@@ -1,0 +1,9 @@
+[package]
+name = "idea-pop-domain"
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+publish = false
+
+[dependencies]
+thiserror = { workspace = true }

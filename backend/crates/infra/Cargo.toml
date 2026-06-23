@@ -1,0 +1,9 @@
+[package]
+name = "idea-pop-infra"
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+publish = false
+
+[dependencies]
+idea-pop-domain = { path = "../domain" }

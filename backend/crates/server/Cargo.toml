@@ -1,0 +1,18 @@
+[package]
+name = "idea-pop-server"
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+publish = false
+
+[[bin]]
+name = "idea-pop-server"
+path = "src/main.rs"
+
+[dependencies]
+api = { package = "idea-pop-api", path = "../api" }
+axum = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+anyhow = { workspace = true }

@@ -1,0 +1,69 @@
+# Idea Pop — Project Guide for Claude Code
+
+Idea Pop is a web learning platform for kids 8+ and teens: Explore (nature videos),
+Library (expert courses/makes), Challenge (8-step real-world missions). Kids watch,
+learn, solve, and build — earning XP/stickers. Brand line: "Ask nature. Build with your hands."
+
+## Stack
+- Backend: Rust, Axum, SQLx, PostgreSQL. Cargo workspace: crates/{domain, infra, api, server}.
+- Frontend: Next.js (App Router), TypeScript, Tailwind CSS, next-intl (EN + FA/RTL).
+- Infra: Docker Compose (dev), GitHub Actions CI, deploy to a VPS. S3/MinIO for photos. SMTP/MailHog for email.
+
+## Repo layout
+backend/crates/{domain,infra,api,server}, backend/migrations, frontend/src/{app,components,lib,styles,messages},
+packages/api-types, .github/workflows, docs/.
+
+## Architecture rules
+- Dependencies point inward: api -> domain <- infra. The `domain` crate has NO IO (no SQLx, no HTTP).
+- Business rules live in domain services. Handlers are thin: validate -> call service -> map to DTO/status.
+- `infra` implements domain ports (traits) like ChildRepo, ChallengeRepo, EmailSender, PhotoStore.
+- Errors: thiserror in domain; map to RFC 7807 problem+json at the API edge. Never leak internals.
+- All SQL via SQLx with the offline cache (.sqlx committed). Migrations are append-only and reversible.
+
+## Product safety rules (non-negotiable)
+- Everything a child creates is PRIVATE by default. class/public visibility requires a recorded human approval.
+- Children start RESTRICTED. Sharing, social, and extra data collection are disabled until a parent grants
+  consent (email verification). Enforce via consent-gating middleware.
+- Kid tokens are scoped: no pricing, billing, other children, or free chat. There is no user-to-user chat.
+- Collect from children only: nickname, avatar, birth year. Never full name, address, phone, school, face photo.
+- Project photos are "project, not face". AI-generated content is flagged `ai_generated` and labeled in the UI.
+
+## Design tokens (see docs/design-tokens.md, wired in frontend/tailwind.config.ts)
+- Fonts: Baloo 2 (display/headlines ONLY) + Nunito (body). Min body ~14px; larger for kids.
+- Section colors (chameleon nav): Explore green, Library #F2994A, Challenge #2D9CDB, Pricing purple.
+- Pastel page tints: #F3FFC2 lime, #FBF7D5 cream, #C0F0FF blue, #F1D8FB lavender, #F9DED7 blush.
+- One button system (primary/secondary/tertiary) with default/hover/focus/pressed/disabled. One input anatomy.
+- One mascot: "Poppy". One icon set. Tablet-first, responsive. Target WCAG AA.
+
+## Gamification (canonical)
+- XP: Explore +5/video, Learn +10/lesson, Solve +20/challenge. Levels derived from an append-only xp_events ledger.
+- Medals per adventure: bronze@3, silver@6, gold@10. Creative Cycle: explore+learn+solve in one ISO week -> +15 XP.
+- Ranks: Explorer -> Maker -> Inventor -> Innovator -> Master -> Mentor.
+
+## Challenge engine (canonical)
+Challenge = DATA, not a page. One generic engine renders any challenge from its JSON.
+8 steps: 1 Brief, 2 Your idea?, 3 Nature clues, 4 Design secret, 5 Skill, 6 Sketch, 7 Build & test, 8 Celebrate & share.
+"Yes, I have an idea" jumps to step 6; all steps stay reachable from the mission menu. Ideas Wall is locked until the kid submits.
+
+## Commands
+- Dev up: `docker compose up` (or `just up`). DB UI: adminer (:8081). Mail: mailhog (:8025). Storage: minio (:9001).
+- Backend: `cargo test --all`, `cargo clippy --all-targets -- -D warnings`, `cargo fmt --all`,
+  `cargo sqlx prepare`, `cargo sqlx migrate run`. Coverage: `cargo llvm-cov`.
+- Frontend: `npm run lint`, `npm run typecheck`, `npm run build`, `npm test` (add Vitest), `npx playwright test`.
+
+## Definition of done for ANY task
+1. Compiles; `cargo fmt` clean; `cargo clippy --all-targets -- -D warnings` clean; `npm run lint` + `tsc` clean.
+2. Unit tests for new domain logic; integration tests for new endpoints (testcontainers Postgres).
+3. OpenAPI updated; regenerate frontend api-types if the API changed.
+4. `.sqlx` offline cache refreshed (`cargo sqlx prepare`).
+5. No coverage drop below threshold. Conventional Commit message. Open a PR with a short summary + test notes.
+
+## Conventions
+- Branches: feat/..., fix/..., chore/... (short-lived). Squash-merge. Conventional Commits. Keep main deployable.
+- Never commit secrets; use .env (see .env.example).
+- If a task conflicts with the safety rules above, STOP and flag it rather than weakening them.
+
+## Current state
+Phase 0 scaffold complete: workspace builds, /health + /readyz, Next.js landing stub with tokens, Docker Compose,
+CI (fmt/clippy/test + lint/typecheck/build). Next: Phase 1 (DB, migrations, OpenAPI, test harness) — see
+../Idea-Pop-Dev-Roadmap.md and ../Idea-Pop-ClaudeCode-Prompts.md (prompt P1).

@@ -54,7 +54,7 @@ jobs:
 
       - name: Install sqlx-cli
         if: steps.cache-sqlx-cli.outputs.cache-hit != 'true'
-        run: cargo install sqlx-cli --no-default-features --features postgres --locked
+        run: cargo install sqlx-cli --no-default-features --features postgres
 
       - name: Format
         run: cargo fmt --all -- --check

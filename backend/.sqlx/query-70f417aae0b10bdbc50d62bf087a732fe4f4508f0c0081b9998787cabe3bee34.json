@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO accounts\n               (id, email, password_hash, role, email_verified_at, locale,\n                verification_token_hash, verification_token_expires_at, created_at, updated_at)\n               VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Varchar",
+        "Text",
+        "Varchar",
+        "Timestamptz",
+        "Varchar",
+        "Text",
+        "Timestamptz",
+        "Timestamptz",
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "70f417aae0b10bdbc50d62bf087a732fe4f4508f0c0081b9998787cabe3bee34"
+}

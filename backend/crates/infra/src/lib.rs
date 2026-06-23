@@ -1,10 +1,16 @@
-//! Infrastructure adapters for Idea Pop (database, email, storage) that
-//! implement the ports defined in `idea-pop-domain`.
-//!
-//! Nothing concrete here yet — adapters arrive in Phase 1+ (SQLx repositories,
-//! `lettre` email, S3/MinIO storage). The re-export below keeps the dependency
-//! wired so the layering is explicit from day one.
+//! Infrastructure adapters — implements domain ports.
 
 #![forbid(unsafe_code)]
 
+pub mod account_repo;
+pub mod clock;
+pub mod email;
+pub mod hasher;
+pub mod token;
+
+pub use account_repo::SqlxAccountRepo;
+pub use clock::SystemClock;
+pub use email::{LettreEmailSender, NullEmailSender};
+pub use hasher::Argon2Hasher;
 pub use idea_pop_domain as domain;
+pub use token::JwtTokenIssuer;

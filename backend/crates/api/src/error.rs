@@ -1,3 +1,5 @@
+//! RFC 7807 problem+json error layer.
+
 #![forbid(unsafe_code)]
 
 use axum::{
@@ -12,14 +14,10 @@ use utoipa::ToSchema;
 /// RFC 7807 problem+json body.
 #[derive(Debug, Serialize, ToSchema)]
 pub struct ProblemDetail {
-    /// A URI identifying the problem type.
     #[serde(rename = "type")]
     pub type_uri: String,
-    /// Short, human-readable summary of the problem.
     pub title: String,
-    /// HTTP status code.
     pub status: u16,
-    /// Human-readable explanation specific to this occurrence.
     pub detail: String,
 }
 
@@ -34,54 +32,61 @@ impl ProblemDetail {
     }
 }
 
-/// Handler-level error: converts to an RFC 7807 problem+json response.
+/// Build a problem+json Response directly (used by extractors / guards).
+pub fn problem(status: StatusCode, slug: &str, detail: impl Into<String>) -> Response {
+    let title = status.canonical_reason().unwrap_or("Error").to_owned();
+    let body = ProblemDetail::new(slug, &title, status, detail);
+    let mut response = (status, Json(body)).into_response();
+    response.headers_mut().insert(
+        header::CONTENT_TYPE,
+        HeaderValue::from_static("application/problem+json"),
+    );
+    response
+}
+
+/// Handler-level error → RFC 7807 response.
 #[derive(Debug)]
 pub enum ApiError {
     Domain(DomainError),
     Database(sqlx::Error),
+    Validation(String),
 }
 
 impl IntoResponse for ApiError {
     fn into_response(self) -> Response {
-        let (status, body) = match self {
+        let (status, slug, detail): (StatusCode, &str, String) = match self {
             ApiError::Domain(DomainError::NotFound) => (
                 StatusCode::NOT_FOUND,
-                ProblemDetail::new(
-                    "not-found",
-                    "Not Found",
-                    StatusCode::NOT_FOUND,
-                    "The requested resource does not exist.",
-                ),
+                "not-found",
+                "The requested resource does not exist.".into(),
             ),
-            ApiError::Domain(DomainError::Validation(msg)) => (
-                StatusCode::UNPROCESSABLE_ENTITY,
-                ProblemDetail::new(
-                    "validation",
-                    "Unprocessable Entity",
-                    StatusCode::UNPROCESSABLE_ENTITY,
-                    msg,
-                ),
-            ),
+            ApiError::Domain(DomainError::Validation(msg)) => {
+                (StatusCode::UNPROCESSABLE_ENTITY, "validation", msg)
+            }
+            ApiError::Domain(DomainError::Conflict(msg)) => (StatusCode::CONFLICT, "conflict", msg),
+            ApiError::Domain(DomainError::Unauthorized(msg)) => {
+                (StatusCode::UNAUTHORIZED, "unauthorized", msg)
+            }
+            ApiError::Domain(DomainError::Internal(msg)) => {
+                tracing::error!(detail = %msg, "domain internal error");
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    "internal",
+                    "An unexpected error occurred.".into(),
+                )
+            }
             ApiError::Database(e) => {
                 tracing::error!(error = %e, "database error");
                 (
                     StatusCode::INTERNAL_SERVER_ERROR,
-                    ProblemDetail::new(
-                        "internal",
-                        "Internal Server Error",
-                        StatusCode::INTERNAL_SERVER_ERROR,
-                        "An unexpected error occurred.",
-                    ),
+                    "internal",
+                    "An unexpected error occurred.".into(),
                 )
             }
+            ApiError::Validation(msg) => (StatusCode::UNPROCESSABLE_ENTITY, "validation", msg),
         };
 
-        let mut response = (status, Json(body)).into_response();
-        response.headers_mut().insert(
-            header::CONTENT_TYPE,
-            HeaderValue::from_static("application/problem+json"),
-        );
-        response
+        problem(status, slug, detail)
     }
 }
 
@@ -94,5 +99,11 @@ impl From<DomainError> for ApiError {
 impl From<sqlx::Error> for ApiError {
     fn from(e: sqlx::Error) -> Self {
         ApiError::Database(e)
+    }
+}
+
+impl From<validator::ValidationErrors> for ApiError {
+    fn from(e: validator::ValidationErrors) -> Self {
+        ApiError::Validation(e.to_string())
     }
 }

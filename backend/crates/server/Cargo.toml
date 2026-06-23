@@ -11,6 +11,8 @@ path = "src/main.rs"
 
 [dependencies]
 api = { package = "idea-pop-api", path = "../api" }
+idea-pop-infra = { path = "../infra" }
+idea-pop-domain = { path = "../domain" }
 axum = { workspace = true }
 tokio = { workspace = true }
 tracing = { workspace = true }

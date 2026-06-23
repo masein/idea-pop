@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "INSERT INTO health_log (message) VALUES ($1)\n           RETURNING id, message, created_at",
+  "query": "INSERT INTO health_log (message) VALUES ($1) RETURNING id, message, created_at",
   "describe": {
     "columns": [
       {
@@ -48,5 +48,5 @@
       false
     ]
   },
-  "hash": "01eaa852c1d7f04c74ac6860e0bf0f030478549d28b88cbb1135291a96dcabd2"
+  "hash": "f4240674f8f50da0af615be075ff8cca981e5e407bb9ae1e2f6fe50b31b98b74"
 }

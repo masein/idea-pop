@@ -1,14 +1,10 @@
-//! Integration tests for the health-log endpoint.
-//!
-//! Each test spins up a fresh Postgres container via testcontainers, runs the
-//! SQLx migrations, then exercises the HTTP router using `tower::ServiceExt`
-//! (no real network socket needed).
+//! Integration tests for the health-log endpoint (Phase 1).
 
 use axum::{
     body::{to_bytes, Body},
     http::{Request, StatusCode},
 };
-use idea_pop_api::router;
+use idea_pop_api::{null_state, router};
 use serde_json::{json, Value};
 use sqlx::PgPool;
 use testcontainers::{runners::AsyncRunner, ContainerAsync};
@@ -35,10 +31,14 @@ async fn start_postgres() -> (PgPool, ContainerAsync<Postgres>) {
     (pool, pg)
 }
 
+fn make_app(pool: PgPool) -> axum::Router {
+    router(null_state(pool), None)
+}
+
 #[tokio::test]
 async fn health_endpoint_returns_ok() {
     let (pool, _pg) = start_postgres().await;
-    let app = router(pool);
+    let app = make_app(pool);
 
     let res = app
         .oneshot(
@@ -60,7 +60,7 @@ async fn health_endpoint_returns_ok() {
 async fn create_and_list_health_log_roundtrip() {
     let (pool, _pg) = start_postgres().await;
 
-    let res = router(pool.clone())
+    let res = make_app(pool.clone())
         .oneshot(
             Request::builder()
                 .method("POST")
@@ -80,7 +80,7 @@ async fn create_and_list_health_log_roundtrip() {
     assert_eq!(created["message"], "phase-1 pipeline validated");
     assert!(created["id"].is_string());
 
-    let res = router(pool)
+    let res = make_app(pool)
         .oneshot(
             Request::builder()
                 .uri("/api/health-log")
@@ -101,7 +101,7 @@ async fn create_and_list_health_log_roundtrip() {
 async fn create_health_log_blank_message_returns_422() {
     let (pool, _pg) = start_postgres().await;
 
-    let res = router(pool)
+    let res = make_app(pool)
         .oneshot(
             Request::builder()
                 .method("POST")

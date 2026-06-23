@@ -18,13 +18,21 @@ chrono = { workspace = true }
 tracing = { workspace = true }
 utoipa = { workspace = true }
 tokio = { workspace = true, features = ["time"] }
+async-trait = { workspace = true }
+validator = { workspace = true }
+governor = { workspace = true }
 
 [dev-dependencies]
 tokio = { workspace = true }
 tower = { workspace = true, features = ["util"] }
 testcontainers = "0.23"
 testcontainers-modules = { version = "0.11", features = ["postgres"] }
+idea-pop-infra = { path = "../infra" }
 
 [[test]]
 name = "health_log_integration"
 path = "tests/health_log_integration.rs"
+
+[[test]]
+name = "auth_integration"
+path = "tests/auth_integration.rs"

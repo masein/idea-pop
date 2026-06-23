@@ -11,20 +11,66 @@ jobs:
     defaults:
       run:
         working-directory: backend
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: ideapop
+          POSTGRES_PASSWORD: ideapop
+          POSTGRES_DB: ideapop
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgres://ideapop:ideapop@localhost:5432/ideapop
+      SQLX_OFFLINE: "true"
+
     steps:
       - uses: actions/checkout@v4
+
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt, clippy
+
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: backend
+
+      - name: Install cargo-llvm-cov
+        uses: taiki-e/install-action@cargo-llvm-cov
+
       - name: Format
         run: cargo fmt --all -- --check
+
       - name: Clippy
         run: cargo clippy --all-targets -- -D warnings
-      - name: Test
-        run: cargo test --all
+
+      - name: Verify SQLx offline cache
+        run: cargo sqlx prepare --workspace --check
+        env:
+          SQLX_OFFLINE: "false"
+
+      - name: Run migrations
+        run: cargo sqlx migrate run
+        env:
+          SQLX_OFFLINE: "false"
+
+      - name: Test with coverage
+        run: cargo llvm-cov --all --lcov --output-path lcov.info
+        env:
+          SQLX_OFFLINE: "false"
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
+        with:
+          files: backend/lcov.info
+          fail_ci_if_error: false
 
   frontend:
     runs-on: ubuntu-latest

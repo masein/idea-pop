@@ -7,3 +7,7 @@ publish = false
 
 [dependencies]
 idea-pop-domain = { path = "../domain" }
+sqlx = { workspace = true }
+uuid = { workspace = true }
+chrono = { workspace = true }
+tracing = { workspace = true }

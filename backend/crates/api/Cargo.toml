@@ -6,11 +6,25 @@ license.workspace = true
 publish = false
 
 [dependencies]
+idea-pop-domain = { path = "../domain" }
 axum = { workspace = true }
+tower = { workspace = true }
 tower-http = { workspace = true }
 serde = { workspace = true }
+serde_json = { workspace = true }
+sqlx = { workspace = true }
+uuid = { workspace = true }
+chrono = { workspace = true }
+tracing = { workspace = true }
+utoipa = { workspace = true }
+tokio = { workspace = true, features = ["time"] }
 
 [dev-dependencies]
 tokio = { workspace = true }
-tower = { version = "0.5", features = ["util"] }
-serde_json = { workspace = true }
+tower = { workspace = true, features = ["util"] }
+testcontainers = "0.23"
+testcontainers-modules = { version = "0.11", features = ["postgres"] }
+
+[[test]]
+name = "health_log_integration"
+path = "tests/health_log_integration.rs"

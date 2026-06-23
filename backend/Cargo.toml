@@ -23,6 +23,13 @@ uuid = { version = "1", features = ["v4", "serde"] }
 chrono = { version = "0.4", features = ["serde"] }
 dotenvy = "0.15"
 utoipa = { version = "4", features = ["uuid", "chrono"] }
+async-trait = "0.1"
+argon2 = "0.5"
+jsonwebtoken = "9"
+lettre = { version = "0.11", default-features = false, features = ["tokio1", "smtp-transport", "builder"] }
+validator = { version = "0.18", features = ["derive"] }
+governor = "0.6"
+rand = { version = "0.8", features = ["std"] }
 
 [profile.release]
 strip = true

@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT id, message, created_at FROM health_log\n           ORDER BY created_at DESC LIMIT 20",
+  "query": "SELECT id, message, created_at FROM health_log ORDER BY created_at DESC LIMIT 20",
   "describe": {
     "columns": [
       {
@@ -46,5 +46,5 @@
       false
     ]
   },
-  "hash": "285998662aa1c66d2e36ce3918910bdce9cfcfe203f643aa05ba2584b5aadad4"
+  "hash": "341cc67ea4bd8f7e9742aeeab7d4314d3bdb87b384a78667f2448735c00cd58c"
 }

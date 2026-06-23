@@ -52,18 +52,30 @@ Challenge = DATA, not a page. One generic engine renders any challenge from its 
 - Frontend: `npm run lint`, `npm run typecheck`, `npm run build`, `npm test` (add Vitest), `npx playwright test`.
 
 ## Definition of done for ANY task
-1. Compiles; `cargo fmt` clean; `cargo clippy --all-targets -- -D warnings` clean; `npm run lint` + `tsc` clean.
+1. Code compiles; `cargo fmt` clean; `cargo clippy --all-targets -- -D warnings` clean; `npm run lint` + `tsc` clean.
 2. Unit tests for new domain logic; integration tests for new endpoints (testcontainers Postgres).
-3. OpenAPI updated; regenerate frontend api-types if the API changed.
+3. OpenAPI updated; regenerate the frontend api-types if the API changed.
 4. `.sqlx` offline cache refreshed (`cargo sqlx prepare`).
-5. No coverage drop below threshold. Conventional Commit message. Open a PR with a short summary + test notes.
+5. No coverage drop below threshold.
+
+## Git workflow for EVERY task (Claude Code owns this end to end)
+1. Start clean: `git checkout main && git pull`, then `git checkout -b <type>/<scope>` (feat/…, fix/…, chore/…).
+2. Do the work in small commits with Conventional Commit messages. NEVER commit directly to main.
+3. Make the full gate green locally before opening a PR:
+   `cargo fmt --all -- --check && cargo clippy --all-targets -- -D warnings && cargo test --all`
+   and in `frontend/`: `npm run lint && npm run typecheck && npm run build`.
+4. Push and open a PR to main with a summary + the verification you ran:
+   `git push -u origin HEAD && gh pr create --fill`
+5. Let CI gate the merge, then squash-merge and clean up:
+   `gh pr checks --watch`
+   `gh pr merge --squash --delete-branch`
+   `git checkout main && git pull`
+6. NEVER merge red. If CI fails, stop and fix on the same branch, then re-run the checks.
 
 ## Conventions
-- Branches: feat/..., fix/..., chore/... (short-lived). Squash-merge. Conventional Commits. Keep main deployable.
 - Never commit secrets; use .env (see .env.example).
 - If a task conflicts with the safety rules above, STOP and flag it rather than weakening them.
 
 ## Current state
-Phase 0 scaffold complete: workspace builds, /health + /readyz, Next.js landing stub with tokens, Docker Compose,
-CI (fmt/clippy/test + lint/typecheck/build). Next: Phase 1 (DB, migrations, OpenAPI, test harness) — see
-../Idea-Pop-Dev-Roadmap.md and ../Idea-Pop-ClaudeCode-Prompts.md (prompt P1).
+Phase 1 in progress: SQLx + Postgres, migrations, RFC 7807 error layer, request-id/trace/timeout middleware,
+OpenAPI (utoipa + Swagger UI at /docs), integration-test harness (testcontainers). Phase 0 done.

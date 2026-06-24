@@ -7,7 +7,7 @@ use axum::{
     body::{to_bytes, Body},
     http::{Request, StatusCode},
 };
-use idea_pop_api::{router, AppState, NullExploreRepo, NullLibraryRepo};
+use idea_pop_api::{router, AppState, NullChallengeRepo, NullExploreRepo, NullLibraryRepo};
 use idea_pop_infra::{
     Argon2Hasher, JwtTokenIssuer, NullConsentEmailSender, NullEmailSender, SqlxAccountRepo,
     SqlxChildRepo, SqlxClassRepo, SqlxConsentRepo, SystemClock,
@@ -57,6 +57,7 @@ fn make_state(pool: PgPool) -> AppState {
         Arc::new(NullConsentEmailSender),
         Arc::new(NullExploreRepo),
         Arc::new(NullLibraryRepo),
+        Arc::new(NullChallengeRepo),
     )
 }
 

@@ -3,6 +3,7 @@
 #![forbid(unsafe_code)]
 
 pub mod account_repo;
+pub mod challenge_repo;
 pub mod child_repo;
 pub mod clock;
 pub mod content_repo;
@@ -11,6 +12,7 @@ pub mod hasher;
 pub mod token;
 
 pub use account_repo::SqlxAccountRepo;
+pub use challenge_repo::SqlxChallengeRepo;
 pub use child_repo::{
     NullConsentEmailSender, SmtpConsentEmailSender, SqlxChildRepo, SqlxClassRepo, SqlxConsentRepo,
 };

@@ -9,6 +9,7 @@ use chrono::{DateTime, Utc};
 use uuid::Uuid;
 
 use crate::{
+    challenge::{Challenge, ChallengeFilter},
     content::{
         Course, Creator, ExploreFilter, ExploreVideo, Lesson, Page, QuickMake, QuickMakeFilter,
         StudioCount,
@@ -123,6 +124,14 @@ pub trait Clock: Send + Sync {
 pub trait ExploreRepo: Send + Sync {
     async fn list(&self, filter: &ExploreFilter) -> Result<Page<ExploreVideo>, DomainError>;
     async fn find_by_id(&self, id: Uuid) -> Result<Option<ExploreVideo>, DomainError>;
+}
+
+// ── Challenge port ────────────────────────────────────────────────────────────
+
+#[async_trait]
+pub trait ChallengeRepo: Send + Sync {
+    async fn list(&self, filter: &ChallengeFilter) -> Result<Page<Challenge>, DomainError>;
+    async fn find_by_id(&self, id: Uuid) -> Result<Option<Challenge>, DomainError>;
 }
 
 #[async_trait]

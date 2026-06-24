@@ -12,7 +12,8 @@ use uuid::Uuid;
 
 /// Age bracket derived from birth_year at runtime; also stored on ExploreVideo
 /// age_modes[] to filter content by developmental stage.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum AgeMode {
     /// Ages 8–9 (birth_year relative to current year).
     Young,

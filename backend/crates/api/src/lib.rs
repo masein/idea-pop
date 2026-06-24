@@ -7,6 +7,7 @@ pub mod extractor;
 pub mod state;
 
 mod auth;
+pub mod challenges;
 mod children;
 mod classes;
 mod consents;
@@ -44,6 +45,7 @@ use crate::{
         AuthResponse, LoginRequest, RefreshRequest, RegisterRequest, TokenResponse,
         VerifyEmailRequest,
     },
+    challenges::{AgeTierVariantResponse, ChallengePageResponse, ChallengeResponse, ToolResponse},
     children::{CreateChildRequest, CreateChildResponse},
     classes::{CreateClassRequest, CreateClassResponse, JoinClassResponse},
     explore::{ExplorePageResponse, ExploreVideoResponse},
@@ -163,6 +165,7 @@ pub struct CreateHealthLogRequest {
         explore::list_explore, explore::get_explore,
         library::list_studios, library::list_quick_makes,
         library::get_course, library::get_creator,
+        challenges::list_challenges, challenges::get_challenge,
     ),
     components(schemas(
         Health, HealthLogEntry, CreateHealthLogRequest, ProblemDetail,
@@ -173,6 +176,7 @@ pub struct CreateHealthLogRequest {
         ExploreVideoResponse, ExplorePageResponse,
         StudioCountResponse, QuickMakeResponse, QuickMakePageResponse,
         LessonResponse, CourseDetailResponse, CreatorResponse,
+        ChallengeResponse, ChallengePageResponse, AgeTierVariantResponse, ToolResponse,
     )),
     tags(
         (name = "ops",       description = "Operational endpoints"),
@@ -182,8 +186,9 @@ pub struct CreateHealthLogRequest {
         (name = "children",  description = "Child profiles (COPPA)"),
         (name = "consents",  description = "Parental consent grant/revoke"),
         (name = "classes",   description = "Classroom management"),
-        (name = "explore",   description = "Explore section — nature videos"),
-        (name = "library",   description = "Library section — courses, quick-makes, creators"),
+        (name = "explore",     description = "Explore section — nature videos"),
+        (name = "library",     description = "Library section — courses, quick-makes, creators"),
+        (name = "challenges",  description = "Challenge engine — data-driven 8-step missions"),
     ),
     info(
         title = "Idea Pop API",
@@ -363,6 +368,9 @@ pub fn router(state: AppState, rate_limiter: Option<Arc<AuthRateLimiter>>) -> Ro
         .route("/library/quick-makes", get(library::list_quick_makes))
         .route("/courses/:id", get(library::get_course))
         .route("/creators/:id", get(library::get_creator))
+        // Challenges (any authenticated principal; restricted kids CAN read)
+        .route("/challenges", get(challenges::list_challenges))
+        .route("/challenges/:id", get(challenges::get_challenge))
         .with_state(state)
         .merge(auth_routes)
         .merge(gated_routes)
@@ -377,13 +385,14 @@ pub fn router(state: AppState, rate_limiter: Option<Arc<AuthRateLimiter>>) -> Ro
 
 use async_trait::async_trait;
 use idea_pop_domain::{
+    challenge::{Challenge, ChallengeFilter},
     content::{
         Course, Creator, ExploreFilter, ExploreVideo, Lesson, Page, QuickMake, QuickMakeFilter,
         StudioCount,
     },
-    Account, AccountRepo, ChildProfile, ChildRepo, Class, ClassRepo, Clock, ConsentEmailSender,
-    ConsentRepo, ConsentStatus, EmailSender, ExploreRepo, LibraryRepo, ParentalConsent,
-    PasswordHasher, RefreshSession, TokenClaims, TokenIssuer, TokenPair,
+    Account, AccountRepo, ChallengeRepo, ChildProfile, ChildRepo, Class, ClassRepo, Clock,
+    ConsentEmailSender, ConsentRepo, ConsentStatus, EmailSender, ExploreRepo, LibraryRepo,
+    ParentalConsent, PasswordHasher, RefreshSession, TokenClaims, TokenIssuer, TokenPair,
 };
 
 pub struct NullRepo;
@@ -556,6 +565,17 @@ impl LibraryRepo for NullLibraryRepo {
     }
 }
 
+pub struct NullChallengeRepo;
+#[async_trait]
+impl ChallengeRepo for NullChallengeRepo {
+    async fn list(&self, f: &ChallengeFilter) -> Result<Page<Challenge>, DomainError> {
+        Ok(Page::new(vec![], 0, f.page, f.per_page))
+    }
+    async fn find_by_id(&self, _: Uuid) -> Result<Option<Challenge>, DomainError> {
+        Ok(None)
+    }
+}
+
 /// Build a state using only a PgPool + null auth adapters (for Phase 1 tests).
 pub fn null_state(pool: PgPool) -> AppState {
     AppState::new(
@@ -571,5 +591,6 @@ pub fn null_state(pool: PgPool) -> AppState {
         Arc::new(NullConsentEmail),
         Arc::new(NullExploreRepo),
         Arc::new(NullLibraryRepo),
+        Arc::new(NullChallengeRepo),
     )
 }

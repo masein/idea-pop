@@ -10,8 +10,8 @@ use std::{net::SocketAddr, sync::Arc};
 use api::{create_auth_rate_limiter, router, AppState};
 use idea_pop_infra::{
     Argon2Hasher, JwtTokenIssuer, LettreEmailSender, NullConsentEmailSender, NullEmailSender,
-    SmtpConsentEmailSender, SqlxAccountRepo, SqlxChildRepo, SqlxClassRepo, SqlxConsentRepo,
-    SqlxExploreRepo, SqlxLibraryRepo, SystemClock,
+    SmtpConsentEmailSender, SqlxAccountRepo, SqlxChallengeRepo, SqlxChildRepo, SqlxClassRepo,
+    SqlxConsentRepo, SqlxExploreRepo, SqlxLibraryRepo, SystemClock,
 };
 
 #[tokio::main]
@@ -86,7 +86,8 @@ async fn main() -> anyhow::Result<()> {
         Arc::new(SqlxClassRepo::new(pool.clone())),
         consent_email_sender,
         Arc::new(SqlxExploreRepo::new(pool.clone())),
-        Arc::new(SqlxLibraryRepo::new(pool)),
+        Arc::new(SqlxLibraryRepo::new(pool.clone())),
+        Arc::new(SqlxChallengeRepo::new(pool)),
     );
 
     let auth_rpm: u32 = std::env::var("AUTH_RATE_LIMIT_RPM")

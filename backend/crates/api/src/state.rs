@@ -6,8 +6,9 @@ use governor::{DefaultKeyedRateLimiter, Quota, RateLimiter};
 use sqlx::PgPool;
 
 use idea_pop_domain::{
-    AccountRepo, AuthService, ChildRepo, ClassRepo, Clock, ConsentEmailSender, ConsentRepo,
-    ConsentService, EmailSender, ExploreRepo, LibraryRepo, PasswordHasher, TokenIssuer,
+    AccountRepo, AuthService, ChallengeRepo, ChildRepo, ClassRepo, Clock, ConsentEmailSender,
+    ConsentRepo, ConsentService, EmailSender, ExploreRepo, LibraryRepo, PasswordHasher,
+    TokenIssuer,
 };
 
 pub type AuthRateLimiter = DefaultKeyedRateLimiter<std::net::IpAddr>;
@@ -20,6 +21,7 @@ pub struct AppState {
     pub tokens: Arc<dyn TokenIssuer>,
     pub explore: Arc<dyn ExploreRepo>,
     pub library: Arc<dyn LibraryRepo>,
+    pub challenge: Arc<dyn ChallengeRepo>,
 }
 
 impl AppState {
@@ -37,6 +39,7 @@ impl AppState {
         consent_email: Arc<dyn ConsentEmailSender>,
         explore: Arc<dyn ExploreRepo>,
         library: Arc<dyn LibraryRepo>,
+        challenge: Arc<dyn ChallengeRepo>,
     ) -> Self {
         let auth = Arc::new(AuthService::new(
             Arc::clone(&repo),
@@ -60,6 +63,7 @@ impl AppState {
             tokens,
             explore,
             library,
+            challenge,
         }
     }
 }

@@ -67,6 +67,9 @@ impl IntoResponse for ApiError {
             ApiError::Domain(DomainError::Unauthorized(msg)) => {
                 (StatusCode::UNAUTHORIZED, "unauthorized", msg)
             }
+            ApiError::Domain(DomainError::Forbidden(msg)) => {
+                (StatusCode::FORBIDDEN, "forbidden", msg)
+            }
             ApiError::Domain(DomainError::Internal(msg)) => {
                 tracing::error!(detail = %msg, "domain internal error");
                 (

@@ -51,6 +51,35 @@ impl FromRequestParts<AppState> for AuthToken {
     }
 }
 
+// ── Adult-only extractor ──────────────────────────────────────────────────────
+
+/// Extractor that explicitly blocks kid-scoped tokens.
+///
+/// Kid tokens (role = Kid) carry a child_id claim. Any route extracted with
+/// `AdultAuth` returns 403 if a kid token is presented, enforcing the scope
+/// constraint: no pricing, billing, other-children, or free-chat access.
+pub struct AdultAuth(pub TokenClaims);
+
+#[async_trait]
+impl FromRequestParts<AppState> for AdultAuth {
+    type Rejection = Response;
+
+    async fn from_request_parts(
+        parts: &mut Parts,
+        state: &AppState,
+    ) -> Result<Self, Self::Rejection> {
+        let AuthToken(claims) = AuthToken::from_request_parts(parts, state).await?;
+        if claims.role == Role::Kid {
+            return Err(problem(
+                StatusCode::FORBIDDEN,
+                "kid-token-not-allowed",
+                "Kid-scoped tokens cannot access this route",
+            ));
+        }
+        Ok(AdultAuth(claims))
+    }
+}
+
 // ── Role guard ────────────────────────────────────────────────────────────────
 
 /// Extractor that requires a specific role (or admin).

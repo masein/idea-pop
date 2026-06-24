@@ -7,6 +7,9 @@ pub mod extractor;
 pub mod state;
 
 mod auth;
+mod children;
+mod classes;
+mod consents;
 mod me;
 
 pub use error::{ApiError, ProblemDetail};
@@ -23,6 +26,7 @@ use axum::{
     Json, Router,
 };
 use chrono::{DateTime, Utc};
+use idea_pop_domain::{DomainError, GatedAction, Role};
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 use tower_http::{
@@ -38,6 +42,8 @@ use crate::{
         AuthResponse, LoginRequest, RefreshRequest, RegisterRequest, TokenResponse,
         VerifyEmailRequest,
     },
+    children::{CreateChildRequest, CreateChildResponse},
+    classes::{CreateClassRequest, CreateClassResponse, JoinClassResponse},
     me::MeResponse,
 };
 
@@ -60,6 +66,59 @@ async fn timeout_middleware(req: Request, next: Next) -> Response {
         Ok(res) => res,
         Err(_) => StatusCode::REQUEST_TIMEOUT.into_response(),
     }
+}
+
+// ── Consent-gating middleware ─────────────────────────────────────────────────
+
+/// Middleware that blocks RESTRICTED children from gated routes.
+///
+/// Applied to route groups that contain sharing/social/extra-data endpoints.
+/// Kid tokens with Pending or Revoked consent receive 403; all adult tokens
+/// and Granted/ClassGranted kids pass through.
+async fn consent_gate(
+    tokens: Arc<dyn idea_pop_domain::TokenIssuer>,
+    consent: Arc<idea_pop_domain::ConsentService>,
+    req: Request,
+    next: Next,
+) -> Response {
+    use crate::error::problem;
+
+    let bearer = req
+        .headers()
+        .get("Authorization")
+        .and_then(|v| v.to_str().ok())
+        .and_then(|s| s.strip_prefix("Bearer "));
+
+    // Not authenticated or not a kid → let the handler decide.
+    let Some(raw) = bearer else {
+        return next.run(req).await;
+    };
+    let Ok(claims) = tokens.verify_access(raw).await else {
+        return next.run(req).await;
+    };
+
+    if claims.role == Role::Kid {
+        let Some(child_id) = claims.child_id else {
+            return problem(
+                StatusCode::FORBIDDEN,
+                "consent-required",
+                "Parental consent required",
+            );
+        };
+        match consent.check_gate(child_id, &GatedAction::Share).await {
+            Ok(()) => {}
+            Err(DomainError::Forbidden(_)) => {
+                return problem(
+                    StatusCode::FORBIDDEN,
+                    "consent-required",
+                    "Parental consent is required before sharing or social features can be used",
+                );
+            }
+            Err(_) => {}
+        }
+    }
+
+    next.run(req).await
 }
 
 // ── Health-log DTOs (Phase 1) ─────────────────────────────────────────────────
@@ -87,21 +146,29 @@ pub struct CreateHealthLogRequest {
 #[derive(OpenApi)]
 #[openapi(
     paths(
-        health, readyz,
+        health, readyz, example_gated_share,
         create_health_log, list_health_log,
         auth::register, auth::login, auth::refresh, auth::verify_email,
         me::me,
+        children::create_child,
+        consents::grant_consent, consents::revoke_consent,
+        classes::create_class, classes::join_class,
     ),
     components(schemas(
         Health, HealthLogEntry, CreateHealthLogRequest, ProblemDetail,
         RegisterRequest, LoginRequest, RefreshRequest, VerifyEmailRequest,
         AuthResponse, TokenResponse, MeResponse,
+        CreateChildRequest, CreateChildResponse,
+        CreateClassRequest, CreateClassResponse, JoinClassResponse,
     )),
     tags(
-        (name = "ops",        description = "Operational endpoints"),
+        (name = "ops",       description = "Operational endpoints"),
         (name = "health-log", description = "Phase 1 pipeline-validation resource"),
-        (name = "auth",       description = "Authentication"),
-        (name = "accounts",   description = "Account management"),
+        (name = "auth",      description = "Authentication"),
+        (name = "accounts",  description = "Account management"),
+        (name = "children",  description = "Child profiles (COPPA)"),
+        (name = "consents",  description = "Parental consent grant/revoke"),
+        (name = "classes",   description = "Classroom management"),
     ),
     info(
         title = "Idea Pop API",
@@ -168,7 +235,6 @@ async fn create_health_log(
     State(state): State<AppState>,
     Json(body): Json<CreateHealthLogRequest>,
 ) -> Result<(StatusCode, Json<HealthLogEntry>), ApiError> {
-    use idea_pop_domain::DomainError;
     if body.message.trim().is_empty() {
         return Err(ApiError::Domain(DomainError::Validation(
             "message must not be blank".into(),
@@ -198,12 +264,19 @@ async fn list_health_log(
     Ok(Json(entries))
 }
 
+/// Example gated sharing route — blocked for RESTRICTED children.
+#[utoipa::path(get, path = "/api/my-shares", tag = "children",
+    responses(
+        (status = 200, description = "Allowed (consent granted)"),
+        (status = 403, description = "Blocked — parental consent required", body = ProblemDetail),
+    ))]
+async fn example_gated_share() -> &'static str {
+    "sharing allowed"
+}
+
 // ── Router ────────────────────────────────────────────────────────────────────
 
 /// Build the application router.
-///
-/// Pass `rate_limiter = None` to disable per-IP auth rate limiting
-/// (tests use `None` so they aren't subject to the 20 req/min limit).
 pub fn router(state: AppState, rate_limiter: Option<Arc<AuthRateLimiter>>) -> Router {
     let x_req_id = HeaderName::from_static("x-request-id");
 
@@ -235,6 +308,21 @@ pub fn router(state: AppState, rate_limiter: Option<Arc<AuthRateLimiter>>) -> Ro
         }
     };
 
+    // Consent-gated routes: blocked for RESTRICTED children.
+    // Use route_layer (not layer) so the middleware stays scoped to only
+    // these routes after Router::merge; layer() would wrap the entire merged
+    // service and leak the gate to unrelated routes like /classes/{code}/join.
+    let tokens_cap = Arc::clone(&state.tokens);
+    let consent_cap = Arc::clone(&state.consent);
+    let gated_routes = Router::new()
+        .route("/api/my-shares", get(example_gated_share))
+        .route_layer(middleware::from_fn(move |req: Request, next: Next| {
+            let tokens = Arc::clone(&tokens_cap);
+            let consent = Arc::clone(&consent_cap);
+            async move { consent_gate(tokens, consent, req, next).await }
+        }))
+        .with_state(state.clone());
+
     Router::new()
         .route("/health", get(health))
         .route("/readyz", get(readyz))
@@ -245,8 +333,16 @@ pub fn router(state: AppState, rate_limiter: Option<Arc<AuthRateLimiter>>) -> Ro
             post(create_health_log).get(list_health_log),
         )
         .route("/me", get(me::me))
+        // Child profiles & consent
+        .route("/children", post(children::create_child))
+        .route("/consents/:token/grant", post(consents::grant_consent))
+        .route("/consents/:child_id/revoke", post(consents::revoke_consent))
+        // Classes
+        .route("/classes", post(classes::create_class))
+        .route("/classes/:code/join", post(classes::join_class))
         .with_state(state)
         .merge(auth_routes)
+        .merge(gated_routes)
         .layer(middleware::from_fn(timeout_middleware))
         .layer(TraceLayer::new_for_http())
         .layer(PropagateRequestIdLayer::new(x_req_id.clone()))
@@ -258,7 +354,8 @@ pub fn router(state: AppState, rate_limiter: Option<Arc<AuthRateLimiter>>) -> Ro
 
 use async_trait::async_trait;
 use idea_pop_domain::{
-    Account, AccountRepo, Clock, DomainError, EmailSender, PasswordHasher, RefreshSession, Role,
+    Account, AccountRepo, ChildProfile, ChildRepo, Class, ClassRepo, Clock, ConsentEmailSender,
+    ConsentRepo, ConsentStatus, EmailSender, ParentalConsent, PasswordHasher, RefreshSession,
     TokenClaims, TokenIssuer, TokenPair,
 };
 
@@ -314,6 +411,9 @@ impl TokenIssuer for NullTokens {
     async fn issue(&self, _: Uuid, _: &Role) -> Result<TokenPair, DomainError> {
         Err(DomainError::Internal("null tokens".into()))
     }
+    async fn issue_kid(&self, _: Uuid, _: Uuid) -> Result<String, DomainError> {
+        Err(DomainError::Internal("null tokens".into()))
+    }
     async fn verify_access(&self, _: &str) -> Result<TokenClaims, DomainError> {
         Err(DomainError::Unauthorized("null tokens".into()))
     }
@@ -329,6 +429,64 @@ pub struct NullEmail;
 #[async_trait]
 impl EmailSender for NullEmail {
     async fn send_verification_email(&self, _: &str, _: &str, _: &str) -> Result<(), DomainError> {
+        Ok(())
+    }
+}
+
+pub struct NullConsentEmail;
+#[async_trait]
+impl ConsentEmailSender for NullConsentEmail {
+    async fn send_consent_request(&self, _: &str, _: &str, _: &str) -> Result<(), DomainError> {
+        Ok(())
+    }
+}
+
+pub struct NullChildRepo;
+#[async_trait]
+impl ChildRepo for NullChildRepo {
+    async fn create(&self, _: &ChildProfile) -> Result<(), DomainError> {
+        Ok(())
+    }
+    async fn find_by_id(&self, _: Uuid) -> Result<Option<ChildProfile>, DomainError> {
+        Ok(None)
+    }
+    async fn find_by_parent(&self, _: Uuid) -> Result<Vec<ChildProfile>, DomainError> {
+        Ok(vec![])
+    }
+}
+
+pub struct NullConsentRepo;
+#[async_trait]
+impl ConsentRepo for NullConsentRepo {
+    async fn create(&self, _: &ParentalConsent) -> Result<(), DomainError> {
+        Ok(())
+    }
+    async fn find_by_token_hash(&self, _: &str) -> Result<Option<ParentalConsent>, DomainError> {
+        Ok(None)
+    }
+    async fn find_latest_by_child(&self, _: Uuid) -> Result<Option<ParentalConsent>, DomainError> {
+        Ok(None)
+    }
+    async fn update_status(
+        &self,
+        _: Uuid,
+        _: ConsentStatus,
+        _: DateTime<Utc>,
+    ) -> Result<(), DomainError> {
+        Ok(())
+    }
+}
+
+pub struct NullClassRepo;
+#[async_trait]
+impl ClassRepo for NullClassRepo {
+    async fn create(&self, _: &Class) -> Result<(), DomainError> {
+        Ok(())
+    }
+    async fn find_by_code(&self, _: &str) -> Result<Option<Class>, DomainError> {
+        Ok(None)
+    }
+    async fn add_member(&self, _: Uuid, _: Uuid) -> Result<(), DomainError> {
         Ok(())
     }
 }
@@ -349,5 +507,9 @@ pub fn null_state(pool: PgPool) -> AppState {
         Arc::new(NullTokens),
         Arc::new(NullEmail),
         Arc::new(NullClock),
+        Arc::new(NullChildRepo),
+        Arc::new(NullConsentRepo),
+        Arc::new(NullClassRepo),
+        Arc::new(NullConsentEmail),
     )
 }

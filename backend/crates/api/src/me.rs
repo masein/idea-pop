@@ -4,7 +4,7 @@ use axum::{extract::State, Json};
 use serde::Serialize;
 use utoipa::ToSchema;
 
-use crate::{error::ApiError, extractor::AuthToken, state::AppState};
+use crate::{error::ApiError, extractor::AdultAuth, state::AppState};
 
 #[derive(Debug, Serialize, ToSchema)]
 pub struct MeResponse {
@@ -25,7 +25,7 @@ pub struct MeResponse {
 )]
 pub async fn me(
     State(_state): State<AppState>,
-    AuthToken(claims): AuthToken,
+    AdultAuth(claims): AdultAuth,
 ) -> Result<Json<MeResponse>, ApiError> {
     Ok(Json(MeResponse {
         account_id: claims.account_id.to_string(),

@@ -9,12 +9,13 @@ use std::{net::SocketAddr, sync::Arc};
 
 use api::{create_auth_rate_limiter, router, AppState};
 use idea_pop_infra::{
-    Argon2Hasher, JwtTokenIssuer, LettreEmailSender, NullEmailSender, SqlxAccountRepo, SystemClock,
+    Argon2Hasher, JwtTokenIssuer, LettreEmailSender, NullConsentEmailSender, NullEmailSender,
+    SmtpConsentEmailSender, SqlxAccountRepo, SqlxChildRepo, SqlxClassRepo, SqlxConsentRepo,
+    SystemClock,
 };
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    // Load .env file if present (dev convenience; a no-op in prod).
     dotenvy::dotenv().ok();
 
     init_tracing();
@@ -28,42 +29,62 @@ async fn main() -> anyhow::Result<()> {
         tracing::info!("migrations complete");
     }
 
-    // Auth infrastructure
     let jwt_secret = std::env::var("JWT_SECRET").expect("JWT_SECRET must be set");
     let jwt_expiry: i64 = std::env::var("JWT_EXPIRY_SECS")
         .ok()
         .and_then(|v| v.parse().ok())
-        .unwrap_or(900); // 15 min default
+        .unwrap_or(900);
 
-    let email_sender: Arc<dyn idea_pop_domain::EmailSender> = if let Ok(smtp_host) =
-        std::env::var("SMTP_HOST")
-    {
-        let smtp_port: u16 = std::env::var("SMTP_PORT")
-            .ok()
-            .and_then(|v| v.parse().ok())
-            .unwrap_or(1025);
-        let from_email =
-            std::env::var("FROM_EMAIL").unwrap_or_else(|_| "noreply@idea-pop.app".into());
-        let app_url = std::env::var("APP_URL").unwrap_or_else(|_| "http://localhost:3000".into());
-        let smtp_user = std::env::var("SMTP_USER").ok();
-        let smtp_pass = std::env::var("SMTP_PASS").ok();
-        let sender = LettreEmailSender::new(
-            &smtp_host, smtp_port, smtp_user, smtp_pass, from_email, app_url,
-        )
-        .expect("failed to build SMTP transport");
-        Arc::new(sender)
-    } else {
-        tracing::warn!("SMTP_HOST not set; using null email sender (no emails will be sent)");
-        Arc::new(NullEmailSender)
-    };
+    let from_email = std::env::var("FROM_EMAIL").unwrap_or_else(|_| "noreply@idea-pop.app".into());
+    let app_url = std::env::var("APP_URL").unwrap_or_else(|_| "http://localhost:3000".into());
+
+    let email_sender: Arc<dyn idea_pop_domain::EmailSender> =
+        if let Ok(smtp_host) = std::env::var("SMTP_HOST") {
+            let smtp_port: u16 = std::env::var("SMTP_PORT")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(1025);
+            let smtp_user = std::env::var("SMTP_USER").ok();
+            let smtp_pass = std::env::var("SMTP_PASS").ok();
+            let sender = LettreEmailSender::new(
+                &smtp_host,
+                smtp_port,
+                smtp_user,
+                smtp_pass,
+                from_email.clone(),
+                app_url.clone(),
+            )
+            .expect("failed to build SMTP transport");
+            Arc::new(sender)
+        } else {
+            tracing::warn!("SMTP_HOST not set; using null email sender (no emails will be sent)");
+            Arc::new(NullEmailSender)
+        };
+
+    let consent_email_sender: Arc<dyn idea_pop_domain::ConsentEmailSender> =
+        if let Ok(smtp_host) = std::env::var("SMTP_HOST") {
+            let smtp_port: u16 = std::env::var("SMTP_PORT")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(1025);
+            Arc::new(SmtpConsentEmailSender::new(
+                &smtp_host, smtp_port, from_email, app_url,
+            ))
+        } else {
+            Arc::new(NullConsentEmailSender)
+        };
 
     let state = AppState::new(
         pool.clone(),
-        Arc::new(SqlxAccountRepo::new(pool)),
+        Arc::new(SqlxAccountRepo::new(pool.clone())),
         Arc::new(Argon2Hasher),
         Arc::new(JwtTokenIssuer::new(&jwt_secret, jwt_expiry)),
         email_sender,
         Arc::new(SystemClock),
+        Arc::new(SqlxChildRepo::new(pool.clone())),
+        Arc::new(SqlxConsentRepo::new(pool.clone())),
+        Arc::new(SqlxClassRepo::new(pool)),
+        consent_email_sender,
     );
 
     let auth_rpm: u32 = std::env::var("AUTH_RATE_LIMIT_RPM")

@@ -1,0 +1,172 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id, title, slug, habitat, taxonomy, video_url, duration_s,\n                      design_secret, sticker_id, xp_reward, ai_generated, age_modes, created_at\n               FROM explore_videos WHERE id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "explore_videos",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "title",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "explore_videos",
+            "name": "title"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "slug",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "explore_videos",
+            "name": "slug"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "habitat",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "explore_videos",
+            "name": "habitat"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "taxonomy",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "explore_videos",
+            "name": "taxonomy"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "video_url",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "explore_videos",
+            "name": "video_url"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "duration_s",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "explore_videos",
+            "name": "duration_s"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "design_secret",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "explore_videos",
+            "name": "design_secret"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "sticker_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "explore_videos",
+            "name": "sticker_id"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "xp_reward",
+        "type_info": "Int2",
+        "origin": {
+          "Table": {
+            "table": "explore_videos",
+            "name": "xp_reward"
+          }
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "ai_generated",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "explore_videos",
+            "name": "ai_generated"
+          }
+        }
+      },
+      {
+        "ordinal": 11,
+        "name": "age_modes",
+        "type_info": "TextArray",
+        "origin": {
+          "Table": {
+            "table": "explore_videos",
+            "name": "age_modes"
+          }
+        }
+      },
+      {
+        "ordinal": 12,
+        "name": "created_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "explore_videos",
+            "name": "created_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "0a93fe9444a638d8e771ec90616edb984637073221f7a176ed295a0d53ba58ee"
+}

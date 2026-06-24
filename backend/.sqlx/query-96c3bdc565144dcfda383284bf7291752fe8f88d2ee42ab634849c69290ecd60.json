@@ -1,0 +1,162 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id, title, slug, studio, difficulty, time_minutes, materials,\n                      mess_level, video_url, xp_reward, ai_generated, created_at\n               FROM quick_makes\n               WHERE ($1::text IS NULL OR studio = $1)\n               ORDER BY created_at DESC\n               LIMIT $2 OFFSET $3",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "quick_makes",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "title",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "quick_makes",
+            "name": "title"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "slug",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "quick_makes",
+            "name": "slug"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "studio",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "quick_makes",
+            "name": "studio"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "difficulty",
+        "type_info": "Int2",
+        "origin": {
+          "Table": {
+            "table": "quick_makes",
+            "name": "difficulty"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "time_minutes",
+        "type_info": "Int2",
+        "origin": {
+          "Table": {
+            "table": "quick_makes",
+            "name": "time_minutes"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "materials",
+        "type_info": "TextArray",
+        "origin": {
+          "Table": {
+            "table": "quick_makes",
+            "name": "materials"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "mess_level",
+        "type_info": "Int2",
+        "origin": {
+          "Table": {
+            "table": "quick_makes",
+            "name": "mess_level"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "video_url",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "quick_makes",
+            "name": "video_url"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "xp_reward",
+        "type_info": "Int2",
+        "origin": {
+          "Table": {
+            "table": "quick_makes",
+            "name": "xp_reward"
+          }
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "ai_generated",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "quick_makes",
+            "name": "ai_generated"
+          }
+        }
+      },
+      {
+        "ordinal": 11,
+        "name": "created_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "quick_makes",
+            "name": "created_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "96c3bdc565144dcfda383284bf7291752fe8f88d2ee42ab634849c69290ecd60"
+}

@@ -1,0 +1,88 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id, parent_account_id, nickname, avatar_id, birth_year, created_at\n               FROM child_profiles WHERE parent_account_id = $1 ORDER BY created_at",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "child_profiles",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "parent_account_id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "child_profiles",
+            "name": "parent_account_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "nickname",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "child_profiles",
+            "name": "nickname"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "avatar_id",
+        "type_info": "Int2",
+        "origin": {
+          "Table": {
+            "table": "child_profiles",
+            "name": "avatar_id"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "birth_year",
+        "type_info": "Int2",
+        "origin": {
+          "Table": {
+            "table": "child_profiles",
+            "name": "birth_year"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "created_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "child_profiles",
+            "name": "created_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "f137a1fe58c8b465e5033191ce8cffbecac233b55b83f95ac1fb5439fdfcba43"
+}

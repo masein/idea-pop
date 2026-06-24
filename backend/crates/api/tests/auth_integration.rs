@@ -8,7 +8,10 @@ use axum::{
     http::{Request, StatusCode},
 };
 use idea_pop_api::{router, AppState};
-use idea_pop_infra::{Argon2Hasher, JwtTokenIssuer, NullEmailSender, SqlxAccountRepo, SystemClock};
+use idea_pop_infra::{
+    Argon2Hasher, JwtTokenIssuer, NullConsentEmailSender, NullEmailSender, SqlxAccountRepo,
+    SqlxChildRepo, SqlxClassRepo, SqlxConsentRepo, SystemClock,
+};
 use serde_json::{json, Value};
 use sqlx::PgPool;
 use testcontainers::{runners::AsyncRunner, ContainerAsync};
@@ -40,7 +43,7 @@ async fn start_postgres() -> (PgPool, ContainerAsync<Postgres>) {
 fn make_state(pool: PgPool) -> AppState {
     AppState::new(
         pool.clone(),
-        Arc::new(SqlxAccountRepo::new(pool)),
+        Arc::new(SqlxAccountRepo::new(pool.clone())),
         Arc::new(Argon2Hasher),
         Arc::new(JwtTokenIssuer::new(
             "test-secret-key-32chars-padding!!",
@@ -48,6 +51,10 @@ fn make_state(pool: PgPool) -> AppState {
         )),
         Arc::new(NullEmailSender),
         Arc::new(SystemClock),
+        Arc::new(SqlxChildRepo::new(pool.clone())),
+        Arc::new(SqlxConsentRepo::new(pool.clone())),
+        Arc::new(SqlxClassRepo::new(pool)),
+        Arc::new(NullConsentEmailSender),
     )
 }
 

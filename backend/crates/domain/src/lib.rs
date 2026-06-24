@@ -7,11 +7,20 @@
 
 pub mod account;
 pub mod auth_service;
+pub mod child;
+pub mod consent_service;
 pub mod ports;
 
 pub use account::{Account, RefreshSession, Role, TokenClaims, TokenPair};
 pub use auth_service::AuthService;
-pub use ports::{AccountRepo, Clock, EmailSender, PasswordHasher, TokenIssuer};
+pub use child::{
+    AgeMode, ChildProfile, Class, ConsentGate, ConsentStatus, GatedAction, ParentalConsent,
+};
+pub use consent_service::ConsentService;
+pub use ports::{
+    AccountRepo, ChildRepo, ClassRepo, Clock, ConsentEmailSender, ConsentRepo, EmailSender,
+    PasswordHasher, TokenIssuer,
+};
 
 use thiserror::Error;
 
@@ -25,6 +34,8 @@ pub enum DomainError {
     Conflict(String),
     #[error("unauthorized: {0}")]
     Unauthorized(String),
+    #[error("forbidden: {0}")]
+    Forbidden(String),
     #[error("internal error: {0}")]
     Internal(String),
 }
@@ -43,6 +54,10 @@ mod tests {
         assert_eq!(
             DomainError::Conflict("email already registered".into()).to_string(),
             "conflict: email already registered"
+        );
+        assert_eq!(
+            DomainError::Forbidden("not the parent".into()).to_string(),
+            "forbidden: not the parent"
         );
     }
 }

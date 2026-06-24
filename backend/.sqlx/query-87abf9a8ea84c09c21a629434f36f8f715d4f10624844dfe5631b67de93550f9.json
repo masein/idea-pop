@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE parental_consents\n               SET status = $2,\n                   granted_at = COALESCE(granted_at, $3),\n                   revoked_at = COALESCE(revoked_at, $4)\n               WHERE id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Varchar",
+        "Timestamptz",
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "87abf9a8ea84c09c21a629434f36f8f715d4f10624844dfe5631b67de93550f9"
+}

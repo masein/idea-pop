@@ -12,6 +12,8 @@ pub enum Role {
     Other,
     Admin,
     Reviewer,
+    /// Child account — scoped: no billing, pricing, other children, or free chat.
+    Kid,
 }
 
 impl Role {
@@ -22,6 +24,7 @@ impl Role {
             Role::Other => "other",
             Role::Admin => "admin",
             Role::Reviewer => "reviewer",
+            Role::Kid => "kid",
         }
     }
 
@@ -32,6 +35,7 @@ impl Role {
             "other" => Some(Role::Other),
             "admin" => Some(Role::Admin),
             "reviewer" => Some(Role::Reviewer),
+            "kid" => Some(Role::Kid),
             _ => None,
         }
     }
@@ -102,6 +106,10 @@ pub struct TokenPair {
 /// Claims decoded from a valid access JWT — used by the auth extractor.
 #[derive(Debug, Clone)]
 pub struct TokenClaims {
+    /// For adult tokens: the account UUID.
+    /// For kid tokens: the parent's account UUID (so ownership is traceable).
     pub account_id: Uuid,
     pub role: Role,
+    /// Set only on kid-scoped tokens; holds the ChildProfile UUID.
+    pub child_id: Option<Uuid>,
 }

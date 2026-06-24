@@ -353,6 +353,9 @@ mod tests {
                 expires_in: 900,
             })
         }
+        async fn issue_kid(&self, child_id: Uuid, _parent_id: Uuid) -> Result<String, DomainError> {
+            Ok(format!("kid:{child_id}"))
+        }
         async fn verify_access(&self, token: &str) -> Result<TokenClaims, DomainError> {
             // "access:<uuid>:<role>"
             let parts: Vec<&str> = token.splitn(3, ':').collect();
@@ -363,7 +366,11 @@ mod tests {
                 .map_err(|_| DomainError::Unauthorized("bad token".into()))?;
             let role =
                 Role::from_slug(parts[2]).ok_or(DomainError::Unauthorized("bad token".into()))?;
-            Ok(TokenClaims { account_id, role })
+            Ok(TokenClaims {
+                account_id,
+                role,
+                child_id: None,
+            })
         }
         fn hash_token(&self, raw: &str) -> String {
             format!("sha256:{raw}")

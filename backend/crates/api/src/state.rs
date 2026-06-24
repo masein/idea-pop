@@ -5,7 +5,10 @@ use std::sync::Arc;
 use governor::{DefaultKeyedRateLimiter, Quota, RateLimiter};
 use sqlx::PgPool;
 
-use idea_pop_domain::{AccountRepo, AuthService, Clock, EmailSender, PasswordHasher, TokenIssuer};
+use idea_pop_domain::{
+    AccountRepo, AuthService, ChildRepo, ClassRepo, Clock, ConsentEmailSender, ConsentRepo,
+    ConsentService, EmailSender, PasswordHasher, TokenIssuer,
+};
 
 pub type AuthRateLimiter = DefaultKeyedRateLimiter<std::net::IpAddr>;
 
@@ -13,10 +16,12 @@ pub type AuthRateLimiter = DefaultKeyedRateLimiter<std::net::IpAddr>;
 pub struct AppState {
     pub db: PgPool,
     pub auth: Arc<AuthService>,
+    pub consent: Arc<ConsentService>,
     pub tokens: Arc<dyn TokenIssuer>,
 }
 
 impl AppState {
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         db: PgPool,
         repo: Arc<dyn AccountRepo>,
@@ -24,9 +29,32 @@ impl AppState {
         tokens: Arc<dyn TokenIssuer>,
         email: Arc<dyn EmailSender>,
         clock: Arc<dyn Clock>,
+        child_repo: Arc<dyn ChildRepo>,
+        consent_repo: Arc<dyn ConsentRepo>,
+        class_repo: Arc<dyn ClassRepo>,
+        consent_email: Arc<dyn ConsentEmailSender>,
     ) -> Self {
-        let auth = Arc::new(AuthService::new(repo, hasher, tokens.clone(), email, clock));
-        Self { db, auth, tokens }
+        let auth = Arc::new(AuthService::new(
+            Arc::clone(&repo),
+            Arc::clone(&hasher),
+            Arc::clone(&tokens),
+            Arc::clone(&email),
+            Arc::clone(&clock),
+        ));
+        let consent = Arc::new(ConsentService::new(
+            child_repo,
+            consent_repo,
+            class_repo,
+            Arc::clone(&tokens),
+            consent_email,
+            Arc::clone(&clock),
+        ));
+        Self {
+            db,
+            auth,
+            consent,
+            tokens,
+        }
     }
 }
 

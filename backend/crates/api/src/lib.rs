@@ -10,6 +10,8 @@ mod auth;
 mod children;
 mod classes;
 mod consents;
+pub mod explore;
+pub mod library;
 mod me;
 
 pub use error::{ApiError, ProblemDetail};
@@ -44,6 +46,11 @@ use crate::{
     },
     children::{CreateChildRequest, CreateChildResponse},
     classes::{CreateClassRequest, CreateClassResponse, JoinClassResponse},
+    explore::{ExplorePageResponse, ExploreVideoResponse},
+    library::{
+        CourseDetailResponse, CreatorResponse, LessonResponse, QuickMakePageResponse,
+        QuickMakeResponse, StudioCountResponse,
+    },
     me::MeResponse,
 };
 
@@ -153,6 +160,9 @@ pub struct CreateHealthLogRequest {
         children::create_child,
         consents::grant_consent, consents::revoke_consent,
         classes::create_class, classes::join_class,
+        explore::list_explore, explore::get_explore,
+        library::list_studios, library::list_quick_makes,
+        library::get_course, library::get_creator,
     ),
     components(schemas(
         Health, HealthLogEntry, CreateHealthLogRequest, ProblemDetail,
@@ -160,6 +170,9 @@ pub struct CreateHealthLogRequest {
         AuthResponse, TokenResponse, MeResponse,
         CreateChildRequest, CreateChildResponse,
         CreateClassRequest, CreateClassResponse, JoinClassResponse,
+        ExploreVideoResponse, ExplorePageResponse,
+        StudioCountResponse, QuickMakeResponse, QuickMakePageResponse,
+        LessonResponse, CourseDetailResponse, CreatorResponse,
     )),
     tags(
         (name = "ops",       description = "Operational endpoints"),
@@ -169,6 +182,8 @@ pub struct CreateHealthLogRequest {
         (name = "children",  description = "Child profiles (COPPA)"),
         (name = "consents",  description = "Parental consent grant/revoke"),
         (name = "classes",   description = "Classroom management"),
+        (name = "explore",   description = "Explore section — nature videos"),
+        (name = "library",   description = "Library section — courses, quick-makes, creators"),
     ),
     info(
         title = "Idea Pop API",
@@ -340,6 +355,14 @@ pub fn router(state: AppState, rate_limiter: Option<Arc<AuthRateLimiter>>) -> Ro
         // Classes
         .route("/classes", post(classes::create_class))
         .route("/classes/:code/join", post(classes::join_class))
+        // Explore (any authenticated principal; restricted kids CAN read)
+        .route("/explore", get(explore::list_explore))
+        .route("/explore/:id", get(explore::get_explore))
+        // Library (any authenticated principal; restricted kids CAN read)
+        .route("/library/studios", get(library::list_studios))
+        .route("/library/quick-makes", get(library::list_quick_makes))
+        .route("/courses/:id", get(library::get_course))
+        .route("/creators/:id", get(library::get_creator))
         .with_state(state)
         .merge(auth_routes)
         .merge(gated_routes)
@@ -354,9 +377,13 @@ pub fn router(state: AppState, rate_limiter: Option<Arc<AuthRateLimiter>>) -> Ro
 
 use async_trait::async_trait;
 use idea_pop_domain::{
+    content::{
+        Course, Creator, ExploreFilter, ExploreVideo, Lesson, Page, QuickMake, QuickMakeFilter,
+        StudioCount,
+    },
     Account, AccountRepo, ChildProfile, ChildRepo, Class, ClassRepo, Clock, ConsentEmailSender,
-    ConsentRepo, ConsentStatus, EmailSender, ParentalConsent, PasswordHasher, RefreshSession,
-    TokenClaims, TokenIssuer, TokenPair,
+    ConsentRepo, ConsentStatus, EmailSender, ExploreRepo, LibraryRepo, ParentalConsent,
+    PasswordHasher, RefreshSession, TokenClaims, TokenIssuer, TokenPair,
 };
 
 pub struct NullRepo;
@@ -498,6 +525,37 @@ impl Clock for NullClock {
     }
 }
 
+pub struct NullExploreRepo;
+#[async_trait]
+impl ExploreRepo for NullExploreRepo {
+    async fn list(&self, f: &ExploreFilter) -> Result<Page<ExploreVideo>, DomainError> {
+        Ok(Page::new(vec![], 0, f.page, f.per_page))
+    }
+    async fn find_by_id(&self, _: Uuid) -> Result<Option<ExploreVideo>, DomainError> {
+        Ok(None)
+    }
+}
+
+pub struct NullLibraryRepo;
+#[async_trait]
+impl LibraryRepo for NullLibraryRepo {
+    async fn list_quick_makes(&self, f: &QuickMakeFilter) -> Result<Page<QuickMake>, DomainError> {
+        Ok(Page::new(vec![], 0, f.page, f.per_page))
+    }
+    async fn find_course_with_lessons(
+        &self,
+        _: Uuid,
+    ) -> Result<Option<(Course, Vec<Lesson>)>, DomainError> {
+        Ok(None)
+    }
+    async fn find_creator(&self, _: Uuid) -> Result<Option<Creator>, DomainError> {
+        Ok(None)
+    }
+    async fn studio_counts(&self) -> Result<Vec<StudioCount>, DomainError> {
+        Ok(vec![])
+    }
+}
+
 /// Build a state using only a PgPool + null auth adapters (for Phase 1 tests).
 pub fn null_state(pool: PgPool) -> AppState {
     AppState::new(
@@ -511,5 +569,7 @@ pub fn null_state(pool: PgPool) -> AppState {
         Arc::new(NullConsentRepo),
         Arc::new(NullClassRepo),
         Arc::new(NullConsentEmail),
+        Arc::new(NullExploreRepo),
+        Arc::new(NullLibraryRepo),
     )
 }

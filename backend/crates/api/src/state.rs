@@ -7,7 +7,7 @@ use sqlx::PgPool;
 
 use idea_pop_domain::{
     AccountRepo, AuthService, ChildRepo, ClassRepo, Clock, ConsentEmailSender, ConsentRepo,
-    ConsentService, EmailSender, PasswordHasher, TokenIssuer,
+    ConsentService, EmailSender, ExploreRepo, LibraryRepo, PasswordHasher, TokenIssuer,
 };
 
 pub type AuthRateLimiter = DefaultKeyedRateLimiter<std::net::IpAddr>;
@@ -18,6 +18,8 @@ pub struct AppState {
     pub auth: Arc<AuthService>,
     pub consent: Arc<ConsentService>,
     pub tokens: Arc<dyn TokenIssuer>,
+    pub explore: Arc<dyn ExploreRepo>,
+    pub library: Arc<dyn LibraryRepo>,
 }
 
 impl AppState {
@@ -33,6 +35,8 @@ impl AppState {
         consent_repo: Arc<dyn ConsentRepo>,
         class_repo: Arc<dyn ClassRepo>,
         consent_email: Arc<dyn ConsentEmailSender>,
+        explore: Arc<dyn ExploreRepo>,
+        library: Arc<dyn LibraryRepo>,
     ) -> Self {
         let auth = Arc::new(AuthService::new(
             Arc::clone(&repo),
@@ -54,6 +58,8 @@ impl AppState {
             auth,
             consent,
             tokens,
+            explore,
+            library,
         }
     }
 }

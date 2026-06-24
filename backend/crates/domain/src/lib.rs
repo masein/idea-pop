@@ -9,6 +9,7 @@ pub mod account;
 pub mod auth_service;
 pub mod child;
 pub mod consent_service;
+pub mod content;
 pub mod ports;
 
 pub use account::{Account, RefreshSession, Role, TokenClaims, TokenPair};
@@ -17,9 +18,13 @@ pub use child::{
     AgeMode, ChildProfile, Class, ConsentGate, ConsentStatus, GatedAction, ParentalConsent,
 };
 pub use consent_service::ConsentService;
+pub use content::{
+    Course, Creator, ExploreFilter, ExploreVideo, Habitat, Lesson, Page, QuickMake,
+    QuickMakeFilter, Studio, StudioCount,
+};
 pub use ports::{
     AccountRepo, ChildRepo, ClassRepo, Clock, ConsentEmailSender, ConsentRepo, EmailSender,
-    PasswordHasher, TokenIssuer,
+    ExploreRepo, LibraryRepo, PasswordHasher, TokenIssuer,
 };
 
 use thiserror::Error;

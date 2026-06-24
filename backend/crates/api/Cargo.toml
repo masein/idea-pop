@@ -43,3 +43,7 @@ path = "tests/auth_integration.rs"
 [[test]]
 name = "children_integration"
 path = "tests/children_integration.rs"
+
+[[test]]
+name = "content_integration"
+path = "tests/content_integration.rs"

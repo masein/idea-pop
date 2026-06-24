@@ -9,6 +9,10 @@ publish = false
 name = "idea-pop-server"
 path = "src/main.rs"
 
+[[bin]]
+name = "seed"
+path = "src/bin/seed.rs"
+
 [dependencies]
 api = { package = "idea-pop-api", path = "../api" }
 idea-pop-infra = { path = "../infra" }
@@ -19,4 +23,5 @@ tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 anyhow = { workspace = true }
 sqlx = { workspace = true }
+uuid = { workspace = true }
 dotenvy = { workspace = true }

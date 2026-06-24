@@ -12,6 +12,7 @@ use axum::{
     body::Body,
     http::{header, Method, Request, StatusCode},
 };
+use idea_pop_api::{NullExploreRepo, NullLibraryRepo};
 use idea_pop_infra::{
     Argon2Hasher, JwtTokenIssuer, NullConsentEmailSender, NullEmailSender, SqlxAccountRepo,
     SqlxChildRepo, SqlxClassRepo, SqlxConsentRepo, SystemClock,
@@ -51,6 +52,8 @@ fn make_state(
         Arc::new(SqlxConsentRepo::new(pool.clone())),
         Arc::new(SqlxClassRepo::new(pool)),
         consent_email,
+        Arc::new(NullExploreRepo),
+        Arc::new(NullLibraryRepo),
     )
 }
 

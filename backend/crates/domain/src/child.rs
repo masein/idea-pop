@@ -10,13 +10,31 @@ use uuid::Uuid;
 
 // ── AgeMode ───────────────────────────────────────────────────────────────────
 
-/// Age bracket derived from birth_year at runtime; never stored.
+/// Age bracket derived from birth_year at runtime; also stored on ExploreVideo
+/// age_modes[] to filter content by developmental stage.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum AgeMode {
     /// Ages 8–9 (birth_year relative to current year).
     Young,
     /// Ages 10+.
     Older,
+}
+
+impl AgeMode {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            AgeMode::Young => "young",
+            AgeMode::Older => "older",
+        }
+    }
+
+    pub fn from_slug(s: &str) -> Option<Self> {
+        match s {
+            "young" => Some(AgeMode::Young),
+            "older" => Some(AgeMode::Older),
+            _ => None,
+        }
+    }
 }
 
 // ── ChildProfile ──────────────────────────────────────────────────────────────

@@ -9,6 +9,10 @@ use chrono::{DateTime, Utc};
 use uuid::Uuid;
 
 use crate::{
+    content::{
+        Course, Creator, ExploreFilter, ExploreVideo, Lesson, Page, QuickMake, QuickMakeFilter,
+        StudioCount,
+    },
     Account, ChildProfile, Class, ConsentStatus, DomainError, ParentalConsent, RefreshSession,
     Role, TokenClaims, TokenPair,
 };
@@ -111,4 +115,26 @@ pub trait EmailSender: Send + Sync {
 
 pub trait Clock: Send + Sync {
     fn now(&self) -> DateTime<Utc>;
+}
+
+// ── Content ports ─────────────────────────────────────────────────────────────
+
+#[async_trait]
+pub trait ExploreRepo: Send + Sync {
+    async fn list(&self, filter: &ExploreFilter) -> Result<Page<ExploreVideo>, DomainError>;
+    async fn find_by_id(&self, id: Uuid) -> Result<Option<ExploreVideo>, DomainError>;
+}
+
+#[async_trait]
+pub trait LibraryRepo: Send + Sync {
+    async fn list_quick_makes(
+        &self,
+        filter: &QuickMakeFilter,
+    ) -> Result<Page<QuickMake>, DomainError>;
+    async fn find_course_with_lessons(
+        &self,
+        id: Uuid,
+    ) -> Result<Option<(Course, Vec<Lesson>)>, DomainError>;
+    async fn find_creator(&self, id: Uuid) -> Result<Option<Creator>, DomainError>;
+    async fn studio_counts(&self) -> Result<Vec<StudioCount>, DomainError>;
 }

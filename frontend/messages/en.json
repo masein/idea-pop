@@ -3,7 +3,11 @@
     "profile": "My Profile",
     "explore": "Exploring",
     "library": "Library",
-    "challenges": "Challenges"
+    "challenges": "Challenges",
+    "method": "The Method",
+    "pricing": "Pricing",
+    "for_teachers": "For Teachers",
+    "sign_up": "Sign up"
   },
   "home": {
     "tagline": "Ask nature. Build with your hands.",
@@ -30,5 +34,242 @@
   "errors": {
     "not_found": "Page not found",
     "try_again": "Try again"
+  },
+  "marketing": {
+    "hero": {
+      "headline": "Ask nature. Build with your hands.",
+      "subhead": "Your child solves one real problem every week — with design thinking, nature's secrets, and home materials. Ages 8+.",
+      "cta_start": "Start free",
+      "cta_watch": "Watch a sample",
+      "trust": "No credit card needed · Cancel anytime · COPPA-friendly"
+    },
+    "year_preview": {
+      "heading": "What a year of Idea Pop looks like",
+      "stat_missions": "52 weekly missions",
+      "stat_videos": "500+ nature videos",
+      "stat_experts": "Dozens of expert makers",
+      "stat_portfolio": "One growing portfolio"
+    },
+    "cycle": {
+      "heading": "How it works — the creative cycle",
+      "see_label": "SEE",
+      "see_desc": "Watch a short nature documentary clip",
+      "learn_label": "LEARN",
+      "learn_desc": "Follow an expert maker in the Library",
+      "solve_label": "SOLVE",
+      "solve_desc": "Complete a real challenge with home materials"
+    },
+    "together": {
+      "heading": "We can make them together",
+      "body": "See what your child creates, approve weekly missions, and celebrate every build — from wherever you are."
+    },
+    "curriculum": {
+      "heading": "A curriculum, not random videos",
+      "body": "Every week connects to the next. Biomimicry, forces, camouflage, bridges — topics that build on each other."
+    },
+    "try_now": {
+      "heading": "Try one mission right now",
+      "body": "No account needed. Pick an open mission and start building.",
+      "cta": "Try a free mission"
+    },
+    "kids_made": {
+      "heading": "Made by kids like yours",
+      "subhead": "Real projects from real kids."
+    },
+    "experts": {
+      "heading": "Real experts, exciting lessons",
+      "subhead": "Every library course is led by someone who does this for a living."
+    },
+    "pricing_teaser": {
+      "heading": "Start free. Upgrade when your kids enjoy it.",
+      "free_label": "Free",
+      "standard_label": "Standard",
+      "monthly_label": "Monthly",
+      "annual_label": "Annual",
+      "monthly_price": "$6.99",
+      "annual_price": "$59.90",
+      "annual_per_month": "$4.99/mo",
+      "savings_badge": "Save 29%",
+      "cancel_anytime": "Cancel anytime",
+      "cta_free": "Start for free",
+      "cta_standard": "Start free trial"
+    },
+    "faq": {
+      "heading": "Questions parents ask",
+      "items": [
+        {
+          "q": "How is this different from YouTube?",
+          "a": "Every video is one piece of a structured weekly challenge. Kids watch, learn from an expert, then solve a real problem with home materials — YouTube is open-ended; Idea Pop is purposeful."
+        },
+        {
+          "q": "What age is Idea Pop for?",
+          "a": "Ages 8 to 14. The missions scale in complexity, so an 8-year-old and a 12-year-old can both be challenged appropriately."
+        },
+        {
+          "q": "Is it safe for kids?",
+          "a": "Yes. No ads, no social feeds, no free chat. All AI outputs are labeled. We're COPPA-friendly and kids never share with strangers."
+        },
+        {
+          "q": "Can my child use it independently?",
+          "a": "Mostly, yes. You approve missions and see the portfolio. Your child builds and submits — you stay informed without hovering."
+        },
+        {
+          "q": "What if we want to cancel?",
+          "a": "One click, any time. You keep access until the end of your billing period. No questions asked."
+        }
+      ]
+    },
+    "penguin_helper": {
+      "heading": "Hi, I'm Idea Pop!",
+      "body": "I help kids find their next mission, look up nature facts, and celebrate every build. Tap me anytime."
+    }
+  },
+  "method": {
+    "hero": {
+      "heading": "The Idea Pop Method",
+      "subhead": "A structured creative curriculum built on biomimicry and maker education."
+    },
+    "why": {
+      "heading": "Why we built it",
+      "body": "Screen time is here to stay. We built Idea Pop so kids use it to solve, build, and think — not just consume. Every minute on Idea Pop ends with something made."
+    },
+    "cycle": {
+      "heading": "One cycle, every week",
+      "body": "SEE a nature clip → LEARN from an expert → SOLVE with home materials. Same rhythm, new topic, every week."
+    },
+    "creativity": {
+      "heading": "Essential creativity",
+      "powers": [
+        "Observation",
+        "Questioning",
+        "Connecting",
+        "Making",
+        "Sharing",
+        "Reflecting"
+      ]
+    },
+    "what_you_see": {
+      "heading": "What you'll actually see",
+      "items": [
+        "A weekly mission email with what to gather at home",
+        "A 3–5 min nature clip your child watches first",
+        "An expert walkthrough in the Library",
+        "A build challenge with photo submission",
+        "XP, badges, and a growing Ideas Wall portfolio"
+      ]
+    },
+    "this_week": {
+      "heading": "See it works — this week",
+      "cta": "Start this week's mission"
+    }
+  },
+  "for_teachers": {
+    "hero": {
+      "heading": "Free for teachers — forever",
+      "subhead": "Bring the creative cycle into your classroom. No budget required."
+    },
+    "class_code": {
+      "heading": "Your class code, your control",
+      "body": "Create a class, share a code, and every student joins with a safe account. You see their portfolio — they never see each other's."
+    },
+    "parent_letter": {
+      "heading": "Printable parent letter",
+      "body": "One page that explains Idea Pop, data practices, and how parents can follow along at home.",
+      "cta": "Download parent letter (PDF)"
+    },
+    "privacy": {
+      "heading": "Privacy-first for students",
+      "items": [
+        "No ads, ever",
+        "No social feeds or peer chat",
+        "FERPA-aware data practices",
+        "AI outputs clearly labeled"
+      ]
+    },
+    "cta": {
+      "heading": "Ready to bring Idea Pop to your class?",
+      "button": "Create a teacher account"
+    }
+  },
+  "pricing": {
+    "heading": "Simple, honest pricing",
+    "subhead": "Start free. Upgrade when your family loves it.",
+    "free_label": "Free",
+    "free_price": "$0",
+    "free_forever": "Always free",
+    "free_features": [
+      "Watch any Explore video",
+      "Try 1 mission per month",
+      "Basic library access",
+      "Public Ideas Wall"
+    ],
+    "standard_label": "Standard",
+    "monthly_price": "$6.99",
+    "annual_price": "$59.90",
+    "annual_per_month": "$4.99",
+    "annual_savings": "Save 29%",
+    "billing_monthly": "per month",
+    "billing_annual": "per year",
+    "standard_features": [
+      "Unlimited missions",
+      "Full expert library",
+      "Private portfolio & Ideas Wall",
+      "XP, badges & cosmetic themes",
+      "Parent dashboard & weekly digest",
+      "Priority support"
+    ],
+    "cta_free": "Start for free",
+    "cta_standard": "Start free trial",
+    "cancel_anytime": "Cancel anytime — no questions asked",
+    "kid_note": "Kids can browse plans. Checkout is completed by a parent.",
+    "school_heading": "School or district?",
+    "school_body": "Volume pricing and FERPA DPA available.",
+    "school_cta": "Contact us",
+    "faq_heading": "Billing questions",
+    "faqs": [
+      {
+        "q": "When does my free trial start?",
+        "a": "The moment you click Start free trial. You have 14 days to try everything — no credit card needed."
+      },
+      {
+        "q": "What happens when the trial ends?",
+        "a": "You drop to the Free plan automatically. No charge, no surprise."
+      },
+      {
+        "q": "Can I switch between monthly and annual?",
+        "a": "Yes — any time from your account settings. Switching to annual credits the remaining monthly days."
+      },
+      {
+        "q": "Do you offer family plans?",
+        "a": "One account supports one child. Multi-child family plans are on the roadmap."
+      }
+    ]
+  },
+  "footer": {
+    "product": "Product",
+    "safety": "Safety",
+    "stay_close": "Stay close",
+    "links": {
+      "method": "The Method",
+      "challenges": "Challenges",
+      "library": "Library",
+      "explore": "Explore",
+      "privacy": "Privacy",
+      "privacy_kids": "Privacy for kids",
+      "coppa": "COPPA compliance",
+      "report": "Report a concern",
+      "terms": "Terms of use",
+      "parent_letter": "Parent letter"
+    },
+    "trust_coppa": "COPPA-friendly",
+    "trust_no_ads": "No ads",
+    "trust_ai": "AI labeled",
+    "newsletter_label": "Parent newsletter",
+    "newsletter_placeholder": "your@email.com",
+    "newsletter_cta": "Stay close",
+    "newsletter_success": "You're in! Check your inbox.",
+    "legal": "© {year} Idea Pop. All rights reserved.",
+    "locale_en": "EN",
+    "locale_fa": "فا"
   }
 }

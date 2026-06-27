@@ -432,6 +432,99 @@
     "error_invalid": "This link is expired or already used.",
     "error_generic": "Something went wrong. Please try again."
   },
+  "challenge": {
+    "step_label": "Step {n} of 8",
+    "mission_menu": "Mission menu",
+    "jump_to": "Jump to step",
+    "step_optional": "(optional)",
+    "step_names": {
+      "1": "Brief",
+      "2": "Your idea?",
+      "3": "Nature clues",
+      "4": "Design secret",
+      "5": "Skill",
+      "6": "Sketch",
+      "7": "Build & test",
+      "8": "Celebrate & share"
+    },
+    "brief": {
+      "mission": "Your mission",
+      "lets_go": "Let's go! 🚀",
+      "xp_reward": "+{xp} XP to earn"
+    },
+    "idea_fork": {
+      "heading": "Do you already have an idea?",
+      "yes_label": "💡 YES! I have an idea",
+      "yes_sub": "Jump straight to sketching",
+      "no_label": "🌿 Not yet — inspire me!",
+      "no_sub": "See how nature solves it"
+    },
+    "nature_clues": {
+      "heading": "How does nature solve this?",
+      "xp_each": "+{xp} XP each",
+      "watch_video": "Watch clip",
+      "continue": "Got it — show me the secret →"
+    },
+    "design_secret": {
+      "heading": "Design secret 🔑",
+      "story_label": "The story",
+      "got_it": "I got the secret! →"
+    },
+    "skill": {
+      "heading": "Learn a skill 📚",
+      "optional_note": "Optional — pick one or skip",
+      "lesson_label": "+{xp} XP",
+      "skip": "Skip to my idea →",
+      "start_lesson": "▶ Lesson"
+    },
+    "sketch": {
+      "heading": "YOUR crossing machine! ✏️",
+      "photo_prompt": "📷 Sketch or photo — projects, not faces",
+      "field_what": "What is it?",
+      "field_used": "What will you use?",
+      "field_why": "Why will it work?",
+      "ai_hint": "🤖 Stuck? Brainstorm with Popi",
+      "save": "Save my idea · +20 XP ⭐",
+      "saving": "Saving…"
+    },
+    "build": {
+      "heading": "Build it & test it! 🔧",
+      "checklist_heading": "Gather your materials",
+      "test_heading": "Test it out",
+      "photo_prompt": "📷 Show us what you made",
+      "field_what": "What did you make?",
+      "field_used": "What did you use?",
+      "field_hard": "What was hard?",
+      "field_improve": "What would you improve?",
+      "worked": "✅ It worked!",
+      "needs_fix": "🔁 Needs a fix",
+      "submit": "Mission complete! →"
+    },
+    "celebrate": {
+      "heading": "MISSION COMPLETE! 🎉",
+      "xp_total": "+{xp} XP",
+      "breakdown_watch": "Watched clue: +5",
+      "breakdown_lesson": "Learned skill: +10",
+      "breakdown_build": "Built & tested: +20",
+      "breakdown_cycle": "Creative Cycle bonus: +15",
+      "share_heading": "Who can see your project?",
+      "share_private": "🔒 Only me",
+      "share_private_sub": "Your private portfolio — always the default",
+      "share_class": "🏫 My class",
+      "share_class_sub": "Your teacher can see & cheer",
+      "share_public": "🌍 Idea Gallery",
+      "share_public_sub": "Grown-ups check posts first",
+      "share_public_locked": "Ask a parent to unlock this",
+      "next_mission": "Next mission →",
+      "ideas_wall": "See the Ideas Wall ({count}) →",
+      "safety_note": "🛡 Grown-ups check public posts before others can see them"
+    },
+    "capture": {
+      "add_photo": "Add a photo",
+      "remove_photo": "Remove photo",
+      "photo_tip": "📷 Projects — not faces"
+    }
+  },
   "kid_dashboard": {
     "welcome": "Hi, {nickname}!",
     "restricted_banner": "A grown-up needs to check their email to unlock everything.",

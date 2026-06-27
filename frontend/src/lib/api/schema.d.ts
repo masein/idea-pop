@@ -174,7 +174,11 @@ export interface paths {
   "/api/challenges": {
     get: {
       responses: {
-        200: { content: { "application/json": unknown[] } };
+        200: {
+          content: {
+            "application/json": components["schemas"]["ChallengeDetail"][];
+          };
+        };
       };
     };
   };
@@ -182,7 +186,11 @@ export interface paths {
     get: {
       parameters: { path: { id: string } };
       responses: {
-        200: { content: { "application/json": unknown } };
+        200: {
+          content: {
+            "application/json": components["schemas"]["ChallengeDetail"];
+          };
+        };
       };
     };
   };
@@ -190,7 +198,11 @@ export interface paths {
     post: {
       parameters: { path: { id: string } };
       responses: {
-        200: { content: { "application/json": unknown } };
+        201: {
+          content: {
+            "application/json": components["schemas"]["ChallengeAttempt"];
+          };
+        };
       };
     };
   };
@@ -198,7 +210,28 @@ export interface paths {
     get: {
       parameters: { path: { id: string } };
       responses: {
-        200: { content: { "application/json": unknown[] } };
+        200: {
+          content: {
+            "application/json": components["schemas"]["ChallengeAttempt"][];
+          };
+        };
+      };
+    };
+  };
+  "/api/attempts/{id}/step": {
+    patch: {
+      parameters: { path: { id: string } };
+      requestBody: {
+        content: {
+          "application/json": { step: number };
+        };
+      };
+      responses: {
+        200: {
+          content: {
+            "application/json": components["schemas"]["XpAwardResponse"];
+          };
+        };
       };
     };
   };
@@ -218,8 +251,17 @@ export interface paths {
       };
     };
     post: {
+      requestBody: {
+        content: {
+          "application/json": components["schemas"]["ProjectCreateRequest"];
+        };
+      };
       responses: {
-        201: { content: { "application/json": unknown } };
+        201: {
+          content: {
+            "application/json": components["schemas"]["ProjectResponse"];
+          };
+        };
       };
     };
   };
@@ -395,6 +437,47 @@ export interface components {
       rank: string;
       is_new: boolean;
       cycle_bonus_earned: boolean;
+    };
+    NatureClue: {
+      title: string;
+      description: string;
+      explore_video_id: string | null;
+      emoji: string;
+      xp_reward: number;
+    };
+    ChallengeDetail: {
+      id: string;
+      title: string;
+      slug: string;
+      brief: string;
+      emoji: string;
+      nature_clues: components["schemas"]["NatureClue"][];
+      design_secret: string;
+      design_secret_story: string | null;
+      skill_lesson_id: string | null;
+      related_explore_ids: string[];
+      completion_xp: number;
+    };
+    ChallengeAttempt: {
+      id: string;
+      challenge_id: string;
+      step: number;
+      started_at: string;
+    };
+    ProjectCreateRequest: {
+      title: string;
+      what_i_made: string;
+      what_i_used: string;
+      what_was_hard: string;
+      what_id_improve: string;
+      challenge_id: string | null;
+      step_type: "sketch" | "build";
+    };
+    ProjectResponse: {
+      id: string;
+      title: string;
+      visibility: "private" | "class" | "public";
+      created_at: string;
     };
     SubscriptionResponse: {
       status: string;

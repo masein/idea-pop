@@ -1,0 +1,66 @@
+'use client';
+
+import { useState } from 'react';
+import CaptureCard, { type CaptureData } from './CaptureCard';
+import { createProject } from '@/lib/api/client';
+
+type ChallengeDetail = import('@/lib/api/schema').components['schemas']['ChallengeDetail'];
+
+interface StepSketchProps {
+  challenge: ChallengeDetail;
+  ageMode: 'young' | 'older';
+  onNext: (projectId: string | null) => void;
+  onBack: () => void;
+}
+
+export default function StepSketch({ challenge, ageMode, onNext, onBack }: StepSketchProps) {
+  const [submitting, setSubmitting] = useState(false);
+
+  async function handleSubmit(data: CaptureData) {
+    setSubmitting(true);
+    try {
+      const project = await createProject({
+        title: data.title || 'My sketch',
+        what_i_made: data.what_i_made,
+        what_i_used: data.what_i_used,
+        what_was_hard: '',
+        what_id_improve: '',
+        challenge_id: challenge.id,
+        step_type: 'sketch',
+      });
+      onNext(project.id);
+    } catch {
+      onNext(null);
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <div data-testid="step-sketch" className="flex flex-col gap-4 px-4 py-6">
+      <div>
+        <h2 className="font-display text-2xl text-challenge">YOUR idea! ✏️</h2>
+        <p className="font-body text-sm text-ink/50 mt-1">
+          Sketch or photo your crossing machine
+        </p>
+      </div>
+
+      <CaptureCard
+        showExtendedFields={false}
+        photoPrompt="📷 Sketch or photo — projects, not faces"
+        submitLabel="Save my idea · +20 XP ⭐"
+        ageMode={ageMode}
+        onSubmit={handleSubmit}
+        submitting={submitting}
+      />
+
+      <button
+        type="button"
+        onClick={onBack}
+        className="font-body text-sm text-ink/50 text-left mt-2"
+      >
+        ← Back
+      </button>
+    </div>
+  );
+}

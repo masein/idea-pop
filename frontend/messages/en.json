@@ -271,5 +271,120 @@
     "legal": "© {year} Idea Pop. All rights reserved.",
     "locale_en": "EN",
     "locale_fa": "فا"
+  },
+  "auth": {
+    "persona_select": {
+      "heading": "Tell us who you are",
+      "subhead": "So we can make this great for you",
+      "kid_label": "I'm a kid",
+      "kid_sub": "I just want to play",
+      "parent_label": "I'm a parent",
+      "parent_sub": "Signing up for my kids",
+      "teacher_label": "I'm a teacher",
+      "teacher_sub": "I use this in the classroom",
+      "other_label": "Other",
+      "other_sub": "None of the above",
+      "already": "Already have an account?",
+      "log_in": "Log in"
+    },
+    "login": {
+      "heading": "Welcome back",
+      "email_label": "Email",
+      "email_placeholder": "you@example.com",
+      "password_label": "Password",
+      "submit": "Log in",
+      "no_account": "Don't have an account?",
+      "sign_up": "Sign up",
+      "error_invalid": "Wrong email or password. Please try again.",
+      "error_generic": "Something went wrong. Please try again."
+    },
+    "register": {
+      "heading_parent": "Create your parent account",
+      "heading_teacher": "Create your teacher account",
+      "email_label": "Email",
+      "email_placeholder": "you@example.com",
+      "password_label": "Password",
+      "password_placeholder": "At least 8 characters",
+      "confirm_label": "Confirm password",
+      "confirm_placeholder": "Repeat your password",
+      "submit": "Create account",
+      "already": "Already have an account?",
+      "log_in": "Log in",
+      "error_generic": "Something went wrong. Please try again."
+    },
+    "verify_email": {
+      "heading": "Check your inbox",
+      "body": "We sent a verification link to {email}. Click it to activate your account.",
+      "no_email": "Didn't get it?",
+      "resend": "Resend email",
+      "resent": "Sent! Check your inbox again.",
+      "success_heading": "Email verified!",
+      "success_body": "Your account is ready. Let's get started."
+    }
+  },
+  "onboarding": {
+    "kid": {
+      "step_avatar": "Pick your character",
+      "step_avatar_sub": "Who's going on the adventure with you?",
+      "step_nickname": "What should we call you?",
+      "step_nickname_sub": "Pick a nickname — no real name needed.",
+      "step_nickname_placeholder": "e.g. TurtleBuilder7",
+      "step_birth_year": "What year were you born?",
+      "step_birth_year_sub": "We use this to show missions that match your age.",
+      "step_parent_email": "What's your parent's email?",
+      "step_parent_email_sub": "We'll send them a link to finish your account. They need to say \"yes\" before you can share your builds.",
+      "step_parent_email_placeholder": "parent@example.com",
+      "next": "Next",
+      "back": "Back",
+      "submit": "Let's go!",
+      "submitting": "Setting up your adventure…",
+      "error_generic": "Something went wrong. Please try again.",
+      "step_of": "Step {current} of {total}"
+    },
+    "parent": {
+      "heading": "Welcome to Idea Pop!",
+      "subhead": "Your account is ready. You can manage your child's missions and see their portfolio here.",
+      "cta": "Go to my dashboard"
+    },
+    "teacher": {
+      "heading": "Create your first class",
+      "subhead": "Students join with this class code — no email or password needed.",
+      "class_name_label": "Class name",
+      "class_name_placeholder": "e.g. Year 5 Science",
+      "submit": "Create class",
+      "submitting": "Creating your class…",
+      "class_code_heading": "Your class code is ready!",
+      "class_code_body": "Share this with your students. They enter it when they sign up.",
+      "copy_code": "Copy code",
+      "copied": "Copied!",
+      "done": "Go to my dashboard",
+      "error_generic": "Something went wrong. Please try again."
+    }
+  },
+  "consent": {
+    "heading": "Unlock {nickname}'s account",
+    "body": "By tapping below you confirm you're {nickname}'s parent or guardian and agree to our Privacy Policy and Terms.",
+    "grant": "Yes, unlock the account",
+    "granting": "Unlocking…",
+    "decline": "No thanks",
+    "success_heading": "Done! {nickname} is all set.",
+    "success_body": "They can now share builds and use all features.",
+    "error_invalid": "This link is expired or already used.",
+    "error_generic": "Something went wrong. Please try again."
+  },
+  "kid_dashboard": {
+    "welcome": "Hi, {nickname}!",
+    "restricted_banner": "A grown-up needs to check their email to unlock everything.",
+    "explore_title": "Explore",
+    "library_title": "Library",
+    "challenges_title": "This week's mission",
+    "locked_label": "Locked",
+    "upgrade_heading": "Want more missions?",
+    "upgrade_body": "Ask a parent to upgrade your plan.",
+    "parent_handoff_heading": "Get a parent to help!",
+    "parent_handoff_body": "Show this screen to your parent. They can upgrade from their account.",
+    "parent_handoff_dismiss": "Got it",
+    "xp_label": "XP",
+    "level_label": "Level {n}"
   }
 }

@@ -271,5 +271,120 @@
     "legal": "© {year} Idea Pop. تمام حقوق محفوظ است.",
     "locale_en": "EN",
     "locale_fa": "فا"
+  },
+  "auth": {
+    "persona_select": {
+      "heading": "بگویید چه کسی هستید",
+      "subhead": "تا این تجربه را برای شما عالی کنیم",
+      "kid_label": "من بچه‌ام",
+      "kid_sub": "فقط می‌خواهم بازی کنم",
+      "parent_label": "من والدم",
+      "parent_sub": "برای فرزندانم ثبت‌نام می‌کنم",
+      "teacher_label": "من معلمم",
+      "teacher_sub": "از این در کلاس استفاده می‌کنم",
+      "other_label": "دیگری",
+      "other_sub": "هیچ‌کدام از موارد بالا",
+      "already": "قبلاً حساب دارید؟",
+      "log_in": "ورود"
+    },
+    "login": {
+      "heading": "خوش آمدید",
+      "email_label": "ایمیل",
+      "email_placeholder": "شما@مثال.com",
+      "password_label": "رمز عبور",
+      "submit": "ورود",
+      "no_account": "حساب ندارید؟",
+      "sign_up": "ثبت‌نام",
+      "error_invalid": "ایمیل یا رمز عبور اشتباه است.",
+      "error_generic": "مشکلی پیش آمد. دوباره تلاش کنید."
+    },
+    "register": {
+      "heading_parent": "حساب والد ایجاد کنید",
+      "heading_teacher": "حساب معلم ایجاد کنید",
+      "email_label": "ایمیل",
+      "email_placeholder": "شما@مثال.com",
+      "password_label": "رمز عبور",
+      "password_placeholder": "حداقل ۸ کاراکتر",
+      "confirm_label": "تأیید رمز عبور",
+      "confirm_placeholder": "رمز عبور را تکرار کنید",
+      "submit": "ایجاد حساب",
+      "already": "قبلاً حساب دارید؟",
+      "log_in": "ورود",
+      "error_generic": "مشکلی پیش آمد. دوباره تلاش کنید."
+    },
+    "verify_email": {
+      "heading": "صندوق ورودی خود را بررسی کنید",
+      "body": "لینک تأیید به {email} ارسال شد. روی آن کلیک کنید.",
+      "no_email": "ایمیل دریافت نکردید؟",
+      "resend": "ارسال مجدد",
+      "resent": "ارسال شد! دوباره بررسی کنید.",
+      "success_heading": "ایمیل تأیید شد!",
+      "success_body": "حساب شما آماده است. شروع کنیم."
+    }
+  },
+  "onboarding": {
+    "kid": {
+      "step_avatar": "شخصیت خود را انتخاب کنید",
+      "step_avatar_sub": "چه کسی همراه ماجراجویی شما خواهد بود؟",
+      "step_nickname": "چه اسمی برایتان بگذاریم؟",
+      "step_nickname_sub": "یک نام مستعار انتخاب کنید — نام واقعی لازم نیست.",
+      "step_nickname_placeholder": "مثلاً سازنده‌کوچک",
+      "step_birth_year": "چه سالی متولد شدید؟",
+      "step_birth_year_sub": "از این برای نشان دادن مأموریت‌های مناسب سن شما استفاده می‌کنیم.",
+      "step_parent_email": "ایمیل والد شما چیست؟",
+      "step_parent_email_sub": "یک لینک برای آن‌ها می‌فرستیم تا حساب شما را تکمیل کنند.",
+      "step_parent_email_placeholder": "والد@مثال.com",
+      "next": "بعدی",
+      "back": "قبلی",
+      "submit": "بزنیم بریم!",
+      "submitting": "در حال راه‌اندازی…",
+      "error_generic": "مشکلی پیش آمد. دوباره تلاش کنید.",
+      "step_of": "مرحله {current} از {total}"
+    },
+    "parent": {
+      "heading": "به Idea Pop خوش آمدید!",
+      "subhead": "حساب شما آماده است. مأموریت‌های فرزندتان را مدیریت کنید.",
+      "cta": "به داشبورد من برو"
+    },
+    "teacher": {
+      "heading": "اولین کلاس خود را ایجاد کنید",
+      "subhead": "دانش‌آموزان با این کد کلاس ملحق می‌شوند.",
+      "class_name_label": "نام کلاس",
+      "class_name_placeholder": "مثلاً علوم پایه پنجم",
+      "submit": "ایجاد کلاس",
+      "submitting": "در حال ایجاد کلاس…",
+      "class_code_heading": "کد کلاس شما آماده است!",
+      "class_code_body": "این کد را با دانش‌آموزانتان به اشتراک بگذارید.",
+      "copy_code": "کپی کد",
+      "copied": "کپی شد!",
+      "done": "به داشبورد من برو",
+      "error_generic": "مشکلی پیش آمد. دوباره تلاش کنید."
+    }
+  },
+  "consent": {
+    "heading": "قفل حساب {nickname} را باز کنید",
+    "body": "با زدن دکمه زیر تأیید می‌کنید که والد یا سرپرست {nickname} هستید و با سیاست حریم خصوصی موافقید.",
+    "grant": "بله، حساب را باز کن",
+    "granting": "در حال باز کردن…",
+    "decline": "خیر، ممنون",
+    "success_heading": "انجام شد! {nickname} آماده است.",
+    "success_body": "حالا می‌توانند ساخته‌هایشان را به اشتراک بگذارند.",
+    "error_invalid": "این لینک منقضی شده یا قبلاً استفاده شده.",
+    "error_generic": "مشکلی پیش آمد. دوباره تلاش کنید."
+  },
+  "kid_dashboard": {
+    "welcome": "سلام، {nickname}!",
+    "restricted_banner": "یک بزرگسال باید ایمیل خود را بررسی کند تا همه چیز باز شود.",
+    "explore_title": "کشف",
+    "library_title": "کتابخانه",
+    "challenges_title": "مأموریت این هفته",
+    "locked_label": "قفل است",
+    "upgrade_heading": "مأموریت بیشتر می‌خواهی؟",
+    "upgrade_body": "از یک والد بخواه که اشتراک را ارتقا دهد.",
+    "parent_handoff_heading": "از والدت کمک بگیر!",
+    "parent_handoff_body": "این صفحه را به والدینت نشان بده. آن‌ها می‌توانند از حساب خودشان ارتقا دهند.",
+    "parent_handoff_dismiss": "فهمیدم",
+    "xp_label": "XP",
+    "level_label": "سطح {n}"
   }
 }

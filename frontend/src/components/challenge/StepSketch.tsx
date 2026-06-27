@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import CaptureCard, { type CaptureData } from './CaptureCard';
+import ToolSelector from './tool/ToolSelector';
 import { createProject } from '@/lib/api/client';
 
 type ChallengeDetail = import('@/lib/api/schema').components['schemas']['ChallengeDetail'];
@@ -44,6 +45,15 @@ export default function StepSketch({ challenge, ageMode, onNext, onBack }: StepS
           Sketch or photo your crossing machine
         </p>
       </div>
+
+      {/* Creativity tools accordion — only when challenge includes tools */}
+      {challenge.tools && challenge.tools.length > 0 && (
+        <ToolSelector
+          tools={challenge.tools}
+          topic={challenge.title}
+          ageMode={ageMode}
+        />
+      )}
 
       <CaptureCard
         showExtendedFields={false}

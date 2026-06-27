@@ -276,8 +276,63 @@ export interface paths {
   "/api/projects/{id}/visibility": {
     patch: {
       parameters: { path: { id: string } };
+      requestBody: {
+        content: {
+          "application/json": components["schemas"]["UpdateVisibilityRequest"];
+        };
+      };
+      responses: {
+        200: { content: { "application/json": components["schemas"]["ProjectResponse"] } };
+        403: { content: never };
+      };
+    };
+  };
+  "/api/challenges/{id}/ideas": {
+    get: {
+      parameters: {
+        path: { id: string };
+        query?: { sort?: "newest" | "most_remixed" };
+      };
+      responses: {
+        200: {
+          content: {
+            "application/json": components["schemas"]["IdeaWallEntry"][];
+          };
+        };
+      };
+    };
+    post: {
+      parameters: { path: { id: string } };
+      requestBody: {
+        content: {
+          "application/json": components["schemas"]["SubmitIdeaRequest"];
+        };
+      };
+      responses: {
+        201: { content: { "application/json": { id: string } } };
+        403: { content: never };
+      };
+    };
+  };
+  "/api/ideas/{id}/react": {
+    post: {
+      parameters: { path: { id: string } };
+      requestBody: {
+        content: {
+          "application/json": components["schemas"]["ReactionRequest"];
+        };
+      };
       responses: {
         200: { content: { "application/json": unknown } };
+      };
+    };
+  };
+  "/api/ideas/{id}/remix": {
+    post: {
+      parameters: { path: { id: string } };
+      responses: {
+        201: { content: { "application/json": { attempt_id: string } } };
+        403: { content: never };
       };
     };
   };
@@ -457,6 +512,30 @@ export interface components {
       skill_lesson_id: string | null;
       related_explore_ids: string[];
       completion_xp: number;
+      tools?: ("five_whys" | "scamper" | "mind_map")[];
+    };
+    IdeaWallEntry: {
+      id: string;
+      challenge_id: string;
+      author_nickname: string;
+      author_avatar_id: string;
+      project_photo_url: string | null;
+      caption: string | null;
+      clap_count: number;
+      star_count: number;
+      lightbulb_count: number;
+      remix_count: number;
+      created_at: string;
+    };
+    SubmitIdeaRequest: {
+      project_id: string;
+      caption: string;
+    };
+    ReactionRequest: {
+      reaction: "clap" | "star" | "lightbulb";
+    };
+    UpdateVisibilityRequest: {
+      visibility: "private" | "class" | "public";
     };
     ChallengeAttempt: {
       id: string;

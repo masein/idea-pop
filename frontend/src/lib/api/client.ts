@@ -205,3 +205,84 @@ export async function createProject(body: {
   if (error) throw new Error("Failed to create project");
   return data;
 }
+
+// ── Ideas Wall ────────────────────────────────────────────────────────────────
+
+export async function fetchIdeas(
+  challengeId: string,
+  sort: "newest" | "most_remixed" = "newest"
+) {
+  const { data, error } = await apiClient.GET("/api/challenges/{id}/ideas", {
+    params: { path: { id: challengeId }, query: { sort } },
+  });
+  if (error) throw new Error("Failed to load ideas");
+  return data;
+}
+
+/** Returns the new idea id. Throws with code 'restricted' on 403. */
+export async function submitIdea(
+  challengeId: string,
+  projectId: string,
+  caption: string
+) {
+  const { data, error, response } = await apiClient.POST(
+    "/api/challenges/{id}/ideas",
+    {
+      params: { path: { id: challengeId } },
+      body: { project_id: projectId, caption },
+    }
+  );
+  if (response.status === 403) {
+    const e = new Error("restricted");
+    (e as Error & { code: string }).code = "restricted";
+    throw e;
+  }
+  if (error) throw new Error("Failed to submit idea");
+  return data;
+}
+
+export async function reactToIdea(
+  ideaId: string,
+  reaction: "clap" | "star" | "lightbulb"
+) {
+  const { error } = await apiClient.POST("/api/ideas/{id}/react", {
+    params: { path: { id: ideaId } },
+    body: { reaction },
+  });
+  if (error) throw new Error("Failed to react");
+}
+
+export async function remixIdea(ideaId: string) {
+  const { data, error, response } = await apiClient.POST(
+    "/api/ideas/{id}/remix",
+    { params: { path: { id: ideaId } } }
+  );
+  if (response.status === 403) {
+    const e = new Error("restricted");
+    (e as Error & { code: string }).code = "restricted";
+    throw e;
+  }
+  if (error) throw new Error("Failed to remix");
+  return data;
+}
+
+/** PATCH /api/projects/{id}/visibility. Throws with code 'restricted' on 403. */
+export async function updateVisibility(
+  projectId: string,
+  visibility: "private" | "class" | "public"
+) {
+  const { data, error, response } = await apiClient.PATCH(
+    "/api/projects/{id}/visibility",
+    {
+      params: { path: { id: projectId } },
+      body: { visibility },
+    }
+  );
+  if (response.status === 403) {
+    const e = new Error("restricted");
+    (e as Error & { code: string }).code = "restricted";
+    throw e;
+  }
+  if (error) throw new Error("Failed to update visibility");
+  return data;
+}

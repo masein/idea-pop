@@ -14,6 +14,7 @@ import StepSkill from '@/components/challenge/StepSkill';
 import StepSketch from '@/components/challenge/StepSketch';
 import StepBuild from '@/components/challenge/StepBuild';
 import StepCelebrate from '@/components/challenge/StepCelebrate';
+import IdeasWallTab from '@/components/challenge/IdeasWallTab';
 import XpBurst from '@/components/explore/XpBurst';
 import type { components } from '@/lib/api/schema';
 
@@ -22,6 +23,7 @@ type ChallengeAttempt = components['schemas']['ChallengeAttempt'];
 type XpAward = components['schemas']['XpAwardResponse'];
 
 type StepNum = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+type ActiveTab = 'mission' | 'wall';
 
 const STEP_NAMES: Record<StepNum, string> = {
   1: 'Brief',
@@ -38,6 +40,10 @@ function isStepNum(n: number): n is StepNum {
   return n >= 1 && n <= 8;
 }
 
+function wallStorageKey(challengeId: string) {
+  return `wallSubmitted_${challengeId}`;
+}
+
 export default function ChallengePage() {
   const params = useParams<{ id: string }>();
   const ageMode = useAgeMode();
@@ -48,10 +54,12 @@ export default function ChallengePage() {
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
 
+  const [activeTab, setActiveTab] = useState<ActiveTab>('mission');
   const [currentStep, setCurrentStep] = useState<StepNum>(1);
   const [reachedSteps, setReachedSteps] = useState<Set<number>>(new Set([1]));
   const [ideaPath, setIdeaPath] = useState<'yes' | 'no' | null>(null);
   const [sketchProjectId, setSketchProjectId] = useState<string | null>(null);
+  const [wallUnlocked, setWallUnlocked] = useState(false);
 
   // Load challenge data
   useEffect(() => {
@@ -59,6 +67,13 @@ export default function ChallengePage() {
       .then((c) => setChallenge(c as ChallengeDetail))
       .catch(() => setFetchError('Could not load this mission. Please try again.'))
       .finally(() => setLoading(false));
+  }, [params.id]);
+
+  // Restore wall-unlocked state from localStorage
+  useEffect(() => {
+    if (!params.id) return;
+    const stored = localStorage.getItem(wallStorageKey(params.id));
+    if (stored === 'true') setWallUnlocked(true);
   }, [params.id]);
 
   // Start attempt once challenge is loaded (once)
@@ -91,6 +106,7 @@ export default function ChallengePage() {
         next.add(step);
         return next;
       });
+      setActiveTab('mission');
       window.scrollTo({ top: 0, behavior: 'smooth' });
     },
     [attempt, show],
@@ -113,6 +129,13 @@ export default function ChallengePage() {
     setIdeaPath('no');
     goToStep(3);
   }, [goToStep]);
+
+  function handleWallSubmitted() {
+    setWallUnlocked(true);
+    if (params.id) {
+      localStorage.setItem(wallStorageKey(params.id), 'true');
+    }
+  }
 
   if (loading) {
     return (
@@ -145,85 +168,137 @@ export default function ChallengePage() {
         ideaPath={ideaPath}
       />
 
-      <div className="max-w-2xl mx-auto px-4 pt-4 pb-24">
-        {currentStep === 1 && (
-          <StepBrief {...sharedProps} onNext={() => goToStep(2)} />
-        )}
+      {/* Mission / Ideas Wall tabs */}
+      <div className="max-w-2xl mx-auto px-4 pt-4">
+        <div className="flex gap-0 rounded-card overflow-hidden border border-ink/10 mb-4" role="tablist">
+          <button
+            role="tab"
+            aria-selected={activeTab === 'mission'}
+            data-testid="tab-mission"
+            onClick={() => setActiveTab('mission')}
+            className={`flex-1 py-2.5 font-display text-sm transition-colors ${
+              activeTab === 'mission'
+                ? 'bg-challenge text-white'
+                : 'bg-white text-ink/60 hover:bg-tint-blue'
+            }`}
+          >
+            🚀 Mission
+          </button>
+          <button
+            role="tab"
+            aria-selected={activeTab === 'wall'}
+            data-testid="tab-wall"
+            onClick={() => setActiveTab('wall')}
+            className={`flex-1 py-2.5 font-display text-sm transition-colors ${
+              activeTab === 'wall'
+                ? 'bg-challenge text-white'
+                : 'bg-white text-ink/60 hover:bg-tint-blue'
+            }`}
+          >
+            💡 Ideas Wall
+          </button>
+        </div>
+      </div>
 
-        {currentStep === 2 && (
-          <StepIdeaFork
-            {...sharedProps}
-            onYes={handleIdeaYes}
-            onNo={handleIdeaNo}
-            onBack={() => goToStep(1)}
-          />
-        )}
+      {/* Mission tab content */}
+      {activeTab === 'mission' && (
+        <div className="max-w-2xl mx-auto px-4 pb-24">
+          {currentStep === 1 && (
+            <StepBrief {...sharedProps} onNext={() => goToStep(2)} />
+          )}
 
-        {currentStep === 3 && (
-          <StepNatureClues
-            {...sharedProps}
-            onNext={() => goToStep(4)}
-            onBack={() => goToStep(2)}
-          />
-        )}
+          {currentStep === 2 && (
+            <StepIdeaFork
+              {...sharedProps}
+              onYes={handleIdeaYes}
+              onNo={handleIdeaNo}
+              onBack={() => goToStep(1)}
+            />
+          )}
 
-        {currentStep === 4 && (
-          <StepDesignSecret
-            {...sharedProps}
-            onNext={() => goToStep(5)}
-            onBack={() => goToStep(3)}
-          />
-        )}
+          {currentStep === 3 && (
+            <StepNatureClues
+              {...sharedProps}
+              onNext={() => goToStep(4)}
+              onBack={() => goToStep(2)}
+            />
+          )}
 
-        {currentStep === 5 && (
-          <StepSkill
-            {...sharedProps}
-            onNext={() => goToStep(6)}
-            onBack={() => goToStep(4)}
-          />
-        )}
+          {currentStep === 4 && (
+            <StepDesignSecret
+              {...sharedProps}
+              onNext={() => goToStep(5)}
+              onBack={() => goToStep(3)}
+            />
+          )}
 
-        {currentStep === 6 && (
-          <StepSketch
-            {...sharedProps}
-            onNext={(projectId) => {
-              if (projectId) setSketchProjectId(projectId);
-              goToStep(7);
-            }}
-            onBack={() => goToStep(ideaPath === 'yes' ? 2 : 5)}
-          />
-        )}
+          {currentStep === 5 && (
+            <StepSkill
+              {...sharedProps}
+              onNext={() => goToStep(6)}
+              onBack={() => goToStep(4)}
+            />
+          )}
 
-        {currentStep === 7 && (
-          <StepBuild
-            {...sharedProps}
-            sketchProjectId={sketchProjectId}
-            onNext={() => {
-              // Show completion XP burst before navigating to step 8
-              show({
-                xp_earned: challenge.completion_xp,
-                xp_total: 0,
-                level: 1,
-                rank: 'Explorer',
-                is_new: false,
-                cycle_bonus_earned: false,
-              });
+          {currentStep === 6 && (
+            <StepSketch
+              {...sharedProps}
+              onNext={(projectId) => {
+                if (projectId) setSketchProjectId(projectId);
+                goToStep(7);
+              }}
+              onBack={() => goToStep(ideaPath === 'yes' ? 2 : 5)}
+            />
+          )}
+
+          {currentStep === 7 && (
+            <StepBuild
+              {...sharedProps}
+              sketchProjectId={sketchProjectId}
+              onNext={() => {
+                show({
+                  xp_earned: challenge.completion_xp,
+                  xp_total: 0,
+                  level: 1,
+                  rank: 'Explorer',
+                  is_new: false,
+                  cycle_bonus_earned: false,
+                });
+                goToStep(8);
+              }}
+              onBack={() => goToStep(6)}
+            />
+          )}
+
+          {currentStep === 8 && (
+            <StepCelebrate
+              {...sharedProps}
+              completionXp={challenge.completion_xp}
+              sketchProjectId={sketchProjectId}
+              wallAlreadySubmitted={wallUnlocked}
+              onWallSubmitted={handleWallSubmitted}
+              onRestart={() => {
+                window.location.href = '/challenges';
+              }}
+            />
+          )}
+        </div>
+      )}
+
+      {/* Ideas Wall tab content */}
+      {activeTab === 'wall' && (
+        <div className="max-w-2xl mx-auto pb-24">
+          <IdeasWallTab
+            challengeId={challenge.id}
+            ageMode={ageMode}
+            wallUnlocked={wallUnlocked}
+            onWriteMyIdea={() => {
+              setActiveTab('mission');
               goToStep(8);
             }}
-            onBack={() => goToStep(6)}
           />
-        )}
-
-        {currentStep === 8 && (
-          <StepCelebrate
-            {...sharedProps}
-            completionXp={challenge.completion_xp}
-            onRestart={() => {
-              window.location.href = '/challenges';
-            }}
-          />
-        )}
-      </div>
+        </div>
+      )}
 
       {visible && award && (
         <XpBurst
@@ -235,4 +310,3 @@ export default function ChallengePage() {
     </div>
   );
 }
-

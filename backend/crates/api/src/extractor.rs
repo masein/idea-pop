@@ -7,6 +7,7 @@ use axum::{
     response::Response,
 };
 use idea_pop_domain::{DomainError, Role, TokenClaims};
+use uuid::Uuid;
 
 use crate::{error::problem, state::AppState};
 
@@ -48,6 +49,45 @@ impl FromRequestParts<AppState> for AuthToken {
             })?;
 
         Ok(AuthToken(claims))
+    }
+}
+
+// ── Kid-only extractor ────────────────────────────────────────────────────────
+
+/// Extractor that requires a kid-scoped token and extracts the child's UUID.
+/// Returns 403 for adult and admin tokens. All progress routes use this.
+pub struct KidAuth {
+    pub child_id: Uuid,
+    pub claims: TokenClaims,
+}
+
+#[async_trait]
+impl FromRequestParts<AppState> for KidAuth {
+    type Rejection = Response;
+
+    async fn from_request_parts(
+        parts: &mut Parts,
+        state: &AppState,
+    ) -> Result<Self, Self::Rejection> {
+        let AuthToken(claims) = AuthToken::from_request_parts(parts, state).await?;
+
+        if claims.role != Role::Kid {
+            return Err(problem(
+                StatusCode::FORBIDDEN,
+                "kid-token-required",
+                "This route requires a kid-scoped token",
+            ));
+        }
+
+        let child_id = claims.child_id.ok_or_else(|| {
+            problem(
+                StatusCode::FORBIDDEN,
+                "invalid-kid-token",
+                "Kid token missing child_id claim",
+            )
+        })?;
+
+        Ok(KidAuth { child_id, claims })
     }
 }
 

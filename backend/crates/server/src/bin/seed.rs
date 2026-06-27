@@ -24,8 +24,54 @@ async fn main() -> anyhow::Result<()> {
     seed_explore_videos(&pool).await?;
     seed_quick_makes(&pool).await?;
     seed_challenges(&pool).await?;
+    seed_badges(&pool).await?;
 
     println!("seed complete");
+    Ok(())
+}
+
+async fn seed_badges(pool: &PgPool) -> anyhow::Result<()> {
+    let badges: &[(&str, &str, &str, serde_json::Value)] = &[
+        (
+            "nature-scout",
+            "Nature Scout",
+            "Watch 3 Explore videos",
+            serde_json::json!({"type": "video_count", "min": 3}),
+        ),
+        (
+            "bridge-builder",
+            "Bridge Builder",
+            "Complete your first Challenge",
+            serde_json::json!({"type": "challenge_count", "min": 1}),
+        ),
+        (
+            "slime-master",
+            "Slime Master",
+            "Complete 3 Lessons",
+            serde_json::json!({"type": "lesson_count", "min": 3}),
+        ),
+        (
+            "cycle-starter",
+            "Cycle Starter",
+            "Complete a Creative Cycle (Explore + Learn + Solve in one week)",
+            serde_json::json!({"type": "cycle_count", "min": 1}),
+        ),
+    ];
+
+    for (slug, name, description, criteria) in badges {
+        sqlx::query(
+            "INSERT INTO badges (slug, name, description, criteria)
+             VALUES ($1, $2, $3, $4)
+             ON CONFLICT (slug) DO NOTHING",
+        )
+        .bind(slug)
+        .bind(name)
+        .bind(description)
+        .bind(sqlx::types::Json(criteria))
+        .execute(pool)
+        .await?;
+    }
+    println!("seeded badges");
     Ok(())
 }
 

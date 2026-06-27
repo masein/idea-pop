@@ -51,3 +51,7 @@ path = "tests/content_integration.rs"
 [[test]]
 name = "challenge_integration"
 path = "tests/challenge_integration.rs"
+
+[[test]]
+name = "progress_integration"
+path = "tests/progress_integration.rs"

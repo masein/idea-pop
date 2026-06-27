@@ -7,11 +7,12 @@
 
 use std::{net::SocketAddr, sync::Arc};
 
-use api::{create_auth_rate_limiter, router, AppState};
+use api::{create_auth_rate_limiter, router, AppState, GamificationRepos};
 use idea_pop_infra::{
     Argon2Hasher, JwtTokenIssuer, LettreEmailSender, NullConsentEmailSender, NullEmailSender,
-    SmtpConsentEmailSender, SqlxAccountRepo, SqlxChallengeRepo, SqlxChildRepo, SqlxClassRepo,
-    SqlxConsentRepo, SqlxExploreRepo, SqlxLibraryRepo, SystemClock,
+    SmtpConsentEmailSender, SqlxAccountRepo, SqlxAnalyticsSink, SqlxBadgeRepo, SqlxChallengeRepo,
+    SqlxChildRepo, SqlxClassRepo, SqlxConsentRepo, SqlxExploreRepo, SqlxLibraryRepo,
+    SqlxProgressRepo, SqlxXpRepo, SystemClock,
 };
 
 #[tokio::main]
@@ -87,7 +88,13 @@ async fn main() -> anyhow::Result<()> {
         consent_email_sender,
         Arc::new(SqlxExploreRepo::new(pool.clone())),
         Arc::new(SqlxLibraryRepo::new(pool.clone())),
-        Arc::new(SqlxChallengeRepo::new(pool)),
+        Arc::new(SqlxChallengeRepo::new(pool.clone())),
+        GamificationRepos {
+            xp: Arc::new(SqlxXpRepo::new(pool.clone())),
+            progress: Arc::new(SqlxProgressRepo::new(pool.clone())),
+            badges: Arc::new(SqlxBadgeRepo::new(pool.clone())),
+            analytics: Arc::new(SqlxAnalyticsSink::new(pool)),
+        },
     );
 
     let auth_rpm: u32 = std::env::var("AUTH_RATE_LIMIT_RPM")

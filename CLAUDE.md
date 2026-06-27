@@ -24,7 +24,8 @@ packages/api-types, .github/workflows, docs/.
 - Everything a child creates is PRIVATE by default. class/public visibility requires a recorded human approval.
 - Children start RESTRICTED. Sharing, social, and extra data collection are disabled until a parent grants
   consent (email verification). Enforce via consent-gating middleware.
-- Kid tokens are scoped: no pricing, billing, other children, or free chat. There is no user-to-user chat.
+- Kid tokens are scoped: NO billing/transactions, no other children, no free chat. Kids MAY view pricing/plans,
+  but cannot check out — tapping Upgrade hands off to the parent, who completes payment on their own session.
 - Collect from children only: nickname, avatar, birth year. Never full name, address, phone, school, face photo.
 - Project photos are "project, not face". AI-generated content is flagged `ai_generated` and labeled in the UI.
 
@@ -33,7 +34,12 @@ packages/api-types, .github/workflows, docs/.
 - Section colors (chameleon nav): Explore green, Library #F2994A, Challenge #2D9CDB, Pricing purple.
 - Pastel page tints: #F3FFC2 lime, #FBF7D5 cream, #C0F0FF blue, #F1D8FB lavender, #F9DED7 blush.
 - One button system (primary/secondary/tertiary) with default/hover/focus/pressed/disabled. One input anatomy.
-- One mascot: "Poppy". One icon set. Tablet-first, responsive. Target WCAG AA.
+- One mascot: the PENGUIN — "Ask Me" in the app, "Hi, I'm Idea Pop!" on marketing. ("Poppy" is only the
+  TTS narrator-voice identity from the Voice Bible, not a visual character.) One icon set. Tablet-first, WCAG AA.
+- Edition-2 UI notes: app shell = persistent LEFT SIDEBAR (My profile · Exploring · Library · Challenges) +
+  content area in per-section tint + top-right IDEA POP logo (tree-in-a-bulb badge) + a floating "Ask Me"
+  penguin helper (bottom-right) + a bottom "Themes" bar (cosmetic themes unlock at Lv 4). Explore content
+  grouped by "superpower" categories: Masters of Disguise / Soft Engineers / Speed Champions / Master Builders.
 
 ## Gamification (canonical)
 - XP: Explore +5/video, Learn +10/lesson, Solve +20/challenge. Levels derived from an append-only xp_events ledger.

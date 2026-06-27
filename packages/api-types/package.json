@@ -1,0 +1,13 @@
+{
+  "name": "@idea-pop/api-types",
+  "version": "0.1.0",
+  "private": true,
+  "types": "./src/schema.d.ts",
+  "scripts": {
+    "generate": "openapi-typescript http://localhost:8080/api-docs/openapi.json -o src/schema.d.ts"
+  },
+  "devDependencies": {
+    "openapi-typescript": "^7.4.4",
+    "typescript": "^5.5.3"
+  }
+}

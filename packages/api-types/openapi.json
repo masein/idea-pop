@@ -1,0 +1,277 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Idea Pop API",
+    "version": "0.1.0",
+    "description": "Backend API for the Idea Pop learning platform"
+  },
+  "paths": {
+    "/api/auth/register": {
+      "post": {
+        "operationId": "authRegister",
+        "summary": "Register a new user",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/AuthRegisterRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Registered successfully" },
+          "422": { "description": "Validation error" }
+        }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "operationId": "authLogin",
+        "summary": "Login and obtain tokens",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/AuthLoginRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AuthLoginResponse" }
+              }
+            }
+          },
+          "401": { "description": "Invalid credentials" }
+        }
+      }
+    },
+    "/api/auth/refresh": {
+      "post": {
+        "operationId": "authRefresh",
+        "summary": "Refresh access token",
+        "responses": {
+          "200": {
+            "description": "Token refreshed",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AuthLoginResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "operationId": "authLogout",
+        "summary": "Invalidate refresh token",
+        "responses": {
+          "204": { "description": "Logged out" }
+        }
+      }
+    },
+    "/api/auth/verify-email": {
+      "post": {
+        "operationId": "authVerifyEmail",
+        "summary": "Verify email with token",
+        "responses": {
+          "200": { "description": "Email verified" }
+        }
+      }
+    },
+    "/api/children": {
+      "post": {
+        "operationId": "createChild",
+        "summary": "Create a child profile",
+        "responses": {
+          "201": { "description": "Child created" }
+        }
+      }
+    },
+    "/api/children/{id}": {
+      "get": {
+        "operationId": "getChild",
+        "summary": "Get a child profile",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Child profile" }
+        }
+      }
+    },
+    "/api/progress/summary": {
+      "get": {
+        "operationId": "getProgressSummary",
+        "summary": "Get XP/level/rank summary",
+        "responses": {
+          "200": {
+            "description": "Progress summary",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ProgressSummary" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/progress/xp": {
+      "get": {
+        "operationId": "getProgressXp",
+        "summary": "Get XP event ledger",
+        "responses": {
+          "200": { "description": "XP events list" }
+        }
+      }
+    },
+    "/api/progress/badges": {
+      "get": {
+        "operationId": "getProgressBadges",
+        "summary": "Get earned badges",
+        "responses": {
+          "200": { "description": "Badges list" }
+        }
+      }
+    },
+    "/billing/checkout": {
+      "post": {
+        "operationId": "billingCheckout",
+        "summary": "Create Stripe checkout session",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CheckoutRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Checkout URL",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CheckoutResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/billing/portal": {
+      "post": {
+        "operationId": "billingPortal",
+        "summary": "Create Stripe customer portal session",
+        "responses": {
+          "200": {
+            "description": "Portal URL",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CheckoutResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/billing/subscription": {
+      "get": {
+        "operationId": "getSubscription",
+        "summary": "Get current subscription",
+        "responses": {
+          "200": {
+            "description": "Subscription details",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SubscriptionResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/billing/premium-check": {
+      "get": {
+        "operationId": "getPremiumCheck",
+        "summary": "Quick premium status check",
+        "responses": {
+          "200": {
+            "description": "Premium status",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SubscriptionResponse" }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AuthLoginRequest": {
+        "type": "object",
+        "required": ["email", "password"],
+        "properties": {
+          "email": { "type": "string", "format": "email" },
+          "password": { "type": "string" }
+        }
+      },
+      "AuthLoginResponse": {
+        "type": "object",
+        "required": ["access_token", "token_type", "expires_in"],
+        "properties": {
+          "access_token": { "type": "string" },
+          "token_type": { "type": "string" },
+          "expires_in": { "type": "integer" }
+        }
+      },
+      "AuthRegisterRequest": {
+        "type": "object",
+        "required": ["email", "password", "role"],
+        "properties": {
+          "email": { "type": "string", "format": "email" },
+          "password": { "type": "string" },
+          "role": { "type": "string", "enum": ["parent", "reviewer"] }
+        }
+      },
+      "SubscriptionResponse": {
+        "type": "object",
+        "required": ["status", "is_premium"],
+        "properties": {
+          "status": { "type": "string" },
+          "plan": { "type": "string", "nullable": true },
+          "current_period_end": { "type": "string", "format": "date-time", "nullable": true },
+          "is_premium": { "type": "boolean" }
+        }
+      },
+      "CheckoutRequest": {
+        "type": "object",
+        "required": ["plan"],
+        "properties": {
+          "plan": { "type": "string", "enum": ["monthly", "annual"] }
+        }
+      },
+      "CheckoutResponse": {
+        "type": "object",
+        "required": ["url"],
+        "properties": {
+          "url": { "type": "string", "format": "uri" }
+        }
+      },
+      "ProgressSummary": {
+        "type": "object",
+        "required": ["level", "total_xp", "rank"],
+        "properties": {
+          "level": { "type": "integer" },
+          "total_xp": { "type": "integer" },
+          "rank": { "type": "string" }
+        }
+      }
+    }
+  }
+}

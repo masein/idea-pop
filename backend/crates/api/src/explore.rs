@@ -6,7 +6,7 @@ use axum::{
     Json,
 };
 use chrono::{DateTime, Utc};
-use idea_pop_domain::{AgeMode, DomainError, ExploreFilter, Habitat};
+use idea_pop_domain::{AgeMode, DomainError, ExploreFilter, SuperpowerCategory};
 use serde::{Deserialize, Serialize};
 use utoipa::{IntoParams, ToSchema};
 use uuid::Uuid;
@@ -20,7 +20,9 @@ pub struct ExploreVideoResponse {
     pub id: Uuid,
     pub title: String,
     pub slug: String,
-    pub habitat: String,
+    /// Edition-2 superpower grouping: masters_of_disguise | soft_engineers |
+    /// speed_champions | master_builders
+    pub superpower_category: String,
     pub taxonomy: String,
     pub video_url: String,
     pub duration_s: i32,
@@ -43,8 +45,9 @@ pub struct ExplorePageResponse {
 
 #[derive(Deserialize, IntoParams)]
 pub struct ExploreQuery {
-    /// Filter by habitat slug: ocean | jungle | desert | sky
-    pub habitat: Option<String>,
+    /// Filter by superpower category slug:
+    /// masters_of_disguise | soft_engineers | speed_champions | master_builders
+    pub superpower_category: Option<String>,
     /// Filter by age_mode slug: young | older
     pub age_mode: Option<String>,
     #[serde(default = "default_page")]
@@ -75,12 +78,13 @@ pub async fn list_explore(
     State(state): State<AppState>,
     Query(q): Query<ExploreQuery>,
 ) -> Result<Json<ExplorePageResponse>, ApiError> {
-    let habitat = q
-        .habitat
+    let superpower_category = q
+        .superpower_category
         .as_deref()
         .map(|s| {
-            Habitat::from_slug(s)
-                .ok_or_else(|| DomainError::Validation(format!("unknown habitat '{s}'")))
+            SuperpowerCategory::from_slug(s).ok_or_else(|| {
+                DomainError::Validation(format!("unknown superpower_category '{s}'"))
+            })
         })
         .transpose()?;
 
@@ -94,7 +98,7 @@ pub async fn list_explore(
         .transpose()?;
 
     let filter = ExploreFilter {
-        habitat,
+        superpower_category,
         age_mode,
         page: q.page,
         per_page: q.per_page,
@@ -137,7 +141,7 @@ fn video_to_dto(v: idea_pop_domain::ExploreVideo) -> ExploreVideoResponse {
         id: v.id,
         title: v.title,
         slug: v.slug,
-        habitat: v.habitat.as_str().to_owned(),
+        superpower_category: v.superpower_category.as_str().to_owned(),
         taxonomy: v.taxonomy,
         video_url: v.video_url,
         duration_s: v.duration_s,

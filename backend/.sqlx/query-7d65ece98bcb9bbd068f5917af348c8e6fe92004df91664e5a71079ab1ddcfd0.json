@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT id, title, slug, habitat, taxonomy, video_url, duration_s,\n                      design_secret, sticker_id, xp_reward, ai_generated, age_modes, created_at\n               FROM explore_videos WHERE id = $1",
+  "query": "SELECT id, title, slug, superpower_category, taxonomy, video_url, duration_s,\n                      design_secret, sticker_id, xp_reward, ai_generated, age_modes, created_at\n               FROM explore_videos\n               WHERE ($1::text IS NULL OR superpower_category = $1)\n                 AND ($2::text IS NULL OR $2 = ANY(age_modes))\n               ORDER BY created_at DESC\n               LIMIT $3 OFFSET $4",
   "describe": {
     "columns": [
       {
@@ -38,12 +38,12 @@
       },
       {
         "ordinal": 3,
-        "name": "habitat",
+        "name": "superpower_category",
         "type_info": "Text",
         "origin": {
           "Table": {
             "table": "explore_videos",
-            "name": "habitat"
+            "name": "superpower_category"
           }
         }
       },
@@ -149,7 +149,10 @@
     ],
     "parameters": {
       "Left": [
-        "Uuid"
+        "Text",
+        "Text",
+        "Int8",
+        "Int8"
       ]
     },
     "nullable": [
@@ -168,5 +171,5 @@
       false
     ]
   },
-  "hash": "0a93fe9444a638d8e771ec90616edb984637073221f7a176ed295a0d53ba58ee"
+  "hash": "7d65ece98bcb9bbd068f5917af348c8e6fe92004df91664e5a71079ab1ddcfd0"
 }

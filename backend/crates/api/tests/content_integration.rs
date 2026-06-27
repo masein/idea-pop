@@ -17,8 +17,8 @@ use axum::{
     http::{header, Method, Request, StatusCode},
 };
 use idea_pop_api::{
-    null_gamification, null_portfolio, router, AppState, NullChallengeRepo, NullExploreRepo,
-    NullLibraryRepo,
+    null_billing, null_gamification, null_portfolio, router, AppState, NullChallengeRepo,
+    NullExploreRepo, NullLibraryRepo,
 };
 use idea_pop_infra::{
     Argon2Hasher, JwtTokenIssuer, NullConsentEmailSender, NullEmailSender, SqlxAccountRepo,
@@ -59,6 +59,7 @@ fn content_state(pool: PgPool) -> AppState {
         Arc::new(NullChallengeRepo),
         null_gamification(),
         null_portfolio(),
+        null_billing(),
     )
 }
 
@@ -329,6 +330,7 @@ async fn explore_requires_auth() {
             Arc::new(NullChallengeRepo),
             null_gamification(),
             null_portfolio(),
+            null_billing(),
         ),
         None,
     );

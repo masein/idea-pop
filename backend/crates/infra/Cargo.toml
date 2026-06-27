@@ -20,6 +20,8 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 sha2 = "0.10"
 hex = "0.4"
+hmac = { workspace = true }
+reqwest = { workspace = true }
 tokio = { workspace = true }
 aws-sdk-s3 = { workspace = true }
 aws-config = { workspace = true }

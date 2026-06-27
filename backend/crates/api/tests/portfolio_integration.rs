@@ -19,8 +19,8 @@ use axum::{
     http::{Method, Request, StatusCode},
 };
 use idea_pop_api::{
-    null_gamification, router, AppState, NullExploreRepo, NullLibraryRepo, NullPhotoStore,
-    PortfolioRepos,
+    null_billing, null_gamification, router, AppState, NullExploreRepo, NullLibraryRepo,
+    NullPhotoStore, PortfolioRepos,
 };
 use idea_pop_domain::{Role, TokenIssuer};
 use idea_pop_infra::{
@@ -75,6 +75,7 @@ fn portfolio_state(pool: PgPool) -> AppState {
         Arc::new(SqlxChallengeRepo::new(pool.clone())),
         null_gamification(),
         portfolio,
+        null_billing(),
     )
 }
 

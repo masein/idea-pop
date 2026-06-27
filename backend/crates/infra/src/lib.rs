@@ -3,6 +3,7 @@
 #![forbid(unsafe_code)]
 
 pub mod account_repo;
+pub mod billing_repo;
 pub mod challenge_repo;
 pub mod child_repo;
 pub mod clock;
@@ -14,6 +15,9 @@ pub mod progress_repo;
 pub mod token;
 
 pub use account_repo::SqlxAccountRepo;
+pub use billing_repo::{
+    MockPaymentGateway, SqlxSubscriptionRepo, SqlxWebhookEventLog, StripePaymentGateway,
+};
 pub use challenge_repo::SqlxChallengeRepo;
 pub use child_repo::{
     NullConsentEmailSender, SmtpConsentEmailSender, SqlxChildRepo, SqlxClassRepo, SqlxConsentRepo,

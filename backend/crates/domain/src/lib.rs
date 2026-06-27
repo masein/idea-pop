@@ -7,6 +7,7 @@
 
 pub mod account;
 pub mod auth_service;
+pub mod billing;
 pub mod challenge;
 pub mod child;
 pub mod consent_service;
@@ -17,6 +18,10 @@ pub mod progress;
 
 pub use account::{Account, RefreshSession, Role, TokenClaims, TokenPair};
 pub use auth_service::AuthService;
+pub use billing::{
+    apply_webhook_event, is_premium, CheckoutResult, Plan, Subscription, SubscriptionStatus,
+    WebhookEventKind, GRACE_PERIOD_HOURS,
+};
 pub use challenge::{
     AgeTier, AgeTierVariant, Challenge, ChallengeFilter, ChallengeStep, Inspiration, Tool, ToolKind,
 };
@@ -37,8 +42,8 @@ pub use portfolio::{
 pub use ports::{
     AccountRepo, AnalyticsSink, BadgeRepo, ChallengeRepo, ChildRepo, ClassRepo, Clock,
     ConsentEmailSender, ConsentRepo, EmailSender, ExploreRepo, IdeaRepo, LibraryRepo,
-    ModerationRepo, PasswordHasher, PhotoStore, ProgressRepo, ProjectRepo, ReportRepo, TokenIssuer,
-    XpRepo,
+    ModerationRepo, PasswordHasher, PaymentGateway, PhotoStore, ProgressRepo, ProjectRepo,
+    ReportRepo, SubscriptionRepo, TokenIssuer, WebhookEventLog, XpRepo,
 };
 pub use progress::{
     award_cycle_bonus, award_explore, award_learn, award_solve, compute_snapshot,

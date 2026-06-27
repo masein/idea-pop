@@ -8,8 +8,8 @@ use sqlx::PgPool;
 use idea_pop_domain::{
     AccountRepo, AnalyticsSink, AuthService, BadgeRepo, ChallengeRepo, ChildRepo, ClassRepo, Clock,
     ConsentEmailSender, ConsentRepo, ConsentService, EmailSender, ExploreRepo, IdeaRepo,
-    LibraryRepo, ModerationRepo, PasswordHasher, PhotoStore, ProgressRepo, ProjectRepo, ReportRepo,
-    TokenIssuer, XpRepo,
+    LibraryRepo, ModerationRepo, PasswordHasher, PaymentGateway, PhotoStore, ProgressRepo,
+    ProjectRepo, ReportRepo, SubscriptionRepo, TokenIssuer, WebhookEventLog, XpRepo,
 };
 
 pub type AuthRateLimiter = DefaultKeyedRateLimiter<std::net::IpAddr>;
@@ -33,6 +33,14 @@ pub struct PortfolioRepos {
     pub reports: Arc<dyn ReportRepo>,
 }
 
+/// Groups subscription repo, webhook log, and payment gateway.
+#[derive(Clone)]
+pub struct BillingRepos {
+    pub subscriptions: Arc<dyn SubscriptionRepo>,
+    pub webhook_log: Arc<dyn WebhookEventLog>,
+    pub gateway: Arc<dyn PaymentGateway>,
+}
+
 #[derive(Clone)]
 pub struct AppState {
     pub db: PgPool,
@@ -44,6 +52,7 @@ pub struct AppState {
     pub challenge: Arc<dyn ChallengeRepo>,
     pub gamification: GamificationRepos,
     pub portfolio: PortfolioRepos,
+    pub billing: BillingRepos,
 }
 
 impl AppState {
@@ -64,6 +73,7 @@ impl AppState {
         challenge: Arc<dyn ChallengeRepo>,
         gamification: GamificationRepos,
         portfolio: PortfolioRepos,
+        billing: BillingRepos,
     ) -> Self {
         let auth = Arc::new(AuthService::new(
             Arc::clone(&repo),
@@ -90,6 +100,7 @@ impl AppState {
             challenge,
             gamification,
             portfolio,
+            billing,
         }
     }
 }

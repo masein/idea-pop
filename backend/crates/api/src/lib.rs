@@ -4,6 +4,7 @@
 
 mod error;
 pub mod extractor;
+pub mod progress;
 pub mod state;
 
 mod auth;
@@ -16,7 +17,7 @@ pub mod library;
 mod me;
 
 pub use error::{ApiError, ProblemDetail};
-pub use state::{create_auth_rate_limiter, AppState, AuthRateLimiter};
+pub use state::{create_auth_rate_limiter, AppState, AuthRateLimiter, GamificationRepos};
 
 use std::{net::IpAddr, sync::Arc, time::Duration};
 
@@ -54,6 +55,10 @@ use crate::{
         QuickMakeResponse, StudioCountResponse,
     },
     me::MeResponse,
+    progress::{
+        AdvanceStepRequest, AdvanceStepResponse, BadgeResponse, LessonCompleteRequest,
+        MedalsResponse, ProgressResponse, StartAttemptResponse, VideoViewRequest, XpAwardResponse,
+    },
 };
 
 // ── Request-ID ────────────────────────────────────────────────────────────────
@@ -166,6 +171,9 @@ pub struct CreateHealthLogRequest {
         library::list_studios, library::list_quick_makes,
         library::get_course, library::get_creator,
         challenges::list_challenges, challenges::get_challenge,
+        progress::post_video_view, progress::post_lesson_complete,
+        progress::start_attempt, progress::advance_step,
+        progress::get_me_progress,
     ),
     components(schemas(
         Health, HealthLogEntry, CreateHealthLogRequest, ProblemDetail,
@@ -177,6 +185,9 @@ pub struct CreateHealthLogRequest {
         StudioCountResponse, QuickMakeResponse, QuickMakePageResponse,
         LessonResponse, CourseDetailResponse, CreatorResponse,
         ChallengeResponse, ChallengePageResponse, AgeTierVariantResponse, ToolResponse,
+        VideoViewRequest, LessonCompleteRequest, XpAwardResponse,
+        StartAttemptResponse, AdvanceStepRequest, AdvanceStepResponse,
+        ProgressResponse, MedalsResponse, BadgeResponse,
     )),
     tags(
         (name = "ops",       description = "Operational endpoints"),
@@ -189,6 +200,7 @@ pub struct CreateHealthLogRequest {
         (name = "explore",     description = "Explore section — nature videos"),
         (name = "library",     description = "Library section — courses, quick-makes, creators"),
         (name = "challenges",  description = "Challenge engine — data-driven 8-step missions"),
+        (name = "progress",    description = "Progress & gamification — kid-owned XP and badges"),
     ),
     info(
         title = "Idea Pop API",
@@ -371,6 +383,18 @@ pub fn router(state: AppState, rate_limiter: Option<Arc<AuthRateLimiter>>) -> Ro
         // Challenges (any authenticated principal; restricted kids CAN read)
         .route("/challenges", get(challenges::list_challenges))
         .route("/challenges/:id", get(challenges::get_challenge))
+        // Progress (kid-scoped tokens only — child_id derived from JWT)
+        .route("/progress/video-view", post(progress::post_video_view))
+        .route(
+            "/progress/lesson-complete",
+            post(progress::post_lesson_complete),
+        )
+        .route("/challenges/:id/attempts", post(progress::start_attempt))
+        .route(
+            "/attempts/:id/step",
+            axum::routing::patch(progress::advance_step),
+        )
+        .route("/me/progress", get(progress::get_me_progress))
         .with_state(state)
         .merge(auth_routes)
         .merge(gated_routes)
@@ -390,9 +414,14 @@ use idea_pop_domain::{
         Course, Creator, ExploreFilter, ExploreVideo, Lesson, Page, QuickMake, QuickMakeFilter,
         StudioCount,
     },
-    Account, AccountRepo, ChallengeRepo, ChildProfile, ChildRepo, Class, ClassRepo, Clock,
-    ConsentEmailSender, ConsentRepo, ConsentStatus, EmailSender, ExploreRepo, LibraryRepo,
-    ParentalConsent, PasswordHasher, RefreshSession, TokenClaims, TokenIssuer, TokenPair,
+    progress::{
+        AnalyticsEvent, AttemptStatus, BadgeDefinition, ChallengeAttempt, ChildBadge,
+        CycleActivityResult, XpEvent, XpSourceType,
+    },
+    Account, AccountRepo, AnalyticsSink, BadgeRepo, ChallengeRepo, ChildProfile, ChildRepo, Class,
+    ClassRepo, Clock, ConsentEmailSender, ConsentRepo, ConsentStatus, EmailSender, ExploreRepo,
+    LibraryRepo, ParentalConsent, PasswordHasher, ProgressRepo, RefreshSession, TokenClaims,
+    TokenIssuer, TokenPair, XpRepo,
 };
 
 pub struct NullRepo;
@@ -576,6 +605,115 @@ impl ChallengeRepo for NullChallengeRepo {
     }
 }
 
+pub struct NullXpRepo;
+#[async_trait]
+impl XpRepo for NullXpRepo {
+    async fn has_event(&self, _: Uuid, _: &XpSourceType, _: Uuid) -> Result<bool, DomainError> {
+        Ok(false)
+    }
+    async fn append_event(&self, _: &XpEvent) -> Result<(), DomainError> {
+        Ok(())
+    }
+    async fn list_events(&self, _: Uuid) -> Result<Vec<XpEvent>, DomainError> {
+        Ok(vec![])
+    }
+    async fn upsert_progress(&self, _: Uuid, _: i32, _: u32, _: &str) -> Result<(), DomainError> {
+        Ok(())
+    }
+}
+
+pub struct NullProgressRepo;
+#[async_trait]
+impl ProgressRepo for NullProgressRepo {
+    async fn record_video_view(
+        &self,
+        _: Uuid,
+        _: Uuid,
+        _: DateTime<Utc>,
+    ) -> Result<bool, DomainError> {
+        Ok(true)
+    }
+    async fn count_video_views(&self, _: Uuid) -> Result<u32, DomainError> {
+        Ok(0)
+    }
+    async fn record_lesson_complete(
+        &self,
+        _: Uuid,
+        _: Uuid,
+        _: DateTime<Utc>,
+    ) -> Result<bool, DomainError> {
+        Ok(true)
+    }
+    async fn count_lesson_completions(&self, _: Uuid) -> Result<u32, DomainError> {
+        Ok(0)
+    }
+    async fn create_attempt(&self, _: &ChallengeAttempt) -> Result<(), DomainError> {
+        Ok(())
+    }
+    async fn find_attempt(&self, _: Uuid) -> Result<Option<ChallengeAttempt>, DomainError> {
+        Ok(None)
+    }
+    async fn update_attempt(
+        &self,
+        _: Uuid,
+        _: i16,
+        _: &AttemptStatus,
+        _: Option<DateTime<Utc>>,
+    ) -> Result<(), DomainError> {
+        Ok(())
+    }
+    async fn count_completed_challenges(&self, _: Uuid) -> Result<u32, DomainError> {
+        Ok(0)
+    }
+    async fn has_completed_challenge(&self, _: Uuid, _: Uuid) -> Result<bool, DomainError> {
+        Ok(false)
+    }
+    async fn update_cycle_activity(
+        &self,
+        _: Uuid,
+        _: i32,
+        _: u32,
+        _: &XpSourceType,
+    ) -> Result<CycleActivityResult, DomainError> {
+        Ok(CycleActivityResult::ActivityRecorded)
+    }
+    async fn count_completed_cycles(&self, _: Uuid) -> Result<u32, DomainError> {
+        Ok(0)
+    }
+}
+
+pub struct NullBadgeRepo;
+#[async_trait]
+impl BadgeRepo for NullBadgeRepo {
+    async fn all_definitions(&self) -> Result<Vec<BadgeDefinition>, DomainError> {
+        Ok(vec![])
+    }
+    async fn child_badges(&self, _: Uuid) -> Result<Vec<ChildBadge>, DomainError> {
+        Ok(vec![])
+    }
+    async fn award_badge(&self, _: Uuid, _: Uuid, _: DateTime<Utc>) -> Result<bool, DomainError> {
+        Ok(false)
+    }
+}
+
+pub struct NullAnalyticsSink;
+#[async_trait]
+impl AnalyticsSink for NullAnalyticsSink {
+    async fn emit(&self, _: &AnalyticsEvent) -> Result<(), DomainError> {
+        Ok(())
+    }
+}
+
+/// Convenience: all-null gamification repos for tests that don't exercise progress.
+pub fn null_gamification() -> GamificationRepos {
+    GamificationRepos {
+        xp: Arc::new(NullXpRepo),
+        progress: Arc::new(NullProgressRepo),
+        badges: Arc::new(NullBadgeRepo),
+        analytics: Arc::new(NullAnalyticsSink),
+    }
+}
+
 /// Build a state using only a PgPool + null auth adapters (for Phase 1 tests).
 pub fn null_state(pool: PgPool) -> AppState {
     AppState::new(
@@ -592,5 +730,6 @@ pub fn null_state(pool: PgPool) -> AppState {
         Arc::new(NullExploreRepo),
         Arc::new(NullLibraryRepo),
         Arc::new(NullChallengeRepo),
+        null_gamification(),
     )
 }

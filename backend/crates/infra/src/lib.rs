@@ -9,6 +9,7 @@ pub mod clock;
 pub mod content_repo;
 pub mod email;
 pub mod hasher;
+pub mod progress_repo;
 pub mod token;
 
 pub use account_repo::SqlxAccountRepo;
@@ -21,4 +22,5 @@ pub use content_repo::{SqlxExploreRepo, SqlxLibraryRepo};
 pub use email::{LettreEmailSender, NullEmailSender};
 pub use hasher::Argon2Hasher;
 pub use idea_pop_domain as domain;
+pub use progress_repo::{SqlxAnalyticsSink, SqlxBadgeRepo, SqlxProgressRepo, SqlxXpRepo};
 pub use token::JwtTokenIssuer;

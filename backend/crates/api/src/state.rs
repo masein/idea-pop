@@ -6,12 +6,21 @@ use governor::{DefaultKeyedRateLimiter, Quota, RateLimiter};
 use sqlx::PgPool;
 
 use idea_pop_domain::{
-    AccountRepo, AuthService, ChallengeRepo, ChildRepo, ClassRepo, Clock, ConsentEmailSender,
-    ConsentRepo, ConsentService, EmailSender, ExploreRepo, LibraryRepo, PasswordHasher,
-    TokenIssuer,
+    AccountRepo, AnalyticsSink, AuthService, BadgeRepo, ChallengeRepo, ChildRepo, ClassRepo, Clock,
+    ConsentEmailSender, ConsentRepo, ConsentService, EmailSender, ExploreRepo, LibraryRepo,
+    PasswordHasher, ProgressRepo, TokenIssuer, XpRepo,
 };
 
 pub type AuthRateLimiter = DefaultKeyedRateLimiter<std::net::IpAddr>;
+
+/// Groups the four gamification repos so AppState stays manageable.
+#[derive(Clone)]
+pub struct GamificationRepos {
+    pub xp: Arc<dyn XpRepo>,
+    pub progress: Arc<dyn ProgressRepo>,
+    pub badges: Arc<dyn BadgeRepo>,
+    pub analytics: Arc<dyn AnalyticsSink>,
+}
 
 #[derive(Clone)]
 pub struct AppState {
@@ -22,6 +31,7 @@ pub struct AppState {
     pub explore: Arc<dyn ExploreRepo>,
     pub library: Arc<dyn LibraryRepo>,
     pub challenge: Arc<dyn ChallengeRepo>,
+    pub gamification: GamificationRepos,
 }
 
 impl AppState {
@@ -40,6 +50,7 @@ impl AppState {
         explore: Arc<dyn ExploreRepo>,
         library: Arc<dyn LibraryRepo>,
         challenge: Arc<dyn ChallengeRepo>,
+        gamification: GamificationRepos,
     ) -> Self {
         let auth = Arc::new(AuthService::new(
             Arc::clone(&repo),
@@ -64,6 +75,7 @@ impl AppState {
             explore,
             library,
             challenge,
+            gamification,
         }
     }
 }

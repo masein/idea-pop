@@ -12,6 +12,7 @@ pub mod child;
 pub mod consent_service;
 pub mod content;
 pub mod ports;
+pub mod progress;
 
 pub use account::{Account, RefreshSession, Role, TokenClaims, TokenPair};
 pub use auth_service::AuthService;
@@ -27,8 +28,16 @@ pub use content::{
     QuickMakeFilter, Studio, StudioCount,
 };
 pub use ports::{
-    AccountRepo, ChallengeRepo, ChildRepo, ClassRepo, Clock, ConsentEmailSender, ConsentRepo,
-    EmailSender, ExploreRepo, LibraryRepo, PasswordHasher, TokenIssuer,
+    AccountRepo, AnalyticsSink, BadgeRepo, ChallengeRepo, ChildRepo, ClassRepo, Clock,
+    ConsentEmailSender, ConsentRepo, EmailSender, ExploreRepo, LibraryRepo, PasswordHasher,
+    ProgressRepo, TokenIssuer, XpRepo,
+};
+pub use progress::{
+    award_cycle_bonus, award_explore, award_learn, award_solve, compute_snapshot,
+    evaluate_new_badges, level_from_xp, medal_from_count, rank_from_level, xp_total,
+    AnalyticsEvent, AnalyticsEventKind, AttemptStatus, BadgeCriteria, BadgeDefinition,
+    ChallengeAttempt, ChildBadge, CycleActivityResult, Medal, ProgressSnapshot, Rank, XpEvent,
+    XpSourceType, XP_CYCLE_BONUS, XP_EXPLORE, XP_LEARN, XP_SOLVE,
 };
 
 use thiserror::Error;

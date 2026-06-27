@@ -16,7 +16,9 @@ use axum::{
     body::Body,
     http::{header, Method, Request, StatusCode},
 };
-use idea_pop_api::{router, AppState, NullChallengeRepo, NullExploreRepo, NullLibraryRepo};
+use idea_pop_api::{
+    null_gamification, router, AppState, NullChallengeRepo, NullExploreRepo, NullLibraryRepo,
+};
 use idea_pop_infra::{
     Argon2Hasher, JwtTokenIssuer, NullConsentEmailSender, NullEmailSender, SqlxAccountRepo,
     SqlxChildRepo, SqlxClassRepo, SqlxConsentRepo, SqlxExploreRepo, SqlxLibraryRepo, SystemClock,
@@ -54,6 +56,7 @@ fn content_state(pool: PgPool) -> AppState {
         Arc::new(SqlxExploreRepo::new(pool.clone())),
         Arc::new(SqlxLibraryRepo::new(pool.clone())),
         Arc::new(NullChallengeRepo),
+        null_gamification(),
     )
 }
 
@@ -322,6 +325,7 @@ async fn explore_requires_auth() {
             Arc::new(NullExploreRepo),
             Arc::new(NullLibraryRepo),
             Arc::new(NullChallengeRepo),
+            null_gamification(),
         ),
         None,
     );

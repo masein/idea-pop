@@ -120,6 +120,32 @@ impl FromRequestParts<AppState> for AdultAuth {
     }
 }
 
+// ── Reviewer extractor ────────────────────────────────────────────────────────
+
+/// Extractor for reviewer and admin tokens. Returns 403 for any other role.
+/// Used by moderation and report queue endpoints.
+pub struct ReviewerAuth(pub TokenClaims);
+
+#[async_trait]
+impl FromRequestParts<AppState> for ReviewerAuth {
+    type Rejection = Response;
+
+    async fn from_request_parts(
+        parts: &mut Parts,
+        state: &AppState,
+    ) -> Result<Self, Self::Rejection> {
+        let AuthToken(claims) = AuthToken::from_request_parts(parts, state).await?;
+        if !matches!(claims.role, Role::Reviewer | Role::Admin) {
+            return Err(problem(
+                StatusCode::FORBIDDEN,
+                "reviewer-required",
+                "This route requires a reviewer or admin role",
+            ));
+        }
+        Ok(ReviewerAuth(claims))
+    }
+}
+
 // ── Role guard ────────────────────────────────────────────────────────────────
 
 /// Extractor that requires a specific role (or admin).

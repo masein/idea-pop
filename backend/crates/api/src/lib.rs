@@ -4,6 +4,7 @@
 
 mod error;
 pub mod extractor;
+pub mod portfolio;
 pub mod progress;
 pub mod state;
 
@@ -17,7 +18,9 @@ pub mod library;
 mod me;
 
 pub use error::{ApiError, ProblemDetail};
-pub use state::{create_auth_rate_limiter, AppState, AuthRateLimiter, GamificationRepos};
+pub use state::{
+    create_auth_rate_limiter, AppState, AuthRateLimiter, GamificationRepos, PortfolioRepos,
+};
 
 use std::{net::IpAddr, sync::Arc, time::Duration};
 
@@ -55,6 +58,13 @@ use crate::{
         QuickMakeResponse, StudioCountResponse,
     },
     me::MeResponse,
+    portfolio::{
+        CreateProjectRequest, CreateReportRequest, IdeaListResponse, IdeaResponse,
+        ModerationItemResponse, ModerationQueueResponse, PresignResponse, ProjectListResponse,
+        ProjectResponse, ReactRequest, ReactionCountsDto, RejectRequest, RemixRequest,
+        ReportListResponse, ReportResponse, SubmitIdeaRequest, UpdateVisibilityRequest,
+        UpdateVisibilityResponse,
+    },
     progress::{
         AdvanceStepRequest, AdvanceStepResponse, BadgeResponse, LessonCompleteRequest,
         MedalsResponse, ProgressResponse, StartAttemptResponse, VideoViewRequest, XpAwardResponse,
@@ -174,6 +184,12 @@ pub struct CreateHealthLogRequest {
         progress::post_video_view, progress::post_lesson_complete,
         progress::start_attempt, progress::advance_step,
         progress::get_me_progress,
+        portfolio::create_project, portfolio::list_my_projects,
+        portfolio::presign_photo_upload, portfolio::update_project_visibility,
+        portfolio::submit_idea, portfolio::list_ideas,
+        portfolio::react_to_idea, portfolio::remix_idea,
+        portfolio::list_moderation_queue, portfolio::approve_item, portfolio::reject_item,
+        portfolio::create_report, portfolio::list_reports,
     ),
     components(schemas(
         Health, HealthLogEntry, CreateHealthLogRequest, ProblemDetail,
@@ -188,6 +204,12 @@ pub struct CreateHealthLogRequest {
         VideoViewRequest, LessonCompleteRequest, XpAwardResponse,
         StartAttemptResponse, AdvanceStepRequest, AdvanceStepResponse,
         ProgressResponse, MedalsResponse, BadgeResponse,
+        CreateProjectRequest, ProjectResponse, ProjectListResponse,
+        PresignResponse, UpdateVisibilityRequest, UpdateVisibilityResponse,
+        SubmitIdeaRequest, IdeaResponse, IdeaListResponse, ReactionCountsDto,
+        ReactRequest, RemixRequest,
+        ModerationItemResponse, ModerationQueueResponse, RejectRequest,
+        CreateReportRequest, ReportResponse, ReportListResponse,
     )),
     tags(
         (name = "ops",       description = "Operational endpoints"),
@@ -201,6 +223,8 @@ pub struct CreateHealthLogRequest {
         (name = "library",     description = "Library section — courses, quick-makes, creators"),
         (name = "challenges",  description = "Challenge engine — data-driven 8-step missions"),
         (name = "progress",    description = "Progress & gamification — kid-owned XP and badges"),
+        (name = "portfolio",   description = "Portfolio — child projects and photo uploads"),
+        (name = "moderation",  description = "Moderation queue, reports (reviewer/admin only for queue/reports)"),
     ),
     info(
         title = "Idea Pop API",
@@ -348,6 +372,13 @@ pub fn router(state: AppState, rate_limiter: Option<Arc<AuthRateLimiter>>) -> Ro
     let consent_cap = Arc::clone(&state.consent);
     let gated_routes = Router::new()
         .route("/api/my-shares", get(example_gated_share))
+        // Sharing requires active parental consent for kid accounts
+        .route(
+            "/projects/:id/visibility",
+            axum::routing::patch(portfolio::update_project_visibility),
+        )
+        .route("/challenges/:id/ideas", post(portfolio::submit_idea))
+        .route("/ideas/:id/remix", post(portfolio::remix_idea))
         .route_layer(middleware::from_fn(move |req: Request, next: Next| {
             let tokens = Arc::clone(&tokens_cap);
             let consent = Arc::clone(&consent_cap);
@@ -395,6 +426,25 @@ pub fn router(state: AppState, rate_limiter: Option<Arc<AuthRateLimiter>>) -> Ro
             axum::routing::patch(progress::advance_step),
         )
         .route("/me/progress", get(progress::get_me_progress))
+        // Portfolio (kid-owned; child_id from JWT)
+        .route("/projects", post(portfolio::create_project))
+        .route("/me/projects", get(portfolio::list_my_projects))
+        .route(
+            "/projects/:id/photos/presign",
+            post(portfolio::presign_photo_upload),
+        )
+        // Moderation queue & reports (reviewer-only reads; any-auth writes)
+        .route("/moderation/queue", get(portfolio::list_moderation_queue))
+        .route("/moderation/:id/approve", post(portfolio::approve_item))
+        .route("/moderation/:id/reject", post(portfolio::reject_item))
+        .route(
+            "/reports",
+            post(portfolio::create_report).get(portfolio::list_reports),
+        )
+        // Ideas Wall — GET is any-auth; locked-until-submit for kids
+        .route("/challenges/:id/ideas", get(portfolio::list_ideas))
+        // React to an idea (kid-owned)
+        .route("/ideas/:id/react", post(portfolio::react_to_idea))
         .with_state(state)
         .merge(auth_routes)
         .merge(gated_routes)
@@ -414,14 +464,19 @@ use idea_pop_domain::{
         Course, Creator, ExploreFilter, ExploreVideo, Lesson, Page, QuickMake, QuickMakeFilter,
         StudioCount,
     },
+    portfolio::{
+        ChallengeIdea, ModerationContentType, ModerationItem, ModerationStatus, Project,
+        ReactionCounts, ReactionType, Report, Visibility,
+    },
     progress::{
         AnalyticsEvent, AttemptStatus, BadgeDefinition, ChallengeAttempt, ChildBadge,
         CycleActivityResult, XpEvent, XpSourceType,
     },
     Account, AccountRepo, AnalyticsSink, BadgeRepo, ChallengeRepo, ChildProfile, ChildRepo, Class,
     ClassRepo, Clock, ConsentEmailSender, ConsentRepo, ConsentStatus, EmailSender, ExploreRepo,
-    LibraryRepo, ParentalConsent, PasswordHasher, ProgressRepo, RefreshSession, TokenClaims,
-    TokenIssuer, TokenPair, XpRepo,
+    IdeaRepo, LibraryRepo, ModerationRepo, ParentalConsent, PasswordHasher, PhotoStore,
+    ProgressRepo, ProjectRepo, RefreshSession, ReportRepo, TokenClaims, TokenIssuer, TokenPair,
+    XpRepo,
 };
 
 pub struct NullRepo;
@@ -714,6 +769,129 @@ pub fn null_gamification() -> GamificationRepos {
     }
 }
 
+// ── Null portfolio adapters ───────────────────────────────────────────────────
+
+pub struct NullProjectRepo;
+#[async_trait]
+impl ProjectRepo for NullProjectRepo {
+    async fn create(&self, _: &Project) -> Result<(), DomainError> {
+        Ok(())
+    }
+    async fn find_by_id(&self, _: Uuid) -> Result<Option<Project>, DomainError> {
+        Ok(None)
+    }
+    async fn list_by_child(&self, _: Uuid) -> Result<Vec<Project>, DomainError> {
+        Ok(vec![])
+    }
+    async fn set_visibility(
+        &self,
+        _: Uuid,
+        _: &Visibility,
+        _: &Visibility,
+        _: DateTime<Utc>,
+    ) -> Result<(), DomainError> {
+        Ok(())
+    }
+}
+
+pub struct NullPhotoStore;
+#[async_trait]
+impl PhotoStore for NullPhotoStore {
+    async fn presign_upload(&self, key: &str, _: u64) -> Result<String, DomainError> {
+        Ok(format!("https://null-storage.test/{key}"))
+    }
+}
+
+pub struct NullModerationRepo;
+#[async_trait]
+impl ModerationRepo for NullModerationRepo {
+    async fn enqueue(&self, _: &ModerationItem) -> Result<(), DomainError> {
+        Ok(())
+    }
+    async fn pending_queue(&self) -> Result<Vec<ModerationItem>, DomainError> {
+        Ok(vec![])
+    }
+    async fn find_by_id(&self, _: Uuid) -> Result<Option<ModerationItem>, DomainError> {
+        Ok(None)
+    }
+    async fn approve(
+        &self,
+        _: Uuid,
+        _: Uuid,
+        _: DateTime<Utc>,
+    ) -> Result<Option<ModerationItem>, DomainError> {
+        Ok(None)
+    }
+    async fn reject(
+        &self,
+        _: Uuid,
+        _: Uuid,
+        _: String,
+        _: DateTime<Utc>,
+    ) -> Result<Option<ModerationItem>, DomainError> {
+        Ok(None)
+    }
+    async fn find_pending_for_content(
+        &self,
+        _: &ModerationContentType,
+        _: Uuid,
+    ) -> Result<Option<ModerationItem>, DomainError> {
+        Ok(None)
+    }
+}
+
+pub struct NullIdeaRepo;
+#[async_trait]
+impl IdeaRepo for NullIdeaRepo {
+    async fn submit(&self, _: &ChallengeIdea) -> Result<(), DomainError> {
+        Ok(())
+    }
+    async fn find_by_id(&self, _: Uuid) -> Result<Option<ChallengeIdea>, DomainError> {
+        Ok(None)
+    }
+    async fn list_approved(&self, _: Uuid) -> Result<Vec<ChallengeIdea>, DomainError> {
+        Ok(vec![])
+    }
+    async fn has_submitted(&self, _: Uuid, _: Uuid) -> Result<bool, DomainError> {
+        Ok(false)
+    }
+    async fn update_moderation_status(
+        &self,
+        _: Uuid,
+        _: &ModerationStatus,
+    ) -> Result<(), DomainError> {
+        Ok(())
+    }
+    async fn add_reaction(&self, _: Uuid, _: Uuid, _: &ReactionType) -> Result<(), DomainError> {
+        Ok(())
+    }
+    async fn count_reactions(&self, _: Uuid) -> Result<ReactionCounts, DomainError> {
+        Ok(ReactionCounts::default())
+    }
+}
+
+pub struct NullReportRepo;
+#[async_trait]
+impl ReportRepo for NullReportRepo {
+    async fn create(&self, _: &Report) -> Result<(), DomainError> {
+        Ok(())
+    }
+    async fn list_pending(&self) -> Result<Vec<Report>, DomainError> {
+        Ok(vec![])
+    }
+}
+
+/// Convenience: all-null portfolio repos for tests that don't exercise portfolio.
+pub fn null_portfolio() -> PortfolioRepos {
+    PortfolioRepos {
+        projects: Arc::new(NullProjectRepo),
+        photos: Arc::new(NullPhotoStore),
+        moderation: Arc::new(NullModerationRepo),
+        ideas: Arc::new(NullIdeaRepo),
+        reports: Arc::new(NullReportRepo),
+    }
+}
+
 /// Build a state using only a PgPool + null auth adapters (for Phase 1 tests).
 pub fn null_state(pool: PgPool) -> AppState {
     AppState::new(
@@ -731,5 +909,6 @@ pub fn null_state(pool: PgPool) -> AppState {
         Arc::new(NullLibraryRepo),
         Arc::new(NullChallengeRepo),
         null_gamification(),
+        null_portfolio(),
     )
 }

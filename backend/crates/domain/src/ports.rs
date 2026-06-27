@@ -14,6 +14,10 @@ use crate::{
         Course, Creator, ExploreFilter, ExploreVideo, Lesson, Page, QuickMake, QuickMakeFilter,
         StudioCount,
     },
+    portfolio::{
+        ChallengeIdea, ModerationContentType, ModerationItem, ModerationStatus, Project,
+        ReactionCounts, ReactionType, Report, Visibility,
+    },
     progress::{
         AnalyticsEvent, AttemptStatus, BadgeDefinition, ChallengeAttempt, ChildBadge,
         CycleActivityResult, XpEvent, XpSourceType,
@@ -230,6 +234,82 @@ pub trait BadgeRepo: Send + Sync {
 pub trait AnalyticsSink: Send + Sync {
     async fn emit(&self, event: &AnalyticsEvent) -> Result<(), DomainError>;
 }
+
+// ── Portfolio ports ───────────────────────────────────────────────────────────
+
+#[async_trait]
+pub trait ProjectRepo: Send + Sync {
+    async fn create(&self, project: &Project) -> Result<(), DomainError>;
+    async fn find_by_id(&self, id: Uuid) -> Result<Option<Project>, DomainError>;
+    async fn list_by_child(&self, child_id: Uuid) -> Result<Vec<Project>, DomainError>;
+    /// Update both requested and effective visibility.
+    async fn set_visibility(
+        &self,
+        id: Uuid,
+        requested: &Visibility,
+        effective: &Visibility,
+        now: DateTime<Utc>,
+    ) -> Result<(), DomainError>;
+}
+
+#[async_trait]
+pub trait PhotoStore: Send + Sync {
+    /// Returns a presigned PUT URL for a photo upload (expires_in_secs).
+    async fn presign_upload(&self, key: &str, expires_in_secs: u64) -> Result<String, DomainError>;
+}
+
+#[async_trait]
+pub trait ModerationRepo: Send + Sync {
+    async fn enqueue(&self, item: &ModerationItem) -> Result<(), DomainError>;
+    async fn pending_queue(&self) -> Result<Vec<ModerationItem>, DomainError>;
+    async fn find_by_id(&self, id: Uuid) -> Result<Option<ModerationItem>, DomainError>;
+    async fn approve(
+        &self,
+        id: Uuid,
+        reviewer_id: Uuid,
+        now: DateTime<Utc>,
+    ) -> Result<Option<ModerationItem>, DomainError>;
+    async fn reject(
+        &self,
+        id: Uuid,
+        reviewer_id: Uuid,
+        reason: String,
+        now: DateTime<Utc>,
+    ) -> Result<Option<ModerationItem>, DomainError>;
+    async fn find_pending_for_content(
+        &self,
+        content_type: &ModerationContentType,
+        content_id: Uuid,
+    ) -> Result<Option<ModerationItem>, DomainError>;
+}
+
+#[async_trait]
+pub trait IdeaRepo: Send + Sync {
+    async fn submit(&self, idea: &ChallengeIdea) -> Result<(), DomainError>;
+    async fn find_by_id(&self, id: Uuid) -> Result<Option<ChallengeIdea>, DomainError>;
+    async fn list_approved(&self, challenge_id: Uuid) -> Result<Vec<ChallengeIdea>, DomainError>;
+    async fn has_submitted(&self, child_id: Uuid, challenge_id: Uuid) -> Result<bool, DomainError>;
+    async fn update_moderation_status(
+        &self,
+        id: Uuid,
+        status: &ModerationStatus,
+    ) -> Result<(), DomainError>;
+    async fn add_reaction(
+        &self,
+        idea_id: Uuid,
+        child_id: Uuid,
+        reaction_type: &ReactionType,
+    ) -> Result<(), DomainError>;
+    async fn count_reactions(&self, idea_id: Uuid) -> Result<ReactionCounts, DomainError>;
+}
+
+#[async_trait]
+pub trait ReportRepo: Send + Sync {
+    async fn create(&self, report: &Report) -> Result<(), DomainError>;
+    async fn list_pending(&self) -> Result<Vec<Report>, DomainError>;
+}
+
+// ── Library ───────────────────────────────────────────────────────────────────
 
 #[async_trait]
 pub trait LibraryRepo: Send + Sync {

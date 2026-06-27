@@ -30,6 +30,9 @@ lettre = { version = "0.11", default-features = false, features = ["tokio1", "sm
 validator = { version = "0.18", features = ["derive"] }
 governor = "0.6"
 rand = { version = "0.8", features = ["std"] }
+aws-sdk-s3 = { version = "1", features = ["behavior-version-latest"] }
+aws-config = { version = "1", features = ["behavior-version-latest"] }
+aws-credential-types = "1"
 
 [profile.release]
 strip = true

@@ -1,0 +1,35 @@
+groups:
+  - name: idea-pop
+    rules:
+      # Alert when 5xx error rate exceeds 1 % over 5 minutes.
+      - alert: HighErrorRate
+        expr: |
+          sum(rate(http_requests_total{status=~"5.."}[5m]))
+          /
+          sum(rate(http_requests_total[5m])) > 0.01
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High 5xx error rate ({{ $value | humanizePercentage }})"
+
+      # Alert when p95 request latency exceeds 2 s over 10 minutes.
+      - alert: HighP95Latency
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(http_request_duration_seconds_bucket[10m])) by (le)
+          ) > 2
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "p95 latency above 2 s ({{ $value | humanizeDuration }})"
+
+      # Alert when the API becomes unreachable.
+      - alert: APIDown
+        expr: up{job="idea-pop-api"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Idea Pop API is down"

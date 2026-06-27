@@ -8,7 +8,8 @@
 use std::{net::SocketAddr, sync::Arc};
 
 use api::{
-    create_auth_rate_limiter, router, AppState, BillingRepos, GamificationRepos, PortfolioRepos,
+    create_auth_rate_limiter, metrics_exporter_prometheus, router_with_metrics, AppState,
+    BillingRepos, GamificationRepos, PortfolioRepos,
 };
 use idea_pop_infra::{
     Argon2Hasher, JwtTokenIssuer, LettreEmailSender, NullConsentEmailSender, NullEmailSender,
@@ -159,7 +160,12 @@ async fn main() -> anyhow::Result<()> {
         .unwrap_or(20);
     let rate_limiter = create_auth_rate_limiter(auth_rpm);
 
-    let app = router(state, Some(rate_limiter));
+    // Install the Prometheus recorder and expose /metrics.
+    let metrics_handle = metrics_exporter_prometheus::PrometheusBuilder::new()
+        .install_recorder()
+        .expect("install prometheus recorder");
+
+    let app = router_with_metrics(state, Some(rate_limiter), Some(metrics_handle));
 
     let port: u16 = std::env::var("APP_PORT")
         .ok()
@@ -176,5 +182,15 @@ async fn main() -> anyhow::Result<()> {
 fn init_tracing() {
     use tracing_subscriber::{fmt, EnvFilter};
     let filter = EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info"));
-    fmt().with_env_filter(filter).init();
+    // Use JSON format in production; human-readable in local dev (LOG_FORMAT=text).
+    if std::env::var("LOG_FORMAT").as_deref() == Ok("text") {
+        fmt().with_env_filter(filter).init();
+    } else {
+        fmt()
+            .json()
+            .with_current_span(false)
+            .with_span_list(false)
+            .with_env_filter(filter)
+            .init();
+    }
 }

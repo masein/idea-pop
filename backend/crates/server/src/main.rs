@@ -7,12 +7,13 @@
 
 use std::{net::SocketAddr, sync::Arc};
 
-use api::{create_auth_rate_limiter, router, AppState, GamificationRepos};
+use api::{create_auth_rate_limiter, router, AppState, GamificationRepos, PortfolioRepos};
 use idea_pop_infra::{
     Argon2Hasher, JwtTokenIssuer, LettreEmailSender, NullConsentEmailSender, NullEmailSender,
-    SmtpConsentEmailSender, SqlxAccountRepo, SqlxAnalyticsSink, SqlxBadgeRepo, SqlxChallengeRepo,
-    SqlxChildRepo, SqlxClassRepo, SqlxConsentRepo, SqlxExploreRepo, SqlxLibraryRepo,
-    SqlxProgressRepo, SqlxXpRepo, SystemClock,
+    S3PhotoStore, SmtpConsentEmailSender, SqlxAccountRepo, SqlxAnalyticsSink, SqlxBadgeRepo,
+    SqlxChallengeRepo, SqlxChildRepo, SqlxClassRepo, SqlxConsentRepo, SqlxExploreRepo,
+    SqlxIdeaRepo, SqlxLibraryRepo, SqlxModerationRepo, SqlxProgressRepo, SqlxProjectRepo,
+    SqlxReportRepo, SqlxXpRepo, SystemClock,
 };
 
 #[tokio::main]
@@ -75,6 +76,27 @@ async fn main() -> anyhow::Result<()> {
             Arc::new(NullConsentEmailSender)
         };
 
+    let s3_endpoint =
+        std::env::var("S3_ENDPOINT").unwrap_or_else(|_| "http://localhost:9000".into());
+    let s3_region = std::env::var("S3_REGION").unwrap_or_else(|_| "us-east-1".into());
+    let s3_access_key = std::env::var("S3_ACCESS_KEY").unwrap_or_else(|_| "minioadmin".into());
+    let s3_secret_key = std::env::var("S3_SECRET_KEY").unwrap_or_else(|_| "minioadmin".into());
+    let s3_bucket = std::env::var("S3_BUCKET").unwrap_or_else(|_| "idea-pop".into());
+
+    let portfolio = PortfolioRepos {
+        projects: Arc::new(SqlxProjectRepo::new(pool.clone())),
+        photos: Arc::new(S3PhotoStore::new(
+            &s3_endpoint,
+            &s3_region,
+            &s3_access_key,
+            &s3_secret_key,
+            &s3_bucket,
+        )),
+        moderation: Arc::new(SqlxModerationRepo::new(pool.clone())),
+        ideas: Arc::new(SqlxIdeaRepo::new(pool.clone())),
+        reports: Arc::new(SqlxReportRepo::new(pool.clone())),
+    };
+
     let state = AppState::new(
         pool.clone(),
         Arc::new(SqlxAccountRepo::new(pool.clone())),
@@ -95,6 +117,7 @@ async fn main() -> anyhow::Result<()> {
             badges: Arc::new(SqlxBadgeRepo::new(pool.clone())),
             analytics: Arc::new(SqlxAnalyticsSink::new(pool)),
         },
+        portfolio,
     );
 
     let auth_rpm: u32 = std::env::var("AUTH_RATE_LIMIT_RPM")

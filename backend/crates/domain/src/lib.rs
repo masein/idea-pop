@@ -11,6 +11,7 @@ pub mod challenge;
 pub mod child;
 pub mod consent_service;
 pub mod content;
+pub mod portfolio;
 pub mod ports;
 pub mod progress;
 
@@ -27,10 +28,17 @@ pub use content::{
     Course, Creator, ExploreFilter, ExploreVideo, Habitat, Lesson, Page, QuickMake,
     QuickMakeFilter, Studio, StudioCount,
 };
+pub use portfolio::{
+    moderation_due_at, report_due_at, request_visibility_change, ChallengeIdea,
+    ModerationContentType, ModerationItem, ModerationStatus, OriginType, Project, ReactionCounts,
+    ReactionType, Report, ReportStatus, Visibility, VisibilityChangeResult, MODERATION_SLA_HOURS,
+    REPORT_SLA_HOURS,
+};
 pub use ports::{
     AccountRepo, AnalyticsSink, BadgeRepo, ChallengeRepo, ChildRepo, ClassRepo, Clock,
-    ConsentEmailSender, ConsentRepo, EmailSender, ExploreRepo, LibraryRepo, PasswordHasher,
-    ProgressRepo, TokenIssuer, XpRepo,
+    ConsentEmailSender, ConsentRepo, EmailSender, ExploreRepo, IdeaRepo, LibraryRepo,
+    ModerationRepo, PasswordHasher, PhotoStore, ProgressRepo, ProjectRepo, ReportRepo, TokenIssuer,
+    XpRepo,
 };
 pub use progress::{
     award_cycle_bonus, award_explore, award_learn, award_solve, compute_snapshot,

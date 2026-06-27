@@ -8,7 +8,8 @@ use axum::{
     http::{Request, StatusCode},
 };
 use idea_pop_api::{
-    null_gamification, router, AppState, NullChallengeRepo, NullExploreRepo, NullLibraryRepo,
+    null_gamification, null_portfolio, router, AppState, NullChallengeRepo, NullExploreRepo,
+    NullLibraryRepo,
 };
 use idea_pop_infra::{
     Argon2Hasher, JwtTokenIssuer, NullConsentEmailSender, NullEmailSender, SqlxAccountRepo,
@@ -61,6 +62,7 @@ fn make_state(pool: PgPool) -> AppState {
         Arc::new(NullLibraryRepo),
         Arc::new(NullChallengeRepo),
         null_gamification(),
+        null_portfolio(),
     )
 }
 

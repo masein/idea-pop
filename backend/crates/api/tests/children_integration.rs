@@ -12,7 +12,9 @@ use axum::{
     body::Body,
     http::{header, Method, Request, StatusCode},
 };
-use idea_pop_api::{null_gamification, NullChallengeRepo, NullExploreRepo, NullLibraryRepo};
+use idea_pop_api::{
+    null_gamification, null_portfolio, NullChallengeRepo, NullExploreRepo, NullLibraryRepo,
+};
 use idea_pop_infra::{
     Argon2Hasher, JwtTokenIssuer, NullConsentEmailSender, NullEmailSender, SqlxAccountRepo,
     SqlxChildRepo, SqlxClassRepo, SqlxConsentRepo, SystemClock,
@@ -56,6 +58,7 @@ fn make_state(
         Arc::new(NullLibraryRepo),
         Arc::new(NullChallengeRepo),
         null_gamification(),
+        null_portfolio(),
     )
 }
 

@@ -14,7 +14,7 @@ use axum::{
     body::{to_bytes, Body},
     http::{Method, Request, StatusCode},
 };
-use idea_pop_api::{router, AppState, GamificationRepos};
+use idea_pop_api::{null_portfolio, router, AppState, GamificationRepos};
 use idea_pop_domain::TokenIssuer;
 use idea_pop_infra::{
     Argon2Hasher, JwtTokenIssuer, NullConsentEmailSender, NullEmailSender, SqlxAccountRepo,
@@ -66,6 +66,7 @@ fn progress_state(pool: PgPool) -> AppState {
             badges: Arc::new(SqlxBadgeRepo::new(pool.clone())),
             analytics: Arc::new(SqlxAnalyticsSink::new(pool)),
         },
+        null_portfolio(),
     )
 }
 

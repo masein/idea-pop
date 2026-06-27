@@ -2,15 +2,18 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import AudiencePicker from './AudiencePicker';
+import { submitIdea } from '@/lib/api/client';
 
 type ChallengeDetail = import('@/lib/api/schema').components['schemas']['ChallengeDetail'];
-
-type ShareOption = 'private' | 'class' | 'public';
 
 interface StepCelebrateProps {
   challenge: ChallengeDetail;
   ageMode: 'young' | 'older';
   completionXp: number;
+  sketchProjectId: string | null;
+  wallAlreadySubmitted: boolean;
+  onWallSubmitted: () => void;
   onRestart: () => void;
 }
 
@@ -25,9 +28,34 @@ export default function StepCelebrate({
   challenge,
   ageMode,
   completionXp,
+  sketchProjectId,
+  wallAlreadySubmitted,
+  onWallSubmitted,
   onRestart,
 }: StepCelebrateProps) {
-  const [shareOption, setShareOption] = useState<ShareOption>('private');
+  const [caption, setCaption] = useState('');
+  const [sending, setSending] = useState(false);
+  const [wallDone, setWallDone] = useState(wallAlreadySubmitted);
+  const [wallError, setWallError] = useState<string | null>(null);
+
+  async function handleWallSubmit() {
+    if (!sketchProjectId || sending) return;
+    setSending(true);
+    setWallError(null);
+    try {
+      await submitIdea(challenge.id, sketchProjectId, caption);
+      setWallDone(true);
+      onWallSubmitted();
+    } catch (err: unknown) {
+      if (err instanceof Error && (err as Error & { code?: string }).code === 'restricted') {
+        setWallError('A grown-up needs to turn on sharing first');
+      } else {
+        setWallError('Could not post — try again');
+      }
+    } finally {
+      setSending(false);
+    }
+  }
 
   return (
     <div data-testid="step-celebrate" className="flex flex-col gap-6 px-4 py-6">
@@ -51,80 +79,57 @@ export default function StepCelebrate({
         )}
       </div>
 
-      {/* Privacy / share card */}
-      <div className="bg-white rounded-card shadow-sm p-4 mb-6">
-        <p className="font-display text-base text-ink mb-3">Who can see your project?</p>
+      {/* Audience picker — real API integration */}
+      <AudiencePicker projectId={sketchProjectId} onDone={() => {}} />
 
-        <div className="flex flex-col gap-1">
-          {/* Private */}
-          <label
-            data-testid="share-private"
-            className={`flex items-start gap-3 p-2 rounded cursor-pointer ${
-              shareOption === 'private' ? 'bg-tint-blue' : ''
-            }`}
-          >
-            <input
-              type="radio"
-              name="share"
-              value="private"
-              checked={shareOption === 'private'}
-              onChange={() => setShareOption('private')}
-              className="mt-0.5 accent-challenge"
-            />
-            <div>
-              <span className="font-body text-sm text-ink">🔒 Only me</span>
-              <span className="font-body text-xs text-ink/50 block">Your private portfolio</span>
-            </div>
-          </label>
+      {/* Ideas Wall submission */}
+      {!wallDone ? (
+        <div
+          data-testid="wall-submit-section"
+          className="bg-white rounded-card shadow-sm p-4 flex flex-col gap-3"
+        >
+          <p className="font-display text-base text-ink">Post to Ideas Wall?</p>
+          <p className="font-body text-sm text-ink/50">
+            Your idea will be checked by a grown-up before others can see it.
+          </p>
 
-          {/* Class */}
-          <label
-            data-testid="share-class"
-            className={`flex items-start gap-3 p-2 rounded cursor-pointer ${
-              shareOption === 'class' ? 'bg-tint-blue' : ''
-            }`}
-          >
-            <input
-              type="radio"
-              name="share"
-              value="class"
-              checked={shareOption === 'class'}
-              onChange={() => setShareOption('class')}
-              className="mt-0.5 accent-challenge"
-            />
-            <div>
-              <span className="font-body text-sm text-ink">🏫 My class</span>
-              <span className="font-body text-xs text-ink/50 block">Your teacher can see &amp; cheer</span>
-            </div>
-          </label>
+          <textarea
+            data-testid="wall-caption"
+            value={caption}
+            onChange={(e) => setCaption(e.target.value)}
+            placeholder="Add a caption (optional)"
+            rows={2}
+            className="w-full rounded-card border border-ink/20 px-3 py-2 font-body text-sm focus:outline-none focus:ring-2 focus:ring-challenge resize-none"
+          />
 
-          {/* Public — locked */}
-          <div
-            data-testid="share-public-locked"
-            className="flex items-start gap-3 p-2 rounded opacity-50 cursor-not-allowed"
+          {wallError && (
+            <p data-testid="wall-submit-error" className="font-body text-sm text-red-500">
+              {wallError}
+            </p>
+          )}
+
+          <button
+            type="button"
+            data-testid="wall-submit-btn"
+            onClick={handleWallSubmit}
+            disabled={sending || !sketchProjectId}
+            className="bg-challenge text-white font-display text-base px-5 py-2.5 rounded-card disabled:opacity-40"
           >
-            <input
-              type="radio"
-              name="share"
-              value="public"
-              disabled
-              className="mt-0.5"
-            />
-            <div>
-              <span className="font-body text-sm text-ink">🌍 Idea Gallery</span>
-              <span className="font-body text-xs text-ink/50 block">
-                Ask a parent to unlock this
-              </span>
-            </div>
-          </div>
+            {sending ? 'Sending…' : '📤 Share to Ideas Wall'}
+          </button>
+
+          <p className="font-body text-xs text-ink/50">
+            🛡 Reviewed by a grown-up before appearing
+          </p>
         </div>
-
-        {/* Safety note */}
-        <p className="font-body text-xs text-ink/50 flex items-center gap-1 mt-3">
-          <span>🛡</span>
-          <span>Grown-ups check public posts before others can see them</span>
-        </p>
-      </div>
+      ) : (
+        <div
+          data-testid="wall-submitted-note"
+          className="bg-tint-blue rounded-card p-4 text-center font-body text-sm text-ink"
+        >
+          Your idea is being reviewed 🛡
+        </div>
+      )}
 
       {/* Action buttons */}
       <Link
@@ -132,12 +137,6 @@ export default function StepCelebrate({
         className="bg-challenge text-white font-display text-lg px-6 py-3 rounded-card w-full text-center block"
       >
         Next mission →
-      </Link>
-      <Link
-        href="/ideas-wall"
-        className="text-challenge font-body text-sm text-center block"
-      >
-        See the Ideas Wall →
       </Link>
     </div>
   );

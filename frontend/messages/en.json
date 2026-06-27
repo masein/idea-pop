@@ -525,6 +525,62 @@
       "photo_tip": "📷 Projects — not faces"
     }
   },
+  "ideas_wall": {
+    "tab_mission": "🚀 Mission",
+    "tab_wall": "💡 Ideas Wall ({count})",
+    "locked_icon": "🔒",
+    "locked_heading": "Send your idea first!",
+    "locked_body": "The wall opens after you share your own idea — no peeking 😉",
+    "locked_cta": "✍️ Write my idea",
+    "safety_note": "🛡 Every idea is checked by a grown-up before it appears here",
+    "sort_newest": "Newest",
+    "sort_remixed": "Most remixed",
+    "reaction_clap": "👏",
+    "reaction_star": "⭐",
+    "reaction_lightbulb": "💡",
+    "remix": "↻ Remix idea",
+    "more_ideas": "{n} more ideas",
+    "submit_heading": "Share your idea with the wall",
+    "submit_caption": "Add a caption (optional)",
+    "submit_button": "Post to Ideas Wall",
+    "submit_sending": "Sending…",
+    "submit_done": "Your idea is being reviewed 🛡",
+    "restricted_submit": "A grown-up needs to turn on sharing first",
+    "restricted_share": "A grown-up needs to turn on sharing first"
+  },
+  "tools": {
+    "heading_young": "Stuck? Try a thinking tool!",
+    "heading_older": "Creativity toolbox 🧰",
+    "five_whys": {
+      "title": "5 Whys ❓",
+      "desc_young": "Ask WHY five times to find the real problem!",
+      "desc_older": "Dig to the root cause by asking WHY five times.",
+      "why_label": "WHY?",
+      "root_found": "🎯 Root found! Now ask: How Might We…?",
+      "hmw_placeholder": "How Might We…?"
+    },
+    "scamper": {
+      "title": "SCAMPER 🔀",
+      "desc_young": "Seven ways to twist your idea!",
+      "desc_older": "Seven lenses for transforming any idea.",
+      "s_label": "Substitute",
+      "c_label": "Combine",
+      "a_label": "Adapt",
+      "m_label": "Modify / Magnify",
+      "p_label": "Put to other use",
+      "e_label": "Eliminate",
+      "r_label": "Reverse / Rearrange",
+      "placeholder": "What if you…?"
+    },
+    "mind_map": {
+      "title": "Mind Map 🧠",
+      "desc_young": "Start with your challenge, branch out your ideas!",
+      "desc_older": "Radiate ideas from the central challenge.",
+      "center_label": "Your challenge",
+      "add_branch": "+ Add branch",
+      "branch_placeholder": "an idea…"
+    }
+  },
   "kid_dashboard": {
     "welcome": "Hi, {nickname}!",
     "restricted_banner": "A grown-up needs to check their email to unlock everything.",

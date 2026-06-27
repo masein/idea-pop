@@ -298,3 +298,111 @@ export async function updateVisibility(
   if (error) throw new Error("Failed to update visibility");
   return data;
 }
+
+// ── Parent ────────────────────────────────────────────────────────────────────
+
+export async function fetchParentChildren() {
+  const { data, error } = await apiClient.GET("/api/parent/children");
+  if (error) throw new Error("Failed to load children");
+  return data;
+}
+
+export async function fetchChildReport(childId: string) {
+  const { data, error } = await apiClient.GET("/api/parent/children/{id}/report", {
+    params: { path: { id: childId } },
+  });
+  if (error) throw new Error("Failed to load report");
+  return data;
+}
+
+export async function grantConsent(childId: string, scope: "class" | "public" | "all") {
+  const { error } = await apiClient.POST("/api/consents/grant", {
+    body: { child_id: childId, scope },
+  });
+  if (error) throw new Error("Failed to grant consent");
+}
+
+export async function revokeConsent(childId: string, scope: "class" | "public" | "all") {
+  const { error } = await apiClient.POST("/api/consents/revoke", {
+    body: { child_id: childId, scope },
+  });
+  if (error) throw new Error("Failed to revoke consent");
+}
+
+export async function startCheckout(plan: "monthly" | "annual") {
+  const { data, error } = await apiClient.POST("/billing/checkout", {
+    body: { plan },
+  });
+  if (error) throw new Error("Failed to start checkout");
+  return data;
+}
+
+export async function openBillingPortal() {
+  const { data, error } = await apiClient.POST("/billing/portal");
+  if (error) throw new Error("Failed to open billing portal");
+  return data;
+}
+
+export async function fetchSubscription() {
+  const { data, error } = await apiClient.GET("/billing/subscription");
+  if (error) throw new Error("Failed to load subscription");
+  return data;
+}
+
+// ── Teacher ───────────────────────────────────────────────────────────────────
+
+export async function fetchTeacherClass() {
+  const { data, error } = await apiClient.GET("/api/teacher/class");
+  if (error) throw new Error("Failed to load class");
+  return data;
+}
+
+export async function assignMission(challengeId: string) {
+  const { error } = await apiClient.POST("/api/teacher/class/assign", {
+    body: { challenge_id: challengeId },
+  });
+  if (error) throw new Error("Failed to assign mission");
+}
+
+export async function fetchClassGallery() {
+  const { data, error } = await apiClient.GET("/api/teacher/class/gallery");
+  if (error) throw new Error("Failed to load gallery");
+  return data;
+}
+
+// ── Moderation ────────────────────────────────────────────────────────────────
+
+export async function fetchModerationQueue(status?: "pending" | "approved" | "rejected") {
+  const { data, error } = await apiClient.GET("/api/moderation/queue", {
+    params: { query: status ? { status } : undefined },
+  });
+  if (error) throw new Error("Failed to load moderation queue");
+  return data;
+}
+
+export async function approveItem(itemId: string) {
+  const { error } = await apiClient.POST("/api/moderation/{id}/approve", {
+    params: { path: { id: itemId } },
+  });
+  if (error) throw new Error("Failed to approve item");
+}
+
+export async function rejectItem(itemId: string, reason: string) {
+  const { error } = await apiClient.POST("/api/moderation/{id}/reject", {
+    params: { path: { id: itemId } },
+    body: { reason },
+  });
+  if (error) throw new Error("Failed to reject item");
+}
+
+export async function fetchReports() {
+  const { data, error } = await apiClient.GET("/api/reports");
+  if (error) throw new Error("Failed to load reports");
+  return data;
+}
+
+export async function fetchChallenges() {
+  const { data, error } = await apiClient.GET("/api/challenges");
+  if (error) throw new Error("Failed to load challenges");
+  return data;
+}

@@ -163,6 +163,18 @@ export async function fetchProgressSummary() {
   return data;
 }
 
+export async function fetchKidProgress() {
+  const { data, error } = await apiClient.GET("/api/me/progress");
+  if (error) throw new Error("Failed to load progress");
+  return data;
+}
+
+export async function fetchMyProjects() {
+  const { data, error } = await apiClient.GET("/api/me/projects");
+  if (error) throw new Error("Failed to load projects");
+  return data;
+}
+
 // ── Challenges ────────────────────────────────────────────────────────────────
 
 export async function fetchChallenge(id: string) {

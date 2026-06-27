@@ -165,7 +165,18 @@ export interface paths {
       responses: {
         200: {
           content: {
-            "application/json": components["schemas"]["ProgressSummary"];
+            "application/json": components["schemas"]["KidProgressResponse"];
+          };
+        };
+      };
+    };
+  };
+  "/api/me/projects": {
+    get: {
+      responses: {
+        200: {
+          content: {
+            "application/json": components["schemas"]["KidProjectSummary"][];
           };
         };
       };
@@ -574,6 +585,33 @@ export interface components {
       level: number;
       total_xp: number;
       rank: string;
+    };
+    KidProgressResponse: {
+      level: number;
+      total_xp: number;
+      xp_this_level: number;
+      xp_to_next_level: number;
+      rank: string;
+      explore_xp: number;
+      learn_xp: number;
+      solve_xp: number;
+      creative_cycle_active: boolean;
+      stickers: string[];
+      medals: {
+        bronze: number;
+        silver: number;
+        gold: number;
+      };
+    };
+    KidProjectSummary: {
+      id: string;
+      title: string;
+      what_i_made: string;
+      project_photo_url: string | null;
+      visibility: "private" | "class" | "public";
+      visibility_pending: boolean;
+      created_at: string;
+      challenge_title: string | null;
     };
   };
 }

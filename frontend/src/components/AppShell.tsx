@@ -127,7 +127,7 @@ export default function AppShell({
         </header>
 
         {/* Scrollable content */}
-        <main className={`flex-1 overflow-y-auto ${tint} pb-20`}>
+        <main id="main-content" className={`flex-1 overflow-y-auto ${tint} pb-20`}>
           {children}
         </main>
 
@@ -139,7 +139,7 @@ export default function AppShell({
           {themesUnlocked ? (
             <span>Themes</span>
           ) : (
-            <span className="opacity-60">Themes unlock at Level 4</span>
+            <span className="text-ink/80">Themes unlock at Level 4</span>
           )}
         </div>
       </div>

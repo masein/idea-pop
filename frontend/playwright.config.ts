@@ -13,10 +13,14 @@ export default defineConfig({
   },
   projects: [
     {
+      // Tablet-first: 1024×768 chromium with touch and 2× DPR
       name: "tablet-chrome",
       use: {
-        ...devices["iPad (gen 7)"],
-        channel: "chromium",
+        browserName: "chromium",
+        viewport: { width: 1024, height: 768 },
+        deviceScaleFactor: 2,
+        hasTouch: true,
+        isMobile: false,
       },
     },
     {

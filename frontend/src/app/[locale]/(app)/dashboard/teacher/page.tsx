@@ -107,7 +107,9 @@ function AssignMissionSection({
         </p>
       )}
 
+      <label htmlFor="challenge-select" className="sr-only">Choose a challenge to assign</label>
       <select
+        id="challenge-select"
         data-testid="challenge-select"
         value={selectedId}
         onChange={(e) => setSelectedId(e.target.value)}

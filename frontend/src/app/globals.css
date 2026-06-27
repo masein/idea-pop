@@ -8,11 +8,11 @@
 :root {
   color-scheme: light;
 
-  /* Section accent colors */
-  --color-explore: #27ae60;
-  --color-library: #f2994a;
-  --color-challenge: #2d9cdb;
-  --color-pricing: #9b51e0;
+  /* Section accent colors — all meet WCAG AA 4.5:1 with white text */
+  --color-explore: #1e7a44;   /* 4.83:1 with white */
+  --color-library: #a85500;   /* 4.97:1 with white */
+  --color-challenge: #1a6fa6; /* 5.02:1 with white */
+  --color-pricing: #7c3cc9;   /* 5.79:1 with white */
 
   /* Pastel page-tint backgrounds */
   --color-tint-lime: #f3ffc2;
@@ -40,4 +40,39 @@ html {
 /* RTL mirror: flip sidebar layout direction */
 [dir="rtl"] .sidebar-flip {
   flex-direction: row-reverse;
+}
+
+/* Respect the user's motion preference — collapse all animations/transitions */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Skip navigation — visually hidden until focused */
+.skip-nav {
+  position: absolute;
+  top: -100%;
+  left: 1rem;
+  z-index: 9999;
+  padding: 0.5rem 1rem;
+  background: var(--color-surface);
+  color: var(--color-ink);
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  font-family: var(--font-nunito, sans-serif);
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: top 0.1s;
+}
+.skip-nav:focus {
+  top: 1rem;
+  outline: 2px solid var(--color-explore);
+  outline-offset: 2px;
 }

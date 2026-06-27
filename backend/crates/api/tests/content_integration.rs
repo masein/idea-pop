@@ -111,7 +111,7 @@ async fn body_json(res: axum::response::Response) -> Value {
 async fn insert_explore_video(
     pool: &PgPool,
     slug: &str,
-    habitat: &str,
+    superpower_category: &str,
     age_modes: &[&str],
     ai_generated: bool,
 ) -> String {
@@ -119,7 +119,7 @@ async fn insert_explore_video(
     let age_modes: Vec<String> = age_modes.iter().map(|s| s.to_string()).collect();
     let row = sqlx::query(
         r#"INSERT INTO explore_videos
-           (title, slug, habitat, taxonomy, video_url, duration_s,
+           (title, slug, superpower_category, taxonomy, video_url, duration_s,
             design_secret, sticker_id, xp_reward, ai_generated, age_modes)
            VALUES ($1, $2, $3, 'Animalia', 'https://v.example.com/vid.mp4', 120,
                    'Test secret', 'test-sticker', 5, $4, $5)
@@ -127,7 +127,7 @@ async fn insert_explore_video(
     )
     .bind(format!("Test {slug}"))
     .bind(slug)
-    .bind(habitat)
+    .bind(superpower_category)
     .bind(ai_generated)
     .bind(&age_modes)
     .fetch_one(pool)
@@ -200,8 +200,15 @@ async fn insert_creator_and_course(pool: &PgPool) -> (String, String) {
 #[tokio::test]
 async fn explore_list_returns_items_with_ai_generated() {
     let pool = test_pool().await;
-    insert_explore_video(&pool, "octopus-brain", "ocean", &["young", "older"], false).await;
-    insert_explore_video(&pool, "ai-coral", "ocean", &["older"], true).await;
+    insert_explore_video(
+        &pool,
+        "octopus-brain",
+        "masters_of_disguise",
+        &["young", "older"],
+        false,
+    )
+    .await;
+    insert_explore_video(&pool, "ai-coral", "masters_of_disguise", &["older"], true).await;
 
     let app = router(content_state(pool), None);
     let token = register_and_token(&app, "explore-list@test.com").await;
@@ -220,33 +227,67 @@ async fn explore_list_returns_items_with_ai_generated() {
     }
 }
 
-/// Habitat filter narrows results to matching videos only.
+/// superpower_category filter narrows results to matching videos only.
 #[tokio::test]
-async fn explore_habitat_filter() {
+async fn explore_superpower_category_filter() {
     let pool = test_pool().await;
-    insert_explore_video(&pool, "ocean-vid", "ocean", &["young"], false).await;
-    insert_explore_video(&pool, "jungle-vid", "jungle", &["older"], false).await;
+    insert_explore_video(
+        &pool,
+        "octopus-disguise",
+        "masters_of_disguise",
+        &["young"],
+        false,
+    )
+    .await;
+    insert_explore_video(&pool, "spider-silk", "soft_engineers", &["older"], false).await;
 
     let app = router(content_state(pool), None);
-    let token = register_and_token(&app, "habitat-filter@test.com").await;
+    let token = register_and_token(&app, "category-filter@test.com").await;
 
     let res = app
-        .oneshot(authed_get("/explore?habitat=ocean", &token))
+        .oneshot(authed_get(
+            "/explore?superpower_category=masters_of_disguise",
+            &token,
+        ))
         .await
         .unwrap();
     assert_eq!(res.status(), StatusCode::OK);
     let body = body_json(res).await;
     assert_eq!(body["total"], 1);
-    assert_eq!(body["items"][0]["habitat"], "ocean");
+    assert_eq!(
+        body["items"][0]["superpower_category"],
+        "masters_of_disguise"
+    );
+}
+
+/// Unknown superpower_category slug returns 422.
+#[tokio::test]
+async fn explore_unknown_category_returns_422() {
+    let pool = test_pool().await;
+    let app = router(content_state(pool), None);
+    let token = register_and_token(&app, "bad-cat@test.com").await;
+
+    let res = app
+        .oneshot(authed_get("/explore?superpower_category=habitat", &token))
+        .await
+        .unwrap();
+    assert_eq!(res.status(), StatusCode::UNPROCESSABLE_ENTITY);
 }
 
 /// age_mode filter returns only videos that include that age bracket.
 #[tokio::test]
 async fn explore_age_mode_filter() {
     let pool = test_pool().await;
-    insert_explore_video(&pool, "young-only", "sky", &["young"], false).await;
-    insert_explore_video(&pool, "older-only", "sky", &["older"], false).await;
-    insert_explore_video(&pool, "both-modes", "sky", &["young", "older"], false).await;
+    insert_explore_video(&pool, "young-only", "master_builders", &["young"], false).await;
+    insert_explore_video(&pool, "older-only", "master_builders", &["older"], false).await;
+    insert_explore_video(
+        &pool,
+        "both-modes",
+        "master_builders",
+        &["young", "older"],
+        false,
+    )
+    .await;
 
     let app = router(content_state(pool), None);
     let token = register_and_token(&app, "age-filter@test.com").await;
@@ -281,7 +322,8 @@ async fn explore_age_mode_filter() {
 #[tokio::test]
 async fn explore_detail_and_not_found() {
     let pool = test_pool().await;
-    let video_id = insert_explore_video(&pool, "detail-vid", "desert", &["older"], false).await;
+    let video_id =
+        insert_explore_video(&pool, "detail-vid", "speed_champions", &["older"], false).await;
 
     let app = router(content_state(pool), None);
     let token = register_and_token(&app, "explore-detail@test.com").await;
@@ -469,7 +511,14 @@ async fn creator_detail() {
 #[tokio::test]
 async fn restricted_child_can_read_content() {
     let pool = test_pool().await;
-    insert_explore_video(&pool, "kid-ocean-vid", "ocean", &["young"], false).await;
+    insert_explore_video(
+        &pool,
+        "kid-ocean-vid",
+        "masters_of_disguise",
+        &["young"],
+        false,
+    )
+    .await;
 
     let app = router(content_state(pool), None);
 
@@ -526,8 +575,8 @@ async fn restricted_child_can_read_content() {
 #[tokio::test]
 async fn explore_pagination() {
     let pool = test_pool().await;
-    insert_explore_video(&pool, "page-vid-a", "sky", &["young"], false).await;
-    insert_explore_video(&pool, "page-vid-b", "sky", &["young"], false).await;
+    insert_explore_video(&pool, "page-vid-a", "speed_champions", &["young"], false).await;
+    insert_explore_video(&pool, "page-vid-b", "speed_champions", &["young"], false).await;
 
     let app = router(content_state(pool), None);
     let token = register_and_token(&app, "pagination@test.com").await;

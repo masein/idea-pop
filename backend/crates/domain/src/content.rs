@@ -53,34 +53,54 @@ impl Studio {
     }
 }
 
-// ── Habitat ───────────────────────────────────────────────────────────────────
+// ── SuperpowerCategory ────────────────────────────────────────────────────────
 
+/// Edition-2 grouping for Explore videos by animal superpower, not by habitat.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Habitat {
-    Ocean,
-    Jungle,
-    Desert,
-    Sky,
+pub enum SuperpowerCategory {
+    MastersOfDisguise,
+    SoftEngineers,
+    SpeedChampions,
+    MasterBuilders,
 }
 
-impl Habitat {
+impl SuperpowerCategory {
     pub fn as_str(self) -> &'static str {
         match self {
-            Habitat::Ocean => "ocean",
-            Habitat::Jungle => "jungle",
-            Habitat::Desert => "desert",
-            Habitat::Sky => "sky",
+            SuperpowerCategory::MastersOfDisguise => "masters_of_disguise",
+            SuperpowerCategory::SoftEngineers => "soft_engineers",
+            SuperpowerCategory::SpeedChampions => "speed_champions",
+            SuperpowerCategory::MasterBuilders => "master_builders",
         }
     }
 
     pub fn from_slug(s: &str) -> Option<Self> {
         match s {
-            "ocean" => Some(Habitat::Ocean),
-            "jungle" => Some(Habitat::Jungle),
-            "desert" => Some(Habitat::Desert),
-            "sky" => Some(Habitat::Sky),
+            "masters_of_disguise" => Some(SuperpowerCategory::MastersOfDisguise),
+            "soft_engineers" => Some(SuperpowerCategory::SoftEngineers),
+            "speed_champions" => Some(SuperpowerCategory::SpeedChampions),
+            "master_builders" => Some(SuperpowerCategory::MasterBuilders),
             _ => None,
         }
+    }
+
+    /// Short marketing tagline shown under each category in the UI.
+    pub fn tagline(self) -> &'static str {
+        match self {
+            SuperpowerCategory::MastersOfDisguise => "change to survive",
+            SuperpowerCategory::SoftEngineers => "bodies that think",
+            SuperpowerCategory::SpeedChampions => "built for speed",
+            SuperpowerCategory::MasterBuilders => "nature's architects",
+        }
+    }
+
+    pub fn all() -> [SuperpowerCategory; 4] {
+        [
+            SuperpowerCategory::MastersOfDisguise,
+            SuperpowerCategory::SoftEngineers,
+            SuperpowerCategory::SpeedChampions,
+            SuperpowerCategory::MasterBuilders,
+        ]
     }
 }
 
@@ -90,7 +110,7 @@ pub struct ExploreVideo {
     pub id: Uuid,
     pub title: String,
     pub slug: String,
-    pub habitat: Habitat,
+    pub superpower_category: SuperpowerCategory,
     pub taxonomy: String,
     pub video_url: String,
     pub duration_s: i32,
@@ -178,7 +198,7 @@ impl<T> Page<T> {
 // ── Filters ───────────────────────────────────────────────────────────────────
 
 pub struct ExploreFilter {
-    pub habitat: Option<Habitat>,
+    pub superpower_category: Option<SuperpowerCategory>,
     pub age_mode: Option<AgeMode>,
     pub page: i64,
     pub per_page: i64,
@@ -199,7 +219,7 @@ impl ExploreFilter {
 impl Default for ExploreFilter {
     fn default() -> Self {
         Self {
-            habitat: None,
+            superpower_category: None,
             age_mode: None,
             page: 1,
             per_page: 20,
@@ -277,16 +297,29 @@ mod tests {
     }
 
     #[test]
-    fn habitat_round_trips() {
-        for h in [
-            Habitat::Ocean,
-            Habitat::Jungle,
-            Habitat::Desert,
-            Habitat::Sky,
-        ] {
-            assert_eq!(Habitat::from_slug(h.as_str()), Some(h));
+    fn superpower_category_round_trips() {
+        for c in SuperpowerCategory::all() {
+            assert_eq!(SuperpowerCategory::from_slug(c.as_str()), Some(c));
         }
-        assert_eq!(Habitat::from_slug("lava"), None);
+        assert_eq!(SuperpowerCategory::from_slug("habitat"), None);
+        assert_eq!(SuperpowerCategory::from_slug("ocean"), None);
+    }
+
+    #[test]
+    fn superpower_category_all_has_four_variants() {
+        let all = SuperpowerCategory::all();
+        assert_eq!(all.len(), 4);
+        assert!(all.contains(&SuperpowerCategory::MastersOfDisguise));
+        assert!(all.contains(&SuperpowerCategory::SoftEngineers));
+        assert!(all.contains(&SuperpowerCategory::SpeedChampions));
+        assert!(all.contains(&SuperpowerCategory::MasterBuilders));
+    }
+
+    #[test]
+    fn superpower_category_taglines_are_nonempty() {
+        for c in SuperpowerCategory::all() {
+            assert!(!c.tagline().is_empty(), "{:?} tagline must not be empty", c);
+        }
     }
 
     #[test]
@@ -302,6 +335,12 @@ mod tests {
     fn explore_filter_validation() {
         let ok = ExploreFilter::default();
         assert!(ok.validate().is_ok());
+
+        let with_category = ExploreFilter {
+            superpower_category: Some(SuperpowerCategory::MastersOfDisguise),
+            ..ExploreFilter::default()
+        };
+        assert!(with_category.validate().is_ok());
 
         let bad_page = ExploreFilter {
             page: 0,

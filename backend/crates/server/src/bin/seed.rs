@@ -169,12 +169,12 @@ async fn seed_lessons(pool: &PgPool) -> anyhow::Result<()> {
 }
 
 async fn seed_explore_videos(pool: &PgPool) -> anyhow::Result<()> {
-    // (slug, title, habitat, taxonomy, design_secret, sticker_id, age_modes, ai_generated, duration_s)
+    // (slug, title, superpower_category, taxonomy, design_secret, sticker_id, age_modes, ai_generated, duration_s)
     let videos: &[(&str, &str, &str, &str, &str, &str, &[&str], bool, i32)] = &[
         (
             "how-octopuses-think",
             "How Octopuses Think",
-            "ocean",
+            "masters_of_disguise",
             "Cephalopoda",
             "Each arm has its own mini-brain — 8 arms, 8 tiny brains, all working together!",
             "octopus",
@@ -185,7 +185,7 @@ async fn seed_explore_videos(pool: &PgPool) -> anyhow::Result<()> {
         (
             "coral-reef-architects",
             "Coral Reef Architects",
-            "ocean",
+            "master_builders",
             "Anthozoa",
             "A coral polyp builds its own tiny limestone castle to live in.",
             "coral",
@@ -196,7 +196,7 @@ async fn seed_explore_videos(pool: &PgPool) -> anyhow::Result<()> {
         (
             "bioluminescent-deep-sea",
             "Bioluminescent Deep Sea",
-            "ocean",
+            "masters_of_disguise",
             "Dinoflagellata",
             "Some sea creatures make their own light — no batteries needed!",
             "anglerfish",
@@ -207,7 +207,7 @@ async fn seed_explore_videos(pool: &PgPool) -> anyhow::Result<()> {
         (
             "ant-colony-engineers",
             "Ant Colony Engineers",
-            "jungle",
+            "master_builders",
             "Hymenoptera",
             "Leaf-cutter ants grow their own fungus garden underground.",
             "ant",
@@ -218,7 +218,7 @@ async fn seed_explore_videos(pool: &PgPool) -> anyhow::Result<()> {
         (
             "rainforest-color-chemistry",
             "Rainforest Color Chemistry",
-            "jungle",
+            "masters_of_disguise",
             "Botany",
             "Bright flowers trick bees with ultraviolet patterns we can't see!",
             "flower",
@@ -229,7 +229,7 @@ async fn seed_explore_videos(pool: &PgPool) -> anyhow::Result<()> {
         (
             "mangrove-root-worlds",
             "Mangrove Root Worlds",
-            "jungle",
+            "soft_engineers",
             "Rhizophora",
             "Mangrove roots trap mud to build new land — a tree that makes islands!",
             "mangrove",
@@ -240,7 +240,7 @@ async fn seed_explore_videos(pool: &PgPool) -> anyhow::Result<()> {
         (
             "desert-sand-sculptures",
             "Desert Sand Sculptures",
-            "desert",
+            "master_builders",
             "Geology",
             "Wind is the sculptor — it carves rock into arches over thousands of years.",
             "arch-rock",
@@ -251,7 +251,7 @@ async fn seed_explore_videos(pool: &PgPool) -> anyhow::Result<()> {
         (
             "camel-water-secrets",
             "Camel Water Secrets",
-            "desert",
+            "soft_engineers",
             "Mammalia",
             "Camels store fat (not water!) in their humps as a travel energy pack.",
             "camel",
@@ -262,7 +262,7 @@ async fn seed_explore_videos(pool: &PgPool) -> anyhow::Result<()> {
         (
             "thermal-updrafts",
             "Riding Thermal Updrafts",
-            "sky",
+            "speed_champions",
             "Meteorology",
             "Hot air rises and forms invisible elevators that birds and gliders use for free lift.",
             "hawk",
@@ -273,7 +273,7 @@ async fn seed_explore_videos(pool: &PgPool) -> anyhow::Result<()> {
         (
             "bird-v-formation",
             "Why Birds Fly in V-Formation",
-            "sky",
+            "speed_champions",
             "Aves",
             "Each bird rides the upwash from the wingtip ahead — teamwork saves energy!",
             "goose",
@@ -283,19 +283,20 @@ async fn seed_explore_videos(pool: &PgPool) -> anyhow::Result<()> {
         ),
     ];
 
-    for (slug, title, habitat, taxonomy, secret, sticker, age_modes, ai_gen, duration_s) in videos {
+    for (slug, title, category, taxonomy, secret, sticker, age_modes, ai_gen, duration_s) in videos
+    {
         let age_modes_vec: Vec<String> = age_modes.iter().map(|s| s.to_string()).collect();
         let video_url = format!("https://assets.idea-pop.app/explore/{slug}.mp4");
         sqlx::query(
             r#"INSERT INTO explore_videos
-               (title, slug, habitat, taxonomy, video_url, duration_s,
+               (title, slug, superpower_category, taxonomy, video_url, duration_s,
                 design_secret, sticker_id, xp_reward, ai_generated, age_modes)
                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 5, $9, $10)
                ON CONFLICT (slug) DO NOTHING"#,
         )
         .bind(title)
         .bind(slug)
-        .bind(habitat)
+        .bind(category)
         .bind(taxonomy)
         .bind(&video_url)
         .bind(duration_s)

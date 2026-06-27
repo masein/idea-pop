@@ -6,8 +6,8 @@ use uuid::Uuid;
 
 use idea_pop_domain::{
     content::{
-        Course, Creator, ExploreFilter, ExploreVideo, Habitat, Lesson, Page, QuickMake,
-        QuickMakeFilter, Studio, StudioCount,
+        Course, Creator, ExploreFilter, ExploreVideo, Lesson, Page, QuickMake, QuickMakeFilter,
+        Studio, StudioCount, SuperpowerCategory,
     },
     AgeMode, DomainError, ExploreRepo, LibraryRepo,
 };
@@ -17,8 +17,8 @@ fn sqlx_err(e: sqlx::Error) -> DomainError {
     DomainError::Internal("database error".into())
 }
 
-fn habitat_or(s: &str) -> Habitat {
-    Habitat::from_slug(s).unwrap_or(Habitat::Ocean)
+fn category_or(s: &str) -> SuperpowerCategory {
+    SuperpowerCategory::from_slug(s).unwrap_or(SuperpowerCategory::MastersOfDisguise)
 }
 
 fn studio_or(s: &str) -> Studio {
@@ -44,7 +44,10 @@ impl SqlxExploreRepo {
 #[async_trait]
 impl ExploreRepo for SqlxExploreRepo {
     async fn list(&self, filter: &ExploreFilter) -> Result<Page<ExploreVideo>, DomainError> {
-        let habitat = filter.habitat.as_ref().map(|h| h.as_str().to_owned());
+        let category = filter
+            .superpower_category
+            .as_ref()
+            .map(|c| c.as_str().to_owned());
         let age_mode = filter.age_mode.as_ref().map(|a| a.as_str().to_owned());
         let per_page = filter.per_page;
         let offset = (filter.page - 1) * per_page;
@@ -52,24 +55,24 @@ impl ExploreRepo for SqlxExploreRepo {
         let total: i64 = sqlx::query_scalar(
             r#"SELECT COUNT(*)
                FROM explore_videos
-               WHERE ($1::text IS NULL OR habitat = $1)
+               WHERE ($1::text IS NULL OR superpower_category = $1)
                  AND ($2::text IS NULL OR $2 = ANY(age_modes))"#,
         )
-        .bind(&habitat)
+        .bind(&category)
         .bind(&age_mode)
         .fetch_one(&self.pool)
         .await
         .map_err(sqlx_err)?;
 
         let rows = sqlx::query!(
-            r#"SELECT id, title, slug, habitat, taxonomy, video_url, duration_s,
+            r#"SELECT id, title, slug, superpower_category, taxonomy, video_url, duration_s,
                       design_secret, sticker_id, xp_reward, ai_generated, age_modes, created_at
                FROM explore_videos
-               WHERE ($1::text IS NULL OR habitat = $1)
+               WHERE ($1::text IS NULL OR superpower_category = $1)
                  AND ($2::text IS NULL OR $2 = ANY(age_modes))
                ORDER BY created_at DESC
                LIMIT $3 OFFSET $4"#,
-            habitat,
+            category,
             age_mode,
             per_page,
             offset,
@@ -84,7 +87,7 @@ impl ExploreRepo for SqlxExploreRepo {
                 id: r.id,
                 title: r.title,
                 slug: r.slug,
-                habitat: habitat_or(&r.habitat),
+                superpower_category: category_or(&r.superpower_category),
                 taxonomy: r.taxonomy,
                 video_url: r.video_url,
                 duration_s: r.duration_s,
@@ -102,7 +105,7 @@ impl ExploreRepo for SqlxExploreRepo {
 
     async fn find_by_id(&self, id: Uuid) -> Result<Option<ExploreVideo>, DomainError> {
         let row = sqlx::query!(
-            r#"SELECT id, title, slug, habitat, taxonomy, video_url, duration_s,
+            r#"SELECT id, title, slug, superpower_category, taxonomy, video_url, duration_s,
                       design_secret, sticker_id, xp_reward, ai_generated, age_modes, created_at
                FROM explore_videos WHERE id = $1"#,
             id,
@@ -115,7 +118,7 @@ impl ExploreRepo for SqlxExploreRepo {
             id: r.id,
             title: r.title,
             slug: r.slug,
-            habitat: habitat_or(&r.habitat),
+            superpower_category: category_or(&r.superpower_category),
             taxonomy: r.taxonomy,
             video_url: r.video_url,
             duration_s: r.duration_s,

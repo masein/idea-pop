@@ -8,8 +8,8 @@ yanked = "warn"
 
 [licenses]
 version = 2
-# Allow our own private workspace crates (UNLICENSED = proprietary).
-unlicensed = "allow"
+# Skip license checks for our own private workspace crates (publish = false).
+private = { ignore = true }
 # Acceptable open-source licenses for this project.
 allow = [
     "MIT",

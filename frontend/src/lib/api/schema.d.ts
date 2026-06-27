@@ -393,6 +393,89 @@ export interface paths {
       };
     };
   };
+  "/api/parent/children": {
+    get: {
+      responses: {
+        200: { content: { "application/json": components["schemas"]["ParentChild"][] } };
+      };
+    };
+  };
+  "/api/parent/children/{id}/report": {
+    get: {
+      parameters: { path: { id: string } };
+      responses: {
+        200: { content: { "application/json": components["schemas"]["ChildReport"] } };
+      };
+    };
+  };
+  "/api/consents/grant": {
+    post: {
+      requestBody: {
+        content: { "application/json": components["schemas"]["ConsentToggleRequest"] };
+      };
+      responses: { 200: { content: never } };
+    };
+  };
+  "/api/consents/revoke": {
+    post: {
+      requestBody: {
+        content: { "application/json": components["schemas"]["ConsentToggleRequest"] };
+      };
+      responses: { 200: { content: never } };
+    };
+  };
+  "/api/teacher/class": {
+    get: {
+      responses: {
+        200: { content: { "application/json": components["schemas"]["TeacherClass"] } };
+      };
+    };
+  };
+  "/api/teacher/class/assign": {
+    post: {
+      requestBody: {
+        content: { "application/json": { challenge_id: string } };
+      };
+      responses: { 200: { content: never } };
+    };
+  };
+  "/api/teacher/class/gallery": {
+    get: {
+      responses: {
+        200: { content: { "application/json": components["schemas"]["ClassGalleryItem"][] } };
+      };
+    };
+  };
+  "/api/moderation/queue": {
+    get: {
+      parameters: { query?: { status?: "pending" | "approved" | "rejected" } };
+      responses: {
+        200: { content: { "application/json": components["schemas"]["ModerationItem"][] } };
+      };
+    };
+  };
+  "/api/moderation/{id}/approve": {
+    post: {
+      parameters: { path: { id: string } };
+      responses: { 200: { content: never } };
+    };
+  };
+  "/api/moderation/{id}/reject": {
+    post: {
+      parameters: { path: { id: string } };
+      requestBody: {
+        content: { "application/json": { reason: string } };
+      };
+      responses: { 200: { content: never } };
+    };
+  };
+  "/api/reports": {
+    get: {
+      responses: {
+        200: { content: { "application/json": components["schemas"]["ContentReport"][] } };
+      };
+    };
+  };
 }
 
 export interface components {
@@ -612,6 +695,67 @@ export interface components {
       visibility_pending: boolean;
       created_at: string;
       challenge_title: string | null;
+    };
+    ParentChild: {
+      id: string;
+      nickname: string;
+      avatar_id: string;
+      birth_year: number;
+      level: number;
+      total_xp: number;
+      consent_granted: boolean;
+      class_sharing_enabled: boolean;
+      public_sharing_enabled: boolean;
+    };
+    ChildReport: {
+      child_id: string;
+      week_start: string;
+      explore_videos_watched: number;
+      lessons_completed: number;
+      challenges_completed: number;
+      xp_earned: number;
+      projects: components["schemas"]["KidProjectSummary"][];
+    };
+    ConsentToggleRequest: {
+      child_id: string;
+      scope: "class" | "public" | "all";
+    };
+    TeacherClass: {
+      id: string;
+      name: string;
+      class_code: string;
+      student_count: number;
+      assigned_challenge_id: string | null;
+      assigned_challenge_title: string | null;
+    };
+    ClassGalleryItem: {
+      id: string;
+      student_nickname: string;
+      student_avatar_id: string;
+      project_title: string;
+      project_photo_url: string | null;
+      challenge_title: string;
+      created_at: string;
+    };
+    ModerationItem: {
+      id: string;
+      type: "project" | "idea";
+      content_id: string;
+      content_title: string;
+      content_photo_url: string | null;
+      author_nickname: string;
+      submitted_at: string;
+      status: "pending" | "approved" | "rejected";
+      rejection_reason: string | null;
+    };
+    ContentReport: {
+      id: string;
+      content_id: string;
+      content_type: "project" | "idea" | "comment";
+      reporter_id: string;
+      reason: string;
+      created_at: string;
+      resolved: boolean;
     };
   };
 }

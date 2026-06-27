@@ -162,3 +162,46 @@ export async function fetchProgressSummary() {
   if (error) throw new Error("Failed to load progress");
   return data;
 }
+
+// ── Challenges ────────────────────────────────────────────────────────────────
+
+export async function fetchChallenge(id: string) {
+  const { data, error } = await apiClient.GET("/api/challenges/{id}", {
+    params: { path: { id } },
+  });
+  if (error) throw new Error("Failed to load challenge");
+  return data;
+}
+
+export async function startAttempt(challengeId: string) {
+  const { data, error } = await apiClient.POST("/api/challenges/{id}/attempt", {
+    params: { path: { id: challengeId } },
+  });
+  if (error) throw new Error("Failed to start attempt");
+  return data;
+}
+
+export async function advanceStep(attemptId: string, step: number) {
+  const { data, error } = await apiClient.PATCH("/api/attempts/{id}/step", {
+    params: { path: { id: attemptId } },
+    body: { step },
+  });
+  if (error) throw new Error("Failed to advance step");
+  return data;
+}
+
+// ── Projects ──────────────────────────────────────────────────────────────────
+
+export async function createProject(body: {
+  title: string;
+  what_i_made: string;
+  what_i_used: string;
+  what_was_hard: string;
+  what_id_improve: string;
+  challenge_id: string | null;
+  step_type: "sketch" | "build";
+}) {
+  const { data, error } = await apiClient.POST("/api/projects", { body });
+  if (error) throw new Error("Failed to create project");
+  return data;
+}

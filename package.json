@@ -1,0 +1,5 @@
+{
+  "name": "idea-pop",
+  "private": true,
+  "workspaces": ["packages/*"]
+}

@@ -2,10 +2,42 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Design tokens as CSS custom properties ─────────────────────────────────
+   A future "Themes" layer swaps palettes by overriding these variables.
+   Actual Tailwind classes (bg-explore, text-library, etc.) reference vars.    */
 :root {
   color-scheme: light;
+
+  /* Section accent colors */
+  --color-explore: #27ae60;
+  --color-library: #f2994a;
+  --color-challenge: #2d9cdb;
+  --color-pricing: #9b51e0;
+
+  /* Pastel page-tint backgrounds */
+  --color-tint-lime: #f3ffc2;
+  --color-tint-cream: #fbf7d5;
+  --color-tint-blue: #c0f0ff;
+  --color-tint-lavender: #f1d8fb;
+  --color-tint-blush: #f9ded7;
+
+  /* Core neutrals */
+  --color-ink: #2b2b2b;
+  --color-surface: #ffffff;
+  --color-sidebar: #f7f7f7;
 }
 
 html {
   -webkit-text-size-adjust: 100%;
+}
+
+/* Sensible focus outline for keyboard nav */
+:focus-visible {
+  outline: 2px solid var(--color-explore);
+  outline-offset: 2px;
+}
+
+/* RTL mirror: flip sidebar layout direction */
+[dir="rtl"] .sidebar-flip {
+  flex-direction: row-reverse;
 }

@@ -1,0 +1,34 @@
+{
+  "nav": {
+    "profile": "My Profile",
+    "explore": "Exploring",
+    "library": "Library",
+    "challenges": "Challenges"
+  },
+  "home": {
+    "tagline": "Ask nature. Build with your hands.",
+    "description": "Your child solves one real problem every week — with design thinking, nature's secrets, and home materials. Ages 8+.",
+    "cta_start": "Start free",
+    "cta_watch": "Watch a sample",
+    "badges": "✓ No ads · ✓ Private by default · ✓ Cancel anytime · ✓ COPPA-friendly"
+  },
+  "mascot": {
+    "ask_me": "Ask Me",
+    "greeting": "Hi, I'm Idea Pop!"
+  },
+  "themes": {
+    "label": "Themes",
+    "locked": "Unlock at Level 4"
+  },
+  "billing": {
+    "upgrade": "Upgrade",
+    "monthly": "Monthly",
+    "annual": "Annual",
+    "per_month": "/month",
+    "per_year": "/year"
+  },
+  "errors": {
+    "not_found": "Page not found",
+    "try_again": "Try again"
+  }
+}

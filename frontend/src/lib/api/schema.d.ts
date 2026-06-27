@@ -62,8 +62,20 @@ export interface paths {
   };
   "/api/explore": {
     get: {
+      parameters: {
+        query?: {
+          superpower_category?: string;
+          age_mode?: string;
+          page?: number;
+          per_page?: number;
+        };
+      };
       responses: {
-        200: { content: { "application/json": unknown[] } };
+        200: {
+          content: {
+            "application/json": components["schemas"]["ExplorePageResponse"];
+          };
+        };
       };
     };
   };
@@ -71,22 +83,91 @@ export interface paths {
     get: {
       parameters: { path: { id: string } };
       responses: {
-        200: { content: { "application/json": unknown } };
+        200: {
+          content: {
+            "application/json": components["schemas"]["ExploreVideo"];
+          };
+        };
       };
     };
   };
-  "/api/library": {
+  "/api/library/studios": {
     get: {
       responses: {
-        200: { content: { "application/json": unknown[] } };
+        200: {
+          content: {
+            "application/json": components["schemas"]["StudioCountResponse"][];
+          };
+        };
       };
     };
   };
-  "/api/library/courses/{id}": {
+  "/api/library/quick-makes": {
+    get: {
+      parameters: {
+        query?: { studio?: string; page?: number; per_page?: number };
+      };
+      responses: {
+        200: {
+          content: {
+            "application/json": components["schemas"]["QuickMakePageResponse"];
+          };
+        };
+      };
+    };
+  };
+  "/api/courses/{id}": {
     get: {
       parameters: { path: { id: string } };
       responses: {
-        200: { content: { "application/json": unknown } };
+        200: {
+          content: {
+            "application/json": components["schemas"]["CourseDetailResponse"];
+          };
+        };
+      };
+    };
+  };
+  "/api/progress/video-view": {
+    post: {
+      requestBody: {
+        content: {
+          "application/json": { video_id: string };
+        };
+      };
+      responses: {
+        200: {
+          content: {
+            "application/json": components["schemas"]["XpAwardResponse"];
+          };
+        };
+      };
+    };
+  };
+  "/api/progress/lesson-complete": {
+    post: {
+      requestBody: {
+        content: {
+          "application/json": { lesson_id: string };
+        };
+      };
+      responses: {
+        200: {
+          content: {
+            "application/json": components["schemas"]["XpAwardResponse"];
+          };
+        };
+      };
+    };
+  };
+  "/api/me/progress": {
+    get: {
+      responses: {
+        200: {
+          content: {
+            "application/json": components["schemas"]["ProgressSummary"];
+          };
+        };
       };
     };
   };
@@ -239,6 +320,81 @@ export interface components {
       id: string;
       class_code: string;
       name: string;
+    };
+    ExploreVideo: {
+      id: string;
+      title: string;
+      slug: string;
+      superpower_category:
+        | "masters_of_disguise"
+        | "soft_engineers"
+        | "speed_champions"
+        | "master_builders";
+      taxonomy: string;
+      video_url: string;
+      duration_s: number;
+      design_secret: string;
+      sticker_id: string;
+      xp_reward: number;
+      ai_generated: boolean;
+      age_modes: ("young" | "older")[];
+      created_at: string;
+    };
+    ExplorePageResponse: {
+      items: components["schemas"]["ExploreVideo"][];
+      total: number;
+      page: number;
+      per_page: number;
+    };
+    StudioCountResponse: {
+      studio: string;
+      quick_make_count: number;
+    };
+    QuickMakeResponse: {
+      id: string;
+      title: string;
+      slug: string;
+      studio: string;
+      difficulty: number;
+      time_minutes: number;
+      materials: string[];
+      mess_level: number;
+      video_url: string;
+      xp_reward: number;
+      ai_generated: boolean;
+      created_at: string;
+    };
+    QuickMakePageResponse: {
+      items: components["schemas"]["QuickMakeResponse"][];
+      total: number;
+      page: number;
+      per_page: number;
+    };
+    LessonResponse: {
+      id: string;
+      ordinal: number;
+      title: string;
+      video_url: string;
+      duration_s: number;
+      xp_reward: number;
+    };
+    CourseDetailResponse: {
+      id: string;
+      title: string;
+      slug: string;
+      studio: string;
+      creator_id: string;
+      summary: string;
+      created_at: string;
+      lessons: components["schemas"]["LessonResponse"][];
+    };
+    XpAwardResponse: {
+      xp_earned: number;
+      xp_total: number;
+      level: number;
+      rank: string;
+      is_new: boolean;
+      cycle_bonus_earned: boolean;
     };
     SubscriptionResponse: {
       status: string;

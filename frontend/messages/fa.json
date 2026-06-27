@@ -386,5 +386,65 @@
     "parent_handoff_dismiss": "فهمیدم",
     "xp_label": "XP",
     "level_label": "سطح {n}"
+  },
+  "explore": {
+    "heading": "قدرت‌های فوق‌العاده حیوانات",
+    "subheading": "بر اساس قدرت، نه گونه — چون مهندسان واقعی همین‌طور فکر می‌کنند.",
+    "categories": {
+      "masters_of_disguise": "استادان تغییر شکل",
+      "soft_engineers": "مهندسان نرم",
+      "speed_champions": "قهرمانان سرعت",
+      "master_builders": "سازندگان بزرگ"
+    },
+    "taglines": {
+      "masters_of_disguise": "تغییر برای بقا",
+      "soft_engineers": "بدن‌هایی که فکر می‌کنند",
+      "speed_champions": "حرکت نهایی",
+      "master_builders": "ساختارهای کامل"
+    },
+    "category_n": "دسته {n}",
+    "video_count": "{count} ویدیو",
+    "design_secret": "راز طراحی",
+    "watch_label": "تماشا و شگفتی",
+    "think_label": "فکر و حل",
+    "xp_earned": "+{xp} XP",
+    "sticker_collected": "استیکر جمع‌آوری شد!",
+    "cycle_bonus": "+۱۵ XP پاداش چرخه خلاقیت!",
+    "continue_watching": "ادامه تماشا",
+    "paint_this": "نقاشی کن",
+    "ai_label": "محتوای تولید شده با هوش مصنوعی",
+    "next_video": "ویدیو بعدی",
+    "back_to_category": "بازگشت",
+    "duration_min": "{min} دقیقه"
+  },
+  "library": {
+    "heading": "حوصله‌ات سر رفته؟ بیا بسازیم!",
+    "subheading": "یک استودیو انتخاب کن، مواد ساده بگیر، و چیزی منحصربه‌فرد بساز.",
+    "continue_heading": "ادامه از جایی که ماندی",
+    "mission_heading": "از ماموریت تو",
+    "studios_heading": "جستجو بر اساس استودیو",
+    "quick_makes_heading": "ساخت‌های سریع",
+    "studios": {
+      "craft": "صنایع دستی و ساخت",
+      "art": "هنر و طراحی",
+      "music": "موسیقی و صدا",
+      "code": "کد و بازی",
+      "science": "آزمایشگاه علم",
+      "nature": "طراحی طبیعت"
+    },
+    "difficulty_easy": "آسان",
+    "difficulty_medium": "متوسط",
+    "difficulty_hard": "سخت",
+    "time_min": "{min} دقیقه",
+    "xp_reward": "+{xp} XP",
+    "mess_level": "آشفتگی {level}",
+    "lesson_n": "درس {n}",
+    "lesson_complete": "تکمیل شد",
+    "lesson_watch": "تماشا",
+    "xp_earned": "+{xp} XP",
+    "cycle_bonus": "+۱۵ XP پاداش چرخه خلاقیت!",
+    "ai_label": "محتوای تولید شده با هوش مصنوعی",
+    "course_lessons": "{count} درس",
+    "helps_challenge": "به چالش کمک می‌کند"
   }
 }

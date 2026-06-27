@@ -87,3 +87,78 @@ export async function createClass(
   if (error || !res) throw new Error("Could not create class");
   return res;
 }
+
+// ── Explore ───────────────────────────────────────────────────────────────────
+
+export async function fetchExplore(params?: {
+  superpower_category?: string;
+  age_mode?: string;
+  page?: number;
+  per_page?: number;
+}) {
+  const { data, error } = await apiClient.GET("/api/explore", {
+    params: { query: params },
+  });
+  if (error) throw new Error("Failed to load explore");
+  return data;
+}
+
+export async function fetchExploreVideo(id: string) {
+  const { data, error } = await apiClient.GET("/api/explore/{id}", {
+    params: { path: { id } },
+  });
+  if (error) throw new Error("Failed to load video");
+  return data;
+}
+
+export async function recordVideoView(videoId: string) {
+  const { data, error } = await apiClient.POST("/api/progress/video-view", {
+    body: { video_id: videoId },
+  });
+  if (error) throw new Error("Failed to record video view");
+  return data;
+}
+
+// ── Library ───────────────────────────────────────────────────────────────────
+
+export async function fetchStudios() {
+  const { data, error } = await apiClient.GET("/api/library/studios");
+  if (error) throw new Error("Failed to load studios");
+  return data;
+}
+
+export async function fetchQuickMakes(params?: {
+  studio?: string;
+  page?: number;
+  per_page?: number;
+}) {
+  const { data, error } = await apiClient.GET("/api/library/quick-makes", {
+    params: { query: params },
+  });
+  if (error) throw new Error("Failed to load quick makes");
+  return data;
+}
+
+export async function fetchCourse(id: string) {
+  const { data, error } = await apiClient.GET("/api/courses/{id}", {
+    params: { path: { id } },
+  });
+  if (error) throw new Error("Failed to load course");
+  return data;
+}
+
+export async function recordLessonComplete(lessonId: string) {
+  const { data, error } = await apiClient.POST("/api/progress/lesson-complete", {
+    body: { lesson_id: lessonId },
+  });
+  if (error) throw new Error("Failed to record lesson complete");
+  return data;
+}
+
+// ── Progress ──────────────────────────────────────────────────────────────────
+
+export async function fetchProgressSummary() {
+  const { data, error } = await apiClient.GET("/api/me/progress");
+  if (error) throw new Error("Failed to load progress");
+  return data;
+}

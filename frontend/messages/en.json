@@ -245,6 +245,66 @@
       }
     ]
   },
+  "explore": {
+    "heading": "Animal Superpowers",
+    "subheading": "Organised by superpower, not species — because that's how real engineers think.",
+    "categories": {
+      "masters_of_disguise": "Masters of Disguise",
+      "soft_engineers": "Soft Engineers",
+      "speed_champions": "Speed Champions",
+      "master_builders": "Master Builders"
+    },
+    "taglines": {
+      "masters_of_disguise": "change to survive",
+      "soft_engineers": "bodies that think",
+      "speed_champions": "ultimate movement",
+      "master_builders": "construct perfect structures"
+    },
+    "category_n": "Category {n}",
+    "video_count": "{count} videos",
+    "design_secret": "Design secret",
+    "watch_label": "Watch & Wonder",
+    "think_label": "Think & Solve",
+    "xp_earned": "+{xp} XP",
+    "sticker_collected": "Sticker collected!",
+    "cycle_bonus": "+15 XP Creative Cycle bonus!",
+    "continue_watching": "Continue watching",
+    "paint_this": "Paint this",
+    "ai_label": "AI-generated content",
+    "next_video": "Next video",
+    "back_to_category": "Back",
+    "duration_min": "{min} min"
+  },
+  "library": {
+    "heading": "Bored? Let's make something!",
+    "subheading": "Pick a studio, grab simple materials, and make something uniquely yours.",
+    "continue_heading": "Continue where you left off",
+    "mission_heading": "From your mission",
+    "studios_heading": "Browse by studio",
+    "quick_makes_heading": "Quick makes",
+    "studios": {
+      "craft": "Craft & Build",
+      "art": "Art & Sketching",
+      "music": "Music & Sound",
+      "code": "Code & Games",
+      "science": "Science Lab",
+      "nature": "Nature Design"
+    },
+    "difficulty_easy": "Easy",
+    "difficulty_medium": "Medium",
+    "difficulty_hard": "Hard",
+    "time_min": "{min} min",
+    "xp_reward": "+{xp} XP",
+    "mess_level": "Mess {level}",
+    "lesson_n": "Lesson {n}",
+    "lesson_complete": "Complete",
+    "lesson_watch": "Watch",
+    "xp_earned": "+{xp} XP",
+    "cycle_bonus": "+15 XP Creative Cycle bonus!",
+    "ai_label": "AI-generated content",
+    "course_lessons": "{count} lessons",
+    "helps_challenge": "helps your challenge"
+  },
   "footer": {
     "product": "Product",
     "safety": "Safety",

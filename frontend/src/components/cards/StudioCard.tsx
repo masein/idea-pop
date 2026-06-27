@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 
 export type StudioAccent = 'explore' | 'library' | 'challenge';
 
@@ -27,8 +28,7 @@ export default function StudioCard({ title, subtitle, imageSrc, tag, accent }: S
     <div className="rounded-card bg-white shadow-sm overflow-hidden flex flex-col w-56">
       <div className={`relative h-32 ${imageBg[accent]}`}>
         {imageSrc ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={imageSrc} alt={title} className="absolute inset-0 h-full w-full object-cover" />
+          <Image src={imageSrc} alt={title} fill className="object-cover" sizes="224px" />
         ) : (
           <div className="absolute inset-0 flex items-center justify-center">
             <span className="text-4xl select-none opacity-40" aria-hidden="true">🖼️</span>

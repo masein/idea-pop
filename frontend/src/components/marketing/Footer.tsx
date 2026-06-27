@@ -52,7 +52,7 @@ export default async function Footer() {
           </div>
 
           <div>
-            <h3 className="mb-3 text-xs font-bold uppercase tracking-widest text-ink/40">
+            <h3 className="mb-3 text-xs font-bold uppercase tracking-widest text-ink/60">
               {t("product")}
             </h3>
             <ul className="space-y-2" role="list">
@@ -70,7 +70,7 @@ export default async function Footer() {
           </div>
 
           <div>
-            <h3 className="mb-3 text-xs font-bold uppercase tracking-widest text-ink/40">
+            <h3 className="mb-3 text-xs font-bold uppercase tracking-widest text-ink/60">
               {t("safety")}
             </h3>
             <ul className="space-y-2" role="list">
@@ -88,7 +88,7 @@ export default async function Footer() {
           </div>
 
           <div>
-            <h3 className="mb-3 text-xs font-bold uppercase tracking-widest text-ink/40">
+            <h3 className="mb-3 text-xs font-bold uppercase tracking-widest text-ink/60">
               {t("stay_close")}
             </h3>
             <ParentLetterForm />
@@ -96,7 +96,7 @@ export default async function Footer() {
         </div>
 
         <div className="mt-10 flex flex-col items-center justify-between gap-4 border-t border-ink/10 pt-6 sm:flex-row">
-          <p className="text-xs text-ink/40">
+          <p className="text-xs text-ink/60">
             {t("legal").replace("{year}", String(year))}
           </p>
           <div className="flex flex-wrap gap-4">
@@ -104,14 +104,14 @@ export default async function Footer() {
               <Link
                 key={href}
                 href={href}
-                className="text-xs text-ink/40 hover:text-ink transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-explore rounded"
+                className="text-xs text-ink/60 hover:text-ink transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-explore rounded"
               >
                 {label}
               </Link>
             ))}
             <Link
               href="/legal/terms"
-              className="text-xs text-ink/40 hover:text-ink transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-explore rounded"
+              className="text-xs text-ink/60 hover:text-ink transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-explore rounded"
             >
               {t("links.terms")}
             </Link>

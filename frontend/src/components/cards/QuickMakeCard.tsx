@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 
 export type Difficulty = 'easy' | 'medium' | 'hard';
 
@@ -20,8 +21,7 @@ export default function QuickMakeCard({ title, duration, difficulty, imageSrc }:
     <div className="rounded-card bg-white shadow-sm flex overflow-hidden h-20">
       <div className="relative w-20 flex-shrink-0 bg-tint-lime">
         {imageSrc ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={imageSrc} alt="" aria-hidden="true" className="absolute inset-0 h-full w-full object-cover" />
+          <Image src={imageSrc} alt="" aria-hidden="true" fill className="object-cover" sizes="80px" />
         ) : (
           <div className="absolute inset-0 flex items-center justify-center">
             <span className="text-2xl select-none opacity-40" aria-hidden="true">✏️</span>
@@ -32,7 +32,7 @@ export default function QuickMakeCard({ title, duration, difficulty, imageSrc }:
         <p className="font-display text-ink text-sm leading-snug line-clamp-2">{title}</p>
         <div className="flex items-center gap-2">
           {duration && (
-            <span className="font-body text-ink/50 text-xs">{duration}</span>
+            <span className="font-body text-ink/60 text-xs">{duration}</span>
           )}
           {difficulty && (
             <span

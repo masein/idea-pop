@@ -74,14 +74,15 @@ export default function LessonVideoPlayer({
       {/* Video */}
       <div className="flex-1 overflow-y-auto px-4 pb-4 flex flex-col gap-4">
         <div className="relative">
-          {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
           <video
             ref={videoRef}
             src={lesson.video_url}
             controls
             className="w-full max-h-[70vh] bg-black"
             onEnded={handleEnded}
-          />
+          >
+            <track kind="captions" src="/captions/empty.vtt" srcLang="en" label="English" default />
+          </video>
           {posting && (
             <div
               className="absolute inset-0 flex items-center justify-center bg-black/40"

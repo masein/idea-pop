@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 
 export type PersonaAccent = 'explore' | 'library' | 'challenge';
 
@@ -22,8 +23,7 @@ export default function PersonaCard({ name, role, imageSrc, accent }: PersonaCar
     >
       <div className="relative flex-1">
         {imageSrc ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={imageSrc} alt={name} className="absolute inset-0 h-full w-full object-cover object-top" />
+          <Image src={imageSrc} alt={name} fill className="object-cover object-top" sizes="192px" />
         ) : (
           <div className="absolute inset-0 bg-ink/60 flex items-center justify-center">
             <span className="text-5xl select-none" aria-hidden="true">👤</span>

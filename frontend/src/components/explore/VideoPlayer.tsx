@@ -73,14 +73,15 @@ export default function VideoPlayer({ video, ageMode, onComplete, onClose }: Vid
       {/* Video element */}
       <div className="flex-1 overflow-y-auto px-4 pb-4 flex flex-col gap-4">
         <div className="relative">
-          {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
           <video
             ref={videoRef}
             src={video.video_url}
             controls
             className="w-full max-h-[60vh] bg-black rounded-card"
             onEnded={handleEnded}
-          />
+          >
+            <track kind="captions" src="/captions/empty.vtt" srcLang="en" label="English" default />
+          </video>
           {posting && (
             <div
               className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-card"

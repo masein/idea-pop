@@ -64,6 +64,7 @@ function ChildCard({
             type="button"
             role="switch"
             aria-checked={child.class_sharing_enabled}
+            aria-label={`Class sharing for ${child.nickname}`}
             data-testid="toggle-class-sharing"
             onClick={() => onToggleClass(child)}
             className={`relative inline-flex h-6 w-11 rounded-full transition-colors flex-shrink-0 ${
@@ -87,6 +88,7 @@ function ChildCard({
             type="button"
             role="switch"
             aria-checked={child.public_sharing_enabled}
+            aria-label={`Public sharing for ${child.nickname}`}
             data-testid="toggle-public-sharing"
             onClick={() => onTogglePublic(child)}
             className={`relative inline-flex h-6 w-11 rounded-full transition-colors flex-shrink-0 ${

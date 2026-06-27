@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 
 export interface ExploreCategoryCardProps {
   category: string;
@@ -16,8 +17,7 @@ export default function ExploreCategoryCard({
   return (
     <div className={`rounded-card overflow-hidden ${color} relative w-44 h-48 flex flex-col justify-end p-4`}>
       {imageSrc && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={imageSrc} alt="" aria-hidden="true" className="absolute inset-0 h-full w-full object-cover opacity-20" />
+        <Image src={imageSrc} alt="" aria-hidden="true" fill className="object-cover opacity-20" sizes="176px" />
       )}
       <div className="relative z-10 flex flex-col gap-2">
         <p className="font-display text-ink text-lg leading-tight">{category}</p>

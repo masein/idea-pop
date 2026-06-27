@@ -29,7 +29,12 @@ export default async function RootLayout({
   const dir = locale === "fa" ? "rtl" : "ltr";
   return (
     <html lang={locale} dir={dir} className={`${baloo.variable} ${nunito.variable}`}>
-      <body className="font-body text-ink antialiased">{children}</body>
+      <body className="font-body text-ink antialiased">
+        <a href="#main-content" className="skip-nav">
+          {locale === "fa" ? "رفتن به محتوا" : "Skip to content"}
+        </a>
+        {children}
+      </body>
     </html>
   );
 }

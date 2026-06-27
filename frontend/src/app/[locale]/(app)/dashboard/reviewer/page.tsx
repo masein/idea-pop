@@ -168,8 +168,9 @@ function ReportsList({ reports }: { reports: ContentReport[] }) {
             <div
               key={r.id}
               data-testid="report-item"
-              className={`bg-white rounded-card px-4 py-3 flex items-start gap-3 border ${
-                r.resolved ? 'border-ink/10 opacity-60' : 'border-ink/20'
+              aria-disabled={r.resolved ? 'true' : undefined}
+              className={`rounded-card px-4 py-3 flex items-start gap-3 border ${
+                r.resolved ? 'bg-ink/5 border-ink/10' : 'bg-white border-ink/20'
               }`}
             >
               <span className="text-lg" aria-hidden="true">🚩</span>

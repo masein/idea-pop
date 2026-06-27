@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 
 export type Visibility = 'private' | 'class' | 'public';
 
@@ -29,8 +30,7 @@ export default function ProjectCard({
     <div className="rounded-card bg-white shadow-sm overflow-hidden flex flex-col w-48">
       <div className="relative h-32 bg-tint-lavender">
         {imageSrc ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={imageSrc} alt={title} className="absolute inset-0 h-full w-full object-cover" />
+          <Image src={imageSrc} alt={title} fill className="object-cover" sizes="192px" />
         ) : (
           <div className="absolute inset-0 flex items-center justify-center">
             <span className="text-4xl select-none opacity-30" aria-hidden="true">🖼️</span>

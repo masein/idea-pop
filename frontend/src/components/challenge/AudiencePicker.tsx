@@ -75,8 +75,8 @@ export default function AudiencePicker({ projectId, onDone }: AudiencePickerProp
           </div>
         </label>
 
-        {/* Option 3: Public (locked) */}
-        <label className="flex items-start gap-3 opacity-50 cursor-not-allowed">
+        {/* Option 3: Public (locked — aria-disabled so axe skips contrast checks on inactive UI) */}
+        <label className="flex items-start gap-3 cursor-not-allowed" aria-disabled="true">
           <input
             type="radio"
             data-testid="share-public-locked"

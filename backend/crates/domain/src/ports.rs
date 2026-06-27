@@ -9,6 +9,7 @@ use chrono::{DateTime, Utc};
 use uuid::Uuid;
 
 use crate::{
+    billing::{CheckoutResult, Plan, Subscription},
     challenge::{Challenge, ChallengeFilter},
     content::{
         Course, Creator, ExploreFilter, ExploreVideo, Lesson, Page, QuickMake, QuickMakeFilter,
@@ -323,4 +324,62 @@ pub trait LibraryRepo: Send + Sync {
     ) -> Result<Option<(Course, Vec<Lesson>)>, DomainError>;
     async fn find_creator(&self, id: Uuid) -> Result<Option<Creator>, DomainError>;
     async fn studio_counts(&self) -> Result<Vec<StudioCount>, DomainError>;
+}
+
+// ── Billing ports ─────────────────────────────────────────────────────────────
+
+#[async_trait]
+pub trait SubscriptionRepo: Send + Sync {
+    async fn find_by_account(&self, account_id: Uuid) -> Result<Option<Subscription>, DomainError>;
+    async fn find_by_provider_subscription(
+        &self,
+        provider_subscription_id: &str,
+    ) -> Result<Option<Subscription>, DomainError>;
+    async fn find_by_provider_customer(
+        &self,
+        provider_customer_id: &str,
+    ) -> Result<Option<Subscription>, DomainError>;
+    /// Insert or update a subscription row keyed by provider_subscription_id.
+    async fn upsert(&self, sub: &Subscription) -> Result<(), DomainError>;
+}
+
+#[async_trait]
+pub trait WebhookEventLog: Send + Sync {
+    /// Attempt to record a webhook event. Returns Ok(true) = newly recorded;
+    /// Ok(false) = already processed (duplicate); the caller should skip processing.
+    async fn try_record(
+        &self,
+        provider_event_id: &str,
+        event_type: &str,
+        now: DateTime<Utc>,
+    ) -> Result<bool, DomainError>;
+}
+
+#[async_trait]
+pub trait PaymentGateway: Send + Sync {
+    /// Create a Stripe Checkout Session for the given plan; returns the
+    /// hosted URL to redirect the user to.
+    async fn create_checkout_session(
+        &self,
+        account_id: Uuid,
+        plan: &Plan,
+        success_url: &str,
+        cancel_url: &str,
+        customer_email: Option<&str>,
+    ) -> Result<CheckoutResult, DomainError>;
+
+    /// Create a Stripe Billing Portal session; returns the hosted URL.
+    async fn create_portal_session(
+        &self,
+        provider_customer_id: &str,
+        return_url: &str,
+    ) -> Result<String, DomainError>;
+
+    /// Verify a Stripe webhook signature (HMAC-SHA256).
+    /// Returns Ok(()) if valid, Err(Unauthorized) if invalid.
+    fn verify_webhook_signature(
+        &self,
+        payload: &[u8],
+        signature_header: &str,
+    ) -> Result<(), DomainError>;
 }

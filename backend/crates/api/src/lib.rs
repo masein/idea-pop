@@ -2,6 +2,7 @@
 
 #![forbid(unsafe_code)]
 
+pub mod billing;
 mod error;
 pub mod extractor;
 pub mod portfolio;
@@ -19,7 +20,8 @@ mod me;
 
 pub use error::{ApiError, ProblemDetail};
 pub use state::{
-    create_auth_rate_limiter, AppState, AuthRateLimiter, GamificationRepos, PortfolioRepos,
+    create_auth_rate_limiter, AppState, AuthRateLimiter, BillingRepos, GamificationRepos,
+    PortfolioRepos,
 };
 
 use std::{net::IpAddr, sync::Arc, time::Duration};
@@ -445,6 +447,13 @@ pub fn router(state: AppState, rate_limiter: Option<Arc<AuthRateLimiter>>) -> Ro
         .route("/challenges/:id/ideas", get(portfolio::list_ideas))
         // React to an idea (kid-owned)
         .route("/ideas/:id/react", post(portfolio::react_to_idea))
+        // Billing — adult-only (AdultAuth extractor rejects kid tokens)
+        .route("/billing/checkout", post(billing::create_checkout))
+        .route("/billing/portal", post(billing::create_portal))
+        .route("/billing/subscription", get(billing::get_subscription))
+        .route("/billing/premium-check", get(billing::premium_check))
+        // Stripe webhook — NO auth, raw body
+        .route("/webhooks/stripe", post(billing::stripe_webhook))
         .with_state(state)
         .merge(auth_routes)
         .merge(gated_routes)
@@ -459,6 +468,7 @@ pub fn router(state: AppState, rate_limiter: Option<Arc<AuthRateLimiter>>) -> Ro
 
 use async_trait::async_trait;
 use idea_pop_domain::{
+    billing::{CheckoutResult, Plan, Subscription},
     challenge::{Challenge, ChallengeFilter},
     content::{
         Course, Creator, ExploreFilter, ExploreVideo, Lesson, Page, QuickMake, QuickMakeFilter,
@@ -474,9 +484,9 @@ use idea_pop_domain::{
     },
     Account, AccountRepo, AnalyticsSink, BadgeRepo, ChallengeRepo, ChildProfile, ChildRepo, Class,
     ClassRepo, Clock, ConsentEmailSender, ConsentRepo, ConsentStatus, EmailSender, ExploreRepo,
-    IdeaRepo, LibraryRepo, ModerationRepo, ParentalConsent, PasswordHasher, PhotoStore,
-    ProgressRepo, ProjectRepo, RefreshSession, ReportRepo, TokenClaims, TokenIssuer, TokenPair,
-    XpRepo,
+    IdeaRepo, LibraryRepo, ModerationRepo, ParentalConsent, PasswordHasher, PaymentGateway,
+    PhotoStore, ProgressRepo, ProjectRepo, RefreshSession, ReportRepo, SubscriptionRepo,
+    TokenClaims, TokenIssuer, TokenPair, WebhookEventLog, XpRepo,
 };
 
 pub struct NullRepo;
@@ -892,6 +902,72 @@ pub fn null_portfolio() -> PortfolioRepos {
     }
 }
 
+// ── Null billing adapters ─────────────────────────────────────────────────────
+
+pub struct NullSubscriptionRepo;
+#[async_trait]
+impl SubscriptionRepo for NullSubscriptionRepo {
+    async fn find_by_account(&self, _: Uuid) -> Result<Option<Subscription>, DomainError> {
+        Ok(None)
+    }
+    async fn find_by_provider_subscription(
+        &self,
+        _: &str,
+    ) -> Result<Option<Subscription>, DomainError> {
+        Ok(None)
+    }
+    async fn find_by_provider_customer(
+        &self,
+        _: &str,
+    ) -> Result<Option<Subscription>, DomainError> {
+        Ok(None)
+    }
+    async fn upsert(&self, _: &Subscription) -> Result<(), DomainError> {
+        Ok(())
+    }
+}
+
+pub struct NullWebhookEventLog;
+#[async_trait]
+impl WebhookEventLog for NullWebhookEventLog {
+    async fn try_record(&self, _: &str, _: &str, _: DateTime<Utc>) -> Result<bool, DomainError> {
+        Ok(true)
+    }
+}
+
+pub struct NullPaymentGateway;
+#[async_trait]
+impl PaymentGateway for NullPaymentGateway {
+    async fn create_checkout_session(
+        &self,
+        _: Uuid,
+        plan: &Plan,
+        _: &str,
+        _: &str,
+        _: Option<&str>,
+    ) -> Result<CheckoutResult, DomainError> {
+        Ok(CheckoutResult {
+            url: format!("https://null-checkout.test?plan={}", plan.as_str()),
+            provider_customer_id: "cus_null".into(),
+        })
+    }
+    async fn create_portal_session(&self, _: &str, _: &str) -> Result<String, DomainError> {
+        Ok("https://null-portal.test".into())
+    }
+    fn verify_webhook_signature(&self, _: &[u8], _: &str) -> Result<(), DomainError> {
+        Ok(())
+    }
+}
+
+/// Convenience: all-null billing repos for tests that don't exercise billing.
+pub fn null_billing() -> BillingRepos {
+    BillingRepos {
+        subscriptions: Arc::new(NullSubscriptionRepo),
+        webhook_log: Arc::new(NullWebhookEventLog),
+        gateway: Arc::new(NullPaymentGateway),
+    }
+}
+
 /// Build a state using only a PgPool + null auth adapters (for Phase 1 tests).
 pub fn null_state(pool: PgPool) -> AppState {
     AppState::new(
@@ -910,5 +986,6 @@ pub fn null_state(pool: PgPool) -> AppState {
         Arc::new(NullChallengeRepo),
         null_gamification(),
         null_portfolio(),
+        null_billing(),
     )
 }

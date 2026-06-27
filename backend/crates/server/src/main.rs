@@ -7,13 +7,16 @@
 
 use std::{net::SocketAddr, sync::Arc};
 
-use api::{create_auth_rate_limiter, router, AppState, GamificationRepos, PortfolioRepos};
+use api::{
+    create_auth_rate_limiter, router, AppState, BillingRepos, GamificationRepos, PortfolioRepos,
+};
 use idea_pop_infra::{
     Argon2Hasher, JwtTokenIssuer, LettreEmailSender, NullConsentEmailSender, NullEmailSender,
     S3PhotoStore, SmtpConsentEmailSender, SqlxAccountRepo, SqlxAnalyticsSink, SqlxBadgeRepo,
     SqlxChallengeRepo, SqlxChildRepo, SqlxClassRepo, SqlxConsentRepo, SqlxExploreRepo,
     SqlxIdeaRepo, SqlxLibraryRepo, SqlxModerationRepo, SqlxProgressRepo, SqlxProjectRepo,
-    SqlxReportRepo, SqlxXpRepo, SystemClock,
+    SqlxReportRepo, SqlxSubscriptionRepo, SqlxWebhookEventLog, SqlxXpRepo, StripePaymentGateway,
+    SystemClock,
 };
 
 #[tokio::main]
@@ -70,7 +73,10 @@ async fn main() -> anyhow::Result<()> {
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(1025);
             Arc::new(SmtpConsentEmailSender::new(
-                &smtp_host, smtp_port, from_email, app_url,
+                &smtp_host,
+                smtp_port,
+                from_email,
+                app_url.clone(),
             ))
         } else {
             Arc::new(NullConsentEmailSender)
@@ -97,6 +103,32 @@ async fn main() -> anyhow::Result<()> {
         reports: Arc::new(SqlxReportRepo::new(pool.clone())),
     };
 
+    let stripe_secret =
+        std::env::var("STRIPE_SECRET_KEY").unwrap_or_else(|_| "sk_test_placeholder".into());
+    let stripe_webhook_secret =
+        std::env::var("STRIPE_WEBHOOK_SECRET").unwrap_or_else(|_| "whsec_placeholder".into());
+    let stripe_price_monthly = std::env::var("STRIPE_PRICE_MONTHLY")
+        .unwrap_or_else(|_| "price_placeholder_monthly".into());
+    let stripe_price_annual =
+        std::env::var("STRIPE_PRICE_ANNUAL").unwrap_or_else(|_| "price_placeholder_annual".into());
+    let billing_success_url = format!("{app_url}/billing/success");
+    let billing_cancel_url = format!("{app_url}/billing/cancel");
+    let billing_return_url = format!("{app_url}/billing");
+
+    let billing = BillingRepos {
+        subscriptions: Arc::new(SqlxSubscriptionRepo::new(pool.clone())),
+        webhook_log: Arc::new(SqlxWebhookEventLog::new(pool.clone())),
+        gateway: Arc::new(StripePaymentGateway::new(
+            stripe_secret,
+            stripe_webhook_secret,
+            stripe_price_monthly,
+            stripe_price_annual,
+            billing_success_url,
+            billing_cancel_url,
+            billing_return_url,
+        )),
+    };
+
     let state = AppState::new(
         pool.clone(),
         Arc::new(SqlxAccountRepo::new(pool.clone())),
@@ -118,6 +150,7 @@ async fn main() -> anyhow::Result<()> {
             analytics: Arc::new(SqlxAnalyticsSink::new(pool)),
         },
         portfolio,
+        billing,
     );
 
     let auth_rpm: u32 = std::env::var("AUTH_RATE_LIMIT_RPM")

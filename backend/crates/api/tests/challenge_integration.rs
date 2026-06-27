@@ -12,7 +12,9 @@ use axum::{
     body::{to_bytes, Body},
     http::{Request, StatusCode},
 };
-use idea_pop_api::{null_gamification, null_portfolio, router, AppState, NullChallengeRepo};
+use idea_pop_api::{
+    null_billing, null_gamification, null_portfolio, router, AppState, NullChallengeRepo,
+};
 use idea_pop_infra::{
     Argon2Hasher, JwtTokenIssuer, NullConsentEmailSender, NullEmailSender, SqlxAccountRepo,
     SqlxChallengeRepo, SqlxChildRepo, SqlxClassRepo, SqlxConsentRepo, SystemClock,
@@ -55,6 +57,7 @@ fn challenge_state(pool: PgPool) -> AppState {
         Arc::new(SqlxChallengeRepo::new(pool)),
         null_gamification(),
         null_portfolio(),
+        null_billing(),
     )
 }
 
@@ -511,6 +514,7 @@ async fn challenges_require_auth() {
             Arc::new(NullChallengeRepo),
             null_gamification(),
             null_portfolio(),
+            null_billing(),
         ),
         None,
     );

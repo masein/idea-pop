@@ -37,10 +37,18 @@ export interface paths {
   };
   "/api/consent/verify": {
     post: {
+      requestBody: {
+        content: {
+          "application/json": { token: string };
+        };
+      };
       responses: {
         200: { content: never };
       };
     };
+  };
+  "/api/classes": {
+    post: operations["createClass"];
   };
   "/api/children/{id}/class": {
     post: {
@@ -212,7 +220,25 @@ export interface components {
     AuthRegisterRequest: {
       email: string;
       password: string;
-      role: "parent" | "reviewer";
+      role: "parent" | "reviewer" | "teacher";
+    };
+    CreateChildRequest: {
+      nickname: string;
+      avatar_id: string;
+      birth_year: number;
+      parent_email: string;
+    };
+    CreateChildResponse: {
+      id: string;
+      access_token: string;
+    };
+    CreateClassRequest: {
+      name: string;
+    };
+    CreateClassResponse: {
+      id: string;
+      class_code: string;
+      name: string;
     };
     SubscriptionResponse: {
       status: string;
@@ -281,8 +307,31 @@ export interface operations {
     };
   };
   createChild: {
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateChildRequest"];
+      };
+    };
     responses: {
-      201: { content: never };
+      201: {
+        content: {
+          "application/json": components["schemas"]["CreateChildResponse"];
+        };
+      };
+    };
+  };
+  createClass: {
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateClassRequest"];
+      };
+    };
+    responses: {
+      201: {
+        content: {
+          "application/json": components["schemas"]["CreateClassResponse"];
+        };
+      };
     };
   };
   getChild: {

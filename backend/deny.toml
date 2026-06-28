@@ -1,0 +1,71 @@
+# cargo-deny configuration
+# https://embarkstudios.github.io/cargo-deny/
+
+[advisories]
+# Deny any crate with a known security vulnerability.
+version = 2
+yanked = "warn"
+
+# Transitive-dep vulnerabilities we cannot fix directly (no upstream patch released or
+# fixing requires a breaking version change in a direct dep we use elsewhere).
+# Each entry documents the blocking dep so we can act when a fix ships.
+[[advisories.ignore]]
+id = "RUSTSEC-2024-0370"
+reason = "proc-macro-error: unmaintained. Transitive via derive macros; no replacement yet."
+
+[[advisories.ignore]]
+id = "RUSTSEC-2025-0134"
+reason = "rustls-pemfile: unmaintained. Transitive via rustls; no upgrade path."
+
+[[advisories.ignore]]
+id = "RUSTSEC-2024-0421"
+reason = "idna: Punycode label issue. Transitive via `url`; awaiting upstream patch."
+
+[[advisories.ignore]]
+id = "RUSTSEC-2026-0098"
+reason = "webpki: URI name constraints. Transitive via `rustls`; awaiting patch."
+
+[[advisories.ignore]]
+id = "RUSTSEC-2026-0099"
+reason = "webpki: wildcard name constraints. Transitive via `rustls`; awaiting patch."
+
+[[advisories.ignore]]
+id = "RUSTSEC-2026-0104"
+reason = "webpki: CRL parsing panic. Transitive via `rustls`; awaiting patch."
+
+[[advisories.ignore]]
+id = "RUSTSEC-2025-0111"
+reason = "tokio-tar: PAX header smuggling. Transitive via testcontainers; dev-only."
+
+[licenses]
+version = 2
+# Skip license checks for our own private workspace crates (publish = false).
+private = { ignore = true }
+# Acceptable open-source licenses for this project.
+allow = [
+    "MIT",
+    "Apache-2.0",
+    "Apache-2.0 WITH LLVM-exception",
+    "ISC",
+    "0BSD",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "OpenSSL",
+    "Unicode-3.0",
+    "Unicode-DFS-2016",
+    "CC0-1.0",
+    "CDLA-Permissive-2.0",
+    "Zlib",
+]
+
+[bans]
+# Warn on multiple versions of the same crate when possible.
+multiple-versions = "warn"
+# Warn on wildcard dep specs — workspace path-deps don't carry a version constraint
+# by design; denying would block all intra-workspace references.
+wildcards = "warn"
+
+[sources]
+# Only allow crates from crates.io (no unknown registries or git sources in prod).
+unknown-registry = "deny"
+unknown-git = "warn"

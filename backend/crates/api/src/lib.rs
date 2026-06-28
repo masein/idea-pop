@@ -26,6 +26,8 @@ pub use state::{
 
 use std::{net::IpAddr, sync::Arc, time::Duration};
 
+pub use metrics_exporter_prometheus;
+
 use axum::{
     extract::{ConnectInfo, Request, State},
     http::{HeaderName, HeaderValue, StatusCode},
@@ -41,6 +43,7 @@ use sqlx::PgPool;
 use tower_http::{
     cors::CorsLayer,
     request_id::{MakeRequestId, PropagateRequestIdLayer, RequestId, SetRequestIdLayer},
+    set_header::SetResponseHeaderLayer,
     trace::TraceLayer,
 };
 use utoipa::{OpenApi, ToSchema};
@@ -83,6 +86,27 @@ impl MakeRequestId for MakeRequestUuid {
         let id = Uuid::new_v4().to_string();
         HeaderValue::from_str(&id).ok().map(RequestId::new)
     }
+}
+
+// ── Request metrics middleware ────────────────────────────────────────────────
+
+/// Records `http_requests_total` (counter) and `http_request_duration_seconds`
+/// (histogram) for every request.  Labels: method, path pattern, status.
+async fn metrics_middleware(req: Request, next: Next) -> Response {
+    let method = req.method().as_str().to_owned();
+    // Use a coarse path (first two segments) to avoid high cardinality.
+    let path = {
+        let p = req.uri().path();
+        let parts: Vec<&str> = p.splitn(4, '/').collect();
+        parts[..parts.len().min(3)].join("/")
+    };
+    let start = std::time::Instant::now();
+    let res = next.run(req).await;
+    let elapsed = start.elapsed().as_secs_f64();
+    let status = res.status().as_u16().to_string();
+    metrics::counter!("http_requests_total", "method" => method.clone(), "path" => path.clone(), "status" => status.clone()).increment(1);
+    metrics::histogram!("http_request_duration_seconds", "method" => method, "path" => path, "status" => status).record(elapsed);
+    res
 }
 
 // ── Timeout ───────────────────────────────────────────────────────────────────
@@ -335,7 +359,18 @@ async fn example_gated_share() -> &'static str {
 // ── Router ────────────────────────────────────────────────────────────────────
 
 /// Build the application router.
+///
+/// `metrics_handle` is `Some` in production (passed from server startup after
+/// installing the Prometheus recorder); `None` in tests (metrics are no-ops).
 pub fn router(state: AppState, rate_limiter: Option<Arc<AuthRateLimiter>>) -> Router {
+    router_with_metrics(state, rate_limiter, None)
+}
+
+pub fn router_with_metrics(
+    state: AppState,
+    rate_limiter: Option<Arc<AuthRateLimiter>>,
+    metrics_handle: Option<metrics_exporter_prometheus::PrometheusHandle>,
+) -> Router {
     let x_req_id = HeaderName::from_static("x-request-id");
 
     let auth_routes = {
@@ -387,6 +422,47 @@ pub fn router(state: AppState, rate_limiter: Option<Arc<AuthRateLimiter>>) -> Ro
             async move { consent_gate(tokens, consent, req, next).await }
         }))
         .with_state(state.clone());
+
+    // /metrics endpoint — renders Prometheus text if handle is available.
+    let metrics_router = if let Some(handle) = metrics_handle {
+        Router::new().route(
+            "/metrics",
+            get(move || {
+                let h = handle.clone();
+                async move {
+                    axum::response::Response::builder()
+                        .header("content-type", "text/plain; version=0.0.4; charset=utf-8")
+                        .body(axum::body::Body::from(h.render()))
+                        .unwrap()
+                }
+            }),
+        )
+    } else {
+        Router::new()
+    };
+
+    // Security headers applied to every response.
+    let security_headers = tower::ServiceBuilder::new()
+        .layer(SetResponseHeaderLayer::if_not_present(
+            axum::http::header::HeaderName::from_static("x-frame-options"),
+            HeaderValue::from_static("DENY"),
+        ))
+        .layer(SetResponseHeaderLayer::if_not_present(
+            axum::http::header::HeaderName::from_static("x-content-type-options"),
+            HeaderValue::from_static("nosniff"),
+        ))
+        .layer(SetResponseHeaderLayer::if_not_present(
+            axum::http::header::HeaderName::from_static("referrer-policy"),
+            HeaderValue::from_static("strict-origin-when-cross-origin"),
+        ))
+        .layer(SetResponseHeaderLayer::if_not_present(
+            axum::http::header::HeaderName::from_static("x-xss-protection"),
+            HeaderValue::from_static("0"),
+        ))
+        .layer(SetResponseHeaderLayer::if_not_present(
+            axum::http::header::HeaderName::from_static("permissions-policy"),
+            HeaderValue::from_static("camera=(), microphone=(), geolocation=()"),
+        ));
 
     Router::new()
         .route("/health", get(health))
@@ -457,11 +533,14 @@ pub fn router(state: AppState, rate_limiter: Option<Arc<AuthRateLimiter>>) -> Ro
         .with_state(state)
         .merge(auth_routes)
         .merge(gated_routes)
+        .merge(metrics_router)
+        .layer(middleware::from_fn(metrics_middleware))
         .layer(middleware::from_fn(timeout_middleware))
         .layer(TraceLayer::new_for_http())
         .layer(PropagateRequestIdLayer::new(x_req_id.clone()))
         .layer(SetRequestIdLayer::new(x_req_id, MakeRequestUuid))
         .layer(CorsLayer::permissive())
+        .layer(security_headers)
 }
 
 // ── Null adapters for tests that only need the health-log routes ──────────────

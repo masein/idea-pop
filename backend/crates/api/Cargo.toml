@@ -21,6 +21,8 @@ tokio = { workspace = true, features = ["time"] }
 async-trait = { workspace = true }
 validator = { workspace = true }
 governor = { workspace = true }
+metrics = { workspace = true }
+metrics-exporter-prometheus = { workspace = true }
 
 [dev-dependencies]
 tokio = { workspace = true }
@@ -63,3 +65,7 @@ path = "tests/portfolio_integration.rs"
 [[test]]
 name = "billing_integration"
 path = "tests/billing_integration.rs"
+
+[[test]]
+name = "safety_regression"
+path = "tests/safety_regression.rs"

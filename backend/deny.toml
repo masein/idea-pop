@@ -5,13 +5,18 @@
 # Deny any crate with a known security vulnerability.
 version = 2
 yanked = "warn"
-# Unmaintained crates are warned but not blocked — many are deep transitive deps with
-# no available upgrade path.
-unmaintained = "warn"
 
 # Transitive-dep vulnerabilities we cannot fix directly (no upstream patch released or
 # fixing requires a breaking version change in a direct dep we use elsewhere).
 # Each entry documents the blocking dep so we can act when a fix ships.
+[[advisories.ignore]]
+id = "RUSTSEC-2024-0370"
+reason = "proc-macro-error: unmaintained. Transitive via derive macros; no replacement yet."
+
+[[advisories.ignore]]
+id = "RUSTSEC-2025-0134"
+reason = "rustls-pemfile: unmaintained. Transitive via rustls; no upgrade path."
+
 [[advisories.ignore]]
 id = "RUSTSEC-2024-0421"
 reason = "idna: Punycode label issue. Transitive via `url`; awaiting upstream patch."

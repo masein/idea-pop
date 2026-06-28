@@ -111,7 +111,7 @@ jobs:
           tool: cargo-audit
 
       - name: cargo audit (RustSec advisories)
-        run: cargo audit
+        run: cargo audit --file audit.toml
 
   secrets-scan:
     runs-on: ubuntu-latest

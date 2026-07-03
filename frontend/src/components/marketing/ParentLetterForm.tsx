@@ -17,7 +17,7 @@ export default function ParentLetterForm() {
   if (submitted) {
     return (
       <p
-        className="text-sm font-semibold text-explore"
+        className="text-sm font-semibold text-[#CDEB5A]"
         role="status"
         aria-live="polite"
       >
@@ -32,7 +32,7 @@ export default function ParentLetterForm() {
       className="space-y-2"
       aria-label={t("newsletter_label")}
     >
-      <label className="text-sm text-ink/60" htmlFor="newsletter-email">
+      <label className="sr-only" htmlFor="newsletter-email">
         {t("newsletter_label")}
       </label>
       <div className="flex gap-2">
@@ -43,11 +43,11 @@ export default function ParentLetterForm() {
           onChange={(e) => setEmail(e.target.value)}
           placeholder={t("newsletter_placeholder")}
           required
-          className="flex-1 rounded-lg border border-ink/20 bg-surface px-3 py-2 text-sm text-ink placeholder:text-ink/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-explore"
+          className="flex-1 rounded-pill border border-white/20 bg-white px-4 py-2 text-sm text-ink placeholder:text-ink/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#CDEB5A]"
         />
         <button
           type="submit"
-          className="rounded-lg bg-explore px-3 py-2 text-sm font-semibold text-white transition-all hover:brightness-110 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-explore focus-visible:ring-offset-2"
+          className="rounded-pill bg-[#CDEB5A] px-5 py-2 text-sm font-bold text-[#1F4D33] transition-all hover:brightness-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#CDEB5A] focus-visible:ring-offset-2 focus-visible:ring-offset-[#2E5F4B]"
         >
           {t("newsletter_cta")}
         </button>

@@ -45,9 +45,9 @@ describe('MarketingNav', () => {
     expect(screen.getByRole('link', { name: /sign up/i })).toBeInTheDocument();
   });
 
-  it('renders Start CTA link', () => {
+  it('renders Start free CTA link', () => {
     render(<MarketingNav />);
-    const startLinks = screen.getAllByRole('link', { name: /^start$/i });
+    const startLinks = screen.getAllByRole('link', { name: /^start free$/i });
     expect(startLinks.length).toBeGreaterThan(0);
   });
 

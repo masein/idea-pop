@@ -17,7 +17,7 @@ export default async function ForTeachersPage() {
       {/* 1. Hero */}
       <section
         aria-label="Hero"
-        className="bg-tint-lime px-4 py-20 text-center"
+        className="bg-tint-lime px-4 pt-32 pb-20 text-center"
       >
         <div className="mx-auto max-w-3xl">
           <span className="mb-4 inline-block rounded-pill bg-explore px-4 py-1 text-sm font-bold text-white">

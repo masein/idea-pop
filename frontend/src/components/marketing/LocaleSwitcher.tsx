@@ -19,7 +19,7 @@ export default function LocaleSwitcher() {
 
   return (
     <div
-      className="flex items-center gap-1 rounded-pill border border-ink/20 p-0.5 text-sm font-semibold"
+      className="flex items-center gap-1 rounded-pill border border-white/30 p-0.5 text-sm font-semibold"
       role="group"
       aria-label="Language"
     >
@@ -27,10 +27,10 @@ export default function LocaleSwitcher() {
         onClick={() => switchLocale("en")}
         disabled={isPending}
         aria-pressed={locale === "en"}
-        className={`rounded-pill px-3 py-1 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-explore ${
+        className={`rounded-pill px-3 py-1 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#CDEB5A] ${
           locale === "en"
-            ? "bg-explore text-white"
-            : "text-ink/60 hover:text-ink"
+            ? "bg-[#CDEB5A] text-[#1F4D33]"
+            : "text-white/80 hover:text-white"
         }`}
       >
         {t("locale_en")}
@@ -39,10 +39,10 @@ export default function LocaleSwitcher() {
         onClick={() => switchLocale("fa")}
         disabled={isPending}
         aria-pressed={locale === "fa"}
-        className={`rounded-pill px-3 py-1 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-explore ${
+        className={`rounded-pill px-3 py-1 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#CDEB5A] ${
           locale === "fa"
-            ? "bg-explore text-white"
-            : "text-ink/60 hover:text-ink"
+            ? "bg-[#CDEB5A] text-[#1F4D33]"
+            : "text-white/80 hover:text-white"
         }`}
       >
         {t("locale_fa")}

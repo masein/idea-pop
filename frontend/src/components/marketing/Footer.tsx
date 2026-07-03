@@ -3,7 +3,7 @@ import Image from "next/image";
 import { Link } from "@/i18n/routing";
 import LocaleSwitcher from "./LocaleSwitcher";
 import ParentLetterForm from "./ParentLetterForm";
-import logoBadge from "../../../public/landing/idea-pop-logo.svg";
+import logoBadge from "../../../public/landing/idea-pop-logo.png";
 import logoText from "../../../public/landing/idea-pop-text.svg";
 
 const colHeading =
@@ -69,6 +69,7 @@ export default async function Footer() {
         <div className="flex flex-col gap-8 md:flex-row md:items-start md:justify-between">
           <div className="flex items-center gap-3">
             <Image
+                unoptimized
               src={logoBadge}
               alt=""
               width={111}
@@ -78,6 +79,7 @@ export default async function Footer() {
             />
             <div>
               <Image
+                unoptimized
                 src={logoText}
                 alt="Idea Pop"
                 width={156}

@@ -33,6 +33,7 @@ export default function AskIdeaPop({
       <div className="max-w-5xl mx-auto px-4 grid grid-cols-1 md:grid-cols-[220px_1fr] items-start gap-8">
         <div className="flex justify-center">
           <Image
+                unoptimized
             src={robot}
             alt=""
             aria-hidden="true"

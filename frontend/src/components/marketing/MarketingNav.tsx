@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import Image from "next/image";
 import { Link } from "@/i18n/routing";
-import logoBadge from "../../../public/landing/idea-pop-logo.svg";
+import logoBadge from "../../../public/landing/idea-pop-logo.png";
 
 const pillLink =
   "flex flex-col items-center gap-0.5 rounded-xl px-3 py-1 text-xs font-body font-bold text-ink/80 transition-colors hover:text-ink hover:bg-ink/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-explore";
@@ -68,6 +68,7 @@ export default function MarketingNav() {
           className="shrink-0 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-explore"
         >
           <Image
+                unoptimized
             src={logoBadge}
             alt="Idea Pop"
             width={111}

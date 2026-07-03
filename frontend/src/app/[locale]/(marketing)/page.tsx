@@ -151,6 +151,7 @@ export default async function LandingPage({ params: { locale } }: Props) {
       <section aria-label="hero" className="relative" dir="ltr">
         <div className="relative w-full overflow-hidden min-h-[540px] md:min-h-0 md:aspect-[2880/1648]">
           <Image
+                unoptimized
             src={heroBg}
             alt=""
             fill
@@ -163,6 +164,7 @@ export default async function LandingPage({ params: { locale } }: Props) {
           <div aria-hidden="true" className="hidden md:block">
             {heroLayers.map((l, i) => (
               <Image
+                unoptimized
                 key={i}
                 src={l.src}
                 alt=""
@@ -233,6 +235,7 @@ export default async function LandingPage({ params: { locale } }: Props) {
                   </p>
                 </div>
                 <Image
+                unoptimized
                   src={card.img}
                   alt=""
                   aria-hidden="true"
@@ -272,6 +275,7 @@ export default async function LandingPage({ params: { locale } }: Props) {
                   </p>
                 </div>
                 <Image
+                unoptimized
                   src={card.img}
                   alt=""
                   aria-hidden="true"
@@ -302,6 +306,7 @@ export default async function LandingPage({ params: { locale } }: Props) {
           </div>
           <div className="flex justify-center">
             <Image
+                unoptimized
               src={heroPainting}
               alt=""
               aria-hidden="true"
@@ -373,6 +378,7 @@ export default async function LandingPage({ params: { locale } }: Props) {
           </Link>
         </div>
         <Image
+                unoptimized
           src={tryMissionBg}
           alt=""
           aria-hidden="true"
@@ -525,6 +531,7 @@ export default async function LandingPage({ params: { locale } }: Props) {
             </div>
             <div className="relative flex justify-center md:justify-end">
               <Image
+                unoptimized
                 src={startFreeGirl}
                 alt=""
                 aria-hidden="true"

@@ -206,7 +206,7 @@ export default async function LandingPage({ params: { locale } }: Props) {
               >
                 {t("hero.cta_explore")}
               </Link>
-              <Link href="/challenges" className={btnWhite}>
+              <Link href="/challenges" prefetch={false} className={btnWhite}>
                 {t("hero.cta_challenge")}
               </Link>
             </div>
@@ -299,7 +299,7 @@ export default async function LandingPage({ params: { locale } }: Props) {
               {t("paint.heading")}
             </h2>
             <div className="mt-6">
-              <Link href="/explore" className={btnOutlineGreen}>
+              <Link href="/explore" prefetch={false} className={btnOutlineGreen}>
                 {t("paint.cta")}
               </Link>
             </div>
@@ -373,7 +373,7 @@ export default async function LandingPage({ params: { locale } }: Props) {
             {t("try_now.heading")}
           </h2>
           <p className="font-body font-bold text-ink/80 mb-6">{t("try_now.body")}</p>
-          <Link href="/challenges" className={btnWhite}>
+          <Link href="/challenges" prefetch={false} className={btnWhite}>
             {t("try_now.cta")}
           </Link>
         </div>

@@ -109,7 +109,9 @@ export default async function Footer() {
               <ul className="space-y-2" role="list">
                 {col.links.map(({ label, href }, i) => (
                   <li key={`${href}-${i}`}>
-                    <Link href={href} className={colLink}>
+                    {/* prefetch off: several targets are app routes that need
+                        the backend; footer prefetches are wasted work anyway */}
+                    <Link href={href} prefetch={false} className={colLink}>
                       {label}
                     </Link>
                   </li>

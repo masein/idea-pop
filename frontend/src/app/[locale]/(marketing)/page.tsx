@@ -20,6 +20,7 @@ import heroParrot from "../../../../public/landing/hero-parrot.png";
 import heroMechBird from "../../../../public/landing/hero-mechanical-bird.png";
 import heroRopeBox from "../../../../public/landing/hero-rope-box.png";
 import heroPainting from "../../../../public/landing/hero-painting.png";
+import paintingGirl from "../../../../public/landing/hero-painting-girl.jpg";
 import thinkingToolsAvatar from "../../../../public/landing/thinking-tools-avatar.png";
 import realMakesAvatar from "../../../../public/landing/real-makes-avatar.png";
 import portfolioAvatar from "../../../../public/landing/portfolio-avatar.png";
@@ -306,11 +307,11 @@ export default async function LandingPage({ params: { locale } }: Props) {
           </div>
           <div className="flex justify-center">
             <Image
-                unoptimized
-              src={heroPainting}
+              unoptimized
+              src={paintingGirl}
               alt=""
               aria-hidden="true"
-              className="w-full max-w-md h-auto"
+              className="w-full max-w-md h-auto rounded-[1.75rem] shadow-lg"
               sizes="(min-width: 768px) 28rem, 90vw"
             />
           </div>

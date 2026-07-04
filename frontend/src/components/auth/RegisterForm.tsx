@@ -42,7 +42,7 @@ export default function RegisterForm({ role }: RegisterFormProps) {
   }
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg p-8" data-testid="register-form">
+    <div className="mx-auto w-full max-w-md bg-white rounded-2xl shadow-lg p-8" data-testid="register-form">
       <h1 className="font-display text-2xl font-bold text-ink text-center mb-6">
         {heading}
       </h1>

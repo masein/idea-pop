@@ -1,8 +1,10 @@
-'use client';
+"use client";
 
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/routing";
 import { setPersona, type Persona } from "@/lib/auth/persona";
+
+const CHIP = "#2A2A2A";
 
 export default function PersonaSelectPage() {
   const t = useTranslations("auth.persona_select");
@@ -23,62 +25,89 @@ export default function PersonaSelectPage() {
 
   const personas: Array<{
     key: Persona;
-    icon: string;
+    emoji: string;
     label: string;
     sub: string;
+    className: string;
   }> = [
-    { key: "kid", icon: "🎮", label: t("kid_label"), sub: t("kid_sub") },
-    { key: "parent", icon: "👨‍👩‍👦", label: t("parent_label"), sub: t("parent_sub") },
-    { key: "teacher", icon: "🏫", label: t("teacher_label"), sub: t("teacher_sub") },
-    { key: "other", icon: "🌐", label: t("other_label"), sub: t("other_sub") },
+    {
+      key: "kid",
+      emoji: "🧒",
+      label: t("kid_label"),
+      sub: t("kid_sub"),
+      className: "",
+    },
+    {
+      key: "parent",
+      emoji: "🧑‍🔬",
+      label: t("parent_label"),
+      sub: t("parent_sub"),
+      className: "",
+    },
+    {
+      key: "teacher",
+      emoji: "👩‍🏫",
+      label: t("teacher_label"),
+      sub: t("teacher_sub"),
+      className: "sm:col-span-2 sm:mx-auto sm:w-1/2",
+    },
   ];
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg p-8" data-testid="persona-select">
-      <h1 className="font-display text-2xl font-bold text-ink text-center mb-1">
+    <div
+      data-testid="persona-select"
+      className="relative rounded-[2rem] bg-[#EDF6C5] px-6 py-10 shadow-lg sm:px-10"
+    >
+      <button
+        type="button"
+        aria-label={t("close")}
+        onClick={() => router.push("/")}
+        className="absolute right-5 top-5 flex h-9 w-9 items-center justify-center rounded-full text-ink/60 transition-colors hover:bg-ink/10 hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-explore"
+      >
+        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2} aria-hidden="true">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+
+      <h1 className="text-center font-display text-2xl font-bold text-[#1E5B2E] md:text-3xl">
         {t("heading")}
       </h1>
-      <p className="font-body text-ink/60 text-center text-sm mb-6">
+      <p className="mt-1 text-center font-display text-xl font-bold text-[#1E5B2E] md:text-2xl">
         {t("subhead")}
       </p>
 
-      <div className="space-y-3">
-        {personas.map(({ key, icon, label, sub }) => (
+      <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
+        {personas.map(({ key, emoji, label, sub, className }) => (
           <button
             key={key}
             type="button"
             onClick={() => handlePersona(key)}
-            className="group w-full flex items-center gap-4 rounded-xl border border-ink/10 bg-white px-5 py-4 text-left transition-all duration-150 hover:bg-tint-lime hover:scale-[1.02] hover:border-explore/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-explore focus-visible:ring-offset-2 active:scale-[0.98]"
+            className={`group relative flex min-h-[7rem] items-center justify-between gap-3 overflow-hidden rounded-2xl px-6 py-5 text-left transition-transform duration-150 hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-explore focus-visible:ring-offset-2 active:scale-[0.99] ${className}`}
+            style={{ backgroundColor: CHIP }}
           >
-            <span className="text-3xl flex-shrink-0" role="img" aria-hidden="true">
-              {icon}
+            <span className="relative z-10">
+              <span className="block font-display text-lg font-bold text-white md:text-xl">
+                {label}
+              </span>
+              <span className="mt-0.5 block font-body text-sm text-white/70 transition-opacity duration-150 group-hover:opacity-0">
+                {sub}
+              </span>
+              <span className="pointer-events-none absolute left-0 top-6 inline-flex translate-y-1 items-center justify-center rounded-pill bg-[#CDEB5A] px-5 py-1.5 font-display text-sm font-bold text-[#1F4D33] opacity-0 shadow transition-all duration-200 group-hover:translate-y-0 group-hover:opacity-100">
+                {t("start")}
+              </span>
             </span>
-            <div className="flex-1 min-w-0">
-              <p className="font-body font-bold text-ink text-base">{label}</p>
-              <p className="font-body text-ink/55 text-sm">{sub}</p>
-            </div>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-              className="w-5 h-5 flex-shrink-0 text-ink/30 group-hover:text-explore transition-colors"
-              aria-hidden="true"
-            >
-              <path
-                fillRule="evenodd"
-                d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z"
-                clipRule="evenodd"
-              />
-            </svg>
+            <span className="text-5xl md:text-6xl" aria-hidden="true">
+              {emoji}
+            </span>
           </button>
         ))}
       </div>
 
-      <p className="mt-7 text-center font-body text-sm text-ink/60">
+      <p className="mt-8 text-center font-body text-sm text-ink/70">
         {t("already")}{" "}
         <a
           href="/login"
-          className="font-semibold text-explore underline-offset-2 hover:underline"
+          className="font-bold text-[#1E5B2E] underline-offset-2 hover:underline"
         >
           {t("log_in")}
         </a>

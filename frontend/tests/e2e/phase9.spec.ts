@@ -136,11 +136,13 @@ test.describe("Login page", () => {
 // ---------------------------------------------------------------------------
 
 test.describe("Marketing to sign-up integration", () => {
-  test('hero "Start free" CTA navigates to /sign-up', async ({ page }) => {
+  test('nav "Start free" CTA navigates to /sign-up', async ({ page }) => {
     await page.goto("/en");
 
-    const heroSection = page.getByRole("region", { name: /hero/i });
-    const startLink = heroSection.getByRole("link", { name: /start free/i });
+    // The redesigned hero CTAs are "Start Exploring" / "Start a simple
+    // challenge"; the "Start free" sign-up entry point lives in the nav.
+    const nav = page.getByTestId("marketing-nav");
+    const startLink = nav.getByRole("link", { name: /start free/i }).first();
     await expect(startLink).toBeVisible();
     await startLink.click();
 

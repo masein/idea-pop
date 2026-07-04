@@ -220,32 +220,40 @@
     }
   },
   "for_teachers": {
-    "hero": {
-      "heading": "Free for teachers — forever",
-      "subhead": "Bring the creative cycle into your classroom. No budget required."
-    },
-    "class_code": {
-      "heading": "Your class code, your control",
-      "body": "Create a class, share a code, and every student joins with a safe account. You see their portfolio — they never see each other's."
-    },
-    "parent_letter": {
-      "heading": "Printable parent letter",
-      "body": "One page that explains Idea Pop, data practices, and how parents can follow along at home.",
-      "cta": "Download parent letter (PDF)"
-    },
-    "privacy": {
-      "heading": "Privacy-first for students",
-      "items": [
-        "No ads, ever",
-        "No social feeds or peer chat",
-        "FERPA-aware data practices",
-        "AI outputs clearly labeled"
-      ]
-    },
-    "cta": {
-      "heading": "Ready to bring Idea Pop to your class?",
-      "button": "Create a teacher account"
-    }
+    "hero_heading": "Idea Pop is free for your class.",
+    "hero_sub": "Weekly creative missions, zero grading, set up in 5 minutes.",
+    "hero_cta": "Create your class free",
+    "how_heading": "How it works in class",
+    "s1_title": "1 · Create class",
+    "s1_sub": "name + grade, 2 min",
+    "s2_title": "2 · Share the code",
+    "s2_sub": "kids join free, no emails",
+    "s3_title": "3 · Assign a mission",
+    "s3_sub": "one per week, we guide",
+    "s4_title": "4 · Class gallery",
+    "s4_sub": "sparks, not grades",
+    "get_heading": "What you get",
+    "dashboard_title": "Teacher dashboard",
+    "dashboard_sub": "who's sparked, who's stuck",
+    "sheets_title": "Printable mission sheets",
+    "sheets_sub": "offline-ready for class",
+    "letters_title": "Ready parent letters",
+    "letters_sub": "home connection, done",
+    "safe_heading": "Classroom-safe by design",
+    "safe_items": [
+      "School-consent model — parents get an info email, not a blocker",
+      "Class gallery is visible to your class only",
+      "Kids join with nickname + code — no emails, no photos of faces",
+      "No ads, no DMs, human-reviewed content"
+    ],
+    "pdf_heading": "Download a full sample mission + lesson plan (PDF)",
+    "pdf_label": "School email for the sample plan",
+    "pdf_placeholder": "school email...",
+    "pdf_button": "Send",
+    "pdf_success": "Sent! Check your inbox for the sample plan.",
+    "cta_1": "Your class could be making",
+    "cta_2": "by Monday.",
+    "cta_button": "Create your class free"
   },
   "pricing": {
     "heading": "Simple, honest pricing",

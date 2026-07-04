@@ -44,7 +44,7 @@ export default async function MethodPage({ params: { locale } }: Props) {
       {/* 1. Hero */}
       <section
         aria-label="method hero"
-        className="bg-tint-lime py-20"
+        className="bg-tint-lime pt-32 pb-20"
       >
         <div className="max-w-6xl mx-auto px-4 text-center">
           <h1 className="font-display text-5xl md:text-6xl font-bold text-ink leading-tight mb-6">

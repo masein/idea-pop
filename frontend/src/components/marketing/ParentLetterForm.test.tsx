@@ -33,7 +33,7 @@ describe('ParentLetterForm', () => {
 
   it('renders the submit button', () => {
     render(<ParentLetterForm />);
-    expect(screen.getByRole('button', { name: /stay close/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /subscribe/i })).toBeInTheDocument();
   });
 
   it('does not show success message initially', () => {
@@ -56,7 +56,7 @@ describe('ParentLetterForm', () => {
     const user = userEvent.setup();
     render(<ParentLetterForm />);
     await user.type(screen.getByRole('textbox'), 'parent@example.com');
-    await user.click(screen.getByRole('button', { name: /stay close/i }));
+    await user.click(screen.getByRole('button', { name: /subscribe/i }));
     expect(screen.getByRole('status')).toBeInTheDocument();
     expect(screen.getByRole('status')).toHaveTextContent("You're in! Check your inbox.");
   });
@@ -65,7 +65,7 @@ describe('ParentLetterForm', () => {
     const user = userEvent.setup();
     render(<ParentLetterForm />);
     await user.type(screen.getByRole('textbox'), 'parent@example.com');
-    await user.click(screen.getByRole('button', { name: /stay close/i }));
+    await user.click(screen.getByRole('button', { name: /subscribe/i }));
     const status = screen.getByRole('status');
     expect(status).toHaveAttribute('aria-live', 'polite');
   });
@@ -74,7 +74,7 @@ describe('ParentLetterForm', () => {
     const user = userEvent.setup();
     render(<ParentLetterForm />);
     await user.type(screen.getByRole('textbox'), 'parent@example.com');
-    await user.click(screen.getByRole('button', { name: /stay close/i }));
+    await user.click(screen.getByRole('button', { name: /subscribe/i }));
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
   });
 });

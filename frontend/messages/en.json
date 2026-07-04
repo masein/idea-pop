@@ -7,7 +7,8 @@
     "method": "The Method",
     "pricing": "Pricing",
     "for_teachers": "For Teachers",
-    "sign_up": "Sign up"
+    "sign_up": "Sign up",
+    "start_free": "Start free"
   },
   "home": {
     "tagline": "Ask nature. Build with your hands.",
@@ -37,91 +38,146 @@
   },
   "marketing": {
     "hero": {
-      "headline": "Ask nature. Build with your hands.",
-      "subhead": "Your child solves one real problem every week — with design thinking, nature's secrets, and home materials. Ages 8+.",
-      "cta_start": "Start free",
-      "cta_watch": "Watch a sample",
-      "trust": "No credit card needed · Cancel anytime · COPPA-friendly"
+      "headline_1": "Ask nature,",
+      "headline_2": "How?",
+      "sub_1": "Build with your",
+      "sub_2": "hands",
+      "body": "Your child solves one real problem every week — with design thinking, nature's secrets and home materials. Ages 8+",
+      "subhead": "Your child solves one real problem every week — with design thinking, nature's secrets and home materials. Ages 8+",
+      "cta_explore": "Start Exploring",
+      "cta_challenge": "Start a simple challenge",
+      "trust": "✓ No ads ✓ Private by default ✓ Cancel anytime ✓ COPPA-friendly"
     },
-    "year_preview": {
+    "year": {
       "heading": "What a year of Idea Pop looks like",
-      "stat_missions": "52 weekly missions",
-      "stat_videos": "500+ nature videos",
-      "stat_experts": "Dozens of expert makers",
-      "stat_portfolio": "One growing portfolio"
+      "card1_title": "12 thinking tools",
+      "card1_sub": "5 WhQ · SCAMPER · Mind Map…",
+      "card2_title": "~40 real makes",
+      "card2_sub": "built from home materials",
+      "card3_title": "Portfolio + certificate",
+      "card3_sub": "proof of creative growth",
+      "steps_label": "mission steps:",
+      "steps": "1 Brief · 2 Watch? · 3 Idea · 4 Secret · 5 Re-ask · 6 My idea · 7 Build & test · 8 Celebrate"
     },
     "cycle": {
       "heading": "How it works — the creative cycle",
-      "see_label": "SEE",
-      "see_desc": "Watch a short nature documentary clip",
-      "learn_label": "LEARN",
-      "learn_desc": "Follow an expert maker in the Library",
-      "solve_label": "SOLVE",
-      "solve_desc": "Complete a real challenge with home materials"
+      "see_label": "1 · SEE the world",
+      "see_desc": "Short nature films spark a “how does it work?!”",
+      "learn_label": "2 · LEARN",
+      "learn_desc": "Real experts teach the skill in short lessons",
+      "solve_label": "3 · SOLVE & MAKE",
+      "solve_desc": "An 8-step mission that ends in a real build"
     },
-    "together": {
-      "heading": "We can make them together",
-      "body": "See what your child creates, approve weekly missions, and celebrate every build — from wherever you are."
+    "paint": {
+      "heading": "Do you like animals? We can paint them together",
+      "cta": "Watch Now"
     },
     "curriculum": {
       "heading": "A curriculum, not random videos",
-      "body": "Every week connects to the next. Biomimicry, forces, camouflage, bridges — topics that build on each other."
+      "sub": "Every mission follows the design-thinking spine:",
+      "note": "Tools are taught once, practiced for weeks, then owned for life — your child finishes the year with a real creative toolbox.",
+      "spine_1": "Frame a Question",
+      "spine_2": "Gather Inspiration",
+      "spine_3": "Generate Ideas",
+      "spine_4": "Make Ideas Tangible",
+      "spine_5": "Test to Learn",
+      "spine_6": "Share the Story",
+      "spine_credit": "IDEO design thinking process",
+      "path_heading": "The 3-year path",
+      "path_line1": "Year 1 · Toolbox 🧰 → Year 2 · Studio mastery 🎓 → Year 3 · Real impact 🌍",
+      "path_line2": "🤠 Explorer → 🛠️ Maker → 💡 Inventor → 🚀 Innovator → 🥇 Master → 🧑‍🏫 Mentor",
+      "cta": "See the method"
     },
     "try_now": {
       "heading": "Try one mission right now",
-      "body": "No account needed. Pick an open mission and start building.",
-      "cta": "Try a free mission"
+      "body": "Help Max cross the river — 60 seconds",
+      "cta": "Start the challenge"
     },
     "kids_made": {
-      "heading": "Made by kids like yours",
-      "subhead": "Real projects from real kids."
+      "heading": "Made by kids this month"
     },
     "experts": {
-      "heading": "Real experts, exciting lessons",
-      "subhead": "Every library course is led by someone who does this for a living."
+      "heading": "Real experts. making lessons.",
+      "e1_name": "Ms. Ronasi",
+      "e1_role": "illustrator",
+      "e2_name": "Dr. Kian",
+      "e2_role": "science",
+      "e3_name": "Mr. Modaresi",
+      "e3_role": "CEO of Netix system",
+      "e4_name": "Eng. Lina",
+      "e4_role": "maker",
+      "note": "Every lesson is reviewed by our education team before it goes live · 🤖 AI-assisted films are labeled"
     },
     "pricing_teaser": {
       "heading": "Start free. Upgrade when your kids enjoy it.",
-      "free_label": "Free",
-      "standard_label": "Standard",
-      "monthly_label": "Monthly",
-      "annual_label": "Annual",
-      "monthly_price": "$6.99",
-      "annual_price": "$59.90",
-      "annual_per_month": "$4.99/mo",
-      "savings_badge": "Save 29%",
-      "cancel_anytime": "Cancel anytime",
-      "cta_free": "Start for free",
-      "cta_standard": "Start free trial"
+      "monthly": "Monthly",
+      "annual": "Annual −50%",
+      "free_name": "Free",
+      "free_price": "$0",
+      "free_f1": "all nature films",
+      "free_f2": "2 missions / month",
+      "free_f3": "3 saved makes",
+      "free_f4": "lesson 1 of every course",
+      "free_f5": "class join via code",
+      "cta_free": "Start free",
+      "plus_name": "Plus",
+      "plus_price": "$9.99/mo",
+      "plus_billing_annual": "billed annually $59.90 · or $9.99 monthly",
+      "plus_billing_monthly": "billed monthly $9.99 · cancel anytime",
+      "plus_intro": "everything in Free, plus:",
+      "plus_f1": "unlimited missions + makes",
+      "plus_f2": "full courses · full AI helper",
+      "plus_f3": "gallery sharing (with consent)",
+      "plus_f4": "weekly report + certificates",
+      "cta_plus": "Try 7 days free",
+      "badge_popular": "MOST POPULAR",
+      "family_name": "Family plan",
+      "family_price": "$7.99/mo",
+      "family_billing_annual": "billed annually $95.90",
+      "family_billing_monthly": "billed monthly $12.99",
+      "family_intro": "everything in Plus, for:",
+      "family_f1": "up to 4 kid profiles",
+      "family_f2": "one parent dashboard",
+      "family_f3": "sibling team missions",
+      "cta_family": "Start family plan",
+      "badge_value": "BEST VALUE"
     },
     "faq": {
       "heading": "Questions parents ask",
       "items": [
         {
-          "q": "How is this different from YouTube?",
-          "a": "Every video is one piece of a structured weekly challenge. Kids watch, learn from an expert, then solve a real problem with home materials — YouTube is open-ended; Idea Pop is purposeful."
+          "q": "What age is it for?",
+          "a": "8+, with age-tuned modes up to teens"
         },
         {
-          "q": "What age is Idea Pop for?",
-          "a": "Ages 8 to 14. The missions scale in complexity, so an 8-year-old and a 12-year-old can both be challenged appropriately."
+          "q": "How much time per week?",
+          "a": "one 5-min film + one mission (~45 min)"
         },
         {
-          "q": "Is it safe for kids?",
-          "a": "Yes. No ads, no social feeds, no free chat. All AI outputs are labeled. We're COPPA-friendly and kids never share with strangers."
+          "q": "Do we need special materials?",
+          "a": "no, just home stuff"
         },
         {
-          "q": "Can my child use it independently?",
-          "a": "Mostly, yes. You approve missions and see the portfolio. Your child builds and submits — you stay informed without hovering."
+          "q": "More than one child?",
+          "a": "Family plan, 4 profiles"
         },
         {
-          "q": "What if we want to cancel?",
-          "a": "One click, any time. You keep access until the end of your billing period. No questions asked."
+          "q": "I'm a teacher — is it free?",
+          "a": "yes, classes are free"
         }
       ]
     },
-    "penguin_helper": {
+    "ask": {
       "heading": "Hi, I'm Idea Pop!",
-      "body": "I help kids find their next mission, look up nature facts, and celebrate every build. Tap me anytime."
+      "sub": "Do you have any question?!",
+      "placeholder": "Ask me anything you like...",
+      "input_label": "Your question for Idea Pop",
+      "send_label": "Send question",
+      "mic_label": "Ask by voice"
+    },
+    "cta_band": {
+      "heading": "Your kid's first invention could be this week.",
+      "cta": "Start for free"
     }
   },
   "method": {
@@ -321,16 +377,43 @@
       "terms": "Terms of use",
       "parent_letter": "Parent letter"
     },
-    "trust_coppa": "COPPA-friendly",
-    "trust_no_ads": "No ads",
-    "trust_ai": "AI labeled",
+    "trust_coppa": "COPPA / GDPR-K friendly",
+    "trust_no_ads": "No ads, ever",
+    "trust_ai": "AI content always labeled",
     "newsletter_label": "Parent newsletter",
-    "newsletter_placeholder": "your@email.com",
-    "newsletter_cta": "Stay close",
+    "newsletter_placeholder": "parent email...",
+    "newsletter_cta": "Subscribe",
     "newsletter_success": "You're in! Check your inbox.",
     "legal": "© {year} Idea Pop. All rights reserved.",
     "locale_en": "EN",
-    "locale_fa": "فا"
+    "locale_fa": "فا",
+    "tagline": "Ask nature, How? Build, with your hands",
+    "newsletter_heading": "Monthly ideas for curious families 📮",
+    "newsletter_note": "adults only · one email a month · unsubscribe anytime",
+    "method_col": "The Method",
+    "company": "Company",
+    "trust_human": "Human-reviewed public sharing",
+    "madewith": "Made with curiosity, for curious kids. 💚",
+    "links2": {
+      "exploring": "Exploring",
+      "library_studios": "Library & studios",
+      "challenges": "Challenges",
+      "pricing_gifts": "Pricing & gift cards 🎁",
+      "how_works": "How Idea Pop works",
+      "path3": "The 3-year path",
+      "tools12": "12 creativity tools",
+      "sample_challenge": "Sample challenge (free)",
+      "teachers_free": "For teachers — free 🏫",
+      "safety_promise": "Our safety promise 🔒",
+      "privacy": "Privacy",
+      "parent_dashboard": "Parent dashboard",
+      "weekly_report": "Weekly report",
+      "contact": "Contact support",
+      "about": "About us",
+      "our_experts": "Our experts",
+      "blog": "Blog & free printables",
+      "careers": "Careers"
+    }
   },
   "auth": {
     "persona_select": {

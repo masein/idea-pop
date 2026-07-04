@@ -22,7 +22,7 @@ export default async function PricingPage() {
       {/* 1. Hero */}
       <section
         aria-label="Pricing hero"
-        className="bg-tint-lavender px-4 py-20 text-center"
+        className="bg-tint-lavender px-4 pt-32 pb-20 text-center"
       >
         <div className="mx-auto max-w-2xl">
           <h1 className="font-display text-4xl font-bold leading-tight text-ink sm:text-5xl">

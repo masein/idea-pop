@@ -9,9 +9,10 @@ test.describe('Marketing landing page', () => {
 
   test('Start free CTA navigates to sign-up', async ({ page }) => {
     await page.goto('/en');
-    // Find the first "Start free" link in the hero section
-    const heroSection = page.getByRole('region', { name: /hero/i });
-    const startLink = heroSection.getByRole('link', { name: /start free/i });
+    // The redesigned hero CTAs are "Start Exploring" / "Start a simple
+    // challenge"; the "Start free" sign-up entry point lives in the nav.
+    const nav = page.getByTestId('marketing-nav');
+    const startLink = nav.getByRole('link', { name: /start free/i }).first();
     await expect(startLink).toBeVisible();
     await startLink.click();
     await page.waitForURL(/sign-up/, { timeout: 5000 });

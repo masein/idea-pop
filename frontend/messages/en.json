@@ -256,58 +256,62 @@
     "cta_button": "Create your class free"
   },
   "pricing": {
-    "heading": "Simple, honest pricing",
-    "subhead": "Start free. Upgrade when your family loves it.",
-    "free_label": "Free",
-    "free_price": "$0",
-    "free_forever": "Always free",
-    "free_features": [
-      "Watch any Explore video",
-      "Try 1 mission per month",
-      "Basic library access",
-      "Public Ideas Wall"
-    ],
-    "standard_label": "Standard",
-    "monthly_price": "$6.99",
-    "annual_price": "$59.90",
-    "annual_per_month": "$4.99",
-    "annual_savings": "Save 29%",
-    "billing_monthly": "per month",
-    "billing_annual": "per year",
-    "standard_features": [
-      "Unlimited missions",
-      "Full expert library",
-      "Private portfolio & Ideas Wall",
-      "XP, badges & cosmetic themes",
-      "Parent dashboard & weekly digest",
-      "Priority support"
-    ],
-    "cta_free": "Start for free",
-    "cta_standard": "Start free trial",
-    "cancel_anytime": "Cancel anytime — no questions asked",
-    "kid_note": "Kids can browse plans. Checkout is completed by a parent.",
-    "school_heading": "School or district?",
-    "school_body": "Volume pricing and FERPA DPA available.",
-    "school_cta": "Contact us",
-    "faq_heading": "Billing questions",
-    "faqs": [
+    "heading": "Start free. Upgrade when your kids enjoy it.",
+    "compare_heading": "Compare everything",
+    "col_feature": "Feature",
+    "col_free": "Free",
+    "col_plus": "Plus",
+    "col_family": "Family",
+    "rows": [
       {
-        "q": "When does my free trial start?",
-        "a": "The moment you click Start free trial. You have 14 days to try everything — no credit card needed."
+        "feature": "Nature films (Exploring)",
+        "free": "all",
+        "plus": "all",
+        "family": "all"
       },
       {
-        "q": "What happens when the trial ends?",
-        "a": "You drop to the Free plan automatically. No charge, no surprise."
+        "feature": "Missions per month",
+        "free": "2",
+        "plus": "∞",
+        "family": "∞"
       },
       {
-        "q": "Can I switch between monthly and annual?",
-        "a": "Yes — any time from your account settings. Switching to annual credits the remaining monthly days."
+        "feature": "Saved makes (portfolio)",
+        "free": "3",
+        "plus": "∞",
+        "family": "∞ ×4"
       },
       {
-        "q": "Do you offer family plans?",
-        "a": "One account supports one child. Multi-child family plans are on the roadmap."
+        "feature": "Expert courses (Library)",
+        "free": "lesson 1",
+        "plus": "full",
+        "family": "full"
+      },
+      {
+        "feature": "Gallery sharing · weekly report",
+        "free": "—",
+        "plus": "✓",
+        "family": "✓"
       }
-    ]
+    ],
+    "faq": [
+      {
+        "q": "Can I switch plans anytime?",
+        "a": "yes, instantly"
+      },
+      {
+        "q": "What happens to our makes if we cancel?",
+        "a": "private portfolio stays yours"
+      },
+      {
+        "q": "Refunds?",
+        "a": "14 days, no questions"
+      }
+    ],
+    "cta_1": "Every plan starts with",
+    "cta_2": "free. Start here.",
+    "cta_start": "Start free",
+    "cta_watch": "Watch a sample"
   },
   "explore": {
     "heading": "Animal Superpowers",

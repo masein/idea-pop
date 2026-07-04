@@ -1,23 +1,67 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   fetchTeacherClass,
   fetchChallenges,
   assignMission,
   fetchClassGallery,
 } from '@/lib/api/client';
+import { AVATARS } from '@/lib/avatars';
 import type { components } from '@/lib/api/schema';
 
 type TeacherClass = components['schemas']['TeacherClass'];
 type ClassGalleryItem = components['schemas']['ClassGalleryItem'];
 type ChallengeDetail = components['schemas']['ChallengeDetail'];
 
-// ── Class code card ───────────────────────────────────────────────────────────
+const DEEP = '#2E5F4B';
+const BLUE = '#1E7FB8';
 
-function ClassCodeCard({ classData }: { classData: TeacherClass }) {
+function avatarEmoji(id: string): string {
+  return AVATARS.find((a) => a.id === id)?.emoji ?? '🧒';
+}
+
+// ── Header ────────────────────────────────────────────────────────────────────
+
+function DashboardHeader({ classData }: { classData: TeacherClass }) {
+  return (
+    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex items-center gap-4">
+        <div
+          className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-tint-cream text-3xl"
+          aria-hidden="true"
+        >
+          🧑‍🏫
+        </div>
+        <div>
+          <h1 className="font-display text-2xl font-bold text-ink">
+            Welcome to your teacher portal
+          </h1>
+          <p className="font-body text-sm text-ink/60">
+            {classData.student_count} students in your class
+          </p>
+        </div>
+      </div>
+      <div className="flex items-center gap-3">
+        <span className="rounded-pill bg-white px-4 py-2 font-body text-sm font-semibold text-ink shadow-sm">
+          {classData.name}
+        </span>
+        <a
+          href="/onboarding/teacher"
+          className="rounded-pill px-5 py-2 font-display text-sm font-bold text-white shadow-sm transition-all hover:brightness-110 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+          style={{ backgroundColor: DEEP }}
+        >
+          Add more class
+        </a>
+      </div>
+    </div>
+  );
+}
+
+// ── Class code bar ──────────────────────────────────────────────────────────
+
+function ClassCodeBar({ classData }: { classData: TeacherClass }) {
   const [copied, setCopied] = useState(false);
-  const codeRef = useRef<HTMLSpanElement>(null);
 
   async function handleCopy() {
     await navigator.clipboard.writeText(classData.class_code);
@@ -25,53 +69,42 @@ function ClassCodeCard({ classData }: { classData: TeacherClass }) {
     setTimeout(() => setCopied(false), 2000);
   }
 
-  function handlePrint() {
-    window.print();
-  }
-
   return (
-    <div data-testid="class-code-card" className="bg-white rounded-card shadow-sm p-6 flex flex-col gap-4">
-      <div className="flex items-center justify-between">
-        <h2 className="font-display text-lg text-ink">{classData.name}</h2>
-        <span className="font-body text-sm text-ink/50">{classData.student_count} students</span>
-      </div>
-
-      <div className="flex flex-col items-center gap-3 py-4">
-        <p className="font-body text-xs text-ink/50 uppercase tracking-wide">Class code</p>
-        <span
-          ref={codeRef}
-          data-testid="class-code"
-          className="font-display text-4xl tracking-widest text-explore bg-tint-lime rounded-card px-8 py-4"
-        >
+    <div
+      data-testid="class-code-card"
+      className="flex flex-col gap-3 rounded-card bg-[#EDF6C5] px-5 py-3 sm:flex-row sm:items-center sm:justify-between"
+    >
+      <p className="font-body text-base font-bold text-ink">
+        Class code:{' '}
+        <span data-testid="class-code" className="tracking-wide text-[#2E5F4B]">
           {classData.class_code}
         </span>
-      </div>
-
-      <div className="flex gap-3">
+      </p>
+      <div className="flex gap-2">
         <button
           type="button"
           data-testid="copy-code-btn"
           onClick={handleCopy}
-          className="flex-1 border border-explore text-explore font-body text-sm py-2.5 rounded-card hover:bg-tint-lime transition-colors"
+          className="rounded-pill bg-[#CDEB5A] px-6 py-2 font-display text-sm font-bold text-[#1F4D33] shadow-sm transition-all hover:brightness-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1F4D33] focus-visible:ring-offset-2"
         >
-          {copied ? '✓ Copied!' : '📋 Copy code'}
+          {copied ? '✓ Copied' : 'Copy'}
         </button>
         <button
           type="button"
           data-testid="print-letter-btn"
-          onClick={handlePrint}
-          className="flex-1 border border-ink/20 text-ink font-body text-sm py-2.5 rounded-card hover:bg-tint-cream transition-colors"
+          onClick={() => window.print()}
+          className="rounded-pill border-2 border-[#2E5F4B]/60 bg-white px-6 py-2 font-display text-sm font-bold text-[#2E5F4B] transition-all hover:bg-[#F4FADD] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2E5F4B] focus-visible:ring-offset-2"
         >
-          🖨️ Print parent letter
+          Print
         </button>
       </div>
     </div>
   );
 }
 
-// ── Mission assignment ────────────────────────────────────────────────────────
+// ── This week's mission ───────────────────────────────────────────────────────
 
-function AssignMissionSection({
+function MissionSection({
   classData,
   challenges,
   onAssigned,
@@ -92,47 +125,66 @@ function AssignMissionSection({
       onAssigned(selectedId);
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
-    } catch { /* silently fail */ } finally {
+    } catch {
+      /* silently fail */
+    } finally {
       setSaving(false);
     }
   }
 
   return (
-    <div data-testid="assign-mission-section" className="bg-white rounded-card shadow-sm p-5 flex flex-col gap-4">
-      <h2 className="font-display text-lg text-ink">This week&apos;s mission</h2>
-
-      {classData.assigned_challenge_title && (
-        <p className="font-body text-sm text-ink/60">
-          Currently assigned: <strong>{classData.assigned_challenge_title}</strong>
+    <section className="flex flex-col gap-3">
+      <h2 className="font-display text-xl font-bold text-ink">This week&apos;s mission</h2>
+      <div
+        data-testid="assign-mission-section"
+        className="flex flex-col gap-4 rounded-card bg-[#CDEBFA] p-5"
+      >
+        <p className="font-display text-lg font-bold text-[#17567D]">
+          🏔️ {classData.assigned_challenge_title ?? 'No mission assigned yet'}
         </p>
-      )}
 
-      <label htmlFor="challenge-select" className="sr-only">Choose a challenge to assign</label>
-      <select
-        id="challenge-select"
-        data-testid="challenge-select"
-        value={selectedId}
-        onChange={(e) => setSelectedId(e.target.value)}
-        className="w-full rounded-card border border-ink/20 px-3 py-2 font-body text-sm focus:outline-none focus:ring-2 focus:ring-explore bg-white"
-      >
-        <option value="">— Choose a challenge —</option>
-        {challenges.map((c) => (
-          <option key={c.id} value={c.id}>
-            {c.emoji} {c.title}
-          </option>
-        ))}
-      </select>
+        {/* progress: assigned = full, unassigned = empty (no finished-count from API) */}
+        <div className="h-3 w-full overflow-hidden rounded-full bg-white">
+          <div
+            className="h-full rounded-full bg-[#2D9CDB] transition-all"
+            style={{ width: classData.assigned_challenge_id ? '100%' : '0%' }}
+          />
+        </div>
+        <p className="font-body text-sm font-semibold text-[#17567D]">
+          {classData.student_count} students in this class
+        </p>
 
-      <button
-        type="button"
-        data-testid="assign-btn"
-        onClick={handleAssign}
-        disabled={!selectedId || saving}
-        className="bg-explore text-white font-display text-sm py-2.5 rounded-card disabled:opacity-40"
-      >
-        {saving ? 'Assigning…' : saved ? '✓ Assigned!' : 'Assign to class'}
-      </button>
-    </div>
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <label htmlFor="challenge-select" className="sr-only">
+            Choose a challenge to assign
+          </label>
+          <select
+            id="challenge-select"
+            data-testid="challenge-select"
+            value={selectedId}
+            onChange={(e) => setSelectedId(e.target.value)}
+            className="flex-1 rounded-pill border border-[#17567D]/25 bg-white px-4 py-2.5 font-body text-sm text-ink focus:outline-none focus:ring-2 focus:ring-[#1E7FB8]"
+          >
+            <option value="">— Choose a challenge —</option>
+            {challenges.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.emoji} {c.title}
+              </option>
+            ))}
+          </select>
+          <button
+            type="button"
+            data-testid="assign-btn"
+            onClick={handleAssign}
+            disabled={!selectedId || saving}
+            className="rounded-pill px-6 py-2.5 font-display text-sm font-bold text-white shadow-sm transition-all hover:brightness-110 active:scale-95 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+            style={{ backgroundColor: BLUE }}
+          >
+            {saving ? 'Assigning…' : saved ? '✓ Assigned!' : 'Assign new mission →'}
+          </button>
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -140,32 +192,91 @@ function AssignMissionSection({
 
 function ClassGallery({ items }: { items: ClassGalleryItem[] }) {
   return (
-    <div data-testid="class-gallery" className="flex flex-col gap-3">
-      <h2 className="font-display text-lg text-ink">Class gallery</h2>
-
+    <section data-testid="class-gallery" className="flex flex-col gap-3">
+      <h2 className="font-display text-xl font-bold text-ink">Class gallery 🏫</h2>
       {items.length === 0 ? (
-        <p className="font-body text-sm text-ink/50 bg-white rounded-card p-6 text-center">
-          No submissions yet — students will appear here after completing a mission.
+        <p className="rounded-card bg-white p-6 text-center font-body text-sm text-ink/50">
+          No submissions yet — students appear here after completing a mission.
         </p>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        <div className="flex gap-4 overflow-x-auto pb-2">
           {items.map((item) => (
             <div
               key={item.id}
               data-testid="gallery-item"
-              className="bg-white rounded-card shadow-sm overflow-hidden"
+              className="w-56 shrink-0 rounded-card border-2 border-[#CDEB5A] bg-white p-3 shadow-sm"
             >
-              <div className="w-full h-28 bg-tint-lime flex items-center justify-center text-3xl">
-                🔨
+              <div className="flex h-28 items-center justify-center rounded-lg bg-ink/5 text-3xl text-ink/30" aria-hidden="true">
+                {item.project_photo_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={item.project_photo_url} alt="" className="h-full w-full rounded-lg object-cover" />
+                ) : (
+                  '📷'
+                )}
               </div>
-              <div className="p-3">
-                <p className="font-display text-xs text-ink leading-snug line-clamp-2">{item.project_title}</p>
-                <p className="font-body text-xs text-ink/50 mt-1">{item.student_nickname}</p>
-              </div>
+              <p className="mt-2 font-display text-sm font-bold text-ink">
+                {avatarEmoji(item.student_avatar_id)} {item.student_nickname}
+              </p>
+              <span className="mt-1 inline-block rounded-pill bg-[#EDF6C5] px-3 py-0.5 font-body text-xs text-ink/70">
+                {item.project_title}
+              </span>
             </div>
           ))}
         </div>
       )}
+    </section>
+  );
+}
+
+// ── My students ───────────────────────────────────────────────────────────────
+
+function MyStudents({ items }: { items: ClassGalleryItem[] }) {
+  // Derive a roster from gallery submissions (no dedicated roster endpoint yet).
+  const seen = new Set<string>();
+  const students = items.filter((i) => {
+    if (seen.has(i.student_nickname)) return false;
+    seen.add(i.student_nickname);
+    return true;
+  });
+
+  if (students.length === 0) return null;
+
+  return (
+    <section className="flex flex-col gap-3">
+      <h2 className="font-display text-xl font-bold text-ink">My students</h2>
+      <ul className="flex flex-col gap-2" role="list">
+        {students.map((s) => (
+          <li
+            key={s.id}
+            className="flex items-center gap-3 rounded-card bg-[#FBFDF0] px-4 py-3"
+          >
+            <span className="text-xl" aria-hidden="true">
+              {avatarEmoji(s.student_avatar_id)}
+            </span>
+            <span className="font-display font-bold text-ink">{s.student_nickname}</span>
+            <span className="font-body text-sm text-ink/60">— made {s.project_title}</span>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+// ── Info box ──────────────────────────────────────────────────────────────────
+
+function BringHomeBox() {
+  return (
+    <div className="rounded-card border-2 border-dashed border-ink/20 bg-tint-lavender/40 p-5">
+      <p className="font-display font-bold text-[#2E5F4B]">🏫 Bring Idea Pop home</p>
+      <p className="mt-1 font-body text-sm text-ink/70">
+        🖨️ Print parent letters (class code inside) · parents sign kids up free
+      </p>
+      <p className="mt-1 font-body text-sm text-ink/70">
+        School / site licensing →{' '}
+        <a href="/for-teachers" className="font-bold text-[#2E5F4B] underline-offset-2 hover:underline">
+          talk to us
+        </a>
+      </p>
     </div>
   );
 }
@@ -203,32 +314,32 @@ export default function TeacherDashboardPage() {
   }
 
   return (
-    <div data-testid="teacher-dashboard" className="max-w-2xl mx-auto px-4 py-8 flex flex-col gap-8">
-      <h1 className="font-display text-2xl text-ink">Your teacher dashboard</h1>
-
+    <div data-testid="teacher-dashboard" className="mx-auto flex max-w-3xl flex-col gap-7 px-4 py-8">
       {loading ? (
         <div className="flex flex-col gap-4">
-          <div className="animate-pulse bg-white rounded-card h-48" />
-          <div className="animate-pulse bg-white rounded-card h-32" />
+          <div className="h-20 animate-pulse rounded-card bg-white" />
+          <div className="h-32 animate-pulse rounded-card bg-white" />
         </div>
       ) : classData ? (
         <>
-          <ClassCodeCard classData={classData} />
-          <AssignMissionSection
+          <DashboardHeader classData={classData} />
+          <ClassCodeBar classData={classData} />
+          <MissionSection
             classData={classData}
             challenges={challenges}
             onAssigned={handleAssigned}
           />
           <ClassGallery items={gallery} />
+          <MyStudents items={gallery} />
+          <BringHomeBox />
         </>
       ) : (
-        <div className="bg-tint-cream rounded-card p-6 text-center flex flex-col gap-3">
-          <p className="font-display text-lg text-ink">No class yet</p>
-          <p className="font-body text-sm text-ink/60">Set up a class to get your unique class code</p>
-          <a
-            href="/onboarding/teacher"
-            className="font-body text-sm text-explore underline"
-          >
+        <div className="flex flex-col gap-3 rounded-card bg-tint-cream p-6 text-center">
+          <p className="font-display text-lg font-bold text-ink">No class yet</p>
+          <p className="font-body text-sm text-ink/60">
+            Set up a class to get your unique class code
+          </p>
+          <a href="/onboarding/teacher" className="font-body text-sm font-bold text-explore underline">
             Set up a class →
           </a>
         </div>

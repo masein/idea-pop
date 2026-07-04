@@ -528,97 +528,27 @@
     "error_generic": "Something went wrong. Please try again."
   },
   "challenge": {
-    "step_label": "Step {n} of 8",
-    "mission_menu": "Mission menu",
-    "jump_to": "Jump to step",
-    "step_optional": "(optional)",
-    "step_names": {
-      "1": "Brief",
-      "2": "Your idea?",
-      "3": "Nature clues",
-      "4": "Design secret",
-      "5": "Skill",
-      "6": "Sketch",
-      "7": "Build & test",
-      "8": "Celebrate & share"
-    },
-    "brief": {
-      "mission": "Your mission",
-      "lets_go": "Let's go! 🚀",
-      "xp_reward": "+{xp} XP to earn"
-    },
-    "idea_fork": {
-      "heading": "Do you already have an idea?",
-      "yes_label": "💡 YES! I have an idea",
-      "yes_sub": "Jump straight to sketching",
-      "no_label": "🌿 Not yet — inspire me!",
-      "no_sub": "See how nature solves it"
-    },
-    "nature_clues": {
-      "heading": "How does nature solve this?",
-      "xp_each": "+{xp} XP each",
-      "watch_video": "Watch clip",
-      "continue": "Got it — show me the secret →"
-    },
-    "design_secret": {
-      "heading": "Design secret 🔑",
-      "story_label": "The story",
-      "got_it": "I got the secret! →"
-    },
-    "skill": {
-      "heading": "Learn a skill 📚",
-      "optional_note": "Optional — pick one or skip",
-      "lesson_label": "+{xp} XP",
-      "skip": "Skip to my idea →",
-      "start_lesson": "▶ Lesson"
-    },
-    "sketch": {
-      "heading": "YOUR crossing machine! ✏️",
-      "photo_prompt": "📷 Sketch or photo — projects, not faces",
-      "field_what": "What is it?",
-      "field_used": "What will you use?",
-      "field_why": "Why will it work?",
-      "ai_hint": "🤖 Stuck? Brainstorm with Popi",
-      "save": "Save my idea · +20 XP ⭐",
-      "saving": "Saving…"
-    },
-    "build": {
-      "heading": "Build it & test it! 🔧",
-      "checklist_heading": "Gather your materials",
-      "test_heading": "Test it out",
-      "photo_prompt": "📷 Show us what you made",
-      "field_what": "What did you make?",
-      "field_used": "What did you use?",
-      "field_hard": "What was hard?",
-      "field_improve": "What would you improve?",
-      "worked": "✅ It worked!",
-      "needs_fix": "🔁 Needs a fix",
-      "submit": "Mission complete! →"
-    },
-    "celebrate": {
-      "heading": "MISSION COMPLETE! 🎉",
-      "xp_total": "+{xp} XP",
-      "breakdown_watch": "Watched clue: +5",
-      "breakdown_lesson": "Learned skill: +10",
-      "breakdown_build": "Built & tested: +20",
-      "breakdown_cycle": "Creative Cycle bonus: +15",
-      "share_heading": "Who can see your project?",
-      "share_private": "🔒 Only me",
-      "share_private_sub": "Your private portfolio — always the default",
-      "share_class": "🏫 My class",
-      "share_class_sub": "Your teacher can see & cheer",
-      "share_public": "🌍 Idea Gallery",
-      "share_public_sub": "Grown-ups check posts first",
-      "share_public_locked": "Ask a parent to unlock this",
-      "next_mission": "Next mission →",
-      "ideas_wall": "See the Ideas Wall ({count}) →",
-      "safety_note": "🛡 Grown-ups check public posts before others can see them"
-    },
-    "capture": {
-      "add_photo": "Add a photo",
-      "remove_photo": "Remove photo",
-      "photo_tip": "📷 Projects — not faces"
-    }
+    "meta_title": "Sample Mission — Idea Pop",
+    "header_title": "Let's Accomplish A Mission!",
+    "header_sub": "“Today's <b>Mission</b> Is To Help Max <b>Cross</b> The River!”",
+    "brief_lead": "Here, You'll Face Lots Of <b>Fun Challenges</b> And <b>Exciting Missions!</b>",
+    "brief_body": "Sometimes You'll Come Up With Ideas To Solve A Problem, And Sometimes You'll Learn New Things First So You Can Create Your Own Creative Solution. Every Mission Is A New Chance To Think, Create, And Try Out Fresh Ideas. So, Are You Ready To Jump Into The World Of Ideas? 🚀",
+    "idea_placeholder": "Do You Have Any Idea? Write It Here...",
+    "idea_label": "Your idea to help Max",
+    "idea_save": "Save to your profile",
+    "idea_share": "Share",
+    "noidea_lead": "If you don't have any idea,",
+    "noidea_body": "We can <b>find</b> amazing ideas to solve Max's problem by getting inspired by <g>nature</g>. Would you like to go on an adventure together into the depths of nature and discover creative solutions along the way? 🌿✨",
+    "noidea_cta": "Start thinking process",
+    "brainstorm_lead": "What's on your mind, Idea Pop Ai can help to <b>Brain storm...</b>",
+    "brainstorm_placeholder": "Let's brain storm to help Max...",
+    "brainstorm_label": "Brainstorm with Idea Pop AI",
+    "brainstorm_mic": "Ask by voice",
+    "brainstorm_send": "Send",
+    "cta_1": "Join others,",
+    "cta_2": "one subscription,",
+    "cta_3": "many ways to play and learn",
+    "cta_button": "Try for free"
   },
   "ideas_wall": {
     "tab_mission": "🚀 Mission",

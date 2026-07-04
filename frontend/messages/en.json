@@ -440,7 +440,9 @@
       "other_label": "Other",
       "other_sub": "None of the above",
       "already": "Already have an account?",
-      "log_in": "Log in"
+      "log_in": "Log in",
+      "start": "Start",
+      "close": "Close"
     },
     "login": {
       "heading": "Welcome back",
@@ -479,7 +481,7 @@
   },
   "onboarding": {
     "kid": {
-      "step_avatar": "Pick your character",
+      "step_avatar": "Pick your look",
       "step_avatar_sub": "Who's going on the adventure with you?",
       "step_nickname": "What should we call you?",
       "step_nickname_sub": "Pick a nickname — no real name needed.",
@@ -494,7 +496,10 @@
       "submit": "Let's go!",
       "submitting": "Setting up your adventure…",
       "error_generic": "Something went wrong. Please try again.",
-      "step_of": "Step {current} of {total}"
+      "step_of": "Step {current} of {total}",
+      "pick_look_note": "your 3D avatars\nIf you want you can make it yourself by AI",
+      "before": "Before",
+      "ai_make": "Make your own with AI"
     },
     "parent": {
       "heading": "Welcome to Idea Pop!",

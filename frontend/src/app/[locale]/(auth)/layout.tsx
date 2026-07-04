@@ -11,7 +11,7 @@ export default function AuthLayout({
       <Link href="/" aria-label="Idea Pop home" className="mb-8">
         <Logo size="md" showWordmark />
       </Link>
-      <div className="w-full max-w-md">{children}</div>
+      <div className="w-full max-w-3xl">{children}</div>
     </div>
   );
 }

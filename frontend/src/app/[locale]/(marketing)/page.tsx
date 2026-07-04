@@ -147,7 +147,7 @@ export default async function LandingPage({ params: { locale } }: Props) {
   ];
 
   return (
-    <div className="bg-[#F4FADD]">
+    <div className="bg-[#F3FFC2]">
       {/* 1. Hero — composited workshop scene */}
       <section aria-label="hero" className="relative" dir="ltr">
         <div className="relative w-full overflow-hidden min-h-[540px] md:min-h-0 md:aspect-[2880/1648]">
@@ -289,13 +289,27 @@ export default async function LandingPage({ params: { locale } }: Props) {
         </div>
       </section>
 
-      {/* 4. Paint together banner */}
+      {/* 4. Paint together banner — full-bleed image with overlaid copy */}
       <section
         aria-label="paint together"
-        className="relative mt-16 overflow-hidden bg-gradient-to-r from-[#FDF6E3] via-[#EAF3F7] to-[#F9E7DE]"
+        className="relative mt-16 overflow-hidden"
       >
-        <div className="max-w-6xl mx-auto px-4 py-16 md:py-24 grid grid-cols-1 md:grid-cols-2 items-center gap-10">
-          <div className="text-center md:text-start">
+        <Image
+          unoptimized
+          src={paintingGirl}
+          alt=""
+          aria-hidden="true"
+          className="absolute inset-0 h-full w-full object-cover object-right"
+          sizes="100vw"
+        />
+        {/* left scrim so the heading stays legible over the mural (WCAG AA);
+            kept on the physical left in both LTR and FA/RTL to match the art */}
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 bg-gradient-to-r from-white/95 via-white/70 to-transparent"
+        />
+        <div className="relative mx-auto flex min-h-[380px] max-w-6xl items-center px-4 py-16 md:min-h-[520px]">
+          <div className="max-w-sm text-center md:mr-auto md:text-left">
             <h2 className="font-display text-3xl md:text-4xl font-bold text-ink leading-snug">
               {t("paint.heading")}
             </h2>
@@ -304,16 +318,6 @@ export default async function LandingPage({ params: { locale } }: Props) {
                 {t("paint.cta")}
               </Link>
             </div>
-          </div>
-          <div className="flex justify-center">
-            <Image
-              unoptimized
-              src={paintingGirl}
-              alt=""
-              aria-hidden="true"
-              className="w-full max-w-md h-auto rounded-[1.75rem] shadow-lg"
-              sizes="(min-width: 768px) 28rem, 90vw"
-            />
           </div>
         </div>
       </section>

@@ -201,7 +201,7 @@ export default async function LandingPage({ params: { locale } }: Props) {
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-5">
               <Link
-                href="/sign-up"
+                href="/exploring"
                 className={btnLime}
                 style={{ backgroundColor: LIME }}
               >

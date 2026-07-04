@@ -12,6 +12,8 @@ import molluscaAvatar from "../../../../public/explore/mollusca-avatar.png";
 import wormsAvatar from "../../../../public/explore/worms-avatar.png";
 import wormsIcon from "../../../../public/explore/worms-icon.png";
 import echinodermataAvatar from "../../../../public/explore/echinodermata-avatar.png";
+import cnidariaAvatar from "../../../../public/explore/cnidaria-avatar.png";
+import cnidariaIcon from "../../../../public/explore/cnidaria-icon.png";
 import fishAvatar from "../../../../public/explore/fish-avatar.png";
 import amphibiansAvatar from "../../../../public/explore/amphibians-avatar.png";
 import amphibiansIcon from "../../../../public/explore/amphibians-icon.png";
@@ -37,7 +39,7 @@ const INVERTEBRATES: Category[] = [
   { key: "mollusca", avatar: molluscaAvatar }, // shell held by avatar
   { key: "worms", avatar: wormsAvatar, icon: wormsIcon },
   { key: "echinodermata", avatar: echinodermataAvatar }, // starfish held by avatar
-  { key: "cnidaria", avatar: null, emoji: "🪼" }, // asset not exported yet
+  { key: "cnidaria", avatar: cnidariaAvatar, icon: cnidariaIcon },
 ];
 
 const VERTEBRATES: Category[] = [

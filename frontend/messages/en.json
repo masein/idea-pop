@@ -772,5 +772,40 @@
     "reports_heading": "Reports",
     "reports_empty": "No reports — all clear!",
     "report_resolved": "resolved"
+  },
+  "exploring": {
+    "signup": "Sign up for free",
+    "title": "Exploring Animals and Plant",
+    "sub1_pre": "with a ",
+    "sub1_em": "creative",
+    "sub1_post": " mind",
+    "sub2_pre": "and ",
+    "sub2_em": "nature",
+    "sub2_post": " as your guide",
+    "invertebrates_heading": "Invertebrates",
+    "invertebrates_desc": "Invertebrates are animals that do not have a backbone, like insects, jellyfish, and worms. They come in many shapes and sizes and live all around us, from the ocean to your backyard!",
+    "vertebrates_heading": "Vertebrates",
+    "vertebrates_desc": "Vertebrates are animals that have a backbone, like fish, birds, and mammals. They can live in many different places, from deep oceans to forests and even near our homes!",
+    "cat": {
+      "arthropoda": "Arthropoda",
+      "mollusca": "Mollusca",
+      "worms": "Worms",
+      "echinodermata": "Echinodermata",
+      "cnidaria": "Cnidaria",
+      "fish": "Fish",
+      "amphibians": "Amphibians",
+      "reptiles": "Reptiles",
+      "birds": "Birds / Aves",
+      "mammals": "Mammals"
+    },
+    "cta_1": "Join others,",
+    "cta_2": "one subscription,",
+    "cta_3": "many ways to play and learn",
+    "cta_button": "Try for free",
+    "footer_heading": "We can create a better world together with your Ideas",
+    "footer_popular_activity": "Popular activity",
+    "footer_popular_course": "Popular course",
+    "footer_challenges": "Challenges",
+    "footer_about": "About Us"
   }
 }

@@ -1,10 +1,20 @@
 'use client';
 
 import React, { useState } from 'react';
+import { usePathname } from '@/i18n/routing';
 import Logo from './Logo';
 import PenguinMascot from './PenguinMascot';
 
 export type Section = 'profile' | 'explore' | 'library' | 'challenge';
+
+/** Which nav item is active, derived from the current route. */
+function sectionFromPath(path: string): Section | undefined {
+  if (path.startsWith('/explore')) return 'explore';
+  if (path.startsWith('/library')) return 'library';
+  if (path.startsWith('/challenge')) return 'challenge';
+  if (path.startsWith('/profile') || path.startsWith('/dashboard')) return 'profile';
+  return undefined;
+}
 
 export interface AppShellProps {
   section?: Section;
@@ -13,7 +23,7 @@ export interface AppShellProps {
 }
 
 const sectionTint: Record<Section, string> = {
-  profile: 'bg-tint-cream',
+  profile: 'bg-tint-lime',
   explore: 'bg-tint-lime',
   library: 'bg-tint-cream',
   challenge: 'bg-tint-blue',
@@ -37,7 +47,9 @@ export default function AppShell({
   themesUnlocked = false,
 }: AppShellProps) {
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const tint = sectionTint[section];
+  const pathname = usePathname();
+  const activeSection = sectionFromPath(pathname) ?? section;
+  const tint = sectionTint[activeSection];
 
   const sidebar = (
     <nav aria-label="Main navigation" className="flex flex-col h-full py-6 px-4 gap-6">
@@ -46,7 +58,7 @@ export default function AppShell({
       </div>
       <ul className="flex flex-col gap-1 mt-2 flex-1" role="list">
         {navItems.map((item) => {
-          const isActive = section === item.id;
+          const isActive = activeSection === item.id;
           return (
             <li key={item.id}>
               <a

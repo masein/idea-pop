@@ -1,10 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import AppShell from '@/components/AppShell';
 import { useAgeMode } from '@/lib/hooks/useAgeMode';
 import { fetchKidProgress, fetchMyProjects } from '@/lib/api/client';
-import KidXpCard from '@/components/profile/KidXpCard';
+import { AVATARS } from '@/lib/avatars';
 import KidMedals from '@/components/profile/KidMedals';
 import KidStickerBook from '@/components/profile/KidStickerBook';
 import KidProjectsGrid from '@/components/profile/KidProjectsGrid';
@@ -13,84 +12,35 @@ import type { components } from '@/lib/api/schema';
 type KidProgressResponse = components['schemas']['KidProgressResponse'];
 type KidProjectSummary = components['schemas']['KidProjectSummary'];
 
+const LIME = '#CDEB5A';
+
 // ── Parent handoff modal ──────────────────────────────────────────────────────
 
 function ParentHandoffModal({ onDismiss }: { onDismiss: () => void }) {
   return (
     <div
-      className="fixed inset-0 z-50 bg-ink/50 flex items-center justify-center"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-ink/50"
       role="dialog"
       aria-modal="true"
       data-testid="parent-handoff-modal"
     >
-      <div className="bg-white rounded-2xl shadow-xl p-8 max-w-sm w-full mx-4">
-        <div className="text-5xl text-center mb-4">🤝</div>
-        <h2 className="font-display text-xl text-ink text-center mb-2">
+      <div className="mx-4 w-full max-w-sm rounded-2xl bg-white p-8 shadow-xl">
+        <div className="mb-4 text-center text-5xl">🤝</div>
+        <h2 className="mb-2 text-center font-display text-xl font-bold text-ink">
           Get a parent to help!
         </h2>
-        <p className="font-body text-ink/70 text-center mb-6">
+        <p className="mb-6 text-center font-body text-ink/70">
           Show this screen to your parent. They can upgrade from their account.
         </p>
         <button
           type="button"
           onClick={onDismiss}
           data-testid="handoff-dismiss"
-          className="w-full py-2.5 rounded-card border border-ink/20 font-body text-sm text-ink hover:bg-tint-blue transition-colors"
+          className="w-full rounded-card border border-ink/20 py-2.5 font-body text-sm text-ink transition-colors hover:bg-tint-blue"
         >
           Got it
         </button>
       </div>
-    </div>
-  );
-}
-
-// ── Themes bar ────────────────────────────────────────────────────────────────
-
-const THEMES = [
-  { id: 'ocean', label: 'Ocean 🌊', bg: '#C0F0FF' },
-  { id: 'forest', label: 'Forest 🌲', bg: '#C8F5C8' },
-  { id: 'sunset', label: 'Sunset 🌅', bg: '#FFD6A0' },
-  { id: 'lavender', label: 'Lavender 💜', bg: '#F1D8FB' },
-];
-
-function ThemesBar({ unlocked, activeTheme, onSelect }: {
-  unlocked: boolean;
-  activeTheme: string;
-  onSelect: (id: string) => void;
-}) {
-  return (
-    <div
-      data-testid="themes-bar"
-      className="bg-tint-lavender rounded-card p-4 flex flex-col gap-3"
-    >
-      <h3 className="font-display text-base text-ink">
-        {unlocked ? '🎨 Choose your theme' : '🎨 Themes'}
-      </h3>
-
-      {unlocked ? (
-        <div className="flex gap-2 flex-wrap">
-          {THEMES.map((t) => (
-            <button
-              key={t.id}
-              data-testid={`theme-${t.id}`}
-              onClick={() => onSelect(t.id)}
-              style={{ backgroundColor: t.bg }}
-              className={`px-3 py-1.5 rounded-full font-body text-xs text-ink border-2 transition-all ${
-                activeTheme === t.id ? 'border-challenge' : 'border-transparent'
-              }`}
-            >
-              {t.label}
-            </button>
-          ))}
-        </div>
-      ) : (
-        <p
-          data-testid="themes-locked-msg"
-          className="font-body text-sm text-ink/50"
-        >
-          Themes unlock at Level 4 🎨
-        </p>
-      )}
     </div>
   );
 }
@@ -101,14 +51,13 @@ export default function ProfilePage() {
   const ageMode = useAgeMode();
 
   const [progress, setProgress] = useState<KidProgressResponse | null>(null);
-  const [projects, setProjects] = useState<KidProjectSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [nickname, setNickname] = useState('Explorer');
+  const [avatarId, setAvatarId] = useState<string>('');
   const [showHandoff, setShowHandoff] = useState(false);
-  const [activeTheme, setActiveTheme] = useState('ocean');
   const [projectsList, setProjectsList] = useState<KidProjectSummary[]>([]);
+  const [detailsOpen, setDetailsOpen] = useState(false);
 
-  // Fallback progress for when API isn't reachable yet
   const EMPTY_PROGRESS: KidProgressResponse = {
     level: 1,
     total_xp: 0,
@@ -127,10 +76,13 @@ export default function ProfilePage() {
     try {
       const stored = localStorage.getItem('kidProfile');
       if (stored) {
-        const p = JSON.parse(stored) as { nickname?: string };
+        const p = JSON.parse(stored) as { nickname?: string; avatar_id?: string };
         if (p.nickname) setNickname(p.nickname);
+        if (p.avatar_id) setAvatarId(p.avatar_id);
       }
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
 
     Promise.all([
       fetchKidProgress().catch(() => EMPTY_PROGRESS),
@@ -144,7 +96,11 @@ export default function ProfilePage() {
   }, []);
 
   const prog = progress ?? EMPTY_PROGRESS;
-  const themesUnlocked = prog.level >= 4;
+  const avatarEmoji = AVATARS.find((a) => a.id === avatarId)?.emoji ?? '🐧';
+  const pct = prog.xp_to_next_level > 0
+    ? Math.round((prog.xp_this_level / prog.xp_to_next_level) * 100)
+    : 0;
+  const xpToNext = Math.max(prog.xp_to_next_level - prog.xp_this_level, 0);
 
   function handleVisibilityChanged(
     projectId: string,
@@ -160,79 +116,127 @@ export default function ProfilePage() {
   }
 
   return (
-    <AppShell section="profile" themesUnlocked={themesUnlocked}>
+    <>
       {showHandoff && <ParentHandoffModal onDismiss={() => setShowHandoff(false)} />}
 
-      <div data-testid="profile-page" className="max-w-2xl mx-auto px-4 py-6 flex flex-col gap-6">
-        {/* Welcome header */}
-        <div className="flex items-center gap-4" data-testid="profile-header">
-          <div className="w-16 h-16 rounded-full bg-tint-lavender flex items-center justify-center text-3xl flex-shrink-0">
-            🐧
+      <div data-testid="profile-page" className="mx-auto flex max-w-3xl flex-col gap-7 px-4 py-6">
+        {/* Header + XP strip */}
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center" data-testid="profile-header">
+          <div
+            className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-white text-4xl shadow-sm ring-4 ring-tint-cream"
+            aria-hidden="true"
+          >
+            {avatarEmoji}
           </div>
-          <div>
-            <h1 className="font-display text-2xl text-ink">Hi, {nickname}!</h1>
-            {ageMode === 'older' && (
-              <p className="font-body text-sm text-ink/60 mt-0.5">
-                Rank: {prog.rank} · Level {prog.level}
-              </p>
-            )}
+          <div className="flex-1">
+            <h1 className="font-display text-2xl font-bold text-ink">Hi {nickname}</h1>
+            <div className="mt-2 flex flex-wrap items-center gap-3">
+              <span
+                className="rounded-pill px-4 py-1.5 font-display text-sm font-bold text-[#1F4D33]"
+                style={{ backgroundColor: LIME }}
+              >
+                Start your level
+              </span>
+              <span className="font-body text-sm font-semibold text-ink/70">
+                {prog.xp_this_level}/{prog.xp_to_next_level} XP —{' '}
+                <span className="text-ink">{xpToNext} XP to Lv {prog.level + 1}</span>
+              </span>
+              <span className="text-lg" aria-hidden="true">🏁</span>
+            </div>
+            <div className="relative mt-2 h-5 w-full overflow-hidden rounded-full bg-black/5">
+              <div
+                data-testid="xp-bar"
+                className="h-full rounded-full bg-explore transition-all"
+                style={{ width: `${pct}%` }}
+                role="progressbar"
+                aria-valuenow={pct}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-label={`${prog.xp_this_level} of ${prog.xp_to_next_level} XP`}
+              />
+              <span className="absolute inset-0 flex items-center justify-center font-body text-xs font-bold text-ink/60">
+                {pct}%
+              </span>
+            </div>
           </div>
         </div>
 
-        {/* XP card */}
-        {loading ? (
-          <div className="bg-white rounded-card shadow-sm p-5 animate-pulse h-32" />
-        ) : (
-          <KidXpCard progress={prog} ageMode={ageMode} />
-        )}
+        <p className="w-fit rounded-pill bg-white px-4 py-1.5 font-body text-sm font-semibold text-ink shadow-sm">
+          ⚡ When you earn {prog.xp_to_next_level} XP = level up!
+        </p>
 
-        {/* Medals — older mode only */}
-        {ageMode === 'older' && !loading && (
-          <KidMedals
-            bronze={prog.medals.bronze}
-            silver={prog.medals.silver}
-            gold={prog.medals.gold}
-          />
-        )}
+        {/* 3 adventures */}
+        <section className="flex flex-col gap-2">
+          <h2 className="font-display text-2xl font-bold text-ink">
+            Your XP comes from 3 adventures
+          </h2>
+          <p className="font-body font-semibold text-ink/70">
+            Explore to get inspired · Learn from experts · Solve real problems — solving pays the most!
+          </p>
 
-        {/* Sticker book */}
-        {!loading && <KidStickerBook stickers={prog.stickers} />}
+          <button
+            type="button"
+            onClick={() => setDetailsOpen((v) => !v)}
+            aria-expanded={detailsOpen}
+            className="mt-2 flex w-full items-center justify-between border-t border-explore/30 pt-2 font-display text-sm font-bold text-[#1E5B2E] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-explore"
+          >
+            More details
+            <span aria-hidden="true">{detailsOpen ? '▲' : '▼'}</span>
+          </button>
 
-        {/* Projects grid */}
+          {detailsOpen && !loading && (
+            <div className="mt-3 flex flex-col gap-4">
+              <div className="grid grid-cols-3 gap-3">
+                {[
+                  { label: 'Explore', xp: prog.explore_xp, emoji: '🌿' },
+                  { label: 'Learn', xp: prog.learn_xp, emoji: '📚' },
+                  { label: 'Solve', xp: prog.solve_xp, emoji: '🔧' },
+                ].map((a) => (
+                  <div key={a.label} className="rounded-card bg-white p-4 text-center shadow-sm">
+                    <div className="text-2xl" aria-hidden="true">{a.emoji}</div>
+                    <p className="mt-1 font-display font-bold text-ink">{a.label}</p>
+                    <p className="font-body text-sm text-ink/60">{a.xp} XP</p>
+                  </div>
+                ))}
+              </div>
+              {ageMode === 'older' && (
+                <KidMedals
+                  bronze={prog.medals.bronze}
+                  silver={prog.medals.silver}
+                  gold={prog.medals.gold}
+                />
+              )}
+              <KidStickerBook stickers={prog.stickers} />
+            </div>
+          )}
+        </section>
+
+        {/* My projects */}
         {!loading && (
           <KidProjectsGrid
             projects={projectsList}
             onVisibilityChanged={handleVisibilityChanged}
           />
         )}
-        {loading && (
-          <div className="bg-white rounded-card shadow-sm p-5 animate-pulse h-40" />
-        )}
+        {loading && <div className="h-40 animate-pulse rounded-card bg-white" />}
 
-        {/* Themes */}
-        <ThemesBar
-          unlocked={themesUnlocked}
-          activeTheme={activeTheme}
-          onSelect={setActiveTheme}
-        />
-
-        {/* Upgrade CTA — routes to parent handoff, never to checkout */}
+        {/* Upgrade → parent handoff (never checkout) */}
         <div
           data-testid="upgrade-section"
-          className="bg-tint-lavender rounded-card p-5 text-center flex flex-col gap-3"
+          className="flex flex-col items-center gap-3 rounded-card bg-tint-lavender p-5 text-center"
         >
-          <p className="font-display text-base text-ink">Want more missions?</p>
+          <p className="font-display text-base font-bold text-ink">Want more missions?</p>
           <p className="font-body text-sm text-ink/60">Ask a parent to upgrade your plan</p>
           <button
             type="button"
             data-testid="upgrade-btn"
             onClick={() => setShowHandoff(true)}
-            className="bg-challenge text-white font-display text-sm px-6 py-2.5 rounded-card self-center"
+            className="self-center rounded-pill bg-challenge px-6 py-2.5 font-display text-sm font-bold text-white transition-all hover:brightness-110 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-challenge focus-visible:ring-offset-2"
           >
             Upgrade
           </button>
         </div>
       </div>
-    </AppShell>
+    </>
   );
 }

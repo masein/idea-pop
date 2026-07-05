@@ -60,15 +60,17 @@ export default function KidProjectsGrid({ projects, onVisibilityChanged }: KidPr
 
       {/* Grid */}
       <div data-testid="projects-grid" className="flex flex-col gap-4">
-        <h2 className="font-display text-lg text-ink">My projects</h2>
+        <h2 className="font-display text-lg font-bold text-ink">My projects</h2>
 
         {projects.length === 0 ? (
-          <p
+          <a
+            href="/challenges"
             data-testid="projects-empty"
-            className="font-body text-sm text-ink/50 bg-white rounded-card p-6 text-center"
+            className="flex aspect-[4/3] max-w-xs flex-col items-center justify-center gap-2 rounded-card border-2 border-dashed border-explore/50 text-ink/50 transition-colors hover:border-explore hover:text-explore focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-explore"
           >
-            Nothing here yet — finish a challenge to save your work!
-          </p>
+            <span className="text-3xl text-explore" aria-hidden="true">+</span>
+            <span className="font-body text-sm">new project</span>
+          </a>
         ) : (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {projects.map((project) => (

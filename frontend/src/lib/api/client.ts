@@ -147,6 +147,12 @@ export async function fetchCourse(id: string) {
   return data;
 }
 
+export async function fetchMe() {
+  const { data, error } = await apiClient.GET("/api/me");
+  if (error) throw new Error("Failed to load account");
+  return data;
+}
+
 export async function fetchCourses() {
   const { data, error } = await apiClient.GET("/api/library/courses");
   if (error) throw new Error("Failed to load courses");

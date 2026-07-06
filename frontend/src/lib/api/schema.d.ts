@@ -183,6 +183,17 @@ export interface paths {
       };
     };
   };
+  "/api/me": {
+    get: {
+      responses: {
+        200: {
+          content: {
+            "application/json": components["schemas"]["MeResponse"];
+          };
+        };
+      };
+    };
+  };
   "/api/me/progress": {
     get: {
       responses: {
@@ -615,6 +626,12 @@ export interface components {
       studio: string;
       avatar_url: string;
       created_at: string;
+    };
+    MeResponse: {
+      account_id: string;
+      role: string;
+      email: string;
+      display_name: string;
     };
     CourseSummaryResponse: {
       id: string;

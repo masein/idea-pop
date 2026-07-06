@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { useAgeMode } from '@/lib/hooks/useAgeMode';
 import { fetchKidProgress, fetchMyProjects } from '@/lib/api/client';
@@ -96,7 +97,7 @@ export default function ProfilePage() {
   }, []);
 
   const prog = progress ?? EMPTY_PROGRESS;
-  const avatarEmoji = AVATARS.find((a) => a.id === avatarId)?.emoji ?? '🐧';
+  const avatar = AVATARS.find((a) => a.id === avatarId) ?? AVATARS[0];
   const pct = prog.xp_to_next_level > 0
     ? Math.round((prog.xp_this_level / prog.xp_to_next_level) * 100)
     : 0;
@@ -123,18 +124,30 @@ export default function ProfilePage() {
         {/* Header + XP strip */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center" data-testid="profile-header">
           <div
-            className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-white text-4xl shadow-sm ring-4 ring-tint-cream"
-            aria-hidden="true"
+            className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full text-4xl shadow-sm ring-4 ring-white"
+            style={{ backgroundColor: avatar.bg }}
           >
-            {avatarEmoji}
+            {avatar.img ? (
+              <Image
+                src={avatar.img}
+                alt={avatar.label}
+                width={80}
+                height={80}
+                className="h-full w-full object-contain"
+                priority
+              />
+            ) : (
+              <span aria-hidden="true">{avatar.emoji}</span>
+            )}
           </div>
           <div className="flex-1">
             <h1 className="font-display text-2xl font-bold text-ink">Hi {nickname}</h1>
             <div className="mt-2 flex flex-wrap items-center gap-3">
               <span
-                className="rounded-pill px-4 py-1.5 font-display text-sm font-bold text-[#1F4D33]"
+                className="inline-flex items-center gap-1.5 rounded-pill px-4 py-1.5 font-display text-sm font-bold text-[#1F4D33]"
                 style={{ backgroundColor: LIME }}
               >
+                <Image src="/kid/xp-star.png" alt="" width={16} height={16} className="h-4 w-4" aria-hidden="true" />
                 Start your level
               </span>
               <span className="font-body text-sm font-semibold text-ink/70">
@@ -223,18 +236,28 @@ export default function ProfilePage() {
         {/* Upgrade → parent handoff (never checkout) */}
         <div
           data-testid="upgrade-section"
-          className="flex flex-col items-center gap-3 rounded-card bg-tint-lavender p-5 text-center"
+          className="flex flex-col items-center gap-3 rounded-card bg-tint-lavender p-5 text-center sm:flex-row sm:justify-center sm:text-left"
         >
-          <p className="font-display text-base font-bold text-ink">Want more missions?</p>
-          <p className="font-body text-sm text-ink/60">Ask a parent to upgrade your plan</p>
-          <button
-            type="button"
-            data-testid="upgrade-btn"
-            onClick={() => setShowHandoff(true)}
-            className="self-center rounded-pill bg-challenge px-6 py-2.5 font-display text-sm font-bold text-white transition-all hover:brightness-110 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-challenge focus-visible:ring-offset-2"
-          >
-            Upgrade
-          </button>
+          <Image
+            src="/kid/upgrade-girl.png"
+            alt=""
+            width={120}
+            height={120}
+            className="h-28 w-auto shrink-0 select-none drop-shadow-sm"
+            aria-hidden="true"
+          />
+          <div className="flex flex-col items-center gap-2 sm:items-start">
+            <p className="font-display text-base font-bold text-ink">Want more missions?</p>
+            <p className="font-body text-sm text-ink/60">Ask a parent to upgrade your plan</p>
+            <button
+              type="button"
+              data-testid="upgrade-btn"
+              onClick={() => setShowHandoff(true)}
+              className="mt-1 rounded-pill bg-challenge px-6 py-2.5 font-display text-sm font-bold text-white transition-all hover:brightness-110 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-challenge focus-visible:ring-offset-2"
+            >
+              Upgrade
+            </button>
+          </div>
         </div>
       </div>
     </>

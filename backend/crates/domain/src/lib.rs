@@ -30,8 +30,8 @@ pub use child::{
 };
 pub use consent_service::ConsentService;
 pub use content::{
-    Course, Creator, ExploreFilter, ExploreVideo, Lesson, Page, QuickMake, QuickMakeFilter, Studio,
-    StudioCount, SuperpowerCategory,
+    Course, CourseSummary, Creator, ExploreFilter, ExploreVideo, Lesson, Page, QuickMake,
+    QuickMakeFilter, Studio, StudioCount, SuperpowerCategory,
 };
 pub use portfolio::{
     moderation_due_at, report_due_at, request_visibility_change, ChallengeIdea,

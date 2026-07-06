@@ -59,8 +59,8 @@ use crate::{
     classes::{CreateClassRequest, CreateClassResponse, JoinClassResponse},
     explore::{ExplorePageResponse, ExploreVideoResponse},
     library::{
-        CourseDetailResponse, CreatorResponse, LessonResponse, QuickMakePageResponse,
-        QuickMakeResponse, StudioCountResponse,
+        CourseDetailResponse, CourseSummaryResponse, CreatorResponse, LessonResponse,
+        QuickMakePageResponse, QuickMakeResponse, StudioCountResponse,
     },
     me::MeResponse,
     portfolio::{
@@ -204,7 +204,7 @@ pub struct CreateHealthLogRequest {
         consents::grant_consent, consents::revoke_consent,
         classes::create_class, classes::join_class,
         explore::list_explore, explore::get_explore,
-        library::list_studios, library::list_quick_makes,
+        library::list_studios, library::list_courses, library::list_quick_makes,
         library::get_course, library::get_creator,
         challenges::list_challenges, challenges::get_challenge,
         progress::post_video_view, progress::post_lesson_complete,
@@ -224,7 +224,7 @@ pub struct CreateHealthLogRequest {
         CreateChildRequest, CreateChildResponse,
         CreateClassRequest, CreateClassResponse, JoinClassResponse,
         ExploreVideoResponse, ExplorePageResponse,
-        StudioCountResponse, QuickMakeResponse, QuickMakePageResponse,
+        StudioCountResponse, CourseSummaryResponse, QuickMakeResponse, QuickMakePageResponse,
         LessonResponse, CourseDetailResponse, CreatorResponse,
         ChallengeResponse, ChallengePageResponse, AgeTierVariantResponse, ToolResponse,
         VideoViewRequest, LessonCompleteRequest, XpAwardResponse,
@@ -486,6 +486,7 @@ pub fn router_with_metrics(
         .route("/explore/:id", get(explore::get_explore))
         // Library (any authenticated principal; restricted kids CAN read)
         .route("/library/studios", get(library::list_studios))
+        .route("/library/courses", get(library::list_courses))
         .route("/library/quick-makes", get(library::list_quick_makes))
         .route("/courses/:id", get(library::get_course))
         .route("/creators/:id", get(library::get_creator))
@@ -550,8 +551,8 @@ use idea_pop_domain::{
     billing::{CheckoutResult, Plan, Subscription},
     challenge::{Challenge, ChallengeFilter},
     content::{
-        Course, Creator, ExploreFilter, ExploreVideo, Lesson, Page, QuickMake, QuickMakeFilter,
-        StudioCount,
+        Course, CourseSummary, Creator, ExploreFilter, ExploreVideo, Lesson, Page, QuickMake,
+        QuickMakeFilter, StudioCount,
     },
     portfolio::{
         ChallengeIdea, ModerationContentType, ModerationItem, ModerationStatus, Project,
@@ -723,6 +724,9 @@ pub struct NullLibraryRepo;
 impl LibraryRepo for NullLibraryRepo {
     async fn list_quick_makes(&self, f: &QuickMakeFilter) -> Result<Page<QuickMake>, DomainError> {
         Ok(Page::new(vec![], 0, f.page, f.per_page))
+    }
+    async fn list_courses(&self) -> Result<Vec<CourseSummary>, DomainError> {
+        Ok(vec![])
     }
     async fn find_course_with_lessons(
         &self,

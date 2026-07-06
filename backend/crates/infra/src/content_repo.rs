@@ -6,8 +6,8 @@ use uuid::Uuid;
 
 use idea_pop_domain::{
     content::{
-        Course, Creator, ExploreFilter, ExploreVideo, Lesson, Page, QuickMake, QuickMakeFilter,
-        Studio, StudioCount, SuperpowerCategory,
+        Course, CourseSummary, Creator, ExploreFilter, ExploreVideo, Lesson, Page, QuickMake,
+        QuickMakeFilter, Studio, StudioCount, SuperpowerCategory,
     },
     AgeMode, DomainError, ExploreRepo, LibraryRepo,
 };
@@ -198,12 +198,45 @@ impl LibraryRepo for SqlxLibraryRepo {
         Ok(Page::new(items, total, filter.page, per_page))
     }
 
+    async fn list_courses(&self) -> Result<Vec<CourseSummary>, DomainError> {
+        let rows = sqlx::query!(
+            r#"SELECT c.id, c.title, c.slug, c.studio, c.creator_id,
+                      cr.display_name AS creator_name,
+                      c.difficulty, c.age_min,
+                      COUNT(l.id) AS "lesson_count!"
+               FROM courses c
+               JOIN creators cr ON cr.id = c.creator_id
+               LEFT JOIN lessons l ON l.course_id = c.id
+               GROUP BY c.id, cr.display_name
+               ORDER BY c.created_at"#,
+        )
+        .fetch_all(&self.pool)
+        .await
+        .map_err(sqlx_err)?;
+
+        Ok(rows
+            .into_iter()
+            .map(|r| CourseSummary {
+                id: r.id,
+                title: r.title,
+                slug: r.slug,
+                studio: studio_or(&r.studio),
+                creator_id: r.creator_id,
+                creator_name: r.creator_name,
+                difficulty: r.difficulty,
+                age_min: r.age_min,
+                lesson_count: r.lesson_count,
+            })
+            .collect())
+    }
+
     async fn find_course_with_lessons(
         &self,
         id: Uuid,
     ) -> Result<Option<(Course, Vec<Lesson>)>, DomainError> {
         let row = sqlx::query!(
-            r#"SELECT id, title, slug, studio, creator_id, summary, created_at
+            r#"SELECT id, title, slug, studio, creator_id, summary,
+                      difficulty, age_min, materials, created_at
                FROM courses WHERE id = $1"#,
             id,
         )
@@ -220,6 +253,9 @@ impl LibraryRepo for SqlxLibraryRepo {
             studio: studio_or(&r.studio),
             creator_id: r.creator_id,
             summary: r.summary,
+            difficulty: r.difficulty,
+            age_min: r.age_min,
+            materials: r.materials,
             created_at: r.created_at,
         };
 
@@ -270,21 +306,35 @@ impl LibraryRepo for SqlxLibraryRepo {
 
     async fn studio_counts(&self) -> Result<Vec<StudioCount>, DomainError> {
         let rows = sqlx::query!(
-            r#"SELECT studio, COUNT(*) as "count!" FROM quick_makes GROUP BY studio"#,
+            r#"SELECT studio AS "studio!",
+                      COUNT(*) FILTER (WHERE kind = 'make')   AS "makes!",
+                      COUNT(*) FILTER (WHERE kind = 'course') AS "courses!"
+               FROM (
+                   SELECT studio, 'make'::text   AS kind FROM quick_makes
+                   UNION ALL
+                   SELECT studio, 'course'::text AS kind FROM courses
+               ) AS combined
+               GROUP BY studio"#,
         )
         .fetch_all(&self.pool)
         .await
         .map_err(sqlx_err)?;
 
-        let mut counts: std::collections::HashMap<String, i64> =
-            rows.into_iter().map(|r| (r.studio, r.count)).collect();
+        let mut counts: std::collections::HashMap<String, (i64, i64)> = rows
+            .into_iter()
+            .map(|r| (r.studio, (r.makes, r.courses)))
+            .collect();
 
         // Return all 6 studios, filling 0 for any not in the DB.
         Ok(Studio::all()
             .into_iter()
-            .map(|s| StudioCount {
-                quick_make_count: counts.remove(s.as_str()).unwrap_or(0),
-                studio: s,
+            .map(|s| {
+                let (makes, courses) = counts.remove(s.as_str()).unwrap_or((0, 0));
+                StudioCount {
+                    studio: s,
+                    quick_make_count: makes,
+                    course_count: courses,
+                }
             })
             .collect())
     }

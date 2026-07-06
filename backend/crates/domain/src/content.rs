@@ -141,7 +141,27 @@ pub struct Course {
     pub studio: Studio,
     pub creator_id: Uuid,
     pub summary: String,
+    /// Skill difficulty: 1 (easy), 2 (medium), 3 (hard).
+    pub difficulty: i16,
+    /// Minimum recommended age.
+    pub age_min: i16,
+    /// Materials needed across the course (e.g. "laptop", "internet").
+    pub materials: Vec<String>,
     pub created_at: DateTime<Utc>,
+}
+
+/// Lightweight course row for the Library index (no lessons; includes the
+/// creator's display name and a lesson count for progress denominators).
+pub struct CourseSummary {
+    pub id: Uuid,
+    pub title: String,
+    pub slug: String,
+    pub studio: Studio,
+    pub creator_id: Uuid,
+    pub creator_name: String,
+    pub difficulty: i16,
+    pub age_min: i16,
+    pub lesson_count: i64,
 }
 
 pub struct Lesson {
@@ -260,6 +280,7 @@ impl Default for QuickMakeFilter {
 pub struct StudioCount {
     pub studio: Studio,
     pub quick_make_count: i64,
+    pub course_count: i64,
 }
 
 // ── Domain validation ─────────────────────────────────────────────────────────

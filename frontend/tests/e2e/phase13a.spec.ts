@@ -170,6 +170,50 @@ test.describe('axe — app pages', () => {
     expect(results.violations).toEqual([]);
   });
 
+  test('library page passes axe', async ({ page }) => {
+    await setCookie(page, 'ideapop_persona', 'kid');
+    // Real data so the orange studio cards + quick-make tiles are contrast-checked.
+    page.route('**/api/library/studios', (r) =>
+      r.fulfill({
+        json: [
+          { studio: 'craft', quick_make_count: 12, course_count: 2 },
+          { studio: 'nature', quick_make_count: 0, course_count: 0 },
+        ],
+      })
+    );
+    page.route('**/api/library/courses', (r) =>
+      r.fulfill({
+        json: [
+          {
+            id: 'c1', title: 'Drawing Animals 101', slug: 'drawing-animals-101',
+            studio: 'art', creator_id: 'cr1', creator_name: 'Ms. Noor',
+            difficulty: 1, age_min: 8, lesson_count: 6,
+          },
+        ],
+      })
+    );
+    page.route('**/api/library/quick-makes**', (r) =>
+      r.fulfill({
+        json: {
+          items: [
+            {
+              id: 'q1', title: 'How to make slime!', slug: 'slime', studio: 'science',
+              difficulty: 1, time_minutes: 15, materials: ['home stuff'], mess_level: 2,
+              video_url: '', xp_reward: 5, ai_generated: false, created_at: '2024-01-01T00:00:00Z',
+            },
+          ],
+          total: 1, page: 1, per_page: 4,
+        },
+      })
+    );
+    await page.goto('/en/library');
+    await page.waitForLoadState('networkidle');
+    const results = await new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
+      .analyze();
+    expect(results.violations).toEqual([]);
+  });
+
   test('profile page passes axe', async ({ page }) => {
     await setCookie(page, 'ideapop_persona', 'kid');
     mockProfileAPIs(page);

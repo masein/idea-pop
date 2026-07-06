@@ -17,6 +17,7 @@ mod consents;
 pub mod explore;
 pub mod library;
 mod me;
+mod parent;
 
 pub use error::{ApiError, ProblemDetail};
 pub use state::{
@@ -63,6 +64,7 @@ use crate::{
         QuickMakePageResponse, QuickMakeResponse, StudioCountResponse,
     },
     me::MeResponse,
+    parent::{ChildReportResponse, ParentChildResponse, ParentProjectSummary},
     portfolio::{
         CreateProjectRequest, CreateReportRequest, IdeaListResponse, IdeaResponse,
         ModerationItemResponse, ModerationQueueResponse, PresignResponse, ProjectListResponse,
@@ -201,6 +203,7 @@ pub struct CreateHealthLogRequest {
         auth::register, auth::login, auth::refresh, auth::verify_email,
         me::me,
         children::create_child,
+        parent::list_children, parent::child_report,
         consents::grant_consent, consents::revoke_consent,
         classes::create_class, classes::join_class,
         explore::list_explore, explore::get_explore,
@@ -222,6 +225,7 @@ pub struct CreateHealthLogRequest {
         RegisterRequest, LoginRequest, RefreshRequest, VerifyEmailRequest,
         AuthResponse, TokenResponse, MeResponse,
         CreateChildRequest, CreateChildResponse,
+        ParentChildResponse, ChildReportResponse, ParentProjectSummary,
         CreateClassRequest, CreateClassResponse, JoinClassResponse,
         ExploreVideoResponse, ExplorePageResponse,
         StudioCountResponse, CourseSummaryResponse, QuickMakeResponse, QuickMakePageResponse,
@@ -476,6 +480,8 @@ pub fn router_with_metrics(
         .route("/me", get(me::me))
         // Child profiles & consent
         .route("/children", post(children::create_child))
+        .route("/parent/children", get(parent::list_children))
+        .route("/parent/children/:id/report", get(parent::child_report))
         .route("/consents/:token/grant", post(consents::grant_consent))
         .route("/consents/:child_id/revoke", post(consents::revoke_consent))
         // Classes

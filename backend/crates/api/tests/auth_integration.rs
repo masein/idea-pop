@@ -306,7 +306,7 @@ async fn me_returns_account_info() {
                         .uri("/auth/register")
                         .header("content-type", "application/json")
                         .body(Body::from(
-                            json!({"email":"me@example.com","password":"password123"}).to_string(),
+                            json!({"email":"me@example.com","password":"password123","display_name":"Susan"}).to_string(),
                         ))
                         .unwrap(),
                 )
@@ -336,6 +336,8 @@ async fn me_returns_account_info() {
     let body: Value =
         serde_json::from_slice(&to_bytes(res.into_body(), usize::MAX).await.unwrap()).unwrap();
     assert_eq!(body["role"], "parent");
+    assert_eq!(body["email"], "me@example.com");
+    assert_eq!(body["display_name"], "Susan");
 }
 
 // ── Rate limiting ─────────────────────────────────────────────────────────────

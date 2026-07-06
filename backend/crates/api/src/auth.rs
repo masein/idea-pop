@@ -21,6 +21,8 @@ pub struct RegisterRequest {
     pub role: Option<String>,
     /// BCP 47 locale (e.g. "en", "fa"). Defaults to "en".
     pub locale: Option<String>,
+    /// Friendly display name for the portal header (optional).
+    pub display_name: Option<String>,
 }
 
 #[derive(Debug, Deserialize, Validate, ToSchema)]
@@ -93,6 +95,18 @@ pub async fn register(
 
     // Login immediately so we can create the refresh session and return tokens.
     let (account, pair) = state.auth.login(email, password).await?;
+
+    // Persist the optional display name (kept out of AuthService to avoid
+    // threading it through every caller).
+    if let Some(name) = body.display_name.as_deref().map(str::trim) {
+        if !name.is_empty() {
+            let _ = sqlx::query("UPDATE accounts SET display_name = $1 WHERE id = $2")
+                .bind(name)
+                .bind(account.id)
+                .execute(&state.db)
+                .await;
+        }
+    }
 
     Ok((
         StatusCode::CREATED,

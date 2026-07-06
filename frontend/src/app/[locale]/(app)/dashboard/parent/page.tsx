@@ -10,6 +10,7 @@ import {
   fetchSubscription,
   startCheckout,
   openBillingPortal,
+  fetchMe,
 } from '@/lib/api/client';
 import { AVATARS } from '@/lib/avatars';
 import type { components } from '@/lib/api/schema';
@@ -124,6 +125,7 @@ export default function ParentDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [reportChild, setReportChild] = useState<ParentChild | null>(null);
   const [billingLoading, setBillingLoading] = useState(false);
+  const [account, setAccount] = useState<{ email: string; display_name: string } | null>(null);
 
   // Un-backed UI-only controls (see note in the response).
   const [emailPrefs, setEmailPrefs] = useState({ marketing: false, content: false, activity: false });
@@ -146,7 +148,13 @@ export default function ParentDashboardPage() {
       for (const [id, r] of entries) if (r) map[id] = r as ChildReport;
       setReports(map);
     });
+    fetchMe()
+      .then((m) => setAccount(m as { email: string; display_name: string }))
+      .catch(() => {});
   }, []);
+
+  const greetingName =
+    account?.display_name?.trim() || account?.email?.split('@')[0] || '';
 
   const isPremium = sub?.is_premium ?? false;
 
@@ -225,8 +233,10 @@ export default function ParentDashboardPage() {
           🧑
         </span>
         <div>
-          <h1 className="font-display text-3xl font-bold text-ink">Welcome to your parent portal</h1>
-          <p className="font-body font-semibold text-ink/60">Manage your family, plan, and safety.</p>
+          <h1 className="font-display text-3xl font-bold text-ink">
+            {greetingName ? `Hi ${greetingName}` : 'Welcome'}
+          </h1>
+          <p className="font-body font-semibold text-ink/60">Welcome to your parent portal.</p>
         </div>
       </header>
 
@@ -239,7 +249,9 @@ export default function ParentDashboardPage() {
               Forgot password
             </a>
           </div>
-          <p className="font-body text-sm text-ink/60">Your login email &amp; password.</p>
+          <p className="font-body text-sm font-semibold text-ink">
+            {account?.email || 'Your login email & password.'}
+          </p>
 
           <div className="mt-1 flex flex-col gap-3 border-t border-ink/10 pt-3">
             <p className="font-body text-xs font-semibold uppercase tracking-wide text-ink/50">

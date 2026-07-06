@@ -232,7 +232,7 @@ export default function ParentDashboardPage() {
 
       <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
         {/* My account */}
-        <section className="flex flex-col gap-3 rounded-card bg-white p-5 shadow-sm">
+        <section id="account" className="flex flex-col gap-3 rounded-card bg-white p-5 shadow-sm scroll-mt-4">
           <div className="flex items-center justify-between">
             <h2 className="font-display text-lg font-bold text-ink">My account</h2>
             <a href="/login" className="font-body text-sm font-semibold text-explore hover:underline">

@@ -396,6 +396,8 @@ async fn library_studios_all_six() {
     let pool = test_pool().await;
     insert_quick_make(&pool, "craft-1", "craft").await;
     insert_quick_make(&pool, "art-1", "art").await;
+    // Seeds an art course (+ creator + 6 lessons) so course_count is exercised.
+    insert_creator_and_course(&pool).await;
 
     let app = router(content_state(pool), None);
     let token = register_and_token(&app, "studios@test.com").await;
@@ -410,9 +412,15 @@ async fn library_studios_all_six() {
 
     let craft = body.iter().find(|s| s["studio"] == "craft").unwrap();
     assert_eq!(craft["quick_make_count"], 1);
+    assert_eq!(craft["course_count"], 0);
+
+    let art = body.iter().find(|s| s["studio"] == "art").unwrap();
+    assert_eq!(art["quick_make_count"], 1);
+    assert_eq!(art["course_count"], 1, "art has one seeded course");
 
     let music = body.iter().find(|s| s["studio"] == "music").unwrap();
     assert_eq!(music["quick_make_count"], 0, "unseen studios get 0");
+    assert_eq!(music["course_count"], 0);
 }
 
 /// GET /library/quick-makes supports studio filter.
@@ -441,6 +449,28 @@ async fn quick_makes_studio_filter() {
         .unwrap();
     let body = body_json(res).await;
     assert_eq!(body["total"], 2, "no filter = all");
+}
+
+/// GET /library/courses returns course summaries with creator name + lesson count.
+#[tokio::test]
+async fn list_courses_returns_summaries() {
+    let pool = test_pool().await;
+    let (_creator_id, _course_id) = insert_creator_and_course(&pool).await;
+
+    let app = router(content_state(pool), None);
+    let token = register_and_token(&app, "list-courses@test.com").await;
+
+    let res = app
+        .oneshot(authed_get("/library/courses", &token))
+        .await
+        .unwrap();
+    assert_eq!(res.status(), StatusCode::OK);
+    let body: Vec<Value> = serde_json::from_value(body_json(res).await).unwrap();
+    assert_eq!(body.len(), 1);
+    assert_eq!(body[0]["title"], "Drawing Animals 101");
+    assert_eq!(body[0]["creator_name"], "Ms. Noor");
+    assert_eq!(body[0]["studio"], "art");
+    assert_eq!(body[0]["lesson_count"], 6);
 }
 
 /// GET /courses/:id returns course with 6 ordered lessons.

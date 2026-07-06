@@ -1,0 +1,117 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT c.id, c.title, c.slug, c.studio, c.creator_id,\n                      cr.display_name AS creator_name,\n                      c.difficulty, c.age_min,\n                      COUNT(l.id) AS \"lesson_count!\"\n               FROM courses c\n               JOIN creators cr ON cr.id = c.creator_id\n               LEFT JOIN lessons l ON l.course_id = c.id\n               GROUP BY c.id, cr.display_name\n               ORDER BY c.created_at",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "courses",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "title",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "courses",
+            "name": "title"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "slug",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "courses",
+            "name": "slug"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "studio",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "courses",
+            "name": "studio"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "creator_id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "courses",
+            "name": "creator_id"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "creator_name",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "creators",
+            "name": "display_name"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "difficulty",
+        "type_info": "Int2",
+        "origin": {
+          "Table": {
+            "table": "courses",
+            "name": "difficulty"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "age_min",
+        "type_info": "Int2",
+        "origin": {
+          "Table": {
+            "table": "courses",
+            "name": "age_min"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "lesson_count!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      null
+    ]
+  },
+  "hash": "e8efe376dfeeeb6037e86cbab6408602c339bcb0ea2bdf79a88fe9d1404a4523"
+}

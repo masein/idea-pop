@@ -147,6 +147,20 @@ export async function fetchCourse(id: string) {
   return data;
 }
 
+export async function fetchCourses() {
+  const { data, error } = await apiClient.GET("/api/library/courses");
+  if (error) throw new Error("Failed to load courses");
+  return data;
+}
+
+export async function fetchCreator(id: string) {
+  const { data, error } = await apiClient.GET("/api/creators/{id}", {
+    params: { path: { id } },
+  });
+  if (error) throw new Error("Failed to load creator");
+  return data;
+}
+
 export async function recordLessonComplete(lessonId: string) {
   const { data, error } = await apiClient.POST("/api/progress/lesson-complete", {
     body: { lesson_id: lessonId },

@@ -12,8 +12,8 @@ use crate::{
     billing::{CheckoutResult, Plan, Subscription},
     challenge::{Challenge, ChallengeFilter},
     content::{
-        Course, Creator, ExploreFilter, ExploreVideo, Lesson, Page, QuickMake, QuickMakeFilter,
-        StudioCount,
+        Course, CourseSummary, Creator, ExploreFilter, ExploreVideo, Lesson, Page, QuickMake,
+        QuickMakeFilter, StudioCount,
     },
     portfolio::{
         ChallengeIdea, ModerationContentType, ModerationItem, ModerationStatus, Project,
@@ -318,6 +318,7 @@ pub trait LibraryRepo: Send + Sync {
         &self,
         filter: &QuickMakeFilter,
     ) -> Result<Page<QuickMake>, DomainError>;
+    async fn list_courses(&self) -> Result<Vec<CourseSummary>, DomainError>;
     async fn find_course_with_lessons(
         &self,
         id: Uuid,

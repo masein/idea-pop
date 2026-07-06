@@ -19,6 +19,7 @@ use crate::{error::ApiError, extractor::AuthToken, AppState};
 pub struct StudioCountResponse {
     pub studio: String,
     pub quick_make_count: i64,
+    pub course_count: i64,
 }
 
 #[derive(Serialize, ToSchema)]
@@ -64,8 +65,24 @@ pub struct CourseDetailResponse {
     pub studio: String,
     pub creator_id: Uuid,
     pub summary: String,
+    pub difficulty: i16,
+    pub age_min: i16,
+    pub materials: Vec<String>,
     pub created_at: DateTime<Utc>,
     pub lessons: Vec<LessonResponse>,
+}
+
+#[derive(Serialize, ToSchema)]
+pub struct CourseSummaryResponse {
+    pub id: Uuid,
+    pub title: String,
+    pub slug: String,
+    pub studio: String,
+    pub creator_id: Uuid,
+    pub creator_name: String,
+    pub difficulty: i16,
+    pub age_min: i16,
+    pub lesson_count: i64,
 }
 
 #[derive(Serialize, ToSchema)]
@@ -114,6 +131,36 @@ pub async fn list_studios(
             .map(|sc| StudioCountResponse {
                 studio: sc.studio.as_str().to_owned(),
                 quick_make_count: sc.quick_make_count,
+                course_count: sc.course_count,
+            })
+            .collect(),
+    ))
+}
+
+/// List all courses (summary rows for the Library index). Restricted children CAN access.
+#[utoipa::path(get, path = "/library/courses", tag = "library",
+    responses(
+        (status = 200, description = "Course summaries", body = [CourseSummaryResponse]),
+        (status = 401, description = "Not authenticated", body = crate::ProblemDetail),
+    ))]
+pub async fn list_courses(
+    _auth: AuthToken,
+    State(state): State<AppState>,
+) -> Result<Json<Vec<CourseSummaryResponse>>, ApiError> {
+    let courses = state.library.list_courses().await?;
+    Ok(Json(
+        courses
+            .into_iter()
+            .map(|c| CourseSummaryResponse {
+                id: c.id,
+                title: c.title,
+                slug: c.slug,
+                studio: c.studio.as_str().to_owned(),
+                creator_id: c.creator_id,
+                creator_name: c.creator_name,
+                difficulty: c.difficulty,
+                age_min: c.age_min,
+                lesson_count: c.lesson_count,
             })
             .collect(),
     ))
@@ -186,6 +233,9 @@ pub async fn get_course(
             studio: course.studio.as_str().to_owned(),
             creator_id: course.creator_id,
             summary: course.summary,
+            difficulty: course.difficulty,
+            age_min: course.age_min,
+            materials: course.materials,
             created_at: course.created_at,
             lessons: lessons
                 .into_iter()

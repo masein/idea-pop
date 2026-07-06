@@ -76,12 +76,20 @@ async fn seed_badges(pool: &PgPool) -> anyhow::Result<()> {
 }
 
 async fn seed_creators(pool: &PgPool) -> anyhow::Result<()> {
-    let rows: &[(&str, &str, &str, &str)] = &[(
-        "Ms. Noor",
-        "Art educator and illustrator who believes every child is a natural artist.",
-        "art",
-        "https://assets.idea-pop.app/creators/ms-noor.png",
-    )];
+    let rows: &[(&str, &str, &str, &str)] = &[
+        (
+            "Ms. Noor",
+            "Art educator and illustrator who believes every child is a natural artist.",
+            "art",
+            "https://assets.idea-pop.app/creators/ms-noor.png",
+        ),
+        (
+            "Mr. Modaresi Nia",
+            "AI Expert, 7 years teaching kids. Every lesson is reviewed by the Idea Pop team before it goes live.",
+            "code",
+            "https://assets.idea-pop.app/creators/modaresi-nia.png",
+        ),
+    ];
 
     for (name, bio, studio, avatar) in rows {
         sqlx::query(
@@ -100,69 +108,124 @@ async fn seed_creators(pool: &PgPool) -> anyhow::Result<()> {
     Ok(())
 }
 
-async fn seed_courses(pool: &PgPool) -> anyhow::Result<()> {
-    let creator_id: Option<uuid::Uuid> =
-        sqlx::query_scalar("SELECT id FROM creators WHERE display_name = 'Ms. Noor' LIMIT 1")
+async fn creator_id_by_name(pool: &PgPool, name: &str) -> anyhow::Result<Option<uuid::Uuid>> {
+    Ok(
+        sqlx::query_scalar("SELECT id FROM creators WHERE display_name = $1 LIMIT 1")
+            .bind(name)
             .fetch_optional(pool)
-            .await?;
-
-    let Some(creator_id) = creator_id else {
-        println!("creator not found — skipping courses");
-        return Ok(());
-    };
-
-    sqlx::query(
-        r#"INSERT INTO courses (title, slug, studio, creator_id, summary)
-           VALUES ($1, $2, $3, $4, $5)
-           ON CONFLICT (slug) DO NOTHING"#,
+            .await?,
     )
-    .bind("Drawing Animals 101")
-    .bind("drawing-animals-101")
-    .bind("art")
-    .bind(creator_id)
-    .bind("Learn to draw 6 beloved animals step by step — from the first pencil line to the final colour wash.")
-    .execute(pool)
-    .await?;
+}
+
+async fn seed_courses(pool: &PgPool) -> anyhow::Result<()> {
+    // (title, slug, studio, creator_name, summary, difficulty, age_min, materials)
+    let courses: &[(&str, &str, &str, &str, &str, i16, i16, &[&str])] = &[
+        (
+            "Drawing Animals 101",
+            "drawing-animals-101",
+            "art",
+            "Ms. Noor",
+            "Learn to draw 6 beloved animals step by step — from the first pencil line to the final colour wash.",
+            1,
+            8,
+            &["paper", "pencil"],
+        ),
+        (
+            "Let's Learn about AI",
+            "lets-learn-about-ai",
+            "code",
+            "Mr. Modaresi Nia",
+            "Discover how computers 'see' shapes and patterns in the world — then build your very own creature.",
+            1,
+            11,
+            &["laptop", "internet"],
+        ),
+    ];
+
+    for (title, slug, studio, creator_name, summary, difficulty, age_min, materials) in courses {
+        let Some(creator_id) = creator_id_by_name(pool, creator_name).await? else {
+            println!("creator '{creator_name}' not found — skipping course '{slug}'");
+            continue;
+        };
+        let materials: Vec<String> = materials.iter().map(|m| m.to_string()).collect();
+        sqlx::query(
+            r#"INSERT INTO courses
+                   (title, slug, studio, creator_id, summary, difficulty, age_min, materials)
+               VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+               ON CONFLICT (slug) DO NOTHING"#,
+        )
+        .bind(title)
+        .bind(slug)
+        .bind(studio)
+        .bind(creator_id)
+        .bind(summary)
+        .bind(difficulty)
+        .bind(age_min)
+        .bind(&materials)
+        .execute(pool)
+        .await?;
+    }
 
     println!("courses seeded");
     Ok(())
 }
 
 async fn seed_lessons(pool: &PgPool) -> anyhow::Result<()> {
-    let course_id: Option<uuid::Uuid> =
-        sqlx::query_scalar("SELECT id FROM courses WHERE slug = 'drawing-animals-101' LIMIT 1")
-            .fetch_optional(pool)
-            .await?;
-
-    let Some(course_id) = course_id else {
-        println!("course not found — skipping lessons");
-        return Ok(());
-    };
-
-    let lessons: &[(i16, &str, i32)] = &[
-        (1, "Warm-Up: Circles & Ovals", 300),
-        (2, "Drawing a Bunny", 480),
-        (3, "Drawing a Fox", 540),
-        (4, "Drawing an Owl", 510),
-        (5, "Drawing a Whale", 600),
-        (6, "Drawing an Elephant", 660),
+    // (course_slug, [(ordinal, title, duration_s, xp_reward)])
+    let courses: &[(&str, &[(i16, &str, i32, i16)])] = &[
+        (
+            "drawing-animals-101",
+            &[
+                (1, "Warm-Up: Circles & Ovals", 300, 10),
+                (2, "Drawing a Bunny", 480, 10),
+                (3, "Drawing a Fox", 540, 10),
+                (4, "Drawing an Owl", 510, 10),
+                (5, "Drawing a Whale", 600, 10),
+                (6, "Drawing an Elephant", 660, 10),
+            ],
+        ),
+        (
+            "lets-learn-about-ai",
+            &[
+                (1, "Shapes hiding in animals", 360, 10),
+                (2, "Big cat faces", 420, 10),
+                (3, "Birds in 5 lines", 480, 10),
+                (4, "The octopus — curves everywhere", 480, 10),
+                (5, "Texture: scales & fur", 540, 10),
+                (6, "Make your OWN creature!", 600, 20),
+            ],
+        ),
     ];
 
-    for (ordinal, title, duration_s) in lessons {
-        let video_url =
-            format!("https://assets.idea-pop.app/courses/drawing-animals-101/lesson-{ordinal}.mp4");
-        sqlx::query(
-            r#"INSERT INTO lessons (course_id, ordinal, title, video_url, duration_s, xp_reward)
-               VALUES ($1, $2, $3, $4, $5, 10)
-               ON CONFLICT (course_id, ordinal) DO NOTHING"#,
-        )
-        .bind(course_id)
-        .bind(ordinal)
-        .bind(title)
-        .bind(&video_url)
-        .bind(duration_s)
-        .execute(pool)
-        .await?;
+    for (slug, lessons) in courses {
+        let course_id: Option<uuid::Uuid> =
+            sqlx::query_scalar("SELECT id FROM courses WHERE slug = $1 LIMIT 1")
+                .bind(slug)
+                .fetch_optional(pool)
+                .await?;
+
+        let Some(course_id) = course_id else {
+            println!("course '{slug}' not found — skipping lessons");
+            continue;
+        };
+
+        for (ordinal, title, duration_s, xp_reward) in *lessons {
+            let video_url =
+                format!("https://assets.idea-pop.app/courses/{slug}/lesson-{ordinal}.mp4");
+            sqlx::query(
+                r#"INSERT INTO lessons (course_id, ordinal, title, video_url, duration_s, xp_reward)
+                   VALUES ($1, $2, $3, $4, $5, $6)
+                   ON CONFLICT (course_id, ordinal) DO NOTHING"#,
+            )
+            .bind(course_id)
+            .bind(ordinal)
+            .bind(title)
+            .bind(&video_url)
+            .bind(duration_s)
+            .bind(xp_reward)
+            .execute(pool)
+            .await?;
+        }
     }
     println!("lessons seeded");
     Ok(())

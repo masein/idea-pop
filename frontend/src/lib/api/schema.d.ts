@@ -128,6 +128,29 @@ export interface paths {
       };
     };
   };
+  "/api/creators/{id}": {
+    get: {
+      parameters: { path: { id: string } };
+      responses: {
+        200: {
+          content: {
+            "application/json": components["schemas"]["CreatorResponse"];
+          };
+        };
+      };
+    };
+  };
+  "/api/library/courses": {
+    get: {
+      responses: {
+        200: {
+          content: {
+            "application/json": components["schemas"]["CourseSummaryResponse"][];
+          };
+        };
+      };
+    };
+  };
   "/api/progress/video-view": {
     post: {
       requestBody: {
@@ -540,6 +563,7 @@ export interface components {
     StudioCountResponse: {
       studio: string;
       quick_make_count: number;
+      course_count: number;
     };
     QuickMakeResponse: {
       id: string;
@@ -576,8 +600,35 @@ export interface components {
       studio: string;
       creator_id: string;
       summary: string;
+      /** Format: int16 */
+      difficulty: number;
+      /** Format: int16 */
+      age_min: number;
+      materials: string[];
       created_at: string;
       lessons: components["schemas"]["LessonResponse"][];
+    };
+    CreatorResponse: {
+      id: string;
+      display_name: string;
+      bio: string;
+      studio: string;
+      avatar_url: string;
+      created_at: string;
+    };
+    CourseSummaryResponse: {
+      id: string;
+      title: string;
+      slug: string;
+      studio: string;
+      creator_id: string;
+      creator_name: string;
+      /** Format: int16 */
+      difficulty: number;
+      /** Format: int16 */
+      age_min: number;
+      /** Format: int64 */
+      lesson_count: number;
     };
     XpAwardResponse: {
       xp_earned: number;

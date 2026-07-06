@@ -435,7 +435,8 @@ async fn seed_challenges(pool: &PgPool) -> anyhow::Result<()> {
     // Each challenge is a full 8-step mission stored as JSONB.
     // ON CONFLICT (slug) DO NOTHING makes re-runs idempotent.
 
-    let challenges: &[(&str, &str, i16, i16, &str, &str, &str)] = &[
+    // (slug, title, season, week, steps, tools, variants, is_premium)
+    let challenges: &[(&str, &str, i16, i16, &str, &str, &str, bool)] = &[
         (
             "help-max-cross-the-river",
             "Help Max Cross the River",
@@ -463,6 +464,7 @@ async fn seed_challenges(pool: &PgPool) -> anyhow::Result<()> {
   {"age_tier":"10-12","title_override":null,"summary":"Compare bridge vs. raft solutions; measure load capacity and stability."},
   {"age_tier":"12-18","title_override":"Engineering Max's Crossing","summary":"Apply truss and arch bridge principles; calculate load-per-unit-area and compare to surface tension data."}
 ]"#,
+            false, // free — the intro mission
         ),
         (
             "the-forest-picnic-problem",
@@ -491,18 +493,20 @@ async fn seed_challenges(pool: &PgPool) -> anyhow::Result<()> {
   {"age_tier":"10-12","title_override":null,"summary":"Compare materials for waterproofing; measure how much water drains vs. pools in different designs."},
   {"age_tier":"12-18","title_override":"Biomimicry: Designing a Superhydrophobic Shelter","summary":"Research the lotus effect and contact angle; design a shelter surface that maximises water roll-off using the principle of superhydrophobicity."}
 ]"#,
+            true, // premium — unlocks with a family subscription
         ),
     ];
 
-    for (slug, title, season, week, steps_json, tools_json, variants_json) in challenges {
+    for (slug, title, season, week, steps_json, tools_json, variants_json, is_premium) in challenges
+    {
         let steps_val: serde_json::Value = serde_json::from_str(steps_json)?;
         let tools_val: serde_json::Value = serde_json::from_str(tools_json)?;
         let variants_val: serde_json::Value = serde_json::from_str(variants_json)?;
 
         sqlx::query(
             r#"INSERT INTO challenges
-               (title, slug, season, week_number, xp_reward, steps, tools, age_tier_variants)
-               VALUES ($1, $2, $3, $4, 20, $5, $6, $7)
+               (title, slug, season, week_number, xp_reward, steps, tools, age_tier_variants, is_premium)
+               VALUES ($1, $2, $3, $4, 20, $5, $6, $7, $8)
                ON CONFLICT (slug) DO NOTHING"#,
         )
         .bind(title)
@@ -512,6 +516,7 @@ async fn seed_challenges(pool: &PgPool) -> anyhow::Result<()> {
         .bind(sqlx::types::Json(&steps_val))
         .bind(sqlx::types::Json(&tools_val))
         .bind(sqlx::types::Json(&variants_val))
+        .bind(is_premium)
         .execute(pool)
         .await?;
     }

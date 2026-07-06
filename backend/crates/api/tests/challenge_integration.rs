@@ -212,6 +212,68 @@ async fn challenge_list_returns_items_with_8_steps() {
     assert_eq!(body["items"][0]["xp_reward"], 20);
 }
 
+/// Premium missions are locked for a caller whose family has no active
+/// subscription; free missions stay open. (null_billing => no subscription.)
+#[tokio::test]
+async fn premium_challenge_is_locked_without_subscription() {
+    let (pool, _pg) = start_postgres().await;
+    let free_id = insert_challenge(
+        &pool,
+        "free-mission",
+        "Free",
+        1,
+        1,
+        STEPS_MAX,
+        TOOLS_JSON,
+        VARIANTS_JSON,
+    )
+    .await;
+    let premium_id = insert_challenge(
+        &pool,
+        "premium-mission",
+        "Premium",
+        1,
+        2,
+        STEPS_MAX,
+        TOOLS_JSON,
+        VARIANTS_JSON,
+    )
+    .await;
+    sqlx::query("UPDATE challenges SET is_premium = TRUE WHERE id = $1")
+        .bind(premium_id)
+        .execute(&pool)
+        .await
+        .unwrap();
+
+    let app = router(challenge_state(pool), None);
+    let token = register_and_token(&app, "premium-gate@test.com").await;
+
+    let res = app
+        .oneshot(authed_get("/challenges", &token))
+        .await
+        .unwrap();
+    assert_eq!(res.status(), StatusCode::OK);
+    let body = body_json(res).await;
+    let items = body["items"].as_array().unwrap();
+
+    let free = items
+        .iter()
+        .find(|c| c["id"] == free_id.to_string())
+        .unwrap();
+    assert_eq!(free["is_premium"], false);
+    assert_eq!(free["locked"], false);
+
+    let premium = items
+        .iter()
+        .find(|c| c["id"] == premium_id.to_string())
+        .unwrap();
+    assert_eq!(premium["is_premium"], true);
+    assert_eq!(
+        premium["locked"], true,
+        "premium mission is locked without a subscription"
+    );
+}
+
 /// THE KEY TEST: seed two completely different challenges, call the same
 /// endpoint, and confirm both return completely different missions with
 /// zero code change — the engine is pure data.

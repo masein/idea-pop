@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -119,16 +120,26 @@ export default function KidOnboardingPage() {
                           aria-label={avatar.label}
                           onClick={() => field.onChange(avatar.id)}
                           className={[
-                            "mx-auto flex h-20 w-20 items-center justify-center rounded-full transition-transform duration-150",
+                            "mx-auto flex h-20 w-20 items-center justify-center overflow-hidden rounded-full transition-transform duration-150",
                             isSelected
                               ? "ring-4 ring-[#CDEB5A] scale-105"
                               : "hover:scale-105",
                           ].join(" ")}
                           style={{ backgroundColor: avatar.bg }}
                         >
-                          <span className="select-none text-5xl leading-none">
-                            {avatar.emoji}
-                          </span>
+                          {avatar.img ? (
+                            <Image
+                              src={avatar.img}
+                              alt=""
+                              width={80}
+                              height={80}
+                              className="h-full w-full object-contain"
+                            />
+                          ) : (
+                            <span className="select-none text-5xl leading-none">
+                              {avatar.emoji}
+                            </span>
+                          )}
                         </button>
                       );
                     })}

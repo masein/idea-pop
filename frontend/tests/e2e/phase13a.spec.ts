@@ -214,6 +214,36 @@ test.describe('axe — app pages', () => {
     expect(results.violations).toEqual([]);
   });
 
+  test('challenges list page passes axe', async ({ page }) => {
+    await setCookie(page, 'ideapop_persona', 'kid');
+    page.route('**/api/challenges', (r) =>
+      r.fulfill({
+        json: [
+          {
+            id: '11111111-1111-1111-1111-111111111111',
+            title: 'Help Max cross the river', slug: 'help-max',
+            brief: 'Find the way across the river before sunset', emoji: '🚀',
+            nature_clues: [], design_secret: '', design_secret_story: null,
+            skill_lesson_id: null, related_explore_ids: [], completion_xp: 20, tools: [],
+          },
+          {
+            id: '22222222-2222-2222-2222-222222222222',
+            title: 'The Picnic Problem!', slug: 'picnic',
+            brief: 'Invent a way to carry it all.', emoji: '🧺',
+            nature_clues: [], design_secret: '', design_secret_story: null,
+            skill_lesson_id: null, related_explore_ids: [], completion_xp: 20, tools: [],
+          },
+        ],
+      })
+    );
+    await page.goto('/en/challenges');
+    await page.waitForLoadState('networkidle');
+    const results = await new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
+      .analyze();
+    expect(results.violations).toEqual([]);
+  });
+
   test('profile page passes axe', async ({ page }) => {
     await setCookie(page, 'ideapop_persona', 'kid');
     mockProfileAPIs(page);

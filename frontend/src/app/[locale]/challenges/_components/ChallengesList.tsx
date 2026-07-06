@@ -1,0 +1,265 @@
+'use client';
+
+import Image from 'next/image';
+import { useEffect, useState } from 'react';
+import { useRouter } from '@/i18n/routing';
+import { useAgeMode } from '@/lib/hooks/useAgeMode';
+import { fetchChallenges } from '@/lib/api/client';
+import IdeasWallTab from '@/components/challenge/IdeasWallTab';
+import type { components } from '@/lib/api/schema';
+
+type ChallengeDetail = components['schemas']['ChallengeDetail'];
+
+const CHALLENGE = '#1a6fa6'; // --color-challenge (AA-safe with white)
+
+// ── Parent handoff (kids never check out — CLAUDE.md safety rule) ───────────────
+
+function UpgradeHandoffModal({ onDismiss }: { onDismiss: () => void }) {
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-ink/50 p-4"
+      role="dialog"
+      aria-modal="true"
+      data-testid="upgrade-handoff-modal"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onDismiss();
+      }}
+    >
+      <div className="w-full max-w-sm rounded-2xl bg-white p-8 text-center shadow-xl">
+        <div className="mb-4 text-5xl" aria-hidden="true">🤝</div>
+        <h2 className="mb-2 font-display text-xl font-bold text-ink">Ask a grown-up to unlock!</h2>
+        <p className="mb-5 font-body text-sm text-ink/70">
+          More missions unlock with Idea Pop premium. A parent completes the upgrade on their own
+          account — you can&apos;t be charged here.
+        </p>
+        <button
+          type="button"
+          onClick={onDismiss}
+          className="rounded-pill bg-tint-blue px-6 py-2.5 font-display text-sm font-bold text-[#135A85] transition-all hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-challenge"
+        >
+          Got it
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ── Page ───────────────────────────────────────────────────────────────────────
+
+type Tab = 'mission' | 'wall';
+
+export default function ChallengesList() {
+  const router = useRouter();
+  const ageMode = useAgeMode();
+
+  const [challenges, setChallenges] = useState<ChallengeDetail[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [tab, setTab] = useState<Tab>('mission');
+  const [showUpgrade, setShowUpgrade] = useState(false);
+  const [wallUnlocked, setWallUnlocked] = useState(false);
+
+  useEffect(() => {
+    fetchChallenges()
+      .then((c) => setChallenges((c ?? []) as ChallengeDetail[]))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  const featured = challenges[0] ?? null;
+
+  useEffect(() => {
+    if (!featured) return;
+    try {
+      setWallUnlocked(localStorage.getItem(`wallSubmitted_${featured.id}`) === 'true');
+    } catch {
+      /* ignore */
+    }
+  }, [featured]);
+
+  return (
+    <div data-testid="challenges-page" className="mx-auto flex max-w-5xl flex-col gap-6 px-4 py-6 md:px-8">
+      {showUpgrade && <UpgradeHandoffModal onDismiss={() => setShowUpgrade(false)} />}
+
+      {/* Header */}
+      <header className="text-center">
+        <h1 className="font-display text-4xl font-bold text-ink md:text-5xl">
+          Let&apos;s Accomplish A Mission!
+        </h1>
+        {featured && (
+          <p className="mt-2 font-display text-lg font-bold text-ink/80 md:text-xl">
+            Today&apos;s mission is to <span className="text-library">{featured.title}</span>!
+          </p>
+        )}
+      </header>
+
+      {/* Tab toggle */}
+      <div className="flex justify-center">
+        <div className="inline-flex rounded-pill bg-white p-1 shadow-sm" role="tablist">
+          <button
+            role="tab"
+            aria-selected={tab === 'mission'}
+            data-testid="tab-mission"
+            onClick={() => setTab('mission')}
+            className={`rounded-pill px-5 py-2 font-display text-sm font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-challenge ${
+              tab === 'mission' ? 'text-white' : 'text-ink/60 hover:text-ink'
+            }`}
+            style={tab === 'mission' ? { backgroundColor: CHALLENGE } : undefined}
+          >
+            🚀 Mission
+          </button>
+          <button
+            role="tab"
+            aria-selected={tab === 'wall'}
+            data-testid="tab-wall"
+            onClick={() => setTab('wall')}
+            className={`rounded-pill px-5 py-2 font-display text-sm font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-challenge ${
+              tab === 'wall' ? 'text-white' : 'text-ink/60 hover:text-ink'
+            }`}
+            style={tab === 'wall' ? { backgroundColor: CHALLENGE } : undefined}
+          >
+            💡 Ideas Wall
+          </button>
+        </div>
+      </div>
+
+      {loading && <div className="h-40 animate-pulse rounded-card bg-white" />}
+
+      {/* ── Mission tab ─────────────────────────────────────────────────────── */}
+      {!loading && tab === 'mission' && (
+        <div className="flex flex-col gap-6">
+          {/* Continue */}
+          {featured && (
+            <section aria-label="Continue your mission" className="flex flex-col gap-2">
+              <h2 className="font-display text-2xl font-bold text-ink">Continue</h2>
+              <button
+                type="button"
+                data-testid="continue-mission"
+                onClick={() => router.push(`/challenges/${featured.id}`)}
+                className="flex items-center gap-4 rounded-[1.5rem] bg-white p-3 text-left shadow-sm transition-shadow hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-challenge focus-visible:ring-offset-2"
+              >
+                <span
+                  className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-tint-cream text-3xl"
+                  aria-hidden="true"
+                >
+                  {featured.emoji || '🚀'}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="font-display text-lg font-bold text-ink">{featured.title}</p>
+                  <p className="line-clamp-1 font-body text-sm text-ink/60">{featured.brief}</p>
+                </div>
+                <span
+                  className="hidden shrink-0 rounded-pill px-5 py-2.5 font-display text-sm font-bold text-white sm:inline-block"
+                  style={{ backgroundColor: CHALLENGE }}
+                >
+                  Continue ▶
+                </span>
+              </button>
+            </section>
+          )}
+
+          {/* Challenge grid */}
+          <section aria-label="Challenges" className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+            {challenges.map((c, i) => {
+              const locked = i > 0; // first mission free; rest need premium
+              return locked ? (
+                <LockedChallengeCard key={c.id} index={i + 1} onUpgrade={() => setShowUpgrade(true)} />
+              ) : (
+                <UnlockedChallengeCard
+                  key={c.id}
+                  index={i + 1}
+                  challenge={c}
+                  onOpen={() => router.push(`/challenges/${c.id}`)}
+                />
+              );
+            })}
+          </section>
+        </div>
+      )}
+
+      {/* ── Ideas Wall tab (IdeasWallTab renders its own safety banner) ──────── */}
+      {!loading && tab === 'wall' && featured && (
+        <IdeasWallTab
+          challengeId={featured.id}
+          ageMode={ageMode}
+          wallUnlocked={wallUnlocked}
+          onWriteMyIdea={() => router.push(`/challenges/${featured.id}`)}
+        />
+      )}
+    </div>
+  );
+}
+
+// ── Cards ──────────────────────────────────────────────────────────────────────
+
+function UnlockedChallengeCard({
+  index,
+  challenge,
+  onOpen,
+}: {
+  index: number;
+  challenge: ChallengeDetail;
+  onOpen: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      data-testid="challenge-card"
+      onClick={onOpen}
+      className="group relative overflow-hidden rounded-[1.5rem] text-left shadow-sm transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-challenge focus-visible:ring-offset-2"
+    >
+      <div className="px-5 py-4 text-white" style={{ backgroundColor: CHALLENGE }}>
+        <p className="font-display text-xl font-bold leading-tight">{challenge.title}</p>
+        <p className="mt-0.5 line-clamp-1 font-body text-sm text-white/90">{challenge.brief}</p>
+      </div>
+      <div className="relative h-44">
+        <Image
+          src="/challenge/mission-cover.png"
+          alt=""
+          aria-hidden="true"
+          fill
+          className="object-cover"
+          sizes="(max-width: 640px) 100vw, 400px"
+        />
+        <span
+          className="absolute bottom-3 right-3 flex h-16 w-16 items-center justify-center rounded-full text-center font-display text-xs font-bold leading-tight text-white shadow-md"
+          style={{ backgroundColor: CHALLENGE }}
+        >
+          challenge {index}
+        </span>
+      </div>
+    </button>
+  );
+}
+
+function LockedChallengeCard({ index, onUpgrade }: { index: number; onUpgrade: () => void }) {
+  return (
+    <button
+      type="button"
+      data-testid="challenge-card-locked"
+      onClick={onUpgrade}
+      aria-label={`Challenge ${index} — locked. Ask a grown-up to upgrade.`}
+      className="group relative flex min-h-[15rem] flex-col items-center justify-center overflow-hidden rounded-[1.5rem] p-6 text-center shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-challenge focus-visible:ring-offset-2"
+    >
+      {/* Blurred, dimmed cover */}
+      <Image
+        src="/challenge/mission-cover.png"
+        alt=""
+        aria-hidden="true"
+        fill
+        className="scale-110 object-cover opacity-30 blur-[3px]"
+        sizes="(max-width: 640px) 100vw, 400px"
+      />
+      <div className="absolute inset-0 bg-tint-blue/70" aria-hidden="true" />
+      <span className="relative text-4xl" aria-hidden="true">🔒</span>
+      <p className="relative mt-3 font-display text-lg font-bold text-ink">
+        Upgrade Idea Pop to unlock everything
+      </p>
+      <span
+        className="absolute bottom-3 right-3 flex h-16 w-16 items-center justify-center rounded-full font-display text-xs font-bold text-white shadow-md"
+        style={{ backgroundColor: CHALLENGE }}
+      >
+        challenge {index}
+      </span>
+    </button>
+  );
+}

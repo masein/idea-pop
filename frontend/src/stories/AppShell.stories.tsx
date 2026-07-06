@@ -32,10 +32,9 @@ export const Challenges: Story = {
   },
 };
 
-export const WithThemesUnlocked: Story = {
+export const Challenge: Story = {
   args: {
-    section: 'explore',
-    themesUnlocked: true,
-    children: <div className="p-8 font-body text-ink">Content — themes unlocked at Lv 4</div>,
+    section: 'challenge',
+    children: <div className="p-8 font-body text-ink">Challenge content</div>,
   },
 };

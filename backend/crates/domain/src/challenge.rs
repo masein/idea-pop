@@ -190,6 +190,8 @@ pub struct Challenge {
     pub age_tier_variants: Vec<AgeTierVariant>,
     pub related_video_ids: Vec<Uuid>,
     pub skill_refs: Vec<Uuid>,
+    /// True when the mission requires a family subscription to play.
+    pub is_premium: bool,
     pub created_at: DateTime<Utc>,
 }
 
@@ -282,6 +284,7 @@ mod tests {
             age_tier_variants: variants,
             related_video_ids: vec![],
             skill_refs: vec![],
+            is_premium: false,
             created_at: Utc::now(),
         }
     }

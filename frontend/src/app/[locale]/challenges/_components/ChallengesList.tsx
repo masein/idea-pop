@@ -160,7 +160,8 @@ export default function ChallengesList() {
           {/* Challenge grid */}
           <section aria-label="Challenges" className="grid grid-cols-1 gap-5 sm:grid-cols-2">
             {challenges.map((c, i) => {
-              const locked = i > 0; // first mission free; rest need premium
+              // Prefer the server's entitlement decision; fall back to "first free".
+              const locked = c.locked ?? i > 0;
               return locked ? (
                 <LockedChallengeCard key={c.id} index={i + 1} onUpgrade={() => setShowUpgrade(true)} />
               ) : (

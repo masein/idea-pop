@@ -15,7 +15,7 @@ use uuid::Uuid;
 
 use idea_pop_domain::{
     challenge::{Challenge, ChallengeFilter},
-    AgeMode,
+    is_premium, AgeMode,
 };
 
 use crate::{error::ApiError, extractor::AuthToken, state::AppState};
@@ -54,6 +54,11 @@ pub struct ChallengeResponse {
     pub tools: Vec<ToolResponse>,
     pub age_tier_variants: Vec<AgeTierVariantResponse>,
     pub related_video_ids: Vec<Uuid>,
+    /// True when this mission needs a family subscription to play.
+    pub is_premium: bool,
+    /// True when `is_premium` and the caller's family has no active subscription.
+    /// The kid UI shows an "ask a grown-up to upgrade" card for locked missions.
+    pub locked: bool,
     pub created_at: DateTime<Utc>,
 }
 
@@ -87,7 +92,7 @@ fn default_per_page() -> i64 {
 
 // ── Mappers ───────────────────────────────────────────────────────────────────
 
-fn challenge_to_dto(c: Challenge) -> ChallengeResponse {
+fn challenge_to_dto(c: Challenge, has_premium: bool) -> ChallengeResponse {
     let steps: Vec<serde_json::Value> = c
         .steps
         .iter()
@@ -124,8 +129,24 @@ fn challenge_to_dto(c: Challenge) -> ChallengeResponse {
         tools,
         age_tier_variants,
         related_video_ids: c.related_video_ids,
+        is_premium: c.is_premium,
+        locked: c.is_premium && !has_premium,
         created_at: c.created_at,
     }
+}
+
+/// Does the authenticated caller's family have an active (or in-grace) subscription?
+/// Kid tokens carry the parent's `account_id`, so this is always a family-level check.
+async fn caller_has_premium(state: &AppState, auth: &AuthToken) -> Result<bool, ApiError> {
+    let sub = state
+        .billing
+        .subscriptions
+        .find_by_account(auth.0.account_id)
+        .await?;
+    Ok(match sub {
+        Some(s) => is_premium(&s.status, s.current_period_end, Utc::now()),
+        None => false,
+    })
 }
 
 // ── Handlers ──────────────────────────────────────────────────────────────────
@@ -167,9 +188,15 @@ pub async fn list_challenges(
     };
     filter.validate()?;
 
+    let has_premium = caller_has_premium(&state, &_auth).await?;
+
     let page = state.challenge.list(&filter).await?;
     Ok(Json(ChallengePageResponse {
-        items: page.items.into_iter().map(challenge_to_dto).collect(),
+        items: page
+            .items
+            .into_iter()
+            .map(|c| challenge_to_dto(c, has_premium))
+            .collect(),
         total: page.total,
         page: page.page,
         per_page: page.per_page,
@@ -192,8 +219,9 @@ pub async fn get_challenge(
     State(state): State<AppState>,
     Path(id): Path<Uuid>,
 ) -> Result<Json<ChallengeResponse>, ApiError> {
+    let has_premium = caller_has_premium(&state, &_auth).await?;
     match state.challenge.find_by_id(id).await? {
-        Some(c) => Ok(Json(challenge_to_dto(c))),
+        Some(c) => Ok(Json(challenge_to_dto(c, has_premium))),
         None => Err(ApiError::Domain(idea_pop_domain::DomainError::NotFound)),
     }
 }

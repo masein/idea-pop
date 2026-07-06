@@ -74,6 +74,9 @@ fn row_to_challenge(row: &sqlx::postgres::PgRow) -> Result<Challenge, DomainErro
         skill_refs: row
             .try_get("skill_refs")
             .map_err(|e| DomainError::Internal(e.to_string()))?,
+        is_premium: row
+            .try_get("is_premium")
+            .map_err(|e| DomainError::Internal(e.to_string()))?,
         created_at: row
             .try_get("created_at")
             .map_err(|e| DomainError::Internal(e.to_string()))?,
@@ -100,7 +103,7 @@ impl ChallengeRepo for SqlxChallengeRepo {
         // age_mode is applied in Rust because it requires JSONB introspection.
         let rows = sqlx::query(
             "SELECT id, title, slug, season, week_number, xp_reward, steps, tools, \
-             age_tier_variants, related_video_ids, skill_refs, created_at \
+             age_tier_variants, related_video_ids, skill_refs, is_premium, created_at \
              FROM challenges \
              WHERE ($1::smallint IS NULL OR season = $1) \
                AND ($2::smallint IS NULL OR week_number = $2) \
@@ -135,7 +138,7 @@ impl ChallengeRepo for SqlxChallengeRepo {
     async fn find_by_id(&self, id: Uuid) -> Result<Option<Challenge>, DomainError> {
         let row = sqlx::query(
             "SELECT id, title, slug, season, week_number, xp_reward, steps, tools, \
-             age_tier_variants, related_video_ids, skill_refs, created_at \
+             age_tier_variants, related_video_ids, skill_refs, is_premium, created_at \
              FROM challenges WHERE id = $1",
         )
         .bind(id)

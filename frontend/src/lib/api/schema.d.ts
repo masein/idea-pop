@@ -658,6 +658,10 @@ export interface components {
       related_explore_ids: string[];
       completion_xp: number;
       tools?: ("five_whys" | "scamper" | "mind_map")[];
+      /** True when this mission needs a family subscription to play. */
+      is_premium?: boolean;
+      /** True when premium and the caller's family has no active subscription. */
+      locked?: boolean;
     };
     IdeaWallEntry: {
       id: string;

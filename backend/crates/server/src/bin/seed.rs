@@ -495,6 +495,122 @@ async fn seed_challenges(pool: &PgPool) -> anyhow::Result<()> {
 ]"#,
             true, // premium — unlocks with a family subscription
         ),
+        (
+            "teach-the-machine-to-see",
+            "Teach the Machine to See",
+            1,
+            3,
+            // steps JSON
+            r#"[
+  {"step":"brief","title":"The Robot That Can't Tell Cats from Dogs","story":"Meet Pixel, a friendly robot who wants to sort photos into 'cats' and 'dogs' — but right now it guesses randomly and gets almost everything wrong! Computers can't magically recognise things; SOMEONE has to teach them, using examples. Your mission: train a 'machine brain' to tell two things apart (cats vs dogs, thumbs-up vs thumbs-down, apples vs oranges) and see how good it gets.","image_url":null},
+  {"step":"your_idea","prompt":"How would YOU teach a friend who has never seen a cat to recognise one? Do you already have an idea?","fork_to_step":6},
+  {"step":"nature_clues","intro":"Brains are the best learning machines we know. Let's see how living brains learn to recognise things.","clues":[{"text":"You can spot your best friend in a crowd in a split second — because you've seen their face thousands of times.","image_url":null,"habitat":"jungle"},{"text":"A newborn duckling learns what 'mum' looks like from the very first moving thing it sees — then follows it everywhere.","image_url":null,"habitat":"jungle"},{"text":"Honeybees learn which flowers have the best nectar by visiting them again and again, remembering colour and shape.","image_url":null,"habitat":"sky"},{"text":"A guide-dog puppy isn't born knowing its job — it practises with hundreds of examples before it gets good.","image_url":null,"habitat":"jungle"}]},
+  {"step":"design_secret","secret":"AI learns from EXAMPLES, not rules. The more examples you show it — and the more VARIED they are — the smarter it gets. Show it one-sided examples and it gets fooled. This is called machine learning, and choosing good examples is the whole secret.","reveal_hint":"Think about how many different cats a friend would need to see before they could recognise ANY cat…"},
+  {"step":"skill","instructions":"Learn about FEATURES — the little clues a classifier uses (pointy ears? whiskers? barks? round or oval?). UNPLUGGED: make a paper 'feature-checklist' classifier — a card that scores each mystery picture on 4 features and votes cat or dog. PLUGGED (optional): open Google Teachable Machine, make two classes, and get ready to train it with about 20 images each.","skill_refs":[]},
+  {"step":"sketch","prompt":"Pick your two categories and PLAN your examples before you collect them.","guidance":"Write down: What two things am I sorting? How many examples of each will I gather? How will I make them VARIED (different colours, angles, sizes)? A plan with varied examples beats a big pile of look-alikes."},
+  {"step":"build_and_test","instructions":"UNPLUGGED: run 10 mystery cards through your feature-checklist classifier and record each guess. PLUGGED (optional): train Teachable Machine with your images, then test it on NEW pictures it has never seen. Either way, count how many it got right.","test_criteria":["Measure your accuracy: correct ÷ total (e.g. 7 out of 10 = 70%).","Now add MORE and MORE VARIED examples and test again — did your accuracy go up?","Find at least one picture the machine got wrong and work out WHY."]},
+  {"step":"celebrate_and_share","celebration_text":"You just trained a machine to see! You're now an AI teacher — and you discovered that good examples make a smart machine.","share_prompt":"Post your best accuracy score AND one example where the AI got fooled. Was your training data one-sided?"}
+]"#,
+            // tools JSON
+            r#"[
+  {"kind":"mind_map","age_mode":"young"},
+  {"kind":"five_whys","age_mode":"older"}
+]"#,
+            // age_tier_variants JSON
+            r#"[
+  {"age_tier":"8-10","title_override":null,"summary":"Sort two easy categories. Focus on collecting LOTS of varied examples and counting how many the machine gets right."},
+  {"age_tier":"10-12","title_override":null,"summary":"Measure accuracy as a percentage, improve it by adding varied data, and explain one case where the classifier was fooled."},
+  {"age_tier":"12-18","title_override":"Training an Image Classifier","summary":"Compare balanced vs. small training sets, track accuracy across rounds, and reason about which features drive misclassifications."}
+]"#,
+            false, // free — class-joined kids have no family subscription
+        ),
+        (
+            "the-guess-who-tree",
+            "The Guess-Who Tree",
+            1,
+            4,
+            // steps JSON
+            r#"[
+  {"step":"brief","title":"Twenty Questions… but Smarter","story":"Pixel the robot wants to guess ANY animal you're thinking of by asking only yes/no questions — and it wants to win in as few questions as possible. But a bad first question wastes a turn! Your mission: build a question tree that guesses an animal in the fewest questions.","image_url":null},
+  {"step":"your_idea","prompt":"What is the SMARTEST first yes/no question you could ask to guess any animal? Got an idea?","fork_to_step":6},
+  {"step":"nature_clues","intro":"Nature loves branching — big things split into smaller and smaller groups. Let's look for the pattern.","clues":[{"text":"A river starts as one big flow, then splits into streams, then tiny trickles — each split sends water a different way.","image_url":null,"habitat":"ocean"},{"text":"A tree trunk divides into big branches, then twigs — every fork narrows down where a leaf ends up.","image_url":null,"habitat":"jungle"},{"text":"Scientists identify a mystery leaf with a 'key': is the edge smooth? yes/no. Each answer cuts the choices in half.","image_url":null,"habitat":"jungle"},{"text":"A family tree branches from grandparents down to you — following the branches finds exactly one person.","image_url":null,"habitat":"jungle"}]},
+  {"step":"design_secret","secret":"This is a DECISION TREE — the way lots of AI makes choices. Each yes/no question splits a big group into smaller ones. The BEST question is the one that splits the group most evenly (roughly in half), because that throws away the most wrong answers at once and wins in the fewest guesses.","reveal_hint":"Which question removes MORE animals: 'Is it a zebra?' or 'Does it have four legs?'"},
+  {"step":"skill","instructions":"Learn how a good question halves the choices. UNPLUGGED: write 8 animals on cards; build a branching yes/no question tree that reaches each one. PLUGGED (optional): draw the same tree in Scratch or a free flowchart tool so it 'asks' the questions on screen.","skill_refs":[]},
+  {"step":"sketch","prompt":"Draw your decision tree for 8 animals.","guidance":"Put your best splitting question at the top. Every branch should be a yes/no question, and every animal should sit at the end of exactly one path. Count the longest path — that's your worst case."},
+  {"step":"build_and_test","instructions":"UNPLUGGED: have a friend secretly pick one of the 8 animals; follow your tree and count how many questions it takes. PLUGGED (optional): run your Scratch version. Play several rounds and record the number of questions each time.","test_criteria":["Can your tree guess any of the 8 animals in 3 questions or fewer?","What is your AVERAGE number of questions over 5 rounds?","Rearrange one question to try to lower your average — did it help?"]},
+  {"step":"celebrate_and_share","celebration_text":"You built a decision tree — the same idea powering everything from spam filters to game AIs! Fewer questions means a smarter tree.","share_prompt":"Share your tree and your average number of questions. What was your single best splitting question?"}
+]"#,
+            // tools JSON
+            r#"[
+  {"kind":"mind_map","age_mode":"young"},
+  {"kind":"five_whys","age_mode":"older"}
+]"#,
+            // age_tier_variants JSON
+            r#"[
+  {"age_tier":"8-10","title_override":null,"summary":"Build a yes/no question tree for 8 animals and try to guess each one in a few questions."},
+  {"age_tier":"10-12","title_override":null,"summary":"Measure the average number of questions and rearrange the tree so the best splitting question comes first."},
+  {"age_tier":"12-18","title_override":"Decision Trees & Information Gain","summary":"Reason about why an even split is best (information gain), and compare worst-case vs. average depth as you reorder questions."}
+]"#,
+            false, // free — class-joined kids have no family subscription
+        ),
+        (
+            "train-your-pet-algorithm",
+            "Train Your Pet Algorithm",
+            1,
+            5,
+            // steps JSON
+            r#"[
+  {"step":"brief","title":"The Robot Mouse and the Cheese","story":"Pixel has a new pet: a robot mouse stuck in a grid, trying to reach the cheese. The mouse doesn't get a map — it just tries moves, and you reward the good ones. Your mission: 'train' the mouse with rewards until it learns the best path to the cheese.","image_url":null},
+  {"step":"your_idea","prompt":"How do you train a puppy to do a new trick? Could the same idea train a robot? Got an idea?","fork_to_step":6},
+  {"step":"nature_clues","intro":"Animals learn by trying things and remembering what paid off. Let's watch reward-learning in the wild.","clues":[{"text":"A puppy learns 'sit' because sitting earns a treat — behaviour that gets rewarded happens more often.","image_url":null,"habitat":"jungle"},{"text":"A crow tries different ways to crack a nut; the trick that works is the one it repeats tomorrow.","image_url":null,"habitat":"sky"},{"text":"A mouse in a maze slowly stops taking dead ends because they never lead to food.","image_url":null,"habitat":"jungle"},{"text":"Bees keep returning to the flower bed that gave the most nectar last time.","image_url":null,"habitat":"sky"}]},
+  {"step":"design_secret","secret":"This is REINFORCEMENT LEARNING. The AI tries moves, earns a REWARD for good ones and little or nothing for bad ones, and slowly builds up a 'map' of which moves pay off. Over many tries, it learns the path that earns the most reward — no one ever told it the answer directly.","reveal_hint":"If reaching the cheese is worth +10 and bumping a wall is worth 0, which moves will the mouse start to prefer?"},
+  {"step":"skill","instructions":"Learn how a REWARD TABLE guides learning. UNPLUGGED: draw a grid, place cheese, and give each square a reward number; move a token 'mouse' by trial and error, updating which direction looked best. PLUGGED (optional): build a tiny reward game in Scratch where a sprite earns points for reaching a goal.","skill_refs":[]},
+  {"step":"sketch","prompt":"Design your grid world.","guidance":"Draw the grid, mark the START and the CHEESE, add any walls or traps, and decide the reward for reaching the cheese (e.g. +10) and for a wasted move (e.g. 0 or -1)."},
+  {"step":"build_and_test","instructions":"UNPLUGGED: run your mouse for several 'episodes', each time nudging it toward the higher-reward moves and recording how many steps it took. PLUGGED (optional): let your Scratch sprite play repeatedly. Track how the step-count changes.","test_criteria":["Record TRIES to reach the cheese in round 1 vs. round 5 — did it get faster?","Does the mouse eventually avoid the traps / dead ends?","Change one reward number and predict, then test, what the mouse does."]},
+  {"step":"celebrate_and_share","celebration_text":"Your pet algorithm learned to fetch the cheese — by rewards alone! That's how AIs learn to play games and control robots.","share_prompt":"Share your reward table and how many tries it took the mouse to learn the best path."}
+]"#,
+            // tools JSON
+            r#"[
+  {"kind":"mind_map","age_mode":"young"},
+  {"kind":"scamper","age_mode":"older"}
+]"#,
+            // age_tier_variants JSON
+            r#"[
+  {"age_tier":"8-10","title_override":null,"summary":"Move a token mouse around a grid and reward it for reaching the cheese; watch it get faster."},
+  {"age_tier":"10-12","title_override":null,"summary":"Keep a reward table, count tries per round, and show the path improving as rewards guide the mouse."},
+  {"age_tier":"12-18","title_override":"Reinforcement Learning by Hand","summary":"Assign rewards and a simple update rule, run several episodes, and discuss exploration vs. exploiting the best-known path."}
+]"#,
+            false, // free — class-joined kids have no family subscription
+        ),
+        (
+            "spot-the-fake",
+            "Spot the Fake",
+            1,
+            6,
+            // steps JSON
+            r#"[
+  {"step":"brief","title":"Why Does the AI Keep Getting Fooled?","story":"Pixel trained a new classifier — but it keeps making silly mistakes, calling green apples 'not apples' and missing them completely. Something about how it learned is unfair. Your mission: build an AI on purpose-bad, one-sided examples, watch it get fooled, then FIX it by fixing the data.","image_url":null},
+  {"step":"your_idea","prompt":"Have you ever been tricked by something that looked like something else? How did the trick work? Got an idea about why Pixel is fooled?","fork_to_step":6},
+  {"step":"nature_clues","intro":"In nature, getting fooled can be a matter of life and death — and lots of animals have learned to fool others. Let's look at the tricksters.","clues":[{"text":"A stick insect looks exactly like a twig — predators' eyes are 'trained' on real twigs, so the insect slips by.","image_url":null,"habitat":"jungle"},{"text":"Some butterflies have giant eyespots on their wings that fool birds into thinking they face a bigger animal.","image_url":null,"habitat":"jungle"},{"text":"A harmless milk snake copies the bright stripes of a venomous coral snake, so predators avoid it by mistake.","image_url":null,"habitat":"desert"},{"text":"An octopus changes colour and texture to vanish against coral — the ultimate 'fake'.","image_url":null,"habitat":"ocean"}]},
+  {"step":"design_secret","secret":"An AI is only as fair as its examples. If it only ever sees RED apples, it secretly learns 'apple = red' — so a green apple fools it, just like a predator fooled by camouflage. This is called BIAS, and it comes from one-sided data. Fix the data (add the missing examples) and you fix the AI.","reveal_hint":"If you only showed the machine one colour of apple, what has it REALLY learned to detect?"},
+  {"step":"skill","instructions":"Learn how one-sided data creates bias. UNPLUGGED: build a card classifier trained only on red apples, then test it on a green apple and a red ball — watch it fail. PLUGGED (optional): in Teachable Machine, train an 'apple' class using only red apples, then test green apples; then RETRAIN with varied apples and compare.","skill_refs":[]},
+  {"step":"sketch","prompt":"Plan a deliberately biased training set — and predict how it will fail.","guidance":"Write down the one-sided examples you'll use, then predict exactly which test items will fool the AI and why. Then plan the BALANCED set that would fix it."},
+  {"step":"build_and_test","instructions":"UNPLUGGED: run your test cards through the biased classifier and record the mistakes; then add the missing varied examples and test again. PLUGGED (optional): compare Teachable Machine accuracy before and after balancing the data.","test_criteria":["Measure accuracy with the BIASED data (expect it to be low on the surprising cases).","Fix the data, retrain/re-score, and measure accuracy AGAIN.","Explain in one sentence what bias your data had and how balancing it helped."]},
+  {"step":"celebrate_and_share","celebration_text":"You found the AI's blind spot AND fixed it — that's exactly the job of people who build fair AI in the real world.","share_prompt":"Share the bias you discovered and your before/after accuracy once you balanced the data."}
+]"#,
+            // tools JSON
+            r#"[
+  {"kind":"five_whys","age_mode":"young"},
+  {"kind":"five_whys","age_mode":"older"}
+]"#,
+            // age_tier_variants JSON
+            r#"[
+  {"age_tier":"8-10","title_override":null,"summary":"Train a classifier on only one kind of example, see it get fooled, then add the missing examples to fix it."},
+  {"age_tier":"10-12","title_override":null,"summary":"Measure accuracy before and after balancing the data, and name the bias you created."},
+  {"age_tier":"12-18","title_override":"Bias & Fairness in Machine Learning","summary":"Design a biased dataset, quantify the accuracy gap on under-represented cases, and show how balancing the data closes it."}
+]"#,
+            false, // free — class-joined kids have no family subscription
+        ),
     ];
 
     for (slug, title, season, week, steps_json, tools_json, variants_json, is_premium) in challenges

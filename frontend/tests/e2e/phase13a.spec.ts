@@ -89,6 +89,11 @@ function mockParentAPIs(page: import('@playwright/test').Page) {
     })
   );
   page.route('**/api/consents/**', (r) => r.fulfill({ json: {} }));
+  page.route('**/api/account/email-preferences', (r) =>
+    r.request().method() === 'PUT'
+      ? r.fulfill({ json: JSON.parse(r.request().postData() ?? '{}') })
+      : r.fulfill({ json: { marketing: false, new_content: false, activity_reports: false } })
+  );
 }
 
 function mockTeacherAPIs(page: import('@playwright/test').Page) {
@@ -428,6 +433,27 @@ test.describe('golden path — parent', () => {
     await expect(toggle).toHaveAttribute('aria-checked', 'false');
     await toggle.click();
     await expect(toggle).toHaveAttribute('aria-checked', 'true');
+  });
+
+  test('parent email preference saves via PUT and stays checked', async ({ page }) => {
+    await setCookie(page, 'ideapop_persona', 'parent');
+    mockParentAPIs(page);
+
+    await page.goto('/en/dashboard/parent');
+    const checkbox = page.getByTestId('email-pref-marketing');
+    await expect(checkbox).not.toBeChecked();
+
+    const putRequest = page.waitForRequest(
+      (req) => req.url().includes('/api/account/email-preferences') && req.method() === 'PUT',
+    );
+    await checkbox.click();
+    const req = await putRequest;
+    expect(req.postDataJSON()).toEqual({
+      marketing: true,
+      new_content: false,
+      activity_reports: false,
+    });
+    await expect(checkbox).toBeChecked();
   });
 
   test('parent billing section shows upgrade options when not premium', async ({ page }) => {

@@ -11,6 +11,8 @@ import {
   startCheckout,
   openBillingPortal,
   fetchMe,
+  fetchEmailPreferences,
+  updateEmailPreferences,
 } from '@/lib/api/client';
 import { AVATARS } from '@/lib/avatars';
 import type { components } from '@/lib/api/schema';
@@ -18,6 +20,13 @@ import type { components } from '@/lib/api/schema';
 type ParentChild = components['schemas']['ParentChild'];
 type ChildReport = components['schemas']['ChildReport'];
 type SubscriptionResponse = components['schemas']['SubscriptionResponse'];
+type EmailPreferences = components['schemas']['EmailPreferences'];
+
+const DEFAULT_EMAIL_PREFS: EmailPreferences = {
+  marketing: false,
+  new_content: false,
+  activity_reports: false,
+};
 
 const GREEN = '#1e7a44'; // explore green — AA-safe with white
 
@@ -127,8 +136,8 @@ export default function ParentDashboardPage() {
   const [billingLoading, setBillingLoading] = useState(false);
   const [account, setAccount] = useState<{ email: string; display_name: string } | null>(null);
 
-  // Un-backed UI-only controls (see note in the response).
-  const [emailPrefs, setEmailPrefs] = useState({ marketing: false, content: false, activity: false });
+  const [emailPrefs, setEmailPrefs] = useState<EmailPreferences>(DEFAULT_EMAIL_PREFS);
+  // Un-backed UI-only control until PR4 lands per-child display_mode.
   const [showAs, setShowAs] = useState('avatar_nickname');
 
   useEffect(() => {
@@ -151,7 +160,21 @@ export default function ParentDashboardPage() {
     fetchMe()
       .then((m) => setAccount(m as { email: string; display_name: string }))
       .catch(() => {});
+    fetchEmailPreferences()
+      .then((p) => setEmailPrefs(p as EmailPreferences))
+      .catch(() => {});
   }, []);
+
+  async function handleEmailPref(key: keyof EmailPreferences, value: boolean) {
+    const previous = emailPrefs;
+    const next = { ...emailPrefs, [key]: value };
+    setEmailPrefs(next); // optimistic
+    try {
+      await updateEmailPreferences(next);
+    } catch {
+      setEmailPrefs(previous); // revert on failure
+    }
+  }
 
   const greetingName =
     account?.display_name?.trim() || account?.email?.split('@')[0] || '';
@@ -261,13 +284,15 @@ export default function ParentDashboardPage() {
               label="Receive marketing emails"
               hint="Updates about Idea Pop, new features, and weekly events."
               checked={emailPrefs.marketing}
-              onChange={(v) => setEmailPrefs((p) => ({ ...p, marketing: v }))}
+              testid="email-pref-marketing"
+              onChange={(v) => handleEmailPref('marketing', v)}
             />
             <EmailPref
               label="Receive new content alerts"
               hint="When a new mission, course, or lesson is added."
-              checked={emailPrefs.content}
-              onChange={(v) => setEmailPrefs((p) => ({ ...p, content: v }))}
+              checked={emailPrefs.new_content}
+              testid="email-pref-new-content"
+              onChange={(v) => handleEmailPref('new_content', v)}
             />
             <EmailPref
               label="Receive activity reports"
@@ -276,9 +301,10 @@ export default function ParentDashboardPage() {
                   ? "Your child's account activity, progress, and community interactions."
                   : 'Weekly activity reports unlock on the full plan.'
               }
-              checked={isPremium && emailPrefs.activity}
+              checked={isPremium && emailPrefs.activity_reports}
               disabled={!isPremium}
-              onChange={(v) => setEmailPrefs((p) => ({ ...p, activity: v }))}
+              testid="email-pref-activity-reports"
+              onChange={(v) => handleEmailPref('activity_reports', v)}
             />
           </div>
         </section>
@@ -476,12 +502,14 @@ function EmailPref({
   hint,
   checked,
   disabled = false,
+  testid,
   onChange,
 }: {
   label: string;
   hint: string;
   checked: boolean;
   disabled?: boolean;
+  testid?: string;
   onChange: (v: boolean) => void;
 }) {
   return (
@@ -490,6 +518,7 @@ function EmailPref({
         type="checkbox"
         checked={checked}
         disabled={disabled}
+        data-testid={testid}
         onChange={(e) => onChange(e.target.checked)}
         className="mt-0.5 h-4 w-4 shrink-0 accent-explore"
       />

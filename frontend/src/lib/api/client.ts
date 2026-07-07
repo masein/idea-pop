@@ -153,6 +153,24 @@ export async function fetchMe() {
   return data;
 }
 
+export async function fetchEmailPreferences() {
+  const { data, error } = await apiClient.GET("/api/account/email-preferences");
+  if (error) throw new Error("Failed to load email preferences");
+  return data;
+}
+
+export async function updateEmailPreferences(prefs: {
+  marketing: boolean;
+  new_content: boolean;
+  activity_reports: boolean;
+}) {
+  const { data, error } = await apiClient.PUT("/api/account/email-preferences", {
+    body: prefs,
+  });
+  if (error) throw new Error("Failed to update email preferences");
+  return data;
+}
+
 export async function fetchCourses() {
   const { data, error } = await apiClient.GET("/api/library/courses");
   if (error) throw new Error("Failed to load courses");

@@ -1,4 +1,8 @@
-//! GET /parent/children + /parent/children/{id}/report — parent-scoped family views.
+//! Parent-scoped family views and actions:
+//! - GET /parent/children + /parent/children/{id}/report
+//! - PUT /parent/children/{id}/display-mode
+//! - GET /parent/approvals + POST /parent/approvals/{id}/{approve,dismiss}
+//!   (the "Needs your OK" queue: pending share posts + premium-unlock requests)
 //!
 //! Adult-only (kid tokens are rejected by `AdultAuth`). All queries run against
 //! `state.db` with runtime `sqlx::query` (no offline-cache entries needed) and
@@ -8,14 +12,15 @@ use axum::{
     extract::{Path, State},
     Json,
 };
-use serde::Serialize;
+use chrono::Utc;
+use serde::{Deserialize, Serialize};
 use sqlx::Row;
 use utoipa::ToSchema;
 use uuid::Uuid;
 
 use idea_pop_domain::{progress::level_from_xp, DomainError};
 
-use crate::{error::ApiError, extractor::AdultAuth, state::AppState};
+use crate::{error::ApiError, extractor::AdultAuth, portfolio, state::AppState};
 
 // ── DTOs (match the frontend ParentChild / ChildReport contract) ────────────────
 
@@ -30,6 +35,9 @@ pub struct ParentChildResponse {
     pub consent_granted: bool,
     pub class_sharing_enabled: bool,
     pub public_sharing_enabled: bool,
+    /// How the child is shown on shared content:
+    /// avatar_nickname | first_name | anonymous.
+    pub display_mode: String,
 }
 
 #[derive(Serialize, ToSchema)]
@@ -73,7 +81,7 @@ pub async fn list_children(
     State(state): State<AppState>,
 ) -> Result<Json<Vec<ParentChildResponse>>, ApiError> {
     let rows = sqlx::query(
-        r#"SELECT c.id, c.nickname, c.avatar_id, c.birth_year,
+        r#"SELECT c.id, c.nickname, c.avatar_id, c.birth_year, c.display_mode,
                   COALESCE((SELECT SUM(amount) FROM xp_events WHERE child_id = c.id), 0) AS total_xp,
                   (SELECT status FROM parental_consents
                    WHERE child_id = c.id ORDER BY sent_at DESC LIMIT 1) AS consent_status
@@ -104,6 +112,9 @@ pub async fn list_children(
                 consent_granted: s == Some("granted"),
                 class_sharing_enabled: s == Some("class_granted"),
                 public_sharing_enabled: matches!(s, Some("granted") | Some("class_granted")),
+                display_mode: r
+                    .try_get("display_mode")
+                    .unwrap_or_else(|_| "avatar_nickname".to_owned()),
             }
         })
         .collect();
@@ -200,5 +211,319 @@ pub async fn child_report(
         challenges_completed: as_i32("challenges"),
         xp_earned: as_i32("xp"),
         projects,
+    }))
+}
+
+// ── PUT /parent/children/{id}/display-mode ──────────────────────────────────────
+
+#[derive(Deserialize, ToSchema)]
+pub struct UpdateDisplayModeRequest {
+    /// avatar_nickname | first_name | anonymous
+    pub display_mode: String,
+}
+
+#[derive(Serialize, ToSchema)]
+pub struct DisplayModeResponse {
+    pub child_id: Uuid,
+    pub display_mode: String,
+}
+
+/// Set how one of the caller's children is shown on shared content.
+#[utoipa::path(put, path = "/parent/children/{id}/display-mode", tag = "children",
+    params(("id" = Uuid, Path, description = "Child profile UUID")),
+    request_body = UpdateDisplayModeRequest,
+    responses(
+        (status = 200, description = "Display mode updated", body = DisplayModeResponse),
+        (status = 403, description = "Not the parent of this child", body = crate::ProblemDetail),
+        (status = 404, description = "Not found", body = crate::ProblemDetail),
+        (status = 422, description = "Invalid display_mode", body = crate::ProblemDetail),
+    ))]
+pub async fn set_display_mode(
+    AdultAuth(claims): AdultAuth,
+    State(state): State<AppState>,
+    Path(child_id): Path<Uuid>,
+    Json(body): Json<UpdateDisplayModeRequest>,
+) -> Result<Json<DisplayModeResponse>, ApiError> {
+    const ALLOWED: [&str; 3] = ["avatar_nickname", "first_name", "anonymous"];
+    if !ALLOWED.contains(&body.display_mode.as_str()) {
+        return Err(DomainError::Validation(
+            "display_mode must be one of avatar_nickname | first_name | anonymous".into(),
+        )
+        .into());
+    }
+
+    assert_own_child(&state, claims.account_id, child_id).await?;
+
+    sqlx::query("UPDATE child_profiles SET display_mode = $1 WHERE id = $2")
+        .bind(&body.display_mode)
+        .bind(child_id)
+        .execute(&state.db)
+        .await
+        .map_err(internal)?;
+
+    Ok(Json(DisplayModeResponse {
+        child_id,
+        display_mode: body.display_mode,
+    }))
+}
+
+/// 404 if the child doesn't exist; 403 if it belongs to another parent.
+async fn assert_own_child(
+    state: &AppState,
+    parent_id: Uuid,
+    child_id: Uuid,
+) -> Result<(), ApiError> {
+    let owner: Option<Uuid> =
+        sqlx::query_scalar("SELECT parent_account_id FROM child_profiles WHERE id = $1")
+            .bind(child_id)
+            .fetch_optional(&state.db)
+            .await
+            .map_err(internal)?;
+    match owner {
+        None => Err(DomainError::NotFound.into()),
+        Some(p) if p != parent_id => {
+            Err(DomainError::Forbidden("not the parent of this child".into()).into())
+        }
+        _ => Ok(()),
+    }
+}
+
+// ── GET /parent/approvals — the "Needs your OK" queue ───────────────────────────
+
+#[derive(Serialize, ToSchema)]
+pub struct ParentApprovalResponse {
+    /// share_post → moderation_queue id; premium_unlock → premium_unlock_requests id.
+    pub id: Uuid,
+    /// share_post | premium_unlock
+    pub kind: String,
+    pub child_id: Uuid,
+    pub child_nickname: String,
+    /// Project title or idea text (share_post only).
+    pub title: Option<String>,
+    /// Visibility the child asked for (share_post projects only).
+    pub requested_visibility: Option<String>,
+    pub created_at: String,
+}
+
+#[derive(Deserialize, ToSchema)]
+pub struct ResolveApprovalRequest {
+    /// share_post | premium_unlock — which queue the id belongs to.
+    pub kind: String,
+}
+
+#[derive(Serialize, ToSchema)]
+pub struct ResolveApprovalResponse {
+    pub id: Uuid,
+    pub status: String,
+}
+
+/// Pending items awaiting the caller's OK: the children's share requests
+/// (posts in the moderation queue) and premium-unlock requests.
+#[utoipa::path(get, path = "/parent/approvals", tag = "children",
+    security(("bearer_auth" = [])),
+    responses(
+        (status = 200, description = "Pending approvals, oldest first", body = [ParentApprovalResponse]),
+        (status = 401, description = "Not authenticated", body = crate::ProblemDetail),
+        (status = 403, description = "Kid tokens rejected", body = crate::ProblemDetail),
+    ))]
+pub async fn list_approvals(
+    AdultAuth(claims): AdultAuth,
+    State(state): State<AppState>,
+) -> Result<Json<Vec<ParentApprovalResponse>>, ApiError> {
+    let share_rows = sqlx::query(
+        r#"SELECT m.id, m.created_at, c.id AS child_id, c.nickname,
+                  COALESCE(p.title, i.text) AS title,
+                  p.requested_visibility
+           FROM moderation_queue m
+           LEFT JOIN projects p        ON m.content_type = 'project' AND p.id = m.content_id
+           LEFT JOIN challenge_ideas i ON m.content_type = 'idea'    AND i.id = m.content_id
+           JOIN child_profiles c ON c.id = COALESCE(p.child_id, i.child_id)
+           WHERE m.status = 'pending' AND c.parent_account_id = $1"#,
+    )
+    .bind(claims.account_id)
+    .fetch_all(&state.db)
+    .await
+    .map_err(internal)?;
+
+    let unlock_rows = sqlx::query(
+        r#"SELECT r.id, r.created_at, c.id AS child_id, c.nickname
+           FROM premium_unlock_requests r
+           JOIN child_profiles c ON c.id = r.child_id
+           WHERE r.status = 'pending' AND c.parent_account_id = $1"#,
+    )
+    .bind(claims.account_id)
+    .fetch_all(&state.db)
+    .await
+    .map_err(internal)?;
+
+    let created = |r: &sqlx::postgres::PgRow| -> String {
+        r.try_get::<chrono::DateTime<Utc>, _>("created_at")
+            .unwrap_or_else(|_| Utc::now())
+            .to_rfc3339()
+    };
+
+    let mut items: Vec<ParentApprovalResponse> = share_rows
+        .iter()
+        .map(|r| ParentApprovalResponse {
+            id: r.try_get("id").unwrap_or_default(),
+            kind: "share_post".to_owned(),
+            child_id: r.try_get("child_id").unwrap_or_default(),
+            child_nickname: r.try_get("nickname").unwrap_or_default(),
+            title: r.try_get("title").ok(),
+            requested_visibility: r.try_get("requested_visibility").ok().flatten(),
+            created_at: created(r),
+        })
+        .chain(unlock_rows.iter().map(|r| ParentApprovalResponse {
+            id: r.try_get("id").unwrap_or_default(),
+            kind: "premium_unlock".to_owned(),
+            child_id: r.try_get("child_id").unwrap_or_default(),
+            child_nickname: r.try_get("nickname").unwrap_or_default(),
+            title: None,
+            requested_visibility: None,
+            created_at: created(r),
+        }))
+        .collect();
+    items.sort_by(|a, b| a.created_at.cmp(&b.created_at));
+
+    Ok(Json(items))
+}
+
+// ── POST /parent/approvals/{id}/approve | /dismiss ──────────────────────────────
+
+/// Approve a pending item. share_post: records the parent as the human
+/// approver and applies the same side-effects as the reviewer queue
+/// (promotes project visibility / marks the idea approved). premium_unlock:
+/// marks the request approved — payment still happens only on the parent's
+/// own billing flow.
+#[utoipa::path(post, path = "/parent/approvals/{id}/approve", tag = "children",
+    params(("id" = Uuid, Path, description = "Approval item UUID")),
+    request_body = ResolveApprovalRequest,
+    responses(
+        (status = 200, description = "Approved", body = ResolveApprovalResponse),
+        (status = 403, description = "Not the parent of this child", body = crate::ProblemDetail),
+        (status = 404, description = "Not found or not pending", body = crate::ProblemDetail),
+        (status = 422, description = "Unknown kind", body = crate::ProblemDetail),
+    ))]
+pub async fn approve_approval(
+    AdultAuth(claims): AdultAuth,
+    State(state): State<AppState>,
+    Path(item_id): Path<Uuid>,
+    Json(body): Json<ResolveApprovalRequest>,
+) -> Result<Json<ResolveApprovalResponse>, ApiError> {
+    resolve_approval(&state, claims.account_id, item_id, &body.kind, true).await
+}
+
+/// Dismiss a pending item. share_post: rejects the moderation item (the
+/// content stays private). premium_unlock: marks the request dismissed.
+#[utoipa::path(post, path = "/parent/approvals/{id}/dismiss", tag = "children",
+    params(("id" = Uuid, Path, description = "Approval item UUID")),
+    request_body = ResolveApprovalRequest,
+    responses(
+        (status = 200, description = "Dismissed", body = ResolveApprovalResponse),
+        (status = 403, description = "Not the parent of this child", body = crate::ProblemDetail),
+        (status = 404, description = "Not found or not pending", body = crate::ProblemDetail),
+        (status = 422, description = "Unknown kind", body = crate::ProblemDetail),
+    ))]
+pub async fn dismiss_approval(
+    AdultAuth(claims): AdultAuth,
+    State(state): State<AppState>,
+    Path(item_id): Path<Uuid>,
+    Json(body): Json<ResolveApprovalRequest>,
+) -> Result<Json<ResolveApprovalResponse>, ApiError> {
+    resolve_approval(&state, claims.account_id, item_id, &body.kind, false).await
+}
+
+async fn resolve_approval(
+    state: &AppState,
+    parent_id: Uuid,
+    item_id: Uuid,
+    kind: &str,
+    approve: bool,
+) -> Result<Json<ResolveApprovalResponse>, ApiError> {
+    let status = if approve { "approved" } else { "dismissed" };
+    match kind {
+        "share_post" => {
+            // Ownership: the moderation item must reference content by one of
+            // the caller's children.
+            let owner: Option<Uuid> = sqlx::query_scalar(
+                r#"SELECT c.parent_account_id
+                   FROM moderation_queue m
+                   LEFT JOIN projects p        ON m.content_type = 'project' AND p.id = m.content_id
+                   LEFT JOIN challenge_ideas i ON m.content_type = 'idea'    AND i.id = m.content_id
+                   JOIN child_profiles c ON c.id = COALESCE(p.child_id, i.child_id)
+                   WHERE m.id = $1 AND m.status = 'pending'"#,
+            )
+            .bind(item_id)
+            .fetch_optional(&state.db)
+            .await
+            .map_err(internal)?;
+            match owner {
+                None => return Err(DomainError::NotFound.into()),
+                Some(p) if p != parent_id => {
+                    return Err(
+                        DomainError::Forbidden("not the parent of this child".into()).into(),
+                    );
+                }
+                _ => {}
+            }
+
+            let now = Utc::now();
+            if approve {
+                let item = state
+                    .portfolio
+                    .moderation
+                    .approve(item_id, parent_id, now)
+                    .await?
+                    .ok_or(ApiError::Domain(DomainError::NotFound))?;
+                portfolio::apply_approval_side_effects(state, &item, now).await?;
+            } else {
+                let item = state
+                    .portfolio
+                    .moderation
+                    .reject(item_id, parent_id, "Dismissed by parent".to_owned(), now)
+                    .await?
+                    .ok_or(ApiError::Domain(DomainError::NotFound))?;
+                portfolio::apply_rejection_side_effects(state, &item).await?;
+            }
+        }
+        "premium_unlock" => {
+            let updated = sqlx::query(
+                r#"UPDATE premium_unlock_requests r
+                   SET status = $1, resolved_at = now(), resolved_by = $2
+                   FROM child_profiles c
+                   WHERE r.id = $3 AND r.status = 'pending'
+                     AND c.id = r.child_id AND c.parent_account_id = $2"#,
+            )
+            .bind(status)
+            .bind(parent_id)
+            .bind(item_id)
+            .execute(&state.db)
+            .await
+            .map_err(internal)?;
+            if updated.rows_affected() == 0 {
+                // Either not found / already resolved, or another parent's child.
+                let exists: Option<Uuid> = sqlx::query_scalar(
+                    "SELECT id FROM premium_unlock_requests WHERE id = $1 AND status = 'pending'",
+                )
+                .bind(item_id)
+                .fetch_optional(&state.db)
+                .await
+                .map_err(internal)?;
+                return Err(match exists {
+                    Some(_) => DomainError::Forbidden("not the parent of this child".into()).into(),
+                    None => DomainError::NotFound.into(),
+                });
+            }
+        }
+        _ => {
+            return Err(
+                DomainError::Validation("kind must be share_post | premium_unlock".into()).into(),
+            );
+        }
+    }
+
+    Ok(Json(ResolveApprovalResponse {
+        id: item_id,
+        status: status.to_owned(),
     }))
 }

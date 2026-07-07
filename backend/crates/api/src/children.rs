@@ -1,4 +1,5 @@
 //! POST /children — child signup (parent creates child profile, restricted until consent).
+//! POST /me/upgrade-request — kid asks their parent to unlock premium (no billing access).
 
 use axum::{extract::State, http::StatusCode, Json};
 use serde::{Deserialize, Serialize};
@@ -6,7 +7,11 @@ use utoipa::ToSchema;
 use uuid::Uuid;
 use validator::Validate;
 
-use crate::{error::ApiError, extractor::AdultAuth, state::AppState};
+use crate::{
+    error::ApiError,
+    extractor::{AdultAuth, KidAuth},
+    state::AppState,
+};
 
 // ── DTO ───────────────────────────────────────────────────────────────────────
 
@@ -72,4 +77,42 @@ pub async fn create_child(
             access_token: token,
         }),
     ))
+}
+
+// ── POST /me/upgrade-request ──────────────────────────────────────────────────
+
+#[derive(Debug, Serialize, ToSchema)]
+pub struct UpgradeRequestResponse {
+    /// Always "pending" — either freshly created or already queued.
+    pub status: String,
+}
+
+/// Kid taps "Upgrade" → record a premium-unlock request for the parent's
+/// "Needs your OK" queue. Kid-scoped and idempotent (at most one pending
+/// request per child). Carries NO billing capability: the parent completes
+/// any payment on their own session.
+#[utoipa::path(post, path = "/me/upgrade-request", tag = "children",
+    security(("bearer_auth" = [])),
+    responses(
+        (status = 200, description = "Request queued (or already pending)", body = UpgradeRequestResponse),
+        (status = 401, description = "Not authenticated", body = crate::ProblemDetail),
+        (status = 403, description = "Requires a kid-scoped token", body = crate::ProblemDetail),
+    ))]
+pub async fn request_premium_unlock(
+    kid: KidAuth,
+    State(state): State<AppState>,
+) -> Result<Json<UpgradeRequestResponse>, ApiError> {
+    sqlx::query(
+        "INSERT INTO premium_unlock_requests (child_id)
+         VALUES ($1)
+         ON CONFLICT (child_id) WHERE status = 'pending' DO NOTHING",
+    )
+    .bind(kid.child_id)
+    .execute(&state.db)
+    .await
+    .map_err(|e| idea_pop_domain::DomainError::Internal(e.to_string()))?;
+
+    Ok(Json(UpgradeRequestResponse {
+        status: "pending".to_owned(),
+    }))
 }

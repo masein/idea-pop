@@ -635,10 +635,21 @@ pub async fn approve_item(
         .await?
         .ok_or(ApiError::Domain(DomainError::NotFound))?;
 
-    // Side-effect: update content based on type
+    apply_approval_side_effects(&state, &item, now).await?;
+
+    Ok(Json(map_moderation_item(item)))
+}
+
+/// Content side-effects of an approval: promote a project's
+/// effective_visibility to its requested level, or mark an idea approved.
+/// Shared by the reviewer queue and the parent "Needs your OK" queue.
+pub(crate) async fn apply_approval_side_effects(
+    state: &AppState,
+    item: &ModerationItem,
+    now: chrono::DateTime<Utc>,
+) -> Result<(), ApiError> {
     match item.content_type {
         ModerationContentType::Project => {
-            // Promote effective_visibility to the project's requested level
             if let Some(project) = state.portfolio.projects.find_by_id(item.content_id).await? {
                 let requested = project.requested_visibility.clone();
                 state
@@ -659,8 +670,26 @@ pub async fn approve_item(
                 .await?;
         }
     }
+    Ok(())
+}
 
-    Ok(Json(map_moderation_item(item)))
+/// Content side-effect of a rejection: mark an idea rejected. Projects need
+/// no change — effective_visibility already stays Private.
+pub(crate) async fn apply_rejection_side_effects(
+    state: &AppState,
+    item: &ModerationItem,
+) -> Result<(), ApiError> {
+    if item.content_type == ModerationContentType::Idea {
+        state
+            .portfolio
+            .ideas
+            .update_moderation_status(
+                item.content_id,
+                &idea_pop_domain::ModerationStatus::Rejected,
+            )
+            .await?;
+    }
+    Ok(())
 }
 
 // ── POST /moderation/:id/reject ───────────────────────────────────────────────
@@ -697,18 +726,7 @@ pub async fn reject_item(
         .await?
         .ok_or(ApiError::Domain(DomainError::NotFound))?;
 
-    // For ideas, update the moderation_status on the idea row
-    if item.content_type == ModerationContentType::Idea {
-        state
-            .portfolio
-            .ideas
-            .update_moderation_status(
-                item.content_id,
-                &idea_pop_domain::ModerationStatus::Rejected,
-            )
-            .await?;
-    }
-    // For projects, effective_visibility already stays Private (no change needed)
+    apply_rejection_side_effects(&state, &item).await?;
 
     Ok(Json(map_moderation_item(item)))
 }

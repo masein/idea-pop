@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { useRouter } from '@/i18n/routing';
 import { useAgeMode } from '@/lib/hooks/useAgeMode';
-import { fetchChallenges } from '@/lib/api/client';
+import { fetchChallenges, requestPremiumUnlock } from '@/lib/api/client';
 import IdeasWallTab from '@/components/challenge/IdeasWallTab';
 import type { components } from '@/lib/api/schema';
 
@@ -15,6 +15,12 @@ const CHALLENGE = '#1a6fa6'; // --color-challenge (AA-safe with white)
 // ── Parent handoff (kids never check out — CLAUDE.md safety rule) ───────────────
 
 function UpgradeHandoffModal({ onDismiss }: { onDismiss: () => void }) {
+  // Queue a "Needs your OK" item on the parent dashboard (idempotent
+  // server-side; fine to fire every time the modal opens).
+  useEffect(() => {
+    requestPremiumUnlock().catch(() => {});
+  }, []);
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-ink/50 p-4"

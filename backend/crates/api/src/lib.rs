@@ -58,7 +58,7 @@ use crate::{
         VerifyEmailRequest,
     },
     challenges::{AgeTierVariantResponse, ChallengePageResponse, ChallengeResponse, ToolResponse},
-    children::{CreateChildRequest, CreateChildResponse},
+    children::{CreateChildRequest, CreateChildResponse, UpgradeRequestResponse},
     classes::{CreateClassRequest, CreateClassResponse, JoinClassResponse},
     explore::{ExplorePageResponse, ExploreVideoResponse},
     library::{
@@ -66,7 +66,11 @@ use crate::{
         QuickMakePageResponse, QuickMakeResponse, StudioCountResponse,
     },
     me::MeResponse,
-    parent::{ChildReportResponse, ParentChildResponse, ParentProjectSummary},
+    parent::{
+        ChildReportResponse, DisplayModeResponse, ParentApprovalResponse, ParentChildResponse,
+        ParentProjectSummary, ResolveApprovalRequest, ResolveApprovalResponse,
+        UpdateDisplayModeRequest,
+    },
     portfolio::{
         CreateProjectRequest, CreateReportRequest, IdeaListResponse, IdeaResponse,
         ModerationItemResponse, ModerationQueueResponse, PresignResponse, ProjectListResponse,
@@ -205,8 +209,10 @@ pub struct CreateHealthLogRequest {
         auth::register, auth::login, auth::refresh, auth::verify_email,
         me::me,
         account::get_email_preferences, account::put_email_preferences,
-        children::create_child,
+        children::create_child, children::request_premium_unlock,
         parent::list_children, parent::child_report,
+        parent::set_display_mode, parent::list_approvals,
+        parent::approve_approval, parent::dismiss_approval,
         consents::grant_consent, consents::revoke_consent,
         classes::create_class, classes::join_class,
         explore::list_explore, explore::get_explore,
@@ -228,8 +234,10 @@ pub struct CreateHealthLogRequest {
         RegisterRequest, LoginRequest, RefreshRequest, VerifyEmailRequest,
         AuthResponse, TokenResponse, MeResponse,
         EmailPreferencesResponse, UpdateEmailPreferencesRequest,
-        CreateChildRequest, CreateChildResponse,
+        CreateChildRequest, CreateChildResponse, UpgradeRequestResponse,
         ParentChildResponse, ChildReportResponse, ParentProjectSummary,
+        UpdateDisplayModeRequest, DisplayModeResponse,
+        ParentApprovalResponse, ResolveApprovalRequest, ResolveApprovalResponse,
         CreateClassRequest, CreateClassResponse, JoinClassResponse,
         ExploreVideoResponse, ExplorePageResponse,
         StudioCountResponse, CourseSummaryResponse, QuickMakeResponse, QuickMakePageResponse,
@@ -489,8 +497,27 @@ pub fn router_with_metrics(
         )
         // Child profiles & consent
         .route("/children", post(children::create_child))
+        // Kid asks parent to unlock premium (kid-scoped; NO billing capability)
+        .route(
+            "/me/upgrade-request",
+            post(children::request_premium_unlock),
+        )
         .route("/parent/children", get(parent::list_children))
         .route("/parent/children/:id/report", get(parent::child_report))
+        .route(
+            "/parent/children/:id/display-mode",
+            axum::routing::put(parent::set_display_mode),
+        )
+        // "Needs your OK" queue (adult-only via AdultAuth)
+        .route("/parent/approvals", get(parent::list_approvals))
+        .route(
+            "/parent/approvals/:id/approve",
+            post(parent::approve_approval),
+        )
+        .route(
+            "/parent/approvals/:id/dismiss",
+            post(parent::dismiss_approval),
+        )
         .route("/consents/:token/grant", post(consents::grant_consent))
         .route("/consents/:child_id/revoke", post(consents::revoke_consent))
         // Classes

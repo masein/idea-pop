@@ -353,6 +353,49 @@ export async function fetchChildReport(childId: string) {
   return data;
 }
 
+export async function setChildDisplayMode(
+  childId: string,
+  displayMode: "avatar_nickname" | "first_name" | "anonymous"
+) {
+  const { data, error } = await apiClient.PUT("/api/parent/children/{id}/display-mode", {
+    params: { path: { id: childId } },
+    body: { display_mode: displayMode },
+  });
+  if (error) throw new Error("Failed to update display mode");
+  return data;
+}
+
+export async function fetchParentApprovals() {
+  const { data, error } = await apiClient.GET("/api/parent/approvals");
+  if (error) throw new Error("Failed to load approvals");
+  return data;
+}
+
+export async function approveParentItem(id: string, kind: "share_post" | "premium_unlock") {
+  const { data, error } = await apiClient.POST("/api/parent/approvals/{id}/approve", {
+    params: { path: { id } },
+    body: { kind },
+  });
+  if (error) throw new Error("Failed to approve");
+  return data;
+}
+
+export async function dismissParentItem(id: string, kind: "share_post" | "premium_unlock") {
+  const { data, error } = await apiClient.POST("/api/parent/approvals/{id}/dismiss", {
+    params: { path: { id } },
+    body: { kind },
+  });
+  if (error) throw new Error("Failed to dismiss");
+  return data;
+}
+
+/** Kid asks their parent to unlock premium — queues a "Needs your OK" item. */
+export async function requestPremiumUnlock() {
+  const { data, error } = await apiClient.POST("/api/me/upgrade-request");
+  if (error) throw new Error("Failed to send upgrade request");
+  return data;
+}
+
 export async function grantConsent(childId: string, scope: "class" | "public" | "all") {
   const { error } = await apiClient.POST("/api/consents/grant", {
     body: { child_id: childId, scope },

@@ -13,6 +13,10 @@ import {
   fetchMe,
   fetchEmailPreferences,
   updateEmailPreferences,
+  fetchParentApprovals,
+  approveParentItem,
+  dismissParentItem,
+  setChildDisplayMode,
 } from '@/lib/api/client';
 import { AVATARS } from '@/lib/avatars';
 import type { components } from '@/lib/api/schema';
@@ -21,6 +25,8 @@ type ParentChild = components['schemas']['ParentChild'];
 type ChildReport = components['schemas']['ChildReport'];
 type SubscriptionResponse = components['schemas']['SubscriptionResponse'];
 type EmailPreferences = components['schemas']['EmailPreferences'];
+type ParentApproval = components['schemas']['ParentApproval'];
+type DisplayMode = ParentChild['display_mode'];
 
 const DEFAULT_EMAIL_PREFS: EmailPreferences = {
   marketing: false,
@@ -137,8 +143,7 @@ export default function ParentDashboardPage() {
   const [account, setAccount] = useState<{ email: string; display_name: string } | null>(null);
 
   const [emailPrefs, setEmailPrefs] = useState<EmailPreferences>(DEFAULT_EMAIL_PREFS);
-  // Un-backed UI-only control until PR4 lands per-child display_mode.
-  const [showAs, setShowAs] = useState('avatar_nickname');
+  const [approvals, setApprovals] = useState<ParentApproval[]>([]);
 
   useEffect(() => {
     Promise.all([
@@ -163,7 +168,35 @@ export default function ParentDashboardPage() {
     fetchEmailPreferences()
       .then((p) => setEmailPrefs(p as EmailPreferences))
       .catch(() => {});
+    fetchParentApprovals()
+      .then((a) => setApprovals((a ?? []) as ParentApproval[]))
+      .catch(() => {});
   }, []);
+
+  async function handleResolveApproval(item: ParentApproval, approve: boolean) {
+    const previous = approvals;
+    setApprovals((prev) => prev.filter((a) => a.id !== item.id)); // optimistic
+    try {
+      if (approve) await approveParentItem(item.id, item.kind);
+      else await dismissParentItem(item.id, item.kind);
+    } catch {
+      setApprovals(previous); // revert on failure
+    }
+  }
+
+  async function handleDisplayMode(child: ParentChild, mode: DisplayMode) {
+    const previous = child.display_mode;
+    setChildren((prev) =>
+      prev.map((c) => (c.id === child.id ? { ...c, display_mode: mode } : c)),
+    );
+    try {
+      await setChildDisplayMode(child.id, mode);
+    } catch {
+      setChildren((prev) =>
+        prev.map((c) => (c.id === child.id ? { ...c, display_mode: previous } : c)),
+      );
+    }
+  }
 
   async function handleEmailPref(key: keyof EmailPreferences, value: boolean) {
     const previous = emailPrefs;
@@ -420,33 +453,73 @@ export default function ParentDashboardPage() {
         </a>
       </section>
 
-      {/* Needs your OK — derived from real pending-consent signals */}
+      {/* Needs your OK — pending consent + the real approval queue */}
       {!loading && (
         <section aria-label="Needs your OK" className="flex flex-col gap-3">
           <h2 className="font-display text-2xl font-bold text-ink">Needs your OK</h2>
-          {pendingConsent.length === 0 ? (
+          {pendingConsent.length === 0 && approvals.length === 0 ? (
             <div className="rounded-card bg-white p-4 font-body text-sm text-ink/60 shadow-sm">
               ✅ You&apos;re all caught up — nothing needs your approval right now.
             </div>
           ) : (
-            pendingConsent.map((child) => (
-              <div
-                key={child.id}
-                className="flex flex-col items-start justify-between gap-3 rounded-card bg-white p-4 shadow-sm sm:flex-row sm:items-center"
-              >
-                <p className="font-display text-base font-bold text-ink">
-                  🛡️ Approve {child.nickname}&apos;s account to unlock sharing
-                </p>
-                <button
-                  type="button"
-                  onClick={() => handleTogglePublic(child)}
-                  className="rounded-pill px-5 py-2 font-display text-sm font-bold text-white"
-                  style={{ backgroundColor: GREEN }}
+            <>
+              {pendingConsent.map((child) => (
+                <div
+                  key={child.id}
+                  className="flex flex-col items-start justify-between gap-3 rounded-card bg-white p-4 shadow-sm sm:flex-row sm:items-center"
                 >
-                  Review
-                </button>
-              </div>
-            ))
+                  <p className="font-display text-base font-bold text-ink">
+                    🛡️ Approve {child.nickname}&apos;s account to unlock sharing
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => handleTogglePublic(child)}
+                    className="rounded-pill px-5 py-2 font-display text-sm font-bold text-white"
+                    style={{ backgroundColor: GREEN }}
+                  >
+                    Review
+                  </button>
+                </div>
+              ))}
+              {approvals.map((item) => (
+                <div
+                  key={item.id}
+                  data-testid="approval-item"
+                  className="flex flex-col items-start justify-between gap-3 rounded-card bg-white p-4 shadow-sm sm:flex-row sm:items-center"
+                >
+                  <p className="font-display text-base font-bold text-ink">
+                    {item.kind === 'premium_unlock' ? (
+                      <>🔓 {item.child_nickname} asked to unlock premium missions</>
+                    ) : (
+                      <>
+                        📤 {item.child_nickname} wants to share
+                        {item.title ? ` “${item.title}”` : ' a post'}
+                        {item.requested_visibility ? ` with their ${item.requested_visibility === 'public' ? 'community' : 'class'}` : ''}
+                      </>
+                    )}
+                  </p>
+                  <div className="flex shrink-0 gap-2">
+                    <button
+                      type="button"
+                      data-testid="approval-approve-btn"
+                      onClick={() => handleResolveApproval(item, true)}
+                      className="rounded-pill px-5 py-2 font-display text-sm font-bold text-white transition-all hover:brightness-105"
+                      style={{ backgroundColor: GREEN }}
+                    >
+                      Approve
+                    </button>
+                    <button
+                      type="button"
+                      data-testid="approval-dismiss-btn"
+                      onClick={() => handleResolveApproval(item, false)}
+                      className="rounded-pill border-2 border-ink/20 px-5 py-2 font-display text-sm font-bold text-ink/70 transition-colors hover:border-ink/40"
+                    >
+                      Dismiss
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </>
           )}
         </section>
       )}
@@ -478,8 +551,9 @@ export default function ParentDashboardPage() {
                 <span className="font-body text-sm text-ink">Show my child as</span>
                 <select
                   aria-label={`Show ${child.nickname} as`}
-                  value={showAs}
-                  onChange={(e) => setShowAs(e.target.value)}
+                  data-testid="display-mode-select"
+                  value={child.display_mode}
+                  onChange={(e) => handleDisplayMode(child, e.target.value as DisplayMode)}
                   className="rounded-pill bg-tint-lime px-3 py-1.5 font-body text-sm font-semibold text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-explore"
                 >
                   <option value="avatar_nickname">Avatar + nickname</option>

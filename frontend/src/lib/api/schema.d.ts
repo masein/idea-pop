@@ -467,6 +467,57 @@ export interface paths {
       };
     };
   };
+  "/api/parent/children/{id}/display-mode": {
+    put: {
+      parameters: { path: { id: string } };
+      requestBody: {
+        content: {
+          "application/json": { display_mode: "avatar_nickname" | "first_name" | "anonymous" };
+        };
+      };
+      responses: {
+        200: {
+          content: { "application/json": { child_id: string; display_mode: string } };
+        };
+      };
+    };
+  };
+  "/api/parent/approvals": {
+    get: {
+      responses: {
+        200: { content: { "application/json": components["schemas"]["ParentApproval"][] } };
+      };
+    };
+  };
+  "/api/parent/approvals/{id}/approve": {
+    post: {
+      parameters: { path: { id: string } };
+      requestBody: {
+        content: { "application/json": { kind: "share_post" | "premium_unlock" } };
+      };
+      responses: {
+        200: { content: { "application/json": { id: string; status: string } } };
+      };
+    };
+  };
+  "/api/parent/approvals/{id}/dismiss": {
+    post: {
+      parameters: { path: { id: string } };
+      requestBody: {
+        content: { "application/json": { kind: "share_post" | "premium_unlock" } };
+      };
+      responses: {
+        200: { content: { "application/json": { id: string; status: string } } };
+      };
+    };
+  };
+  "/api/me/upgrade-request": {
+    post: {
+      responses: {
+        200: { content: { "application/json": { status: string } } };
+      };
+    };
+  };
   "/api/consents/grant": {
     post: {
       requestBody: {
@@ -808,6 +859,16 @@ export interface components {
       consent_granted: boolean;
       class_sharing_enabled: boolean;
       public_sharing_enabled: boolean;
+      display_mode: "avatar_nickname" | "first_name" | "anonymous";
+    };
+    ParentApproval: {
+      id: string;
+      kind: "share_post" | "premium_unlock";
+      child_id: string;
+      child_nickname: string;
+      title: string | null;
+      requested_visibility: string | null;
+      created_at: string;
     };
     ChildReport: {
       child_id: string;

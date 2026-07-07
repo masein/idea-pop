@@ -74,6 +74,7 @@ function mockParentAPIs(page: import('@playwright/test').Page) {
       json: [{
         id: 'child-1', nickname: 'Pixel', avatar_id: 'penguin', birth_year: 2015,
         level: 2, total_xp: 85, consent_granted: true, class_sharing_enabled: false, public_sharing_enabled: false,
+        display_mode: 'avatar_nickname',
       }],
     })
   );
@@ -93,6 +94,25 @@ function mockParentAPIs(page: import('@playwright/test').Page) {
     r.request().method() === 'PUT'
       ? r.fulfill({ json: JSON.parse(r.request().postData() ?? '{}') })
       : r.fulfill({ json: { marketing: false, new_content: false, activity_reports: false } })
+  );
+  page.route('**/api/parent/approvals', (r) =>
+    r.fulfill({
+      json: [
+        {
+          id: 'appr-1', kind: 'share_post', child_id: 'child-1', child_nickname: 'Pixel',
+          title: 'My bridge', requested_visibility: 'class', created_at: '2026-07-01T10:00:00Z',
+        },
+        {
+          id: 'appr-2', kind: 'premium_unlock', child_id: 'child-1', child_nickname: 'Pixel',
+          title: null, requested_visibility: null, created_at: '2026-07-02T10:00:00Z',
+        },
+      ],
+    })
+  );
+  page.route('**/api/parent/approvals/*/approve', (r) => r.fulfill({ json: { id: 'appr-1', status: 'approved' } }));
+  page.route('**/api/parent/approvals/*/dismiss', (r) => r.fulfill({ json: { id: 'appr-2', status: 'dismissed' } }));
+  page.route('**/api/parent/children/*/display-mode', (r) =>
+    r.fulfill({ json: { child_id: 'child-1', display_mode: 'anonymous' } })
   );
 }
 
@@ -417,7 +437,7 @@ test.describe('golden path — parent', () => {
     await page.goto('/en/dashboard/parent');
     await expect(page.getByTestId('parent-dashboard')).toBeVisible();
     await expect(page.getByTestId('child-card')).toBeVisible();
-    await expect(page.getByText('Pixel')).toBeVisible();
+    await expect(page.getByTestId('child-card').getByText('Pixel')).toBeVisible();
 
     await page.getByTestId('view-report-btn').click();
     await expect(page.getByTestId('weekly-report-modal')).toBeVisible();
@@ -454,6 +474,44 @@ test.describe('golden path — parent', () => {
       activity_reports: false,
     });
     await expect(checkbox).toBeChecked();
+  });
+
+  test('parent approves a "Needs your OK" item (POST + removed from queue)', async ({ page }) => {
+    await setCookie(page, 'ideapop_persona', 'parent');
+    mockParentAPIs(page);
+
+    await page.goto('/en/dashboard/parent');
+    await expect(page.getByTestId('approval-item')).toHaveCount(2);
+
+    const postRequest = page.waitForRequest(
+      (req) => req.url().includes('/api/parent/approvals/appr-1/approve') && req.method() === 'POST',
+    );
+    await page.getByTestId('approval-approve-btn').first().click();
+    const req = await postRequest;
+    expect(req.postDataJSON()).toEqual({ kind: 'share_post' });
+    await expect(page.getByTestId('approval-item')).toHaveCount(1);
+
+    // Dismiss the premium-unlock item too.
+    await page.getByTestId('approval-dismiss-btn').click();
+    await expect(page.getByTestId('approval-item')).toHaveCount(0);
+  });
+
+  test('parent sets child display mode (PUT payload)', async ({ page }) => {
+    await setCookie(page, 'ideapop_persona', 'parent');
+    mockParentAPIs(page);
+
+    await page.goto('/en/dashboard/parent');
+    const select = page.getByTestId('display-mode-select');
+    await expect(select).toHaveValue('avatar_nickname');
+
+    const putRequest = page.waitForRequest(
+      (req) =>
+        req.url().includes('/api/parent/children/child-1/display-mode') && req.method() === 'PUT',
+    );
+    await select.selectOption('anonymous');
+    const req = await putRequest;
+    expect(req.postDataJSON()).toEqual({ display_mode: 'anonymous' });
+    await expect(select).toHaveValue('anonymous');
   });
 
   test('parent billing section shows upgrade options when not premium', async ({ page }) => {

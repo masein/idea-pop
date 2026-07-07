@@ -194,6 +194,31 @@ export interface paths {
       };
     };
   };
+  "/api/account/email-preferences": {
+    get: {
+      responses: {
+        200: {
+          content: {
+            "application/json": components["schemas"]["EmailPreferences"];
+          };
+        };
+      };
+    };
+    put: {
+      requestBody: {
+        content: {
+          "application/json": components["schemas"]["EmailPreferences"];
+        };
+      };
+      responses: {
+        200: {
+          content: {
+            "application/json": components["schemas"]["EmailPreferences"];
+          };
+        };
+      };
+    };
+  };
   "/api/me/progress": {
     get: {
       responses: {
@@ -632,6 +657,11 @@ export interface components {
       role: string;
       email: string;
       display_name: string;
+    };
+    EmailPreferences: {
+      marketing: boolean;
+      new_content: boolean;
+      activity_reports: boolean;
     };
     CourseSummaryResponse: {
       id: string;

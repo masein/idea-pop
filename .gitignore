@@ -22,3 +22,10 @@ lcov.info
 .DS_Store
 .idea/
 .vscode/
+
+# Claude Code local tooling
+.claude/
+
+# Playwright local artifacts
+frontend/playwright-report/
+frontend/test-results/

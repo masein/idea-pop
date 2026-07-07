@@ -9,6 +9,7 @@ pub mod portfolio;
 pub mod progress;
 pub mod state;
 
+mod account;
 mod auth;
 pub mod challenges;
 mod children;
@@ -51,6 +52,7 @@ use utoipa::{OpenApi, ToSchema};
 use uuid::Uuid;
 
 use crate::{
+    account::{EmailPreferencesResponse, UpdateEmailPreferencesRequest},
     auth::{
         AuthResponse, LoginRequest, RefreshRequest, RegisterRequest, TokenResponse,
         VerifyEmailRequest,
@@ -202,6 +204,7 @@ pub struct CreateHealthLogRequest {
         create_health_log, list_health_log,
         auth::register, auth::login, auth::refresh, auth::verify_email,
         me::me,
+        account::get_email_preferences, account::put_email_preferences,
         children::create_child,
         parent::list_children, parent::child_report,
         consents::grant_consent, consents::revoke_consent,
@@ -224,6 +227,7 @@ pub struct CreateHealthLogRequest {
         Health, HealthLogEntry, CreateHealthLogRequest, ProblemDetail,
         RegisterRequest, LoginRequest, RefreshRequest, VerifyEmailRequest,
         AuthResponse, TokenResponse, MeResponse,
+        EmailPreferencesResponse, UpdateEmailPreferencesRequest,
         CreateChildRequest, CreateChildResponse,
         ParentChildResponse, ChildReportResponse, ParentProjectSummary,
         CreateClassRequest, CreateClassResponse, JoinClassResponse,
@@ -478,6 +482,11 @@ pub fn router_with_metrics(
             post(create_health_log).get(list_health_log),
         )
         .route("/me", get(me::me))
+        // Account settings — adult-only (AdultAuth rejects kid tokens)
+        .route(
+            "/account/email-preferences",
+            get(account::get_email_preferences).put(account::put_email_preferences),
+        )
         // Child profiles & consent
         .route("/children", post(children::create_child))
         .route("/parent/children", get(parent::list_children))

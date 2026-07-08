@@ -2,10 +2,21 @@ import createNextIntlPlugin from "next-intl/plugin";
 
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
+// Where /api/* requests are proxied (server-side). The backend serves its
+// routes WITHOUT the /api prefix; the frontend always calls same-origin
+// /api/* and this rewrite bridges the two. Baked at build time (standalone
+// output) — set API_URL as a build arg/env: localhost:8080 for local dev,
+// http://backend:8080 inside docker compose.
+const API_URL = process.env.API_URL ?? "http://localhost:8080";
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: "standalone",
   reactStrictMode: true,
+
+  async rewrites() {
+    return [{ source: "/api/:path*", destination: `${API_URL}/:path*` }];
+  },
 
   images: {
     remotePatterns: [

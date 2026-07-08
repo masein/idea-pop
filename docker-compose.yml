@@ -38,9 +38,9 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        # NEXT_PUBLIC_* values are baked into the bundle at BUILD time —
-        # they must be build args; runtime environment has no effect.
-        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8080}
+        # Server-side /api/* rewrite destination — the backend service on the
+        # compose network. Baked at build time (standalone output).
+        API_URL: http://backend:8080
     ports:
       - "3000:3000"
     depends_on:

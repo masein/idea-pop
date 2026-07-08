@@ -18,8 +18,8 @@ export function setAccessToken(token: string | null): void {
 }
 
 export async function refreshAccessToken(): Promise<string | null> {
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "";
-  const res = await fetch(`${apiUrl}/api/auth/refresh`, {
+  // Same-origin: rides the /api/* rewrite in next.config.mjs.
+  const res = await fetch(`/api/auth/refresh`, {
     method: "POST",
     credentials: "include", // sends httpOnly refresh cookie
   });

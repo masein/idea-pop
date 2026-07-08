@@ -6,7 +6,10 @@ import {
   setAccessToken,
 } from "./auth";
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
+// Same-origin: every /api/* call goes to the Next server, which rewrites it
+// to the backend (see next.config.mjs). The browser never needs to know the
+// backend's host/port, and the /api prefix is stripped by the rewrite.
+const BASE_URL = "";
 
 /** Attach the in-memory access token to every request. */
 const authMiddleware: Middleware = {

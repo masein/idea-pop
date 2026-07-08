@@ -143,6 +143,10 @@ pub enum ChallengeStep {
     Skill {
         instructions: String,
         skill_refs: Vec<Uuid>,
+        /// Progressive "Need a hint?" ladder; the LAST entry is the give-away.
+        /// Defaulted so pre-hints JSONB rows still deserialize.
+        #[serde(default)]
+        hints: Vec<String>,
     },
     /// Step 6 — sketch the solution concept.
     Sketch { prompt: String, guidance: String },
@@ -150,6 +154,10 @@ pub enum ChallengeStep {
     BuildAndTest {
         instructions: String,
         test_criteria: Vec<String>,
+        /// Progressive "Need a hint?" ladder; the LAST entry is the give-away.
+        /// Defaulted so pre-hints JSONB rows still deserialize.
+        #[serde(default)]
+        hints: Vec<String>,
     },
     /// Step 8 — celebrate the build and share it (consent-gated in the UI).
     CelebrateAndShare {
@@ -311,6 +319,7 @@ mod tests {
             ChallengeStep::Skill {
                 instructions: "Do this".into(),
                 skill_refs: vec![],
+                hints: vec![],
             },
             ChallengeStep::Sketch {
                 prompt: "Sketch it".into(),
@@ -319,6 +328,7 @@ mod tests {
             ChallengeStep::BuildAndTest {
                 instructions: "Build it".into(),
                 test_criteria: vec!["It works".into()],
+                hints: vec![],
             },
             ChallengeStep::CelebrateAndShare {
                 celebration_text: "Well done!".into(),
@@ -427,6 +437,44 @@ mod tests {
         assert!(json.contains("\"fork_to_step\":6"));
         let back: ChallengeStep = serde_json::from_str(&json).unwrap();
         assert_eq!(back, step);
+    }
+
+    #[test]
+    fn hints_round_trip_on_skill_and_build_steps() {
+        let steps = vec![
+            ChallengeStep::Skill {
+                instructions: "Do this".into(),
+                skill_refs: vec![],
+                hints: vec!["Nudge".into(), "The give-away".into()],
+            },
+            ChallengeStep::BuildAndTest {
+                instructions: "Build it".into(),
+                test_criteria: vec!["It works".into()],
+                hints: vec!["Try smaller".into()],
+            },
+        ];
+        for step in steps {
+            let json = serde_json::to_string(&step).unwrap();
+            assert!(json.contains("\"hints\":["));
+            let back: ChallengeStep = serde_json::from_str(&json).unwrap();
+            assert_eq!(back, step);
+        }
+    }
+
+    #[test]
+    fn steps_without_hints_key_still_deserialize() {
+        // The legacy-JSONB guarantee: rows seeded before the hints field
+        // existed have no "hints" key and must default to an empty vec.
+        let skill: ChallengeStep =
+            serde_json::from_str(r#"{"step":"skill","instructions":"Do this","skill_refs":[]}"#)
+                .unwrap();
+        assert!(matches!(skill, ChallengeStep::Skill { ref hints, .. } if hints.is_empty()));
+
+        let build: ChallengeStep = serde_json::from_str(
+            r#"{"step":"build_and_test","instructions":"Build it","test_criteria":["It works"]}"#,
+        )
+        .unwrap();
+        assert!(matches!(build, ChallengeStep::BuildAndTest { ref hints, .. } if hints.is_empty()));
     }
 
     #[test]

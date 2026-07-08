@@ -753,6 +753,10 @@ export interface components {
       design_secret: string;
       design_secret_story: string | null;
       skill_lesson_id: string | null;
+      /** "Need a hint?" ladder for the Skill step; the LAST entry is the give-away. */
+      skill_hints?: string[];
+      /** "Need a hint?" ladder for the Build & test step; the LAST entry is the give-away. */
+      build_hints?: string[];
       related_explore_ids: string[];
       completion_xp: number;
       tools?: ("five_whys" | "scamper" | "mind_map")[];

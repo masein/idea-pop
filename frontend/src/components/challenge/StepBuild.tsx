@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import CaptureCard, { type CaptureData } from './CaptureCard';
 import ClassifierPanel from '@/components/ai/ClassifierPanel';
+import MissionHints from './MissionHints';
 import { createProject } from '@/lib/api/client';
 
 // Missions whose Build & test step embeds the on-device Machine Trainer.
@@ -101,6 +102,10 @@ export default function StepBuild({
           <ClassifierPanel />
         </div>
       )}
+
+      <div className="mb-4">
+        <MissionHints hints={challenge.build_hints ?? []} />
+      </div>
 
       {/* Test question card */}
       <div className="bg-tint-blue rounded-card p-4 text-center mb-4">

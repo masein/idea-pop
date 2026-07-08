@@ -185,6 +185,9 @@ async fn main() -> anyhow::Result<()> {
         }
         _ => state,
     };
+    // Secure attribute on auth cookies — on in production (https), off for
+    // plain-http local dev.
+    let state = state.with_secure_cookies(std::env::var("COOKIE_SECURE").as_deref() == Ok("true"));
 
     // help_messages retention: with HELP_MESSAGE_RETENTION_DAYS set (> 0),
     // purge transcripts older than the window once a day. Unset → keep

@@ -35,3 +35,15 @@ export async function refreshAccessToken(): Promise<string | null> {
 export function clearAuth(): void {
   accessToken = null;
 }
+
+/** Revoke the server session and clear both tokens (cookie + memory). */
+export async function logout(): Promise<void> {
+  try {
+    await fetch(`/api/auth/logout`, {
+      method: "POST",
+      credentials: "include", // sends + clears the httpOnly refresh cookie
+    });
+  } finally {
+    accessToken = null;
+  }
+}

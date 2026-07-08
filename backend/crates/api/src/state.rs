@@ -91,6 +91,9 @@ pub struct AppState {
     pub billing: BillingRepos,
     pub helper: Arc<dyn MissionHelperProvider>,
     pub helper_config: HelperConfig,
+    /// Adds `Secure` to auth cookies. Off by default so http://localhost dev
+    /// works; MUST be on in production (COOKIE_SECURE=true).
+    pub cookie_secure: bool,
 }
 
 impl AppState {
@@ -141,11 +144,17 @@ impl AppState {
             billing,
             helper: Arc::new(DisabledHelperProvider),
             helper_config: HelperConfig::default(),
+            cookie_secure: false,
         }
     }
 
     /// Attach a real mission-helper provider + config (builder-style so the
     /// many existing `AppState::new` call sites stay untouched).
+    pub fn with_secure_cookies(mut self, secure: bool) -> Self {
+        self.cookie_secure = secure;
+        self
+    }
+
     pub fn with_mission_helper(
         mut self,
         provider: Arc<dyn MissionHelperProvider>,

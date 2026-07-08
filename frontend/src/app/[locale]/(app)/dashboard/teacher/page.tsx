@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { Link } from '@/i18n/routing';
 import {
   fetchTeacherClass,
   fetchChallenges,
@@ -339,9 +340,12 @@ export default function TeacherDashboardPage() {
           <p className="font-body text-sm text-ink/60">
             Set up a class to get your unique class code
           </p>
-          <a href="/onboarding/teacher" className="font-body text-sm font-bold text-explore underline">
+          <Link
+            href="/onboarding/teacher"
+            className="font-body text-sm font-bold text-explore underline"
+          >
             Set up a class →
-          </a>
+          </Link>
         </div>
       )}
     </div>

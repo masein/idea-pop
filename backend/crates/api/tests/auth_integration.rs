@@ -367,3 +367,205 @@ async fn rate_limit_triggers_429() {
     let res = app.oneshot(make_req()).await.unwrap();
     assert_eq!(res.status(), StatusCode::TOO_MANY_REQUESTS);
 }
+
+// ── Refresh cookie contract (browser flow) ─────────────────────────────────────
+
+fn set_cookie_values(res: &axum::response::Response) -> Vec<String> {
+    res.headers()
+        .get_all(axum::http::header::SET_COOKIE)
+        .iter()
+        .filter_map(|v| v.to_str().ok())
+        .map(str::to_owned)
+        .collect()
+}
+
+fn refresh_cookie_pair(res: &axum::response::Response) -> Option<String> {
+    set_cookie_values(res)
+        .iter()
+        .find(|c| c.starts_with("ideapop_refresh="))
+        .and_then(|c| c.split(';').next())
+        .map(str::to_owned)
+}
+
+#[tokio::test]
+async fn refresh_works_from_the_cookie_with_no_body() {
+    let (pool, _pg) = start_postgres().await;
+    let app = make_app(pool);
+
+    // Register → httpOnly refresh cookie is set.
+    let res = app
+        .clone()
+        .oneshot(
+            Request::builder()
+                .method("POST")
+                .uri("/auth/register")
+                .header("content-type", "application/json")
+                .body(Body::from(
+                    json!({"email":"cookie@example.com","password":"password123"}).to_string(),
+                ))
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+    assert_eq!(res.status(), StatusCode::CREATED);
+    let cookie = set_cookie_values(&res)
+        .into_iter()
+        .find(|c| c.starts_with("ideapop_refresh="))
+        .expect("register must set the refresh cookie");
+    assert!(cookie.contains("HttpOnly"), "cookie must be httpOnly");
+    assert!(cookie.contains("SameSite=Lax"));
+    assert!(
+        !cookie.contains("Secure"),
+        "Secure must be off by default so http://localhost works"
+    );
+    let cookie_pair = cookie.split(';').next().unwrap().to_owned();
+
+    // Login also sets it.
+    let res = app
+        .clone()
+        .oneshot(
+            Request::builder()
+                .method("POST")
+                .uri("/auth/login")
+                .header("content-type", "application/json")
+                .body(Body::from(
+                    json!({"email":"cookie@example.com","password":"password123"}).to_string(),
+                ))
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+    assert!(
+        refresh_cookie_pair(&res).is_some(),
+        "login must set the refresh cookie"
+    );
+    let cookie_pair = refresh_cookie_pair(&res).unwrap_or(cookie_pair);
+
+    // THE regression: POST /auth/refresh with NO body and NO content-type —
+    // this returned 415 before the cookie contract landed.
+    let res = app
+        .clone()
+        .oneshot(
+            Request::builder()
+                .method("POST")
+                .uri("/auth/refresh")
+                .header("cookie", &cookie_pair)
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+    assert_eq!(
+        res.status(),
+        StatusCode::OK,
+        "empty-body refresh must be 200, not 415"
+    );
+    let rotated = refresh_cookie_pair(&res).expect("refresh must rotate the cookie");
+    assert_ne!(rotated, cookie_pair, "refresh must rotate the token");
+    let body: Value =
+        serde_json::from_slice(&to_bytes(res.into_body(), usize::MAX).await.unwrap()).unwrap();
+    assert!(body["access_token"].as_str().unwrap().len() > 20);
+
+    // The rotated cookie keeps working; the old one is dead.
+    let res = app
+        .clone()
+        .oneshot(
+            Request::builder()
+                .method("POST")
+                .uri("/auth/refresh")
+                .header("cookie", &rotated)
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+    assert_eq!(res.status(), StatusCode::OK);
+    let res = app
+        .clone()
+        .oneshot(
+            Request::builder()
+                .method("POST")
+                .uri("/auth/refresh")
+                .header("cookie", &cookie_pair)
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+    assert_eq!(
+        res.status(),
+        StatusCode::UNAUTHORIZED,
+        "old cookie is revoked"
+    );
+
+    // No cookie and no body → 401 (never 415).
+    let res = app
+        .oneshot(
+            Request::builder()
+                .method("POST")
+                .uri("/auth/refresh")
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+    assert_eq!(res.status(), StatusCode::UNAUTHORIZED);
+}
+
+#[tokio::test]
+async fn logout_clears_the_cookie_and_revokes_the_session() {
+    let (pool, _pg) = start_postgres().await;
+    let app = make_app(pool);
+
+    let res = app
+        .clone()
+        .oneshot(
+            Request::builder()
+                .method("POST")
+                .uri("/auth/register")
+                .header("content-type", "application/json")
+                .body(Body::from(
+                    json!({"email":"bye@example.com","password":"password123"}).to_string(),
+                ))
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+    let cookie_pair = refresh_cookie_pair(&res).unwrap();
+
+    let res = app
+        .clone()
+        .oneshot(
+            Request::builder()
+                .method("POST")
+                .uri("/auth/logout")
+                .header("cookie", &cookie_pair)
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+    assert_eq!(res.status(), StatusCode::NO_CONTENT);
+    let cleared = set_cookie_values(&res)
+        .into_iter()
+        .find(|c| c.starts_with("ideapop_refresh="))
+        .expect("logout must clear the cookie");
+    assert!(
+        cleared.contains("Max-Age=0"),
+        "cookie must be expired: {cleared}"
+    );
+
+    // The revoked session can no longer refresh.
+    let res = app
+        .oneshot(
+            Request::builder()
+                .method("POST")
+                .uri("/auth/refresh")
+                .header("cookie", &cookie_pair)
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+    assert_eq!(res.status(), StatusCode::UNAUTHORIZED);
+}

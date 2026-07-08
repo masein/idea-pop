@@ -158,6 +158,18 @@ impl AuthService {
         Ok(pair)
     }
 
+    /// Revoke the session behind `refresh_token`. Idempotent: unknown or
+    /// already-revoked tokens are a no-op (logout must never fail the user).
+    pub async fn logout(&self, refresh_token: String) -> Result<(), DomainError> {
+        let hash = self.tokens.hash_token(&refresh_token);
+        if let Some(session) = self.repo.find_refresh_session_by_hash(&hash).await? {
+            if session.revoked_at.is_none() {
+                self.repo.revoke_refresh_session(session.id).await?;
+            }
+        }
+        Ok(())
+    }
+
     pub async fn request_email_verification(&self, account_id: Uuid) -> Result<(), DomainError> {
         let account = self
             .repo
@@ -539,6 +551,31 @@ mod tests {
         // Old refresh token is now revoked
         let err = svc.refresh(pair1.refresh_token).await.unwrap_err();
         assert!(matches!(err, DomainError::Unauthorized(_)));
+    }
+
+    #[tokio::test]
+    async fn logout_revokes_the_session_and_is_idempotent() {
+        let (_, _, svc) = make_service();
+        svc.register(
+            "out@example.com".into(),
+            "password123".into(),
+            Role::Parent,
+            "en".into(),
+        )
+        .await
+        .unwrap();
+        let (_, pair) = svc
+            .login("out@example.com".into(), "password123".into())
+            .await
+            .unwrap();
+
+        svc.logout(pair.refresh_token.clone()).await.unwrap();
+        // The refresh token no longer works…
+        let err = svc.refresh(pair.refresh_token.clone()).await.unwrap_err();
+        assert!(matches!(err, DomainError::Unauthorized(_)));
+        // …and logging out again (or with garbage) is still Ok.
+        svc.logout(pair.refresh_token).await.unwrap();
+        svc.logout("not-a-real-token".into()).await.unwrap();
     }
 
     #[tokio::test]

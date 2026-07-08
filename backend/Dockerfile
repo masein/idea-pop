@@ -6,6 +6,9 @@ RUN apt-get update \
  && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 COPY . .
+# Hermetic build: compile against the committed .sqlx cache, never a live DB
+# (a stray .env with DATABASE_URL would otherwise hijack the sqlx macros).
+ENV SQLX_OFFLINE=true
 RUN cargo build --release --bin idea-pop-server
 
 # ---- runtime ----

@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/Input";
 
 export default function LoginForm() {
   const t = useTranslations("auth.login");
+  const ta = useTranslations("auth");
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
 
@@ -72,6 +73,7 @@ export default function LoginForm() {
         <Input
           label={t("password_label")}
           type="password"
+          passwordToggleLabels={{ show: ta("show_password"), hide: ta("hide_password") }}
           autoComplete="current-password"
           error={errors.password?.message}
           {...register("password")}

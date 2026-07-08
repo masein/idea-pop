@@ -17,6 +17,7 @@ interface RegisterFormProps {
 
 export default function RegisterForm({ role }: RegisterFormProps) {
   const t = useTranslations("auth.register");
+  const ta = useTranslations("auth");
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
 
@@ -72,6 +73,7 @@ export default function RegisterForm({ role }: RegisterFormProps) {
           placeholder={t("password_placeholder")}
           autoComplete="new-password"
           error={errors.password?.message}
+          passwordToggleLabels={{ show: ta("show_password"), hide: ta("hide_password") }}
           {...field("password")}
         />
 
@@ -81,6 +83,7 @@ export default function RegisterForm({ role }: RegisterFormProps) {
           placeholder={t("confirm_placeholder")}
           autoComplete="new-password"
           error={errors.passwordConfirm?.message}
+          passwordToggleLabels={{ show: ta("show_password"), hide: ta("hide_password") }}
           {...field("passwordConfirm")}
         />
 

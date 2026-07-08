@@ -477,7 +477,9 @@
       "resent": "Sent! Check your inbox again.",
       "success_heading": "Email verified!",
       "success_body": "Your account is ready. Let's get started."
-    }
+    },
+    "show_password": "Show password",
+    "hide_password": "Hide password"
   },
   "onboarding": {
     "kid": {

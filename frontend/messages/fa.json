@@ -417,7 +417,9 @@
       "resent": "ارسال شد! دوباره بررسی کنید.",
       "success_heading": "ایمیل تأیید شد!",
       "success_body": "حساب شما آماده است. شروع کنیم."
-    }
+    },
+    "show_password": "نمایش رمز عبور",
+    "hide_password": "پنهان کردن رمز عبور"
   },
   "onboarding": {
     "kid": {

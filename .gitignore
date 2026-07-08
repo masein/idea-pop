@@ -29,3 +29,6 @@ lcov.info
 # Playwright local artifacts
 frontend/playwright-report/
 frontend/test-results/
+
+# Local docker-compose overrides (machine-specific ports/secrets)
+docker-compose.override.yml

@@ -17,7 +17,19 @@ export function setAccessToken(token: string | null): void {
   accessToken = token;
 }
 
-export async function refreshAccessToken(): Promise<string | null> {
+// Single-flight: several 401s land at once after a reload; the refresh
+// ROTATES the session, so parallel refreshes race each other and losers get
+// revoked. Share one in-flight refresh among all callers.
+let inflightRefresh: Promise<string | null> | null = null;
+
+export function refreshAccessToken(): Promise<string | null> {
+  inflightRefresh ??= doRefresh().finally(() => {
+    inflightRefresh = null;
+  });
+  return inflightRefresh;
+}
+
+async function doRefresh(): Promise<string | null> {
   // Same-origin: rides the /api/* rewrite in next.config.mjs.
   const res = await fetch(`/api/auth/refresh`, {
     method: "POST",

@@ -246,7 +246,12 @@ export interface paths {
       responses: {
         200: {
           content: {
-            "application/json": components["schemas"]["ChallengeDetail"][];
+            "application/json": {
+              items: components["schemas"]["ChallengeDetail"][];
+              total: number;
+              page: number;
+              per_page: number;
+            };
           };
         };
       };

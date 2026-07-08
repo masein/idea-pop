@@ -43,6 +43,12 @@ pub trait AccountRepo: Send + Sync {
         hash: &str,
     ) -> Result<Option<RefreshSession>, DomainError>;
     async fn revoke_refresh_session(&self, session_id: Uuid) -> Result<(), DomainError>;
+    /// Shorten a session's lifetime (rotation grace tail).
+    async fn expire_refresh_session(
+        &self,
+        session_id: Uuid,
+        expires_at: chrono::DateTime<chrono::Utc>,
+    ) -> Result<(), DomainError>;
 }
 
 #[async_trait]

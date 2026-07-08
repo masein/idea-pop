@@ -9,11 +9,26 @@ import {
 // Same-origin: every /api/* call goes to the Next server, which rewrites it
 // to the backend (see next.config.mjs). The browser never needs to know the
 // backend's host/port, and the /api prefix is stripped by the rewrite.
-const BASE_URL = "";
+// Node test runners can't resolve relative URLs, so they get an explicit
+// origin (same-origin semantics are what's under test, not the host).
+const BASE_URL =
+  typeof window === "undefined" || process.env.NODE_ENV === "test"
+    ? "http://localhost:3000"
+    : "";
 
-/** Attach the in-memory access token to every request. */
+/**
+ * Attach the in-memory access token to every request, and on a 401 refresh
+ * the session and replay the request once.
+ *
+ * Request bodies are one-shot streams: they must be cloned BEFORE the
+ * original request is sent, or the replay of a POST/PUT goes out with an
+ * empty body (which is how class creation used to fail after a reload).
+ */
+const replayable = new WeakMap<Request, Request>();
+
 const authMiddleware: Middleware = {
   async onRequest({ request }) {
+    replayable.set(request, request.clone());
     const token = getAccessToken();
     if (token) {
       request.headers.set("Authorization", `Bearer ${token}`);
@@ -27,13 +42,18 @@ const authMiddleware: Middleware = {
     const fresh = await refreshAccessToken();
     if (!fresh) return response;
 
-    const retried = request.clone();
+    const retried = replayable.get(request) ?? request.clone();
     retried.headers.set("Authorization", `Bearer ${fresh}`);
     return fetch(retried);
   },
 };
 
-export const apiClient = createClient<paths>({ baseUrl: BASE_URL });
+// Late-bound fetch so test stubs of global.fetch are honoured (openapi-fetch
+// would otherwise capture the real fetch at module-import time).
+export const apiClient = createClient<paths>({
+  baseUrl: BASE_URL,
+  fetch: (request) => globalThis.fetch(request),
+});
 apiClient.use(authMiddleware);
 
 /** Login helper — stores the returned access token in memory. */
@@ -533,5 +553,7 @@ export async function fetchReports() {
 export async function fetchChallenges() {
   const { data, error } = await apiClient.GET("/api/challenges");
   if (error) throw new Error("Failed to load challenges");
-  return data;
+  // The backend paginates ({items, total, …}); e2e route mocks may still
+  // fulfil a bare array. Always hand consumers the array.
+  return Array.isArray(data) ? data : (data?.items ?? []);
 }

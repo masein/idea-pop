@@ -21,6 +21,7 @@ pub use help::purge_expired_help_messages;
 pub mod library;
 mod me;
 mod parent;
+mod teacher;
 
 pub use error::{ApiError, ProblemDetail};
 pub use state::{
@@ -88,6 +89,7 @@ use crate::{
         AdvanceStepRequest, AdvanceStepResponse, BadgeResponse, LessonCompleteRequest,
         MedalsResponse, ProgressResponse, StartAttemptResponse, VideoViewRequest, XpAwardResponse,
     },
+    teacher::{AssignMissionRequest, ClassGalleryItemResponse, TeacherClassResponse},
 };
 
 // ── Request-ID ────────────────────────────────────────────────────────────────
@@ -221,6 +223,7 @@ pub struct CreateHealthLogRequest {
         parent::approve_approval, parent::dismiss_approval,
         consents::grant_consent, consents::revoke_consent,
         classes::create_class, classes::join_class,
+        teacher::get_class, teacher::assign_mission, teacher::class_gallery,
         explore::list_explore, explore::get_explore,
         library::list_studios, library::list_courses, library::list_quick_makes,
         library::get_course, library::get_creator,
@@ -247,6 +250,7 @@ pub struct CreateHealthLogRequest {
         UpdateDisplayModeRequest, DisplayModeResponse,
         ParentApprovalResponse, ResolveApprovalRequest, ResolveApprovalResponse,
         CreateClassRequest, CreateClassResponse, JoinClassResponse,
+        TeacherClassResponse, ClassGalleryItemResponse, AssignMissionRequest,
         ExploreVideoResponse, ExplorePageResponse,
         StudioCountResponse, CourseSummaryResponse, QuickMakeResponse, QuickMakePageResponse,
         LessonResponse, CourseDetailResponse, CreatorResponse,
@@ -534,6 +538,10 @@ pub fn router_with_metrics(
         // Classes
         .route("/classes", post(classes::create_class))
         .route("/classes/:code/join", post(classes::join_class))
+        // Teacher class dashboard
+        .route("/teacher/class", get(teacher::get_class))
+        .route("/teacher/class/assign", post(teacher::assign_mission))
+        .route("/teacher/class/gallery", get(teacher::class_gallery))
         // Explore (any authenticated principal; restricted kids CAN read)
         .route("/explore", get(explore::list_explore))
         .route("/explore/:id", get(explore::get_explore))
@@ -664,6 +672,9 @@ impl AccountRepo for NullRepo {
         Ok(None)
     }
     async fn revoke_refresh_session(&self, _: Uuid) -> Result<(), DomainError> {
+        Ok(())
+    }
+    async fn expire_refresh_session(&self, _: Uuid, _: DateTime<Utc>) -> Result<(), DomainError> {
         Ok(())
     }
 }

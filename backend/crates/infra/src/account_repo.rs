@@ -222,6 +222,21 @@ impl AccountRepo for SqlxAccountRepo {
         .map_err(sqlx_to_domain)?;
         Ok(())
     }
+
+    async fn expire_refresh_session(
+        &self,
+        session_id: Uuid,
+        expires_at: chrono::DateTime<chrono::Utc>,
+    ) -> Result<(), DomainError> {
+        // Runtime query on purpose: keeps the .sqlx offline cache untouched.
+        sqlx::query("UPDATE refresh_sessions SET expires_at = $2 WHERE id = $1")
+            .bind(session_id)
+            .bind(expires_at)
+            .execute(&self.pool)
+            .await
+            .map_err(sqlx_to_domain)?;
+        Ok(())
+    }
 }
 
 // ── helper: DateTime<Utc> conversions ────────────────────────────────────────

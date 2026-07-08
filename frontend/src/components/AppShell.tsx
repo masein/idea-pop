@@ -7,7 +7,7 @@ import Logo from './Logo';
 import PenguinMascot from './PenguinMascot';
 import { AVATARS } from '@/lib/avatars';
 
-export type Section = 'profile' | 'explore' | 'library' | 'challenge';
+export type Section = 'profile' | 'explore' | 'library' | 'challenge' | 'studio';
 type Persona = 'kid' | 'parent' | 'teacher';
 
 // ── Route → active section / persona (works on the server via usePathname) ──────
@@ -16,6 +16,7 @@ function sectionFromPath(path: string): Section | undefined {
   if (path.startsWith('/explore')) return 'explore';
   if (path.startsWith('/library')) return 'library';
   if (path.startsWith('/challenge')) return 'challenge';
+  if (path.startsWith('/studio')) return 'studio';
   if (path.startsWith('/profile') || path.startsWith('/dashboard')) return 'profile';
   return undefined;
 }
@@ -40,6 +41,7 @@ const KID_NAV: NavItem[] = [
   { id: 'explore', label: 'Exploring', href: '/explore', activeClass: 'text-explore' },
   { id: 'library', label: 'Library', href: '/library', activeClass: 'text-library' },
   { id: 'challenge', label: 'Challenges', href: '/challenges', activeClass: 'text-challenge' },
+  { id: 'studio', label: 'AI Studio', href: '/studio/classify', activeClass: 'text-pricing' },
   { id: 'account', label: 'Account', href: '/profile', activeClass: 'text-ink' },
 ];
 
@@ -62,6 +64,7 @@ const sectionTint: Record<Section, string> = {
   explore: 'bg-tint-lime',
   library: 'bg-tint-cream',
   challenge: 'bg-tint-blue',
+  studio: 'bg-tint-lavender',
 };
 
 // ── Inline line icons ───────────────────────────────────────────────────────────
@@ -105,6 +108,16 @@ function NavIcon({ id, className }: { id: NavItem['id']; className?: string }) {
         <svg {...common}>
           <path d="M5 15c-1 2-1 4-1 4s2 0 4-1M14 4c3 1 6 4 6 6 0 3-4 7-8 9l-3-3c2-4 6-8 9-8" />
           <circle cx="15" cy="9" r="1.5" />
+        </svg>
+      );
+    case 'studio':
+      return (
+        <svg {...common}>
+          <rect x="5" y="8" width="14" height="10" rx="2" />
+          <path d="M12 8V5M9 5h6" />
+          <circle cx="9.5" cy="12.5" r="0.75" fill="currentColor" />
+          <circle cx="14.5" cy="12.5" r="0.75" fill="currentColor" />
+          <path d="M9.5 15.5h5" />
         </svg>
       );
     case 'account':

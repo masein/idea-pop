@@ -94,8 +94,9 @@ export async function createChild(data: {
 
 /** Verify consent token (parent arrives from email link). */
 export async function verifyConsent(token: string): Promise<void> {
-  const { error } = await apiClient.POST("/api/consent/verify", {
-    body: { token },
+  // The emailed consent token IS the grant credential (COPPA verifiable consent).
+  const { error } = await apiClient.POST("/api/consents/{token}/grant", {
+    params: { path: { token } },
   });
   if (error) throw new Error("Consent verification failed");
 }
@@ -247,7 +248,7 @@ export async function fetchChallenge(id: string) {
 }
 
 export async function startAttempt(challengeId: string) {
-  const { data, error } = await apiClient.POST("/api/challenges/{id}/attempt", {
+  const { data, error } = await apiClient.POST("/api/challenges/{id}/attempts", {
     params: { path: { id: challengeId } },
   });
   if (error) throw new Error("Failed to start attempt");

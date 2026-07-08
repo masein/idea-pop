@@ -35,13 +35,9 @@ export interface paths {
       };
     };
   };
-  "/api/consent/verify": {
+  "/api/consents/{token}/grant": {
     post: {
-      requestBody: {
-        content: {
-          "application/json": { token: string };
-        };
-      };
+      parameters: { path: { token: string } };
       responses: {
         200: { content: never };
       };
@@ -269,7 +265,7 @@ export interface paths {
       };
     };
   };
-  "/api/challenges/{id}/attempt": {
+  "/api/challenges/{id}/attempts": {
     post: {
       parameters: { path: { id: string } };
       responses: {

@@ -16,6 +16,10 @@ use crate::{
 const MIN_PASSWORD_LEN: usize = 8;
 const MAX_PASSWORD_LEN: usize = 72;
 const REFRESH_TTL_DAYS: i64 = 30;
+/// After rotation the OLD refresh token stays valid this long. A page reload
+/// can abort the refresh response after the server rotated — without a grace
+/// tail the browser keeps a dead cookie and the user is silently logged out.
+const ROTATION_GRACE_SECS: i64 = 60;
 const VERIFICATION_TTL_HOURS: i64 = 24;
 
 pub struct AuthService {
@@ -135,8 +139,12 @@ impl AuthService {
             ));
         }
 
-        // Rotate: revoke old, issue new session.
-        self.repo.revoke_refresh_session(session.id).await?;
+        // Rotate with a grace tail: the old session stays valid briefly so a
+        // client that never received the rotated cookie (aborted response,
+        // page reload) can retry. Logout still hard-revokes immediately.
+        self.repo
+            .expire_refresh_session(session.id, now + Duration::seconds(ROTATION_GRACE_SECS))
+            .await?;
 
         let account = self
             .repo
@@ -333,6 +341,18 @@ mod tests {
                 .find(|s| s.refresh_token_hash == hash)
                 .cloned())
         }
+        async fn expire_refresh_session(
+            &self,
+            session_id: Uuid,
+            expires_at: chrono::DateTime<Utc>,
+        ) -> Result<(), DomainError> {
+            let mut sessions = self.sessions.lock().unwrap();
+            if let Some(s) = sessions.iter_mut().find(|s| s.id == session_id) {
+                s.expires_at = expires_at;
+            }
+            Ok(())
+        }
+
         async fn revoke_refresh_session(&self, session_id: Uuid) -> Result<(), DomainError> {
             let mut sessions = self.sessions.lock().unwrap();
             if let Some(s) = sessions.iter_mut().find(|s| s.id == session_id) {
@@ -533,8 +553,8 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn refresh_token_rotation() {
-        let (_, _, svc) = make_service();
+    async fn refresh_token_rotation_with_grace_tail() {
+        let (repo, _, svc) = make_service();
         svc.register(
             "rot@example.com".into(),
             "password123".into(),
@@ -548,9 +568,26 @@ mod tests {
             .await
             .unwrap();
         let _pair2 = svc.refresh(pair1.refresh_token.clone()).await.unwrap();
-        // Old refresh token is now revoked
-        let err = svc.refresh(pair1.refresh_token).await.unwrap_err();
-        assert!(matches!(err, DomainError::Unauthorized(_)));
+
+        // The old session's lifetime was cut to the grace tail, not revoked:
+        // a client whose rotated cookie never arrived can still retry…
+        {
+            let sessions = repo.sessions.lock().unwrap();
+            let old = sessions
+                .iter()
+                .find(|s| s.refresh_token_hash == format!("sha256:{}", pair1.refresh_token))
+                .expect("old session kept");
+            assert!(old.revoked_at.is_none(), "rotation must not hard-revoke");
+            assert!(
+                old.expires_at <= Utc::now() + Duration::seconds(ROTATION_GRACE_SECS + 1),
+                "old session must expire within the grace tail"
+            );
+        }
+        // …so an immediate reuse of the old token still works (issues a fresh
+        // pair). Hard-revoke-on-logout is covered by the logout test.
+        svc.refresh(pair1.refresh_token.clone())
+            .await
+            .expect("reuse within the grace tail must succeed");
     }
 
     #[tokio::test]

@@ -263,7 +263,10 @@ async fn refresh_rotates_tokens() {
         .unwrap();
     assert_eq!(res.status(), StatusCode::OK);
 
-    // Using the old refresh token again should fail.
+    // Rotation keeps the old token alive for a short grace tail (60s), so an
+    // immediate reuse still succeeds — an aborted rotation response (page
+    // reload mid-refresh) must not permanently log the user out. Hard
+    // revocation is logout's job (covered in the logout test).
     let res = app
         .oneshot(
             Request::builder()
@@ -277,7 +280,7 @@ async fn refresh_rotates_tokens() {
         )
         .await
         .unwrap();
-    assert_eq!(res.status(), StatusCode::UNAUTHORIZED);
+    assert_eq!(res.status(), StatusCode::OK);
 }
 
 // ── Protected route & RBAC ────────────────────────────────────────────────────
@@ -494,8 +497,9 @@ async fn refresh_works_from_the_cookie_with_no_body() {
         .unwrap();
     assert_eq!(
         res.status(),
-        StatusCode::UNAUTHORIZED,
-        "old cookie is revoked"
+        StatusCode::OK,
+        "old cookie must still work within the 60s rotation grace tail \
+         (an aborted rotation response must not permanently log the user out)"
     );
 
     // No cookie and no body → 401 (never 415).

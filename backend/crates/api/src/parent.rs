@@ -38,6 +38,8 @@ pub struct ParentChildResponse {
     /// How the child is shown on shared content:
     /// avatar_nickname | first_name | anonymous.
     pub display_mode: String,
+    /// Whether the scoped AI mission helper is switched on for this child.
+    pub helper_enabled: bool,
 }
 
 #[derive(Serialize, ToSchema)]
@@ -81,7 +83,7 @@ pub async fn list_children(
     State(state): State<AppState>,
 ) -> Result<Json<Vec<ParentChildResponse>>, ApiError> {
     let rows = sqlx::query(
-        r#"SELECT c.id, c.nickname, c.avatar_id, c.birth_year, c.display_mode,
+        r#"SELECT c.id, c.nickname, c.avatar_id, c.birth_year, c.display_mode, c.helper_enabled,
                   COALESCE((SELECT SUM(amount) FROM xp_events WHERE child_id = c.id), 0) AS total_xp,
                   (SELECT status FROM parental_consents
                    WHERE child_id = c.id ORDER BY sent_at DESC LIMIT 1) AS consent_status
@@ -115,6 +117,7 @@ pub async fn list_children(
                 display_mode: r
                     .try_get("display_mode")
                     .unwrap_or_else(|_| "avatar_nickname".to_owned()),
+                helper_enabled: r.try_get("helper_enabled").unwrap_or(false),
             }
         })
         .collect();
@@ -268,7 +271,7 @@ pub async fn set_display_mode(
 }
 
 /// 404 if the child doesn't exist; 403 if it belongs to another parent.
-async fn assert_own_child(
+pub(crate) async fn assert_own_child(
     state: &AppState,
     parent_id: Uuid,
     child_id: Uuid,

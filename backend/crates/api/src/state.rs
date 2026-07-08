@@ -8,8 +8,8 @@ use sqlx::PgPool;
 use idea_pop_domain::{
     AccountRepo, AnalyticsSink, AuthService, BadgeRepo, ChallengeRepo, ChildRepo, ClassRepo, Clock,
     ConsentEmailSender, ConsentRepo, ConsentService, EmailSender, ExploreRepo, IdeaRepo,
-    LibraryRepo, ModerationRepo, PasswordHasher, PaymentGateway, PhotoStore, ProgressRepo,
-    ProjectRepo, ReportRepo, SubscriptionRepo, TokenIssuer, WebhookEventLog, XpRepo,
+    LibraryRepo, MissionHelperProvider, ModerationRepo, PasswordHasher, PaymentGateway, PhotoStore,
+    ProgressRepo, ProjectRepo, ReportRepo, SubscriptionRepo, TokenIssuer, WebhookEventLog, XpRepo,
 };
 
 pub type AuthRateLimiter = DefaultKeyedRateLimiter<std::net::IpAddr>;
@@ -41,6 +41,42 @@ pub struct BillingRepos {
     pub gateway: Arc<dyn PaymentGateway>,
 }
 
+/// Runtime config for the scoped mission helper (AI-helper-spec.md).
+/// `enabled` is the global dark-ship switch (MISSION_HELPER_ENABLED env);
+/// the per-child opt-in lives on child_profiles.helper_enabled.
+#[derive(Clone)]
+pub struct HelperConfig {
+    pub enabled: bool,
+    /// Per-child hourly cap on helper exchanges.
+    pub hourly_limit: i64,
+}
+
+impl Default for HelperConfig {
+    fn default() -> Self {
+        Self {
+            enabled: false, // ships dark
+            hourly_limit: 10,
+        }
+    }
+}
+
+/// A `MissionHelperProvider` that refuses everything — the safe default
+/// wired by `AppState::new` so tests and non-helper deployments need no
+/// provider at all (the feature-flag check rejects first anyway).
+struct DisabledHelperProvider;
+
+#[async_trait::async_trait]
+impl MissionHelperProvider for DisabledHelperProvider {
+    async fn answer(&self, _: &str, _: &str) -> Result<String, idea_pop_domain::DomainError> {
+        Err(idea_pop_domain::DomainError::Internal(
+            "mission helper provider not configured".into(),
+        ))
+    }
+    async fn moderate(&self, _: &str) -> Result<bool, idea_pop_domain::DomainError> {
+        Ok(false) // fail closed
+    }
+}
+
 #[derive(Clone)]
 pub struct AppState {
     pub db: PgPool,
@@ -53,6 +89,8 @@ pub struct AppState {
     pub gamification: GamificationRepos,
     pub portfolio: PortfolioRepos,
     pub billing: BillingRepos,
+    pub helper: Arc<dyn MissionHelperProvider>,
+    pub helper_config: HelperConfig,
 }
 
 impl AppState {
@@ -101,7 +139,21 @@ impl AppState {
             gamification,
             portfolio,
             billing,
+            helper: Arc::new(DisabledHelperProvider),
+            helper_config: HelperConfig::default(),
         }
+    }
+
+    /// Attach a real mission-helper provider + config (builder-style so the
+    /// many existing `AppState::new` call sites stay untouched).
+    pub fn with_mission_helper(
+        mut self,
+        provider: Arc<dyn MissionHelperProvider>,
+        config: HelperConfig,
+    ) -> Self {
+        self.helper = provider;
+        self.helper_config = config;
+        self
     }
 }
 

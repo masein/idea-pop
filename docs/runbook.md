@@ -277,3 +277,69 @@ If the consent gate unexpectedly passes RESTRICTED children through:
 2. Verify `parental_consents` table: `SELECT status, COUNT(*) FROM parental_consents GROUP BY status`
 3. The gate fails OPEN (allows through) on internal errors to avoid lockouts — this
    is intentional for availability. Investigate the underlying error.
+
+---
+
+## 9. AI unit + mission helper go-live
+
+### 9.1 Seeding / updating the AI missions (prod-safe)
+
+`seed_challenges()` upserts by slug (`ON CONFLICT (slug) DO UPDATE`), so re-running the seed
+**updates existing challenge rows in place** to the current authored content. Row ids never
+change, so FK references (`projects`, `challenge_attempts`, `challenge_ideas`,
+`help_messages`) are unaffected. **Never DELETE challenge rows on prod** — all three child
+tables cascade on delete.
+
+Run against production (operator only — needs the prod `DATABASE_URL`):
+
+```bash
+export DATABASE_URL="postgres://…production…"
+
+# 1. All migrations, including 20260708000013_mission_helper
+(cd backend && sqlx migrate run --source migrations)
+
+# 2. Seed/refresh reference content (idempotent; challenges upsert by slug)
+(cd backend && cargo run --release -p idea-pop-server --bin seed)
+```
+
+Expected output includes `challenges seeded (6 entries)`. Verify:
+
+```sql
+SELECT slug, season, week_number, is_premium,
+       jsonb_array_length(steps) AS steps
+FROM challenges ORDER BY season, week_number;
+-- 6 rows; weeks 3-6 are the AI missions, is_premium = f, 8 steps each
+```
+
+### 9.2 Mission-helper configuration
+
+| Variable | Where | Default | Meaning |
+|----------|-------|---------|---------|
+| `MISSION_HELPER_ENABLED` | server runtime | `false` | Master switch. `false` → helper route 404s (dark). |
+| `METIS_API_KEY` | server runtime | *(none — secret)* | Metis AI key. Without it the helper stays off even if enabled. |
+| `METIS_BASE_URL` | server runtime | `https://api.metisai.ir/openai/v1` | OpenAI-compatible base URL. |
+| `METIS_MODEL` | server runtime | `gpt-4o-mini` | Chat + moderation-classification model. |
+| `HELPER_HOURLY_LIMIT` | server runtime | `10` | Per-child exchanges per hour (blocked ones count). |
+| `HELP_MESSAGE_RETENTION_DAYS` | server runtime | *(unset = keep forever)* | Daily purge of transcripts older than N days. |
+| `NEXT_PUBLIC_MISSION_HELPER` | **frontend build** | unset (`false`) | Renders the helper UI. Baked in at `next build` — rebuild to change. |
+
+Even with every flag on, a child can use the helper only when BOTH hold:
+consent is `granted`/`class_granted` **and** the parent flipped the per-child
+"AI mission helper" toggle (off by default) in the parent dashboard.
+
+Retention can also run from cron instead of the built-in daily task:
+
+```sql
+DELETE FROM help_messages WHERE created_at < now() - interval '90 days';
+```
+
+### 9.3 Staging first (no legal sign-off needed)
+
+The helper can be exercised end-to-end in a **non-kid staging/preview
+environment** now: set the four server vars + rebuild the frontend with
+`NEXT_PUBLIC_MISSION_HELPER=true` on staging only, using test accounts.
+That validates Metis connectivity, moderation, logging, and the review
+feeds without exposing anything to children. Keep every flag **off in the
+production-for-kids environment** until the Metis data-retention terms are
+confirmed and the privacy policy is published (see
+`docs/privacy-mission-helper-draft.md`).

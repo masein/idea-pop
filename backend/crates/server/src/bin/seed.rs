@@ -1,7 +1,10 @@
 //! Idempotent seed binary — inserts reference content if not already present.
 //!
 //! Usage: DATABASE_URL=... cargo run -p idea-pop-server --bin seed
-//! All inserts use ON CONFLICT (slug) DO NOTHING so re-running is safe.
+//! Re-running is safe: reference content upserts by slug. Challenges use
+//! ON CONFLICT (slug) DO UPDATE so authored content changes (e.g. step hint
+//! text) reliably land on existing rows — updates never touch row ids, so
+//! FK references (projects, attempts, ideas, help_messages) are unaffected.
 
 #![forbid(unsafe_code)]
 #![allow(clippy::type_complexity)]
@@ -433,7 +436,9 @@ async fn seed_quick_makes(pool: &PgPool) -> anyhow::Result<()> {
 
 async fn seed_challenges(pool: &PgPool) -> anyhow::Result<()> {
     // Each challenge is a full 8-step mission stored as JSONB.
-    // ON CONFLICT (slug) DO NOTHING makes re-runs idempotent.
+    // ON CONFLICT (slug) DO UPDATE keeps re-runs idempotent AND authoritative:
+    // existing rows get the current authored content (ids preserved — never
+    // delete challenge rows; children's projects/attempts reference them).
 
     // (slug, title, season, week, steps, tools, variants, is_premium)
     let challenges: &[(&str, &str, i16, i16, &str, &str, &str, bool)] = &[
@@ -623,7 +628,15 @@ async fn seed_challenges(pool: &PgPool) -> anyhow::Result<()> {
             r#"INSERT INTO challenges
                (title, slug, season, week_number, xp_reward, steps, tools, age_tier_variants, is_premium)
                VALUES ($1, $2, $3, $4, 20, $5, $6, $7, $8)
-               ON CONFLICT (slug) DO NOTHING"#,
+               ON CONFLICT (slug) DO UPDATE
+               SET title = EXCLUDED.title,
+                   season = EXCLUDED.season,
+                   week_number = EXCLUDED.week_number,
+                   xp_reward = EXCLUDED.xp_reward,
+                   steps = EXCLUDED.steps,
+                   tools = EXCLUDED.tools,
+                   age_tier_variants = EXCLUDED.age_tier_variants,
+                   is_premium = EXCLUDED.is_premium"#,
         )
         .bind(title)
         .bind(slug)

@@ -2,6 +2,10 @@
 
 import { useState } from 'react';
 import MissionHints from './MissionHints';
+import MissionHelper from './MissionHelper';
+
+// Dark-launch flag for the scoped AI helper (server enforces the real gates).
+const HELPER_ON = process.env.NEXT_PUBLIC_MISSION_HELPER === 'true';
 
 type ChallengeDetail = import('@/lib/api/schema').components['schemas']['ChallengeDetail'];
 
@@ -62,6 +66,8 @@ export default function StepSkill({
       )}
 
       <MissionHints hints={challenge.skill_hints ?? []} />
+
+      {HELPER_ON && <MissionHelper challengeId={challenge.id} step={5} />}
 
       {toastVisible && (
         <div

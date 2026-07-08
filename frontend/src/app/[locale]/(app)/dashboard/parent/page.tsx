@@ -17,6 +17,7 @@ import {
   approveParentItem,
   dismissParentItem,
   setChildDisplayMode,
+  setChildHelperEnabled,
 } from '@/lib/api/client';
 import { AVATARS } from '@/lib/avatars';
 import type { components } from '@/lib/api/schema';
@@ -181,6 +182,20 @@ export default function ParentDashboardPage() {
       else await dismissParentItem(item.id, item.kind);
     } catch {
       setApprovals(previous); // revert on failure
+    }
+  }
+
+  async function handleToggleHelper(child: ParentChild) {
+    const next = !child.helper_enabled;
+    setChildren((prev) =>
+      prev.map((c) => (c.id === child.id ? { ...c, helper_enabled: next } : c)),
+    );
+    try {
+      await setChildHelperEnabled(child.id, next);
+    } catch {
+      setChildren((prev) =>
+        prev.map((c) => (c.id === child.id ? { ...c, helper_enabled: !next } : c)),
+      );
     }
   }
 
@@ -546,6 +561,13 @@ export default function ParentDashboardPage() {
                 testid="toggle-class-sharing"
                 ariaLabel={`Class sharing for ${child.nickname}`}
                 onToggle={() => handleToggleClass(child)}
+              />
+              <SafetyToggle
+                label="AI mission helper 🤖"
+                checked={child.helper_enabled}
+                testid="toggle-mission-helper"
+                ariaLabel={`AI mission helper for ${child.nickname}`}
+                onToggle={() => handleToggleHelper(child)}
               />
               <div className="flex items-center justify-between gap-3">
                 <span className="font-body text-sm text-ink">Show my child as</span>

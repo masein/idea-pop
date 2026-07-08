@@ -467,6 +467,30 @@ export interface paths {
       };
     };
   };
+  "/api/challenges/{id}/steps/{step}/help": {
+    post: {
+      parameters: { path: { id: string; step: number } };
+      requestBody: {
+        content: { "application/json": { question: string } };
+      };
+      responses: {
+        200: {
+          content: { "application/json": { answer: string; blocked: boolean } };
+        };
+      };
+    };
+  };
+  "/api/parent/children/{id}/helper": {
+    put: {
+      parameters: { path: { id: string } };
+      requestBody: {
+        content: { "application/json": { enabled: boolean } };
+      };
+      responses: {
+        200: { content: { "application/json": { child_id: string; enabled: boolean } } };
+      };
+    };
+  };
   "/api/parent/children/{id}/display-mode": {
     put: {
       parameters: { path: { id: string } };
@@ -864,6 +888,7 @@ export interface components {
       class_sharing_enabled: boolean;
       public_sharing_enabled: boolean;
       display_mode: "avatar_nickname" | "first_name" | "anonymous";
+      helper_enabled: boolean;
     };
     ParentApproval: {
       id: string;

@@ -17,6 +17,7 @@ mod classes;
 mod consents;
 pub mod explore;
 mod help;
+pub use help::purge_expired_help_messages;
 pub mod library;
 mod me;
 mod parent;

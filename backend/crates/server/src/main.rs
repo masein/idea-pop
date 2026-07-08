@@ -186,6 +186,31 @@ async fn main() -> anyhow::Result<()> {
         _ => state,
     };
 
+    // help_messages retention: with HELP_MESSAGE_RETENTION_DAYS set (> 0),
+    // purge transcripts older than the window once a day. Unset → keep
+    // forever (backward-safe); the same purge is runnable from cron as SQL.
+    if let Some(days) = std::env::var("HELP_MESSAGE_RETENTION_DAYS")
+        .ok()
+        .and_then(|v| v.parse::<i64>().ok())
+        .filter(|d| *d > 0)
+    {
+        let purge_pool = state.db.clone();
+        tokio::spawn(async move {
+            let mut tick = tokio::time::interval(std::time::Duration::from_secs(24 * 60 * 60));
+            loop {
+                tick.tick().await;
+                match api::purge_expired_help_messages(&purge_pool, days).await {
+                    Ok(n) if n > 0 => {
+                        tracing::info!("purged {n} help_messages older than {days} days");
+                    }
+                    Ok(_) => {}
+                    Err(e) => tracing::error!("help_messages retention purge failed: {e}"),
+                }
+            }
+        });
+        tracing::info!("help_messages retention active: {days} days");
+    }
+
     let auth_rpm: u32 = std::env::var("AUTH_RATE_LIMIT_RPM")
         .ok()
         .and_then(|v| v.parse().ok())

@@ -379,3 +379,28 @@ pub async fn set_helper_enabled(
         enabled: body.enabled,
     }))
 }
+
+// ── Retention purge ───────────────────────────────────────────────────────────
+
+/// Delete `help_messages` rows older than `retention_days`. Returns the number
+/// of rows purged. Called by the server's daily retention task when
+/// HELP_MESSAGE_RETENTION_DAYS is set; with the var unset nothing is ever
+/// purged (backward-safe default). Also runnable as plain SQL from cron —
+/// see docs/runbook.md.
+pub async fn purge_expired_help_messages(
+    pool: &sqlx::PgPool,
+    retention_days: i64,
+) -> Result<u64, DomainError> {
+    if retention_days <= 0 {
+        return Ok(0);
+    }
+    let result = sqlx::query(
+        "DELETE FROM help_messages
+         WHERE created_at < now() - make_interval(days => $1::int)",
+    )
+    .bind(retention_days)
+    .execute(pool)
+    .await
+    .map_err(internal)?;
+    Ok(result.rows_affected())
+}

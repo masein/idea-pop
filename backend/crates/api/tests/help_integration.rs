@@ -436,3 +436,62 @@ async fn teacher_feed_lists_only_own_class_children() {
         .unwrap();
     assert_eq!(res.status(), StatusCode::FORBIDDEN);
 }
+
+#[tokio::test]
+async fn retention_purge_deletes_only_expired_transcripts() {
+    let (pool, _pg) = start_postgres().await;
+    let app = router(helper_state(pool.clone(), 10), None);
+
+    let email = "retention-parent@test.com";
+    let parent = register_adult(&app, email, "parent").await;
+    let (child_id, _) = create_child(&app, &parent, email).await;
+    grant_consent(&pool, child_id).await;
+    let challenge = seed_challenge(&pool, "bridge-retention").await;
+
+    // Two expired rows (40 days old) and one fresh row.
+    for question in ["old one", "old two"] {
+        sqlx::query(
+            "INSERT INTO help_messages (child_id, challenge_id, step, question, answer, blocked, created_at)
+             VALUES ($1, $2, 2, $3, 'a', false, now() - interval '40 days')",
+        )
+        .bind(child_id)
+        .bind(challenge)
+        .bind(question)
+        .execute(&pool)
+        .await
+        .unwrap();
+    }
+    sqlx::query(
+        "INSERT INTO help_messages (child_id, challenge_id, step, question, answer, blocked)
+         VALUES ($1, $2, 2, 'fresh', 'a', false)",
+    )
+    .bind(child_id)
+    .bind(challenge)
+    .execute(&pool)
+    .await
+    .unwrap();
+
+    // 30-day window → the two 40-day-old rows go, the fresh one stays.
+    let purged = idea_pop_api::purge_expired_help_messages(&pool, 30)
+        .await
+        .unwrap();
+    assert_eq!(purged, 2);
+    let remaining: Vec<String> =
+        sqlx::query_scalar("SELECT question FROM help_messages WHERE child_id = $1")
+            .bind(child_id)
+            .fetch_all(&pool)
+            .await
+            .unwrap();
+    assert_eq!(remaining, vec!["fresh".to_owned()]);
+
+    // Zero / negative window is a no-op (retention disabled — keep forever).
+    let purged = idea_pop_api::purge_expired_help_messages(&pool, 0)
+        .await
+        .unwrap();
+    assert_eq!(purged, 0);
+    let count: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM help_messages")
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+    assert_eq!(count, 1);
+}

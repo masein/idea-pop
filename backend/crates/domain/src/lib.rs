@@ -12,6 +12,7 @@ pub mod challenge;
 pub mod child;
 pub mod consent_service;
 pub mod content;
+pub mod help;
 pub mod portfolio;
 pub mod ports;
 pub mod progress;
@@ -42,8 +43,8 @@ pub use portfolio::{
 pub use ports::{
     AccountRepo, AnalyticsSink, BadgeRepo, ChallengeRepo, ChildRepo, ClassRepo, Clock,
     ConsentEmailSender, ConsentRepo, EmailSender, ExploreRepo, IdeaRepo, LibraryRepo,
-    ModerationRepo, PasswordHasher, PaymentGateway, PhotoStore, ProgressRepo, ProjectRepo,
-    ReportRepo, SubscriptionRepo, TokenIssuer, WebhookEventLog, XpRepo,
+    MissionHelperProvider, ModerationRepo, PasswordHasher, PaymentGateway, PhotoStore,
+    ProgressRepo, ProjectRepo, ReportRepo, SubscriptionRepo, TokenIssuer, WebhookEventLog, XpRepo,
 };
 pub use progress::{
     award_cycle_bonus, award_explore, award_learn, award_solve, compute_snapshot,

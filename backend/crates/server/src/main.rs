@@ -9,15 +9,15 @@ use std::{net::SocketAddr, sync::Arc};
 
 use api::{
     create_auth_rate_limiter, metrics_exporter_prometheus, router_with_metrics, AppState,
-    BillingRepos, GamificationRepos, PortfolioRepos,
+    BillingRepos, GamificationRepos, HelperConfig, PortfolioRepos,
 };
 use idea_pop_infra::{
-    Argon2Hasher, JwtTokenIssuer, LettreEmailSender, NullConsentEmailSender, NullEmailSender,
-    S3PhotoStore, SmtpConsentEmailSender, SqlxAccountRepo, SqlxAnalyticsSink, SqlxBadgeRepo,
-    SqlxChallengeRepo, SqlxChildRepo, SqlxClassRepo, SqlxConsentRepo, SqlxExploreRepo,
-    SqlxIdeaRepo, SqlxLibraryRepo, SqlxModerationRepo, SqlxProgressRepo, SqlxProjectRepo,
-    SqlxReportRepo, SqlxSubscriptionRepo, SqlxWebhookEventLog, SqlxXpRepo, StripePaymentGateway,
-    SystemClock,
+    Argon2Hasher, JwtTokenIssuer, LettreEmailSender, MetisHelperProvider, NullConsentEmailSender,
+    NullEmailSender, S3PhotoStore, SmtpConsentEmailSender, SqlxAccountRepo, SqlxAnalyticsSink,
+    SqlxBadgeRepo, SqlxChallengeRepo, SqlxChildRepo, SqlxClassRepo, SqlxConsentRepo,
+    SqlxExploreRepo, SqlxIdeaRepo, SqlxLibraryRepo, SqlxModerationRepo, SqlxProgressRepo,
+    SqlxProjectRepo, SqlxReportRepo, SqlxSubscriptionRepo, SqlxWebhookEventLog, SqlxXpRepo,
+    StripePaymentGateway, SystemClock,
 };
 
 #[tokio::main]
@@ -153,6 +153,38 @@ async fn main() -> anyhow::Result<()> {
         portfolio,
         billing,
     );
+
+    // Scoped AI mission helper — ships dark (MISSION_HELPER_ENABLED=false by
+    // default). The Metis key is server-side only; without a key the flag
+    // stays off regardless.
+    let helper_enabled = std::env::var("MISSION_HELPER_ENABLED").as_deref() == Ok("true");
+    let metis_key = std::env::var("METIS_API_KEY").ok();
+    let state = match (helper_enabled, metis_key) {
+        (true, Some(key)) => {
+            let base_url = std::env::var("METIS_BASE_URL")
+                .unwrap_or_else(|_| "https://api.metisai.ir/openai/v1".into());
+            let model = std::env::var("METIS_MODEL").unwrap_or_else(|_| "gpt-4o-mini".into());
+            let hourly_limit: i64 = std::env::var("HELPER_HOURLY_LIMIT")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(10);
+            tracing::info!("mission helper enabled (model {model})");
+            state.with_mission_helper(
+                Arc::new(MetisHelperProvider::new(base_url, key, model)),
+                HelperConfig {
+                    enabled: true,
+                    hourly_limit,
+                },
+            )
+        }
+        (true, None) => {
+            tracing::warn!(
+                "MISSION_HELPER_ENABLED=true but METIS_API_KEY missing; helper stays off"
+            );
+            state
+        }
+        _ => state,
+    };
 
     let auth_rpm: u32 = std::env::var("AUTH_RATE_LIMIT_RPM")
         .ok()

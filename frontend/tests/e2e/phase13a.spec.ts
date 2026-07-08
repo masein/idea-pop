@@ -41,6 +41,9 @@ function mockChallengeAPIs(page: import('@playwright/test').Page) {
   page.route('**/api/challenges/ch-1/attempt', (r) =>
     r.fulfill({ json: { attempt_id: 'att-1', current_step: 1 } })
   );
+  page.route('**/api/challenges/ch-1/steps/*/help', (r) =>
+    r.fulfill({ json: { answer: 'Try one coin first — does it hold? 🐧', blocked: false } })
+  );
   page.route('**/api/attempts/att-1/step', (r) => r.fulfill({ json: {} }));
   page.route('**/api/projects', (r) =>
     r.fulfill({ json: { id: 'proj-1', title: 'My bridge' } })
@@ -76,7 +79,7 @@ function mockParentAPIs(page: import('@playwright/test').Page) {
       json: [{
         id: 'child-1', nickname: 'Pixel', avatar_id: 'penguin', birth_year: 2015,
         level: 2, total_xp: 85, consent_granted: true, class_sharing_enabled: false, public_sharing_enabled: false,
-        display_mode: 'avatar_nickname',
+        display_mode: 'avatar_nickname', helper_enabled: false,
       }],
     })
   );
@@ -302,6 +305,30 @@ test.describe('axe — app pages', () => {
     await expect(page.getByTestId('hint-item-1')).toBeVisible();
     await expect(page.getByTestId('hints-done')).toBeVisible();
     await expect(page.getByTestId('hint-reveal-btn')).toHaveCount(0);
+
+    const results = await new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
+      .analyze();
+    expect(results.violations).toEqual([]);
+  });
+
+  test('mission helper passes axe when open with an answer', async ({ page }) => {
+    await setCookie(page, 'ideapop_persona', 'kid');
+    mockChallengeAPIs(page);
+    await page.goto('/en/challenges/ch-1');
+    // Walk the "yes, I have an idea" fork to Build & test (step 7).
+    await page.getByTestId('step-brief').getByRole('button').first().click();
+    await page.getByTestId('idea-yes').click();
+    await page.getByTestId('field-title').fill('My bridge');
+    await page.getByTestId('field-used').fill('Sticks and tape');
+    await page.getByRole('button', { name: /save my idea/i }).click();
+    await page.getByTestId('step-build').waitFor();
+
+    await expect(page.getByTestId('mission-helper')).toBeVisible();
+    await page.getByTestId('helper-toggle').click();
+    await page.getByTestId('helper-question-input').fill('Why does my bridge fall?');
+    await page.getByTestId('helper-ask-btn').click();
+    await expect(page.getByTestId('helper-answer')).toContainText('Try one coin first');
 
     const results = await new AxeBuilder({ page })
       .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])

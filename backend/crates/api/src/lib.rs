@@ -16,6 +16,7 @@ mod children;
 mod classes;
 mod consents;
 pub mod explore;
+mod help;
 pub mod library;
 mod me;
 mod parent;
@@ -23,7 +24,7 @@ mod parent;
 pub use error::{ApiError, ProblemDetail};
 pub use state::{
     create_auth_rate_limiter, AppState, AuthRateLimiter, BillingRepos, GamificationRepos,
-    PortfolioRepos,
+    HelperConfig, PortfolioRepos,
 };
 
 use std::{net::IpAddr, sync::Arc, time::Duration};
@@ -61,6 +62,10 @@ use crate::{
     children::{CreateChildRequest, CreateChildResponse, UpgradeRequestResponse},
     classes::{CreateClassRequest, CreateClassResponse, JoinClassResponse},
     explore::{ExplorePageResponse, ExploreVideoResponse},
+    help::{
+        HelpMessageResponse, HelpRequest, HelpResponse, HelperEnabledResponse,
+        UpdateHelperEnabledRequest,
+    },
     library::{
         CourseDetailResponse, CourseSummaryResponse, CreatorResponse, LessonResponse,
         QuickMakePageResponse, QuickMakeResponse, StudioCountResponse,
@@ -219,6 +224,8 @@ pub struct CreateHealthLogRequest {
         library::list_studios, library::list_courses, library::list_quick_makes,
         library::get_course, library::get_creator,
         challenges::list_challenges, challenges::get_challenge,
+        help::ask_helper, help::parent_help_messages,
+        help::teacher_help_messages, help::set_helper_enabled,
         progress::post_video_view, progress::post_lesson_complete,
         progress::start_attempt, progress::advance_step,
         progress::get_me_progress,
@@ -243,6 +250,8 @@ pub struct CreateHealthLogRequest {
         StudioCountResponse, CourseSummaryResponse, QuickMakeResponse, QuickMakePageResponse,
         LessonResponse, CourseDetailResponse, CreatorResponse,
         ChallengeResponse, ChallengePageResponse, AgeTierVariantResponse, ToolResponse,
+        HelpRequest, HelpResponse, HelpMessageResponse,
+        UpdateHelperEnabledRequest, HelperEnabledResponse,
         VideoViewRequest, LessonCompleteRequest, XpAwardResponse,
         StartAttemptResponse, AdvanceStepRequest, AdvanceStepResponse,
         ProgressResponse, MedalsResponse, BadgeResponse,
@@ -535,6 +544,17 @@ pub fn router_with_metrics(
         // Challenges (any authenticated principal; restricted kids CAN read)
         .route("/challenges", get(challenges::list_challenges))
         .route("/challenges/:id", get(challenges::get_challenge))
+        // Scoped AI mission helper (kid-scoped; flag+consent+opt-in gated)
+        .route("/challenges/:id/steps/:step/help", post(help::ask_helper))
+        .route(
+            "/parent/children/:id/help-messages",
+            get(help::parent_help_messages),
+        )
+        .route(
+            "/parent/children/:id/helper",
+            axum::routing::put(help::set_helper_enabled),
+        )
+        .route("/teacher/help-messages", get(help::teacher_help_messages))
         // Progress (kid-scoped tokens only — child_id derived from JWT)
         .route("/progress/video-view", post(progress::post_video_view))
         .route(

@@ -384,3 +384,17 @@ pub trait PaymentGateway: Send + Sync {
         signature_header: &str,
     ) -> Result<(), DomainError>;
 }
+
+/// LLM provider for the scoped mission helper (AI-helper-spec.md).
+///
+/// Implementations MUST keep the API key server-side; the browser never
+/// talks to the model provider. `moderate` returns `true` when the text is
+/// SAFE for an 8–12 audience; implementations must fail CLOSED (unsafe)
+/// when the verdict cannot be determined.
+#[async_trait]
+pub trait MissionHelperProvider: Send + Sync {
+    /// One scoped exchange: constrained system prompt + the child's question.
+    async fn answer(&self, system_prompt: &str, question: &str) -> Result<String, DomainError>;
+    /// Safety classification: Ok(true) = safe, Ok(false) = block.
+    async fn moderate(&self, text: &str) -> Result<bool, DomainError>;
+}

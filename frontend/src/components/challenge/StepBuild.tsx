@@ -4,6 +4,10 @@ import { useState } from 'react';
 import CaptureCard, { type CaptureData } from './CaptureCard';
 import ClassifierPanel from '@/components/ai/ClassifierPanel';
 import MissionHints from './MissionHints';
+import MissionHelper from './MissionHelper';
+
+// Dark-launch flag for the scoped AI helper (server enforces the real gates).
+const HELPER_ON = process.env.NEXT_PUBLIC_MISSION_HELPER === 'true';
 import { createProject } from '@/lib/api/client';
 
 // Missions whose Build & test step embeds the on-device Machine Trainer.
@@ -103,8 +107,9 @@ export default function StepBuild({
         </div>
       )}
 
-      <div className="mb-4">
+      <div className="mb-4 flex flex-col gap-4">
         <MissionHints hints={challenge.build_hints ?? []} />
+        {HELPER_ON && <MissionHelper challengeId={challenge.id} step={7} />}
       </div>
 
       {/* Test question card */}

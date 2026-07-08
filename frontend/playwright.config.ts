@@ -35,5 +35,9 @@ export default defineConfig({
         url: "http://localhost:3000",
         reuseExistingServer: true,
         timeout: 120_000,
+        env: {
+          // Dark-launch flag: on for e2e so the mission-helper UI is testable.
+          NEXT_PUBLIC_MISSION_HELPER: "true",
+        },
       },
 });

@@ -240,6 +240,51 @@ export async function advanceStep(attemptId: string, step: number) {
   return data;
 }
 
+/**
+ * Ask the scoped mission helper about the current step. Only the typed
+ * question leaves the browser — the server owns the model key, moderation,
+ * logging, and all gating. Throws Errors with a `code` of
+ * 'rate_limited' | 'not_allowed' | 'unavailable' for UI-specific messages.
+ */
+export async function askMissionHelper(
+  challengeId: string,
+  step: number,
+  question: string
+): Promise<{ answer: string; blocked: boolean }> {
+  const { data, error, response } = await apiClient.POST(
+    "/api/challenges/{id}/steps/{step}/help",
+    {
+      params: { path: { id: challengeId, step } },
+      body: { question },
+    }
+  );
+  if (response.status === 429) {
+    const e = new Error("rate_limited");
+    (e as Error & { code: string }).code = "rate_limited";
+    throw e;
+  }
+  if (response.status === 403 || response.status === 404) {
+    const e = new Error("not_allowed");
+    (e as Error & { code: string }).code = "not_allowed";
+    throw e;
+  }
+  if (error || !data) {
+    const e = new Error("unavailable");
+    (e as Error & { code: string }).code = "unavailable";
+    throw e;
+  }
+  return data;
+}
+
+export async function setChildHelperEnabled(childId: string, enabled: boolean) {
+  const { data, error } = await apiClient.PUT("/api/parent/children/{id}/helper", {
+    params: { path: { id: childId } },
+    body: { enabled },
+  });
+  if (error) throw new Error("Failed to update helper toggle");
+  return data;
+}
+
 // ── Projects ──────────────────────────────────────────────────────────────────
 
 export async function createProject(body: {

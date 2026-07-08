@@ -804,5 +804,20 @@
     "hint_label": "Hint {number}",
     "big_hint_label": "The big hint 🎁",
     "all_shown": "That's every hint — you've got this! 💪"
+  },
+  "helper": {
+    "toggle": "Ask the mission helper 🤖",
+    "intro": "Stuck on this step? Ask the helper a question — it only knows about this mission step.",
+    "privacy": "A grown-up can always read your questions and answers.",
+    "input_label": "Your question about this step",
+    "placeholder": "e.g. Why does my bridge keep falling?",
+    "send": "Ask",
+    "thinking": "Thinking…",
+    "answer_label": "Helper says",
+    "blocked": "I can only help with this mission step! Let's get back to it — what part are you working on? 🐧",
+    "rate_limited": "That's a lot of questions! The helper needs a little rest — try again soon. ⏳",
+    "not_allowed": "The helper isn't switched on for you yet — ask a grown-up to turn it on. 🗝️",
+    "error": "Hmm, the helper couldn't answer right now. Try again in a moment!",
+    "ask_another": "Ask another question"
   }
 }

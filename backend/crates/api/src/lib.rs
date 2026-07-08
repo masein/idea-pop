@@ -212,7 +212,7 @@ pub struct CreateHealthLogRequest {
     paths(
         health, readyz, example_gated_share,
         create_health_log, list_health_log,
-        auth::register, auth::login, auth::refresh, auth::verify_email,
+        auth::register, auth::login, auth::refresh, auth::logout, auth::verify_email,
         me::me,
         account::get_email_preferences, account::put_email_preferences,
         children::create_child, children::request_premium_unlock,
@@ -404,6 +404,7 @@ pub fn router_with_metrics(
             .route("/auth/register", post(auth::register))
             .route("/auth/login", post(auth::login))
             .route("/auth/refresh", post(auth::refresh))
+            .route("/auth/logout", post(auth::logout))
             .route("/auth/verify-email", post(auth::verify_email))
             .with_state(state.clone());
         if let Some(limiter) = rate_limiter {

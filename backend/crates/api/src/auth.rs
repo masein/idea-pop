@@ -1,13 +1,61 @@
-//! Auth route handlers: register, login, refresh, verify-email.
+//! Auth route handlers: register, login, refresh, logout, verify-email.
+//!
+//! Refresh-token contract: the refresh token travels in an httpOnly cookie
+//! (`ideapop_refresh`) set on login/register, rotated on refresh, cleared on
+//! logout — the browser never exposes it to JS. `/auth/refresh` therefore
+//! accepts an EMPTY POST (cookie only); a JSON `{refresh_token}` body is
+//! still honoured as a fallback for non-browser API clients. The `Secure`
+//! attribute is env-gated (COOKIE_SECURE) so plain-http localhost works.
 
-use axum::{extract::State, http::StatusCode, Json};
+use axum::{
+    body::Bytes,
+    extract::State,
+    http::{header, HeaderMap, StatusCode},
+    response::{AppendHeaders, IntoResponse},
+    Json,
+};
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 use validator::Validate;
 
-use idea_pop_domain::Role;
+use idea_pop_domain::{DomainError, Role};
 
 use crate::{error::ApiError, state::AppState};
+
+// ── Refresh cookie ───────────────────────────────────────────────────────────
+
+pub const REFRESH_COOKIE: &str = "ideapop_refresh";
+/// Matches the domain's REFRESH_TTL_DAYS (30 days).
+const REFRESH_COOKIE_MAX_AGE_SECS: i64 = 30 * 24 * 60 * 60;
+
+/// Path=/ so the cookie also matches when the API is consumed through the
+/// frontend's same-origin `/api/*` rewrite (browser path differs from ours).
+fn set_refresh_cookie(token: &str, secure: bool) -> String {
+    format!(
+        "{REFRESH_COOKIE}={token}; Path=/; Max-Age={REFRESH_COOKIE_MAX_AGE_SECS}; HttpOnly; SameSite=Lax{}",
+        if secure { "; Secure" } else { "" }
+    )
+}
+
+fn clear_refresh_cookie(secure: bool) -> String {
+    format!(
+        "{REFRESH_COOKIE}=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax{}",
+        if secure { "; Secure" } else { "" }
+    )
+}
+
+fn refresh_token_from_cookie(headers: &HeaderMap) -> Option<String> {
+    let prefix = format!("{REFRESH_COOKIE}=");
+    headers
+        .get_all(header::COOKIE)
+        .iter()
+        .filter_map(|v| v.to_str().ok())
+        .flat_map(|line| line.split(';'))
+        .map(str::trim)
+        .find_map(|kv| kv.strip_prefix(prefix.as_str()))
+        .filter(|t| !t.is_empty())
+        .map(str::to_owned)
+}
 
 // ── DTOs ─────────────────────────────────────────────────────────────────────
 
@@ -32,6 +80,7 @@ pub struct LoginRequest {
     pub password: String,
 }
 
+/// Body fallback for API clients that don't use the refresh cookie.
 #[derive(Debug, Deserialize, ToSchema)]
 pub struct RefreshRequest {
     pub refresh_token: String,
@@ -62,6 +111,7 @@ pub struct TokenResponse {
 // ── Handlers ─────────────────────────────────────────────────────────────────
 
 /// Register a new account and return an initial token pair.
+/// Also sets the httpOnly refresh cookie.
 #[utoipa::path(
     post,
     path = "/auth/register",
@@ -76,7 +126,7 @@ pub struct TokenResponse {
 pub async fn register(
     State(state): State<AppState>,
     Json(body): Json<RegisterRequest>,
-) -> Result<(StatusCode, Json<AuthResponse>), ApiError> {
+) -> Result<impl IntoResponse, ApiError> {
     body.validate()?;
 
     let role = body
@@ -110,6 +160,10 @@ pub async fn register(
 
     Ok((
         StatusCode::CREATED,
+        AppendHeaders([(
+            header::SET_COOKIE,
+            set_refresh_cookie(&pair.refresh_token, state.cookie_secure),
+        )]),
         Json(AuthResponse {
             account_id: account.id.to_string(),
             role: account.role.as_str().to_owned(),
@@ -121,7 +175,7 @@ pub async fn register(
     ))
 }
 
-/// Authenticate and receive a token pair.
+/// Authenticate and receive a token pair. Also sets the httpOnly refresh cookie.
 #[utoipa::path(
     post,
     path = "/auth/login",
@@ -136,40 +190,97 @@ pub async fn register(
 pub async fn login(
     State(state): State<AppState>,
     Json(body): Json<LoginRequest>,
-) -> Result<Json<AuthResponse>, ApiError> {
+) -> Result<impl IntoResponse, ApiError> {
     body.validate()?;
     let (account, pair) = state.auth.login(body.email, body.password).await?;
-    Ok(Json(AuthResponse {
-        account_id: account.id.to_string(),
-        role: account.role.as_str().to_owned(),
-        email_verified: account.is_email_verified(),
-        access_token: pair.access_token,
-        refresh_token: pair.refresh_token,
-        expires_in: pair.expires_in,
-    }))
+    Ok((
+        AppendHeaders([(
+            header::SET_COOKIE,
+            set_refresh_cookie(&pair.refresh_token, state.cookie_secure),
+        )]),
+        Json(AuthResponse {
+            account_id: account.id.to_string(),
+            role: account.role.as_str().to_owned(),
+            email_verified: account.is_email_verified(),
+            access_token: pair.access_token,
+            refresh_token: pair.refresh_token,
+            expires_in: pair.expires_in,
+        }),
+    ))
 }
 
-/// Exchange a refresh token for a new token pair (rotates the session).
+/// Rotate the refresh session and return a new token pair.
+///
+/// The refresh token is read from the `ideapop_refresh` httpOnly cookie
+/// (browser flow — an EMPTY POST is valid), falling back to a JSON
+/// `{refresh_token}` body for API clients. Never 415s.
 #[utoipa::path(
     post,
     path = "/auth/refresh",
     tag = "auth",
-    request_body = RefreshRequest,
+    request_body(content = RefreshRequest, description = "Optional — cookie is preferred"),
     responses(
-        (status = 200, description = "Tokens rotated", body = TokenResponse),
-        (status = 401, description = "Invalid or expired refresh token"),
+        (status = 200, description = "Tokens rotated; refresh cookie reset", body = TokenResponse),
+        (status = 401, description = "Missing, invalid, or expired refresh token"),
     )
 )]
 pub async fn refresh(
     State(state): State<AppState>,
-    Json(body): Json<RefreshRequest>,
-) -> Result<Json<TokenResponse>, ApiError> {
-    let pair = state.auth.refresh(body.refresh_token).await?;
-    Ok(Json(TokenResponse {
-        access_token: pair.access_token,
-        refresh_token: pair.refresh_token,
-        expires_in: pair.expires_in,
-    }))
+    headers: HeaderMap,
+    body: Bytes,
+) -> Result<impl IntoResponse, ApiError> {
+    // Cookie first (browser flow), then the optional JSON body (API clients).
+    let token = refresh_token_from_cookie(&headers).or_else(|| {
+        serde_json::from_slice::<RefreshRequest>(&body)
+            .ok()
+            .map(|r| r.refresh_token)
+    });
+    let Some(token) = token else {
+        return Err(DomainError::Unauthorized("missing refresh token".into()).into());
+    };
+
+    let pair = state.auth.refresh(token).await?;
+    Ok((
+        AppendHeaders([(
+            header::SET_COOKIE,
+            set_refresh_cookie(&pair.refresh_token, state.cookie_secure),
+        )]),
+        Json(TokenResponse {
+            access_token: pair.access_token,
+            refresh_token: pair.refresh_token,
+            expires_in: pair.expires_in,
+        }),
+    ))
+}
+
+/// Revoke the current refresh session and clear the refresh cookie.
+/// Idempotent: succeeds even when no valid session exists.
+#[utoipa::path(
+    post,
+    path = "/auth/logout",
+    tag = "auth",
+    responses((status = 204, description = "Session revoked; refresh cookie cleared"))
+)]
+pub async fn logout(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    body: Bytes,
+) -> Result<impl IntoResponse, ApiError> {
+    let token = refresh_token_from_cookie(&headers).or_else(|| {
+        serde_json::from_slice::<RefreshRequest>(&body)
+            .ok()
+            .map(|r| r.refresh_token)
+    });
+    if let Some(token) = token {
+        state.auth.logout(token).await?;
+    }
+    Ok((
+        StatusCode::NO_CONTENT,
+        AppendHeaders([(
+            header::SET_COOKIE,
+            clear_refresh_cookie(state.cookie_secure),
+        )]),
+    ))
 }
 
 /// Confirm email using the token from the verification email.

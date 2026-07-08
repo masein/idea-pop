@@ -39,7 +39,7 @@
       {
         "ordinal": 3,
         "name": "avatar_id",
-        "type_info": "Int2",
+        "type_info": "Varchar",
         "origin": {
           "Table": {
             "table": "child_profiles",

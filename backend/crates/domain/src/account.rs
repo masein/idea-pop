@@ -90,6 +90,9 @@ pub struct RefreshSession {
     pub id: Uuid,
     pub account_id: Uuid,
     pub refresh_token_hash: String,
+    /// When set, this session authenticates a CHILD: refresh re-issues a
+    /// kid-scoped token (account_id is the parent's account).
+    pub child_id: Option<Uuid>,
     pub expires_at: DateTime<Utc>,
     pub revoked_at: Option<DateTime<Utc>>,
     pub created_at: DateTime<Utc>,

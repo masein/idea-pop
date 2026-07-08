@@ -175,11 +175,12 @@ impl AccountRepo for SqlxAccountRepo {
     async fn create_refresh_session(&self, session: &RefreshSession) -> Result<(), DomainError> {
         sqlx::query!(
             r#"INSERT INTO refresh_sessions
-               (id, account_id, refresh_token_hash, expires_at, created_at)
-               VALUES ($1, $2, $3, $4, $5)"#,
+               (id, account_id, refresh_token_hash, child_id, expires_at, created_at)
+               VALUES ($1, $2, $3, $4, $5, $6)"#,
             session.id,
             session.account_id,
             session.refresh_token_hash,
+            session.child_id,
             session.expires_at,
             session.created_at,
         )
@@ -194,7 +195,7 @@ impl AccountRepo for SqlxAccountRepo {
         hash: &str,
     ) -> Result<Option<RefreshSession>, DomainError> {
         let row = sqlx::query!(
-            r#"SELECT id, account_id, refresh_token_hash, expires_at, revoked_at, created_at
+            r#"SELECT id, account_id, refresh_token_hash, child_id, expires_at, revoked_at, created_at
                FROM refresh_sessions WHERE refresh_token_hash = $1"#,
             hash
         )
@@ -206,6 +207,7 @@ impl AccountRepo for SqlxAccountRepo {
             id: r.id,
             account_id: r.account_id,
             refresh_token_hash: r.refresh_token_hash,
+            child_id: r.child_id,
             expires_at: r.expires_at,
             revoked_at: r.revoked_at,
             created_at: r.created_at,

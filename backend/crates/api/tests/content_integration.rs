@@ -565,7 +565,7 @@ async fn restricted_child_can_read_content() {
                 .body(Body::from(
                     serde_json::json!({
                         "nickname": "Kid",
-                        "avatar_id": 1,
+                        "avatar_id": "cat",
                         "birth_year": 2016,
                         "parent_email": "parent-content@test.com"
                     })

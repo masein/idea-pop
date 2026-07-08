@@ -30,7 +30,7 @@ const REFRESH_COOKIE_MAX_AGE_SECS: i64 = 30 * 24 * 60 * 60;
 
 /// Path=/ so the cookie also matches when the API is consumed through the
 /// frontend's same-origin `/api/*` rewrite (browser path differs from ours).
-fn set_refresh_cookie(token: &str, secure: bool) -> String {
+pub(crate) fn set_refresh_cookie(token: &str, secure: bool) -> String {
     format!(
         "{REFRESH_COOKIE}={token}; Path=/; Max-Age={REFRESH_COOKIE_MAX_AGE_SECS}; HttpOnly; SameSite=Lax{}",
         if secure { "; Secure" } else { "" }

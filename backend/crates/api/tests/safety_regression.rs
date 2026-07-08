@@ -142,7 +142,7 @@ async fn register_family(
             "/children",
             json!({
                 "nickname": nickname,
-                "avatar_id": 1,
+                "avatar_id": "cat",
                 "birth_year": 2015,
                 "parent_email": parent_email
             }),

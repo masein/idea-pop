@@ -97,7 +97,7 @@ async fn create_child(app: &axum::Router, parent_token: &str, email: &str) -> (U
         .clone()
         .oneshot(post_json(
             "/children",
-            json!({"nickname": "Pixel", "avatar_id": 2, "birth_year": 2016,
+            json!({"nickname": "Pixel", "avatar_id": "cat", "birth_year": 2016,
                    "parent_email": email}),
             Some(parent_token),
         ))

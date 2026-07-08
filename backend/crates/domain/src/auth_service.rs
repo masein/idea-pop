@@ -20,6 +20,8 @@ const REFRESH_TTL_DAYS: i64 = 30;
 /// can abort the refresh response after the server rotated — without a grace
 /// tail the browser keeps a dead cookie and the user is silently logged out.
 const ROTATION_GRACE_SECS: i64 = 60;
+/// Matches the kid token expiry configured on the issuer (15 minutes).
+const KID_ACCESS_TTL_SECS: i64 = 900;
 const VERIFICATION_TTL_HOURS: i64 = 24;
 
 pub struct AuthService {
@@ -115,6 +117,7 @@ impl AuthService {
             id: Uuid::new_v4(),
             account_id: account.id,
             refresh_token_hash: self.tokens.hash_token(&pair.refresh_token),
+            child_id: None,
             expires_at: now + Duration::days(REFRESH_TTL_DAYS),
             revoked_at: None,
             created_at: now,
@@ -152,11 +155,23 @@ impl AuthService {
             .await?
             .ok_or_else(|| DomainError::Unauthorized("account not found".into()))?;
 
-        let pair = self.tokens.issue(account.id, &account.role).await?;
+        // Kid sessions re-issue a KID token — never the parent's adult token.
+        let pair = match session.child_id {
+            Some(child_id) => {
+                let access_token = self.tokens.issue_kid(child_id, account.id).await?;
+                TokenPair {
+                    access_token,
+                    refresh_token: self.tokens.generate_opaque_token(),
+                    expires_in: KID_ACCESS_TTL_SECS,
+                }
+            }
+            None => self.tokens.issue(account.id, &account.role).await?,
+        };
         let new_session = RefreshSession {
             id: Uuid::new_v4(),
             account_id: account.id,
             refresh_token_hash: self.tokens.hash_token(&pair.refresh_token),
+            child_id: session.child_id,
             expires_at: now + Duration::days(REFRESH_TTL_DAYS),
             revoked_at: None,
             created_at: now,
@@ -164,6 +179,29 @@ impl AuthService {
         self.repo.create_refresh_session(&new_session).await?;
 
         Ok(pair)
+    }
+
+    /// Open a refresh session for a CHILD (kid self-signup): the cookie this
+    /// token goes into lets the kid survive page reloads; refreshing it
+    /// yields kid-scoped tokens only.
+    pub async fn issue_kid_refresh(
+        &self,
+        child_id: Uuid,
+        parent_account_id: Uuid,
+    ) -> Result<String, DomainError> {
+        let refresh_token = self.tokens.generate_opaque_token();
+        let now = self.clock.now();
+        let session = RefreshSession {
+            id: Uuid::new_v4(),
+            account_id: parent_account_id,
+            refresh_token_hash: self.tokens.hash_token(&refresh_token),
+            child_id: Some(child_id),
+            expires_at: now + Duration::days(REFRESH_TTL_DAYS),
+            revoked_at: None,
+            created_at: now,
+        };
+        self.repo.create_refresh_session(&session).await?;
+        Ok(refresh_token)
     }
 
     /// Revoke the session behind `refresh_token`. Idempotent: unknown or

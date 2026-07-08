@@ -141,7 +141,7 @@ async fn consent_lifecycle() {
         .clone()
         .oneshot(post_json(
             "/children",
-            json!({ "nickname": "Rio", "avatar_id": 2, "birth_year": 2016,
+            json!({ "nickname": "Rio", "avatar_id": "cat", "birth_year": 2016,
                      "parent_email": "lifecycle@example.com" }),
             Some(&parent_token),
         ))
@@ -243,7 +243,7 @@ async fn grant_via_http_token() {
         .clone()
         .oneshot(post_json(
             "/children",
-            json!({ "nickname": "Mia", "avatar_id": 3, "birth_year": 2014,
+            json!({ "nickname": "Mia", "avatar_id": "cat", "birth_year": 2014,
                      "parent_email": "granthttp@example.com" }),
             Some(&parent_token),
         ))
@@ -332,7 +332,7 @@ async fn class_join_grants_consent() {
         .clone()
         .oneshot(post_json(
             "/children",
-            json!({ "nickname": "Lee", "avatar_id": 4, "birth_year": 2015,
+            json!({ "nickname": "Lee", "avatar_id": "cat", "birth_year": 2015,
                      "parent_email": "classparent@example.com" }),
             Some(&parent_token),
         ))
@@ -388,7 +388,7 @@ async fn class_join_grants_consent() {
 #[tokio::test]
 async fn kid_token_rejected_from_adult_routes() {
     let pool = test_pool().await;
-    let app = router(null_state(pool), None);
+    let app = router(null_state(pool.clone()), None);
 
     let parent_token = register(&app, "adultroute@example.com", "parent").await;
 
@@ -396,7 +396,7 @@ async fn kid_token_rejected_from_adult_routes() {
         .clone()
         .oneshot(post_json(
             "/children",
-            json!({ "nickname": "Cub", "avatar_id": 5, "birth_year": 2016,
+            json!({ "nickname": "Cub", "avatar_id": "cat", "birth_year": 2016,
                      "parent_email": "adultroute@example.com" }),
             Some(&parent_token),
         ))
@@ -420,20 +420,217 @@ async fn kid_token_rejected_from_adult_routes() {
         "kid token must be rejected from /me"
     );
 
-    // Kid token → POST /children (AdultAuth) → 403.
+    // POST /children is PUBLIC (kid self-signup): a kid token is simply
+    // ignored — the parent binding comes from parent_email resolution, so a
+    // kid can never make themselves (or their token) the parent.
     let res = app
         .clone()
         .oneshot(post_json(
             "/children",
-            json!({ "nickname": "Sibling", "avatar_id": 1, "birth_year": 2017,
+            json!({ "nickname": "Sibling", "avatar_id": "cat", "birth_year": 2017,
                      "parent_email": "adultroute@example.com" }),
             Some(&kid_token),
         ))
         .await
         .unwrap();
+    assert_eq!(res.status(), StatusCode::CREATED);
+    let sibling = body_json(res).await["child_id"]
+        .as_str()
+        .unwrap()
+        .to_owned();
+    let owner_email: String = sqlx::query_scalar(
+        "SELECT a.email FROM accounts a JOIN child_profiles c ON c.parent_account_id = a.id
+         WHERE c.id = $1::uuid",
+    )
+    .bind(&sibling)
+    .fetch_one(&pool)
+    .await
+    .unwrap();
+    assert_eq!(owner_email, "adultroute@example.com");
+}
+
+// ── Anonymous kid self-signup (public POST /children) ──────────────────────────
+
+#[tokio::test]
+async fn anonymous_child_self_signup_is_public() {
+    let pool = test_pool().await;
+    let app = router(null_state(pool.clone()), None);
+
+    // NO token, NO cookie — straight from the kid onboarding.
+    let res = app
+        .clone()
+        .oneshot(post_json(
+            "/children",
+            json!({ "nickname": "Solo", "avatar_id": "cat", "birth_year": 2016,
+                     "parent_email": "solo-parent@example.com" }),
+            None,
+        ))
+        .await
+        .unwrap();
+    assert_eq!(res.status(), StatusCode::CREATED, "must be 201, never 401");
+    let body = body_json(res).await;
+    let child_id = body["child_id"].as_str().unwrap().to_owned();
+    let kid_token = body["access_token"].as_str().unwrap().to_owned();
+    assert!(!kid_token.is_empty());
+
+    // Consent is queued for the named parent (pending).
+    let status: String =
+        sqlx::query_scalar("SELECT status FROM parental_consents WHERE child_id = $1::uuid")
+            .bind(&child_id)
+            .fetch_one(&pool)
+            .await
+            .unwrap();
+    assert_eq!(status, "pending");
+
+    // A pending parent account exists for the email, and owns the child.
+    let (role, parent_id): (String, uuid::Uuid) =
+        sqlx::query_as("SELECT role, id FROM accounts WHERE email = 'solo-parent@example.com'")
+            .fetch_one(&pool)
+            .await
+            .unwrap();
+    assert_eq!(role, "parent");
+    let owner: uuid::Uuid =
+        sqlx::query_scalar("SELECT parent_account_id FROM child_profiles WHERE id = $1::uuid")
+            .bind(&child_id)
+            .fetch_one(&pool)
+            .await
+            .unwrap();
+    assert_eq!(owner, parent_id);
+
+    // The kid token is live (restricted): a kid-scoped route accepts it.
+    let res = app
+        .oneshot(get_req("/me/progress", Some(&kid_token)))
+        .await
+        .unwrap();
+    assert_eq!(res.status(), StatusCode::OK);
+}
+
+#[tokio::test]
+async fn anonymous_signup_reuses_an_existing_parent_account() {
+    let pool = test_pool().await;
+    let app = router(null_state(pool.clone()), None);
+    let _parent_token = register(&app, "known-parent@example.com", "parent").await;
+    let existing: uuid::Uuid =
+        sqlx::query_scalar("SELECT id FROM accounts WHERE email = 'known-parent@example.com'")
+            .fetch_one(&pool)
+            .await
+            .unwrap();
+
+    let res = app
+        .clone()
+        .oneshot(post_json(
+            "/children",
+            json!({ "nickname": "Twin", "avatar_id": "octopus", "birth_year": 2015,
+                     "parent_email": "known-parent@example.com" }),
+            None,
+        ))
+        .await
+        .unwrap();
+    assert_eq!(res.status(), StatusCode::CREATED);
+    let child_id = body_json(res).await["child_id"]
+        .as_str()
+        .unwrap()
+        .to_owned();
+    let owner: uuid::Uuid =
+        sqlx::query_scalar("SELECT parent_account_id FROM child_profiles WHERE id = $1::uuid")
+            .bind(&child_id)
+            .fetch_one(&pool)
+            .await
+            .unwrap();
+    assert_eq!(
+        owner, existing,
+        "must attach to the existing account, not a duplicate"
+    );
+}
+
+#[tokio::test]
+async fn anonymous_signup_invalid_input_is_422_never_401() {
+    let pool = test_pool().await;
+    let app = router(null_state(pool), None);
+    let cases = [
+        json!({ "nickname": "", "avatar_id": "cat", "birth_year": 2016, "parent_email": "p@example.com" }),
+        json!({ "nickname": "Kid", "avatar_id": "", "birth_year": 2016, "parent_email": "p@example.com" }),
+        json!({ "nickname": "Kid", "avatar_id": "cat", "birth_year": 1900, "parent_email": "p@example.com" }),
+        json!({ "nickname": "Kid", "avatar_id": "cat", "birth_year": 2016, "parent_email": "not-an-email" }),
+    ];
+    for body in cases {
+        let res = app
+            .clone()
+            .oneshot(post_json("/children", body.clone(), None))
+            .await
+            .unwrap();
+        assert_eq!(
+            res.status(),
+            StatusCode::UNPROCESSABLE_ENTITY,
+            "expected 422 for {body}"
+        );
+    }
+}
+
+#[tokio::test]
+async fn kid_signup_sets_a_refresh_cookie_that_reissues_kid_tokens() {
+    let pool = test_pool().await;
+    let app = router(null_state(pool.clone()), None);
+
+    let res = app
+        .clone()
+        .oneshot(post_json(
+            "/children",
+            json!({ "nickname": "Reloader", "avatar_id": "dolphin", "birth_year": 2016,
+                     "parent_email": "reload-parent@example.com" }),
+            None,
+        ))
+        .await
+        .unwrap();
+    assert_eq!(res.status(), StatusCode::CREATED);
+    let cookie = res
+        .headers()
+        .get_all(axum::http::header::SET_COOKIE)
+        .iter()
+        .filter_map(|v| v.to_str().ok())
+        .find(|c| c.starts_with("ideapop_refresh="))
+        .expect("kid signup must set the refresh cookie")
+        .split(';')
+        .next()
+        .unwrap()
+        .to_owned();
+
+    // Simulate a page reload: no in-memory token, only the cookie.
+    let res = app
+        .clone()
+        .oneshot(
+            Request::builder()
+                .method("POST")
+                .uri("/auth/refresh")
+                .header("cookie", &cookie)
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+    assert_eq!(res.status(), StatusCode::OK, "kid cookie must refresh");
+    let body = body_json(res).await;
+    let refreshed = body["access_token"].as_str().unwrap().to_owned();
+
+    // The refreshed token is KID-scoped: kid routes accept it…
+    let res = app
+        .clone()
+        .oneshot(get_req("/me/progress", Some(&refreshed)))
+        .await
+        .unwrap();
+    assert_eq!(
+        res.status(),
+        StatusCode::OK,
+        "refreshed token must be a kid token"
+    );
+    // …and adult-only routes still reject it (never escalates to the parent).
+    let res = app
+        .oneshot(get_req("/parent/children", Some(&refreshed)))
+        .await
+        .unwrap();
     assert_eq!(
         res.status(),
         StatusCode::FORBIDDEN,
-        "kid token must not create children"
+        "a kid refresh must NEVER yield the parent's adult token"
     );
 }

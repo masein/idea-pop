@@ -49,7 +49,8 @@ pub struct ChildProfile {
     pub parent_account_id: Uuid,
     pub nickname: String,
     /// Index into the pre-approved avatar set (no face photos).
-    pub avatar_id: u8,
+    /// Semantic avatar id from the fixed set, e.g. "cat".
+    pub avatar_id: String,
     /// Birth year (not full date of birth).
     pub birth_year: u16,
     pub created_at: DateTime<Utc>,

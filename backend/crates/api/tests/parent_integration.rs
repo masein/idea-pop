@@ -115,7 +115,7 @@ async fn account_id(pool: &PgPool, email: &str) -> Uuid {
 async fn seed_child(pool: &PgPool, parent: Uuid) -> Uuid {
     let child_id: Uuid = sqlx::query_scalar(
         "INSERT INTO child_profiles (parent_account_id, nickname, avatar_id, birth_year)
-         VALUES ($1, 'Pixel', 5, 2016) RETURNING id",
+         VALUES ($1, 'Pixel', 'cat', 2016) RETURNING id",
     )
     .bind(parent)
     .fetch_one(pool)
@@ -164,7 +164,7 @@ async fn parent_children_lists_own_kids_with_level_and_consent() {
     let c = &body[0];
     assert_eq!(c["id"], child_id.to_string());
     assert_eq!(c["nickname"], "Pixel");
-    assert_eq!(c["avatar_id"], "5");
+    assert_eq!(c["avatar_id"], "cat");
     assert_eq!(c["total_xp"], 20);
     assert_eq!(c["level"], 2, "20 XP → level 2");
     assert_eq!(c["consent_granted"], true);

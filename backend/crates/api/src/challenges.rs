@@ -51,6 +51,11 @@ pub struct ChallengeResponse {
     pub xp_reward: i16,
     /// 8 steps in canonical order. Each object has a `"step"` discriminant field.
     pub steps: Vec<ChallengeStepValue>,
+    /// The Skill step's "Need a hint?" ladder, flattened for the mission UI
+    /// (matches the `skill_hints` field the frontend ChallengeDetail reads).
+    pub skill_hints: Vec<String>,
+    /// The Build & test step's hint ladder (frontend `build_hints`).
+    pub build_hints: Vec<String>,
     pub tools: Vec<ToolResponse>,
     pub age_tier_variants: Vec<AgeTierVariantResponse>,
     pub related_video_ids: Vec<Uuid>,
@@ -99,6 +104,18 @@ fn challenge_to_dto(c: Challenge, has_premium: bool) -> ChallengeResponse {
         .map(|s| serde_json::to_value(s).unwrap_or(serde_json::Value::Null))
         .collect();
 
+    // Flatten the per-step hint ladders onto the fields the mission UI reads.
+    use idea_pop_domain::challenge::ChallengeStep;
+    let mut skill_hints = Vec::new();
+    let mut build_hints = Vec::new();
+    for step in &c.steps {
+        match step {
+            ChallengeStep::Skill { hints, .. } => skill_hints = hints.clone(),
+            ChallengeStep::BuildAndTest { hints, .. } => build_hints = hints.clone(),
+            _ => {}
+        }
+    }
+
     let tools = c
         .tools
         .iter()
@@ -126,6 +143,8 @@ fn challenge_to_dto(c: Challenge, has_premium: bool) -> ChallengeResponse {
         week_number: c.week_number,
         xp_reward: c.xp_reward,
         steps,
+        skill_hints,
+        build_hints,
         tools,
         age_tier_variants,
         related_video_ids: c.related_video_ids,

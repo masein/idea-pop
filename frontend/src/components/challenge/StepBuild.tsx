@@ -2,7 +2,13 @@
 
 import { useState } from 'react';
 import CaptureCard, { type CaptureData } from './CaptureCard';
+import ClassifierPanel from '@/components/ai/ClassifierPanel';
 import { createProject } from '@/lib/api/client';
+
+// Missions whose Build & test step embeds the on-device Machine Trainer.
+// Keyed off the slug to avoid a backend/schema change; a cleaner long-term
+// option is an `embedded_tool` field on the BuildAndTest step (future PR).
+const CLASSIFIER_SLUGS = new Set(['teach-the-machine-to-see', 'spot-the-fake']);
 
 type ChallengeDetail = import('@/lib/api/schema').components['schemas']['ChallengeDetail'];
 
@@ -88,6 +94,13 @@ export default function StepBuild({
           ))}
         </div>
       </div>
+
+      {/* On-device image classifier for the AI missions */}
+      {CLASSIFIER_SLUGS.has(challenge.slug) && (
+        <div className="mb-4">
+          <ClassifierPanel />
+        </div>
+      )}
 
       {/* Test question card */}
       <div className="bg-tint-blue rounded-card p-4 text-center mb-4">

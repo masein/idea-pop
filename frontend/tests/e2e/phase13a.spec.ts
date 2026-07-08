@@ -280,6 +280,19 @@ test.describe('axe — app pages', () => {
     expect(results.violations).toEqual([]);
   });
 
+  test('studio classify page passes axe', async ({ page }) => {
+    await setCookie(page, 'ideapop_persona', 'kid');
+    // No API mocks needed: the classifier is fully on-device and the model
+    // only downloads after the power-up button is pressed.
+    await page.goto('/en/studio/classify');
+    await expect(page.getByTestId('classifier-power-up')).toBeVisible();
+    await expect(page.getByTestId('classifier-privacy-note')).toBeVisible();
+    const results = await new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
+      .analyze();
+    expect(results.violations).toEqual([]);
+  });
+
   test('parent dashboard passes axe', async ({ page }) => {
     await setCookie(page, 'ideapop_persona', 'parent');
     mockParentAPIs(page);

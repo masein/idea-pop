@@ -794,5 +794,15 @@
     "panel_title": "Try the Machine Trainer! 🤖",
     "panel_hint": "Train it right here — your photos never leave this device.",
     "open_tool": "Open the Machine Trainer"
+  },
+  "hints": {
+    "toggle": "Need a hint? 💡",
+    "intro": "Hints won't spoil the fun — each one nudges you a little closer.",
+    "show_first": "Give me a hint",
+    "show_next": "One more hint",
+    "show_last": "Show the big hint 🎁",
+    "hint_label": "Hint {number}",
+    "big_hint_label": "The big hint 🎁",
+    "all_shown": "That's every hint — you've got this! 💪"
   }
 }

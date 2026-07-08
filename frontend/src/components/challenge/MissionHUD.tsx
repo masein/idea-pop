@@ -75,6 +75,8 @@ export default function MissionHUD({
             <span
               key={step}
               data-testid={`progress-dot-${step}`}
+              // aria-label is prohibited on a bare span; img role permits it
+              role="img"
               aria-label={`Step ${step}${isCurrent ? ' (current)' : isCompleted ? ' (done)' : ''}`}
               className={[
                 'block rounded-full transition-all duration-300',

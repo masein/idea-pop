@@ -33,6 +33,8 @@ function mockChallengeAPIs(page: import('@playwright/test').Page) {
         brief: 'Design a bridge that can hold a book.', nature_clue: 'Spider webs are stronger than steel by weight.',
         design_secret: 'Triangles distribute weight efficiently.', skill_title: 'Structural testing', skill_body: 'Load test your bridge.',
         tools: ['five_whys'], difficulty: 'easy', time_minutes: 30, xp_reward: 20, mess_level: 1,
+        skill_hints: ['Try a tiny version first — small tests fail fast and teach fast.', 'The big hint: tape beats glue for quick prototypes!'],
+        build_hints: ['Test with something lighter than the book first.', 'The big hint: add triangles — they spread the weight!'],
       },
     })
   );
@@ -274,6 +276,33 @@ test.describe('axe — app pages', () => {
     mockProfileAPIs(page);
     await page.goto('/en/profile');
     await page.waitForLoadState('networkidle');
+    const results = await new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
+      .analyze();
+    expect(results.violations).toEqual([]);
+  });
+
+  test('mission hints ladder passes axe when fully revealed', async ({ page }) => {
+    await setCookie(page, 'ideapop_persona', 'kid');
+    mockChallengeAPIs(page);
+    await page.goto('/en/challenges/ch-1');
+    // Walk the "yes, I have an idea" fork to Build & test (step 7).
+    await page.getByTestId('step-brief').getByRole('button').first().click();
+    await page.getByTestId('idea-yes').click();
+    await page.getByTestId('field-title').fill('My bridge');
+    await page.getByTestId('field-used').fill('Sticks and tape');
+    await page.getByRole('button', { name: /save my idea/i }).click();
+    await page.getByTestId('step-build').waitFor();
+
+    await expect(page.getByTestId('mission-hints')).toBeVisible();
+    await page.getByTestId('hints-toggle').click();
+    await page.getByTestId('hint-reveal-btn').click(); // hint 1
+    await expect(page.getByTestId('hint-item-0')).toBeVisible();
+    await page.getByTestId('hint-reveal-btn').click(); // the give-away
+    await expect(page.getByTestId('hint-item-1')).toBeVisible();
+    await expect(page.getByTestId('hints-done')).toBeVisible();
+    await expect(page.getByTestId('hint-reveal-btn')).toHaveCount(0);
+
     const results = await new AxeBuilder({ page })
       .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
       .analyze();

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import MissionHints from './MissionHints';
 
 type ChallengeDetail = import('@/lib/api/schema').components['schemas']['ChallengeDetail'];
 
@@ -59,6 +60,8 @@ export default function StepSkill({
           </p>
         </div>
       )}
+
+      <MissionHints hints={challenge.skill_hints ?? []} />
 
       {toastVisible && (
         <div

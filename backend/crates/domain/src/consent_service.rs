@@ -57,11 +57,12 @@ impl ConsentService {
         &self,
         parent_account_id: Uuid,
         nickname: String,
-        avatar_id: u8,
+        avatar_id: String,
         birth_year: u16,
         parent_email: String,
     ) -> Result<(ChildProfile, String), DomainError> {
         validate_nickname(&nickname)?;
+        validate_avatar_id(&avatar_id)?;
         validate_birth_year(birth_year)?;
 
         let now = self.clock.now();
@@ -254,6 +255,24 @@ impl ConsentService {
 }
 
 // ── Validators ────────────────────────────────────────────────────────────────
+
+fn validate_avatar_id(a: &str) -> Result<(), DomainError> {
+    let t = a.trim();
+    if t.is_empty() || t.len() > 32 {
+        return Err(DomainError::Validation(
+            "avatar_id must be 1-32 characters".into(),
+        ));
+    }
+    if !t
+        .chars()
+        .all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-')
+    {
+        return Err(DomainError::Validation(
+            "avatar_id may only contain letters, digits, _ and -".into(),
+        ));
+    }
+    Ok(())
+}
 
 fn validate_nickname(n: &str) -> Result<(), DomainError> {
     let t = n.trim();
@@ -577,7 +596,13 @@ mod tests {
         let (email, svc) = make_service();
         let parent_id = Uuid::new_v4();
         let (child, token) = svc
-            .create_child(parent_id, "Aria".into(), 1, 2015, "mom@example.com".into())
+            .create_child(
+                parent_id,
+                "Aria".into(),
+                "cat".into(),
+                2015,
+                "mom@example.com".into(),
+            )
             .await
             .unwrap();
 
@@ -596,7 +621,13 @@ mod tests {
     async fn create_child_rejects_blank_nickname() {
         let (_, svc) = make_service();
         let err = svc
-            .create_child(Uuid::new_v4(), "  ".into(), 1, 2015, "p@e.com".into())
+            .create_child(
+                Uuid::new_v4(),
+                "  ".into(),
+                "cat".into(),
+                2015,
+                "p@e.com".into(),
+            )
             .await
             .unwrap_err();
         assert!(matches!(err, DomainError::Validation(_)));
@@ -606,7 +637,13 @@ mod tests {
     async fn create_child_rejects_out_of_range_birth_year() {
         let (_, svc) = make_service();
         let err = svc
-            .create_child(Uuid::new_v4(), "Kid".into(), 1, 1970, "p@e.com".into())
+            .create_child(
+                Uuid::new_v4(),
+                "Kid".into(),
+                "cat".into(),
+                1970,
+                "p@e.com".into(),
+            )
             .await
             .unwrap_err();
         assert!(matches!(err, DomainError::Validation(_)));
@@ -616,9 +653,15 @@ mod tests {
     async fn grant_consent_pending_to_granted() {
         let (email, svc) = make_service();
         let parent_id = Uuid::new_v4();
-        svc.create_child(parent_id, "Baz".into(), 2, 2016, "p@e.com".into())
-            .await
-            .unwrap();
+        svc.create_child(
+            parent_id,
+            "Baz".into(),
+            "cat".into(),
+            2016,
+            "p@e.com".into(),
+        )
+        .await
+        .unwrap();
         let raw_token = email.sent.lock().unwrap()[0].2.clone();
 
         svc.grant_consent(raw_token.clone()).await.unwrap();
@@ -646,7 +689,13 @@ mod tests {
         );
         let parent_id = Uuid::new_v4();
         svc_past
-            .create_child(parent_id, "Exp".into(), 1, 2014, "p@e.com".into())
+            .create_child(
+                parent_id,
+                "Exp".into(),
+                "cat".into(),
+                2014,
+                "p@e.com".into(),
+            )
             .await
             .unwrap();
         let raw_token = email_sender.sent.lock().unwrap()[0].2.clone();
@@ -669,7 +718,13 @@ mod tests {
         let (email, svc) = make_service();
         let parent_id = Uuid::new_v4();
         let (child, _) = svc
-            .create_child(parent_id, "Rio".into(), 3, 2015, "p@e.com".into())
+            .create_child(
+                parent_id,
+                "Rio".into(),
+                "cat".into(),
+                2015,
+                "p@e.com".into(),
+            )
             .await
             .unwrap();
         let raw_token = email.sent.lock().unwrap()[0].2.clone();
@@ -693,7 +748,13 @@ mod tests {
         let (email, svc) = make_service();
         let parent_id = Uuid::new_v4();
         let (child, _) = svc
-            .create_child(parent_id, "Sam".into(), 1, 2016, "p@e.com".into())
+            .create_child(
+                parent_id,
+                "Sam".into(),
+                "cat".into(),
+                2016,
+                "p@e.com".into(),
+            )
             .await
             .unwrap();
         let raw_token = email.sent.lock().unwrap()[0].2.clone();
@@ -712,7 +773,13 @@ mod tests {
         let (_, svc) = make_service();
         let parent_id = Uuid::new_v4();
         let (child, _) = svc
-            .create_child(parent_id, "Cub".into(), 1, 2017, "p@e.com".into())
+            .create_child(
+                parent_id,
+                "Cub".into(),
+                "cat".into(),
+                2017,
+                "p@e.com".into(),
+            )
             .await
             .unwrap();
         let err = svc.revoke_consent(child.id, parent_id).await.unwrap_err();
@@ -726,7 +793,13 @@ mod tests {
         let parent_id = Uuid::new_v4();
 
         let (child, _) = svc
-            .create_child(parent_id, "Lee".into(), 2, 2015, "p@e.com".into())
+            .create_child(
+                parent_id,
+                "Lee".into(),
+                "cat".into(),
+                2015,
+                "p@e.com".into(),
+            )
             .await
             .unwrap();
 
@@ -756,7 +829,13 @@ mod tests {
         let teacher_id = Uuid::new_v4();
         let parent_id = Uuid::new_v4();
         let (child, _) = svc
-            .create_child(parent_id, "Dup".into(), 1, 2016, "p@e.com".into())
+            .create_child(
+                parent_id,
+                "Dup".into(),
+                "cat".into(),
+                2016,
+                "p@e.com".into(),
+            )
             .await
             .unwrap();
         let class = svc

@@ -174,14 +174,14 @@ pub async fn class_gallery(
     let items = rows
         .iter()
         .map(|r| {
-            let avatar_id: i16 = r.try_get("avatar_id").unwrap_or(0);
+            let avatar_id: String = r.try_get("avatar_id").unwrap_or_default();
             let created: chrono::DateTime<chrono::Utc> = r
                 .try_get("created_at")
                 .unwrap_or_else(|_| chrono::Utc::now());
             ClassGalleryItemResponse {
                 id: r.try_get("id").unwrap_or_default(),
                 student_nickname: r.try_get("nickname").unwrap_or_default(),
-                student_avatar_id: avatar_id.to_string(),
+                student_avatar_id: avatar_id,
                 project_title: r.try_get("title").unwrap_or_default(),
                 project_photo_url: None,
                 challenge_title: r

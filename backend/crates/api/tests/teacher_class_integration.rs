@@ -162,7 +162,7 @@ async fn class_created_via_post_is_readable_and_assignable() {
         .clone()
         .oneshot(post_json(
             "/children",
-            json!({"nickname": "Pixel", "avatar_id": 2, "birth_year": 2016,
+            json!({"nickname": "Pixel", "avatar_id": "cat", "birth_year": 2016,
                    "parent_email": "join-parent@test.com"}),
             Some(&parent),
         ))

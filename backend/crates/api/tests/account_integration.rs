@@ -231,7 +231,7 @@ async fn email_preferences_reject_anonymous_and_kid_tokens() {
                 .header("content-type", "application/json")
                 .header("authorization", format!("Bearer {parent_token}"))
                 .body(Body::from(
-                    json!({"nickname": "Rio", "avatar_id": 2, "birth_year": 2016,
+                    json!({"nickname": "Rio", "avatar_id": "cat", "birth_year": 2016,
                            "parent_email": "prefs-kid@test.com"})
                     .to_string(),
                 ))

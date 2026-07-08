@@ -100,14 +100,14 @@ pub async fn list_children(
         .iter()
         .map(|r| {
             let total_xp: i64 = r.try_get("total_xp").unwrap_or(0);
-            let avatar_id: i16 = r.try_get("avatar_id").unwrap_or(0);
+            let avatar_id: String = r.try_get("avatar_id").unwrap_or_default();
             let birth_year: i16 = r.try_get("birth_year").unwrap_or(0);
             let status: Option<String> = r.try_get("consent_status").ok().flatten();
             let s = status.as_deref();
             ParentChildResponse {
                 id: r.try_get("id").unwrap_or_default(),
                 nickname: r.try_get("nickname").unwrap_or_default(),
-                avatar_id: avatar_id.to_string(),
+                avatar_id,
                 birth_year: birth_year as i32,
                 level: level_from_xp(total_xp as i32) as i32,
                 total_xp: total_xp as i32,

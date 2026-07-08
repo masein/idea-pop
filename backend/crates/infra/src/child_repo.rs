@@ -45,7 +45,7 @@ impl ChildRepo for SqlxChildRepo {
             p.id,
             p.parent_account_id,
             p.nickname,
-            p.avatar_id as i16,
+            p.avatar_id,
             p.birth_year as i16,
             p.created_at,
         )
@@ -69,7 +69,7 @@ impl ChildRepo for SqlxChildRepo {
             id: r.id,
             parent_account_id: r.parent_account_id,
             nickname: r.nickname,
-            avatar_id: r.avatar_id as u8,
+            avatar_id: r.avatar_id,
             birth_year: r.birth_year as u16,
             created_at: r.created_at,
         }))
@@ -91,7 +91,7 @@ impl ChildRepo for SqlxChildRepo {
                 id: r.id,
                 parent_account_id: r.parent_account_id,
                 nickname: r.nickname,
-                avatar_id: r.avatar_id as u8,
+                avatar_id: r.avatar_id,
                 birth_year: r.birth_year as u16,
                 created_at: r.created_at,
             })

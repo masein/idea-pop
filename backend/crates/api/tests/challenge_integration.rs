@@ -629,3 +629,75 @@ async fn pagination_works() {
     assert_eq!(body["page"], 2);
     assert_eq!(body["per_page"], 2);
 }
+
+/// Step-level hint ladders must flatten onto skill_hints / build_hints —
+/// the exact fields the mission UI (StepSkill/StepBuild → MissionHints)
+/// reads from ChallengeDetail. Legacy hint-less steps yield empty arrays.
+#[tokio::test]
+async fn step_hints_flatten_onto_skill_and_build_fields() {
+    const STEPS_HINTED: &str = r#"[
+  {"step":"brief","title":"AI","story":"Train a machine.","image_url":null},
+  {"step":"your_idea","prompt":"Got an idea?","fork_to_step":6},
+  {"step":"nature_clues","intro":"Brains learn","clues":[]},
+  {"step":"design_secret","secret":"Examples!","reveal_hint":"Think varied."},
+  {"step":"skill","instructions":"Pick features.","skill_refs":[],
+   "hints":["Think ears and whiskers.","Pick yes/no features."]},
+  {"step":"sketch","prompt":"Plan examples.","guidance":"Varied beats many."},
+  {"step":"build_and_test","instructions":"Test 10 cards.","test_criteria":["Accuracy?"],
+   "hints":["Count the right ones.","Add more of the missed kind."]},
+  {"step":"celebrate_and_share","celebration_text":"AI teacher!","share_prompt":"Share it!"}
+]"#;
+
+    let (pool, _pg) = start_postgres().await;
+    let hinted = insert_challenge(
+        &pool,
+        "hinted",
+        "Hinted Mission",
+        1,
+        1,
+        STEPS_HINTED,
+        TOOLS_JSON,
+        VARIANTS_JSON,
+    )
+    .await;
+    // STEPS_MAX has no hints keys at all — the legacy shape.
+    let legacy = insert_challenge(
+        &pool,
+        "legacy",
+        "Legacy Mission",
+        1,
+        2,
+        STEPS_MAX,
+        TOOLS_JSON,
+        VARIANTS_JSON,
+    )
+    .await;
+
+    let app = router(challenge_state(pool), None);
+    let token = register_and_token(&app, "hints-flat@test.com").await;
+
+    let res = app
+        .clone()
+        .oneshot(authed_get(&format!("/challenges/{hinted}"), &token))
+        .await
+        .unwrap();
+    let body = body_json(res).await;
+    assert_eq!(
+        body["skill_hints"],
+        serde_json::json!(["Think ears and whiskers.", "Pick yes/no features."])
+    );
+    assert_eq!(
+        body["build_hints"],
+        serde_json::json!(["Count the right ones.", "Add more of the missed kind."])
+    );
+    // The hints also remain inside the steps payload itself.
+    assert_eq!(body["steps"][4]["hints"][0], "Think ears and whiskers.");
+
+    let res = app
+        .oneshot(authed_get(&format!("/challenges/{legacy}"), &token))
+        .await
+        .unwrap();
+    let body = body_json(res).await;
+    assert_eq!(body["skill_hints"], serde_json::json!([]));
+    assert_eq!(body["build_hints"], serde_json::json!([]));
+}

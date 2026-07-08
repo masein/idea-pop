@@ -61,7 +61,8 @@ provides Figma screenshots per screen. Work is small, verified PRs merged to `ma
 ## How to work (match this exactly)
 - **Git:** branch off `main` (`feat/…` or `fix/…`), small commits, never commit to `main`.
   Open a PR, watch CI, merge (squash, delete branch), then confirm the **post-merge** run on
-  `main` is green. Commit trailer: `Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>`.
+  `main` is green. Do **not** add any `Co-Authored-By: Claude` trailer, "Generated with Claude Code"
+  line, or other AI attribution to commits or PRs — commit as the normal repo author only.
 - **Frontend gate:** in `frontend/`: `npm run lint && npm run typecheck && npm run build && npm test`.
 - **E2E (CI-scoped):** only `tests/e2e/phase13a.spec.ts` runs in CI. It axe-gates
   `/en`, `/en/sign-up`, `/en/pricing`, `/en/explore`, `/en/library`, `/en/challenges`,

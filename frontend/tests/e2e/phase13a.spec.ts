@@ -596,6 +596,42 @@ test.describe('golden path — parent', () => {
 
 // ── Golden path — teacher ─────────────────────────────────────────────────────
 
+// ── Golden path — auth ─────────────────────────────────────────────────────────
+// Runs in a REAL browser build, so it catches bugs jsdom hides — e.g. an
+// Input that doesn't forward react-hook-form's ref silently loses every
+// field value in production and fails validation with "Invalid input".
+
+test.describe('golden path — auth', () => {
+  test('teacher registration submits real values and redirects', async ({ page }) => {
+    const postRequest = page.waitForRequest(
+      (req) => req.url().includes('/api/auth/register') && req.method() === 'POST',
+    );
+    await page.route('**/api/auth/register', (r) => r.fulfill({ status: 201, json: {} }));
+
+    await page.goto('/en/sign-up/teacher');
+    await page.getByLabel(/email/i).fill('teacher@example.com');
+    await page.getByLabel(/^password/i).fill('password123');
+    await page.getByLabel(/confirm/i).fill('password123');
+
+    // The show-password toggle reveals the typed value.
+    const pw = page.getByLabel(/^password/i);
+    await expect(pw).toHaveAttribute('type', 'password');
+    await page.getByTestId('toggle-password-visibility').first().click();
+    await expect(pw).toHaveAttribute('type', 'text');
+    await expect(pw).toHaveValue('password123');
+    await page.getByTestId('toggle-password-visibility').first().click();
+
+    await page.getByRole('button', { name: /create account/i }).click();
+    const req = await postRequest;
+    expect(req.postDataJSON()).toEqual({
+      email: 'teacher@example.com',
+      password: 'password123',
+      role: 'teacher',
+    });
+    await expect(page).toHaveURL(/dashboard\/teacher/);
+  });
+});
+
 test.describe('golden path — teacher', () => {
   test('teacher sees class code and copies it', async ({ page }) => {
     await setCookie(page, 'ideapop_persona', 'teacher');

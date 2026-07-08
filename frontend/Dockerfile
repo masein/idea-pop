@@ -4,10 +4,10 @@ WORKDIR /app
 COPY package.json package-lock.json* ./
 RUN npm install
 COPY . .
-# NEXT_PUBLIC_* values are baked into the client bundle at build time —
-# pass them as build args (compose: build.args) so deployments can differ.
-ARG NEXT_PUBLIC_API_URL=http://localhost:8080
-ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+# Baked at build time (standalone output): API_URL is the server-side
+# destination of the /api/* rewrite; NEXT_PUBLIC_* land in the client bundle.
+ARG API_URL=http://localhost:8080
+ENV API_URL=$API_URL
 ARG NEXT_PUBLIC_MISSION_HELPER=false
 ENV NEXT_PUBLIC_MISSION_HELPER=$NEXT_PUBLIC_MISSION_HELPER
 RUN npm run build

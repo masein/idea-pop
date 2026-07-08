@@ -38,7 +38,7 @@ function mockChallengeAPIs(page: import('@playwright/test').Page) {
       },
     })
   );
-  page.route('**/api/challenges/ch-1/attempt', (r) =>
+  page.route('**/api/challenges/ch-1/attempts', (r) =>
     r.fulfill({ json: { attempt_id: 'att-1', current_step: 1 } })
   );
   page.route('**/api/challenges/ch-1/steps/*/help', (r) =>

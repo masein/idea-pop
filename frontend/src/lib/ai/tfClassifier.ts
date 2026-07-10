@@ -2,16 +2,25 @@
  * On-device image classifier: MobileNet feature extractor + KNN, via
  * TensorFlow.js transfer learning.
  *
- * PRIVACY (COPPA): everything runs in the browser. Images and webcam frames
- * are turned into feature tensors locally and NEVER leave the device — the
- * only network request is the one-time model weights download.
+ * PRIVACY (COPPA): everything runs in the browser AND the model itself is
+ * SELF-HOSTED under /public/models — powering up the trainer makes zero
+ * third-party requests. (The previous tfhub/kaggle-hosted weights hung on
+ * school/filtered networks and broke the trainer entirely.)
  *
- * All three TF packages are loaded with dynamic import() inside loadEngine(),
- * so they stay out of the main/SSR bundle and only download when a kid
- * actually powers up the trainer.
+ * The extractor is the classic Teachable-Machine recipe: the vendored
+ * MobileNet v1 (α=0.25, 224px) layers model truncated at its
+ * `conv_pw_13_relu` bottleneck; the KNN classifies those embeddings.
+ *
+ * TF packages load via dynamic import() inside loadEngine(), so nothing
+ * ships in the main/SSR bundle until a kid actually powers up the trainer.
  */
 
 export type ImageSource = HTMLImageElement | HTMLVideoElement | HTMLCanvasElement;
+
+/** Same-origin — served from our own /public, never a third party. */
+const MODEL_URL = "/models/mobilenet-v1-025/model.json";
+const EMBEDDING_LAYER = "conv_pw_13_relu";
+const INPUT_SIZE = 224;
 
 export interface Prediction {
   /** The winning class id (matches ClassInfo.id). */
@@ -31,27 +40,44 @@ export interface ClassifierEngine {
 }
 
 export async function loadEngine(): Promise<ClassifierEngine> {
-  const [tf, mobilenetModule, knnModule] = await Promise.all([
-    import('@tensorflow/tfjs'),
-    import('@tensorflow-models/mobilenet'),
-    import('@tensorflow-models/knn-classifier'),
+  const [tf, knnModule] = await Promise.all([
+    import("@tensorflow/tfjs"),
+    import("@tensorflow-models/knn-classifier"),
   ]);
 
   await tf.ready();
-  // Small variant: fastest download for classroom devices; plenty for 2–3 classes.
-  const net = await mobilenetModule.load({ version: 2, alpha: 0.5 });
+  const base = await tf.loadLayersModel(MODEL_URL);
+  // Truncate at the bottleneck: activations there are compact, general
+  // image features — ideal for a KNN over 2-3 kid-defined classes.
+  const bottleneck = base.getLayer(EMBEDDING_LAYER);
+  const extractor = tf.model({ inputs: base.inputs, outputs: bottleneck.output });
   const knn = knnModule.create();
+
+  /** Image → normalized [-1, 1] tensor → flattened bottleneck embedding. */
+  function embed(source: ImageSource) {
+    return tf.tidy(() => {
+      const pixels = tf.browser
+        .fromPixels(source)
+        .resizeBilinear([INPUT_SIZE, INPUT_SIZE])
+        .toFloat()
+        .div(127.5)
+        .sub(1)
+        .expandDims(0);
+      const activation = extractor.predict(pixels) as import("@tensorflow/tfjs").Tensor;
+      return activation.flatten();
+    });
+  }
 
   return {
     addExample(source, classId) {
-      const activation = net.infer(source, true);
+      const activation = embed(source);
       knn.addExample(activation, classId);
       activation.dispose();
     },
 
     async predict(source) {
       if (knn.getNumClasses() === 0) return null;
-      const activation = net.infer(source, true);
+      const activation = embed(source);
       try {
         const result = await knn.predictClass(activation, 5);
         return { classId: result.label, confidences: result.confidences };
@@ -66,6 +92,8 @@ export async function loadEngine(): Promise<ClassifierEngine> {
 
     dispose() {
       knn.dispose();
+      extractor.dispose();
+      base.dispose();
     },
   };
 }

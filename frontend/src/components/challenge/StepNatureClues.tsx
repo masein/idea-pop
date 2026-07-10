@@ -31,8 +31,9 @@ export default function StepNatureClues({
     });
   };
 
-  const firstClue = challenge.nature_clues[0];
-  const exampleXp = firstClue?.xp_reward ?? 5;
+  // Defensive: never index a possibly-missing array (the white-screen bug).
+  const clues = challenge.nature_clues ?? [];
+  const exampleXp = clues[0]?.xp_reward ?? 5;
 
   return (
     <div data-testid="step-nature-clues" className="flex flex-col gap-6">
@@ -46,7 +47,7 @@ export default function StepNatureClues({
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {challenge.nature_clues.map((clue, index) => {
+        {clues.map((clue, index) => {
           const isWatched = watched.has(index);
 
           return (
@@ -65,9 +66,7 @@ export default function StepNatureClues({
 
               <p className="font-display text-lg text-ink">{clue.title}</p>
 
-              {ageMode === 'older' && (
-                <p className="font-body text-sm text-ink/50">{clue.description}</p>
-              )}
+              <p className="font-body text-sm text-ink/70">{clue.description}</p>
 
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="bg-explore/10 text-explore text-xs px-2 py-0.5 rounded-full">

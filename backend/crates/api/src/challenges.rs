@@ -36,6 +36,20 @@ pub struct ToolResponse {
     pub age_mode: String,
 }
 
+/// A nature clue flattened for the mission player, mapped from the domain
+/// `Inspiration` (text/image_url/habitat). Emoji/title derive from the
+/// habitat; every clue awards the canonical Explore +5 XP.
+#[derive(Debug, Serialize, ToSchema)]
+pub struct NatureClueResponse {
+    pub emoji: String,
+    pub title: String,
+    pub description: String,
+    pub image_url: Option<String>,
+    /// Reserved: clues will link Explore clips once authored.
+    pub explore_video_id: Option<Uuid>,
+    pub xp_reward: i16,
+}
+
 /// A single challenge step — the `step` field names the kind; remaining fields
 /// carry the typed payload. Serialised directly from the domain enum so the
 /// client receives the full, structured JSON without a separate schema per step.
@@ -56,6 +70,23 @@ pub struct ChallengeResponse {
     pub skill_hints: Vec<String>,
     /// The Build & test step's hint ladder (frontend `build_hints`).
     pub build_hints: Vec<String>,
+    // ── Flattened step fields the mission player reads directly ──────────────
+    /// The Brief step's story.
+    pub brief: String,
+    /// Display emoji for the mission header (no authored source yet).
+    pub emoji: String,
+    /// Alias of xp_reward under the name the player uses.
+    pub completion_xp: i16,
+    /// The Design-secret step's secret text.
+    pub design_secret: String,
+    /// The Design-secret step's reveal hint (teaser shown to older kids).
+    pub design_secret_story: Option<String>,
+    /// The Nature-clues step's clues, flattened for the player.
+    pub nature_clues: Vec<NatureClueResponse>,
+    /// First library lesson linked from the Skill step, if any.
+    pub skill_lesson_id: Option<Uuid>,
+    /// Alias of related_video_ids under the name the frontend type uses.
+    pub related_explore_ids: Vec<Uuid>,
     pub tools: Vec<ToolResponse>,
     pub age_tier_variants: Vec<AgeTierVariantResponse>,
     pub related_video_ids: Vec<Uuid>,
@@ -97,6 +128,17 @@ fn default_per_page() -> i64 {
 
 // ── Mappers ───────────────────────────────────────────────────────────────────
 
+/// Habitat → (emoji, kid-facing label) for the flattened clue cards.
+fn habitat_display(habitat: &str) -> (&'static str, &'static str) {
+    match habitat {
+        "jungle" => ("🌿", "From the jungle"),
+        "ocean" => ("🌊", "From the ocean"),
+        "desert" => ("🏜️", "From the desert"),
+        "sky" => ("☁️", "From the sky"),
+        _ => ("✨", "From nature"),
+    }
+}
+
 fn challenge_to_dto(c: Challenge, has_premium: bool) -> ChallengeResponse {
     let steps: Vec<serde_json::Value> = c
         .steps
@@ -104,13 +146,48 @@ fn challenge_to_dto(c: Challenge, has_premium: bool) -> ChallengeResponse {
         .map(|s| serde_json::to_value(s).unwrap_or(serde_json::Value::Null))
         .collect();
 
-    // Flatten the per-step hint ladders onto the fields the mission UI reads.
+    // Flatten the step payloads onto the fields the mission player reads.
     use idea_pop_domain::challenge::ChallengeStep;
     let mut skill_hints = Vec::new();
     let mut build_hints = Vec::new();
+    let mut brief = String::new();
+    let mut design_secret = String::new();
+    let mut design_secret_story = None;
+    let mut nature_clues = Vec::new();
+    let mut skill_lesson_id = None;
     for step in &c.steps {
         match step {
-            ChallengeStep::Skill { hints, .. } => skill_hints = hints.clone(),
+            ChallengeStep::Brief { story, .. } => brief = story.clone(),
+            ChallengeStep::DesignSecret {
+                secret,
+                reveal_hint,
+            } => {
+                design_secret = secret.clone();
+                design_secret_story = Some(reveal_hint.clone()).filter(|h| !h.trim().is_empty());
+            }
+            ChallengeStep::NatureClues { clues, .. } => {
+                nature_clues = clues
+                    .iter()
+                    .map(|clue| {
+                        let (emoji, title) = habitat_display(clue.habitat.as_deref().unwrap_or(""));
+                        NatureClueResponse {
+                            emoji: emoji.to_owned(),
+                            title: title.to_owned(),
+                            description: clue.text.clone(),
+                            image_url: clue.image_url.clone(),
+                            explore_video_id: None,
+                            // Canonical Explore reward (CLAUDE.md gamification).
+                            xp_reward: 5,
+                        }
+                    })
+                    .collect();
+            }
+            ChallengeStep::Skill {
+                hints, skill_refs, ..
+            } => {
+                skill_hints = hints.clone();
+                skill_lesson_id = skill_refs.first().copied();
+            }
             ChallengeStep::BuildAndTest { hints, .. } => build_hints = hints.clone(),
             _ => {}
         }
@@ -145,6 +222,14 @@ fn challenge_to_dto(c: Challenge, has_premium: bool) -> ChallengeResponse {
         steps,
         skill_hints,
         build_hints,
+        brief,
+        emoji: "🚀".to_owned(),
+        completion_xp: c.xp_reward,
+        design_secret,
+        design_secret_story,
+        nature_clues,
+        skill_lesson_id,
+        related_explore_ids: c.related_video_ids.clone(),
         tools,
         age_tier_variants,
         related_video_ids: c.related_video_ids,

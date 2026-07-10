@@ -762,33 +762,50 @@ export interface components {
       cycle_bonus_earned: boolean;
     };
     NatureClue: {
+      emoji: string;
       title: string;
       description: string;
+      image_url: string | null;
       explore_video_id: string | null;
-      emoji: string;
       xp_reward: number;
     };
     ChallengeDetail: {
       id: string;
       title: string;
       slug: string;
+      season: number;
+      week_number: number;
+      xp_reward: number;
+      /** Raw 8-step payloads. The player reads the FLATTENED fields below —
+       * never index into steps[] from UI code. */
+      steps: unknown[];
+      /** "Need a hint?" ladder for the Skill step; the LAST entry is the give-away. */
+      skill_hints: string[];
+      /** "Need a hint?" ladder for the Build & test step; the LAST entry is the give-away. */
+      build_hints: string[];
       brief: string;
       emoji: string;
-      nature_clues: components["schemas"]["NatureClue"][];
+      completion_xp: number;
       design_secret: string;
       design_secret_story: string | null;
+      nature_clues: components["schemas"]["NatureClue"][];
       skill_lesson_id: string | null;
-      /** "Need a hint?" ladder for the Skill step; the LAST entry is the give-away. */
-      skill_hints?: string[];
-      /** "Need a hint?" ladder for the Build & test step; the LAST entry is the give-away. */
-      build_hints?: string[];
       related_explore_ids: string[];
-      completion_xp: number;
-      tools?: ("five_whys" | "scamper" | "mind_map")[];
+      tools: {
+        kind: "five_whys" | "scamper" | "mind_map";
+        age_mode: "young" | "older";
+      }[];
+      age_tier_variants: {
+        age_tier: string;
+        title_override?: string | null;
+        summary: string;
+      }[];
+      related_video_ids: string[];
       /** True when this mission needs a family subscription to play. */
-      is_premium?: boolean;
+      is_premium: boolean;
       /** True when premium and the caller's family has no active subscription. */
-      locked?: boolean;
+      locked: boolean;
+      created_at: string;
     };
     IdeaWallEntry: {
       id: string;

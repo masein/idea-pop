@@ -701,3 +701,92 @@ async fn step_hints_flatten_onto_skill_and_build_fields() {
     assert_eq!(body["skill_hints"], serde_json::json!([]));
     assert_eq!(body["build_hints"], serde_json::json!([]));
 }
+
+/// The mission player reads FLATTENED step fields off ChallengeDetail
+/// (brief, design_secret, nature_clues[], skill_lesson_id, completion_xp,
+/// emoji) — this pins the mapping from steps[] so the contract can't drift
+/// silently again (the Nature-clues white-screen bug).
+#[tokio::test]
+async fn detail_flattens_step_fields_for_the_player() {
+    const STEPS_FLAT: &str = r#"[
+  {"step":"brief","title":"Rain!","story":"The picnic is in danger.","image_url":null},
+  {"step":"your_idea","prompt":"Idea?","fork_to_step":6},
+  {"step":"nature_clues","intro":"Look around",
+   "clues":[{"text":"Lotus leaves shed water.","image_url":null,"habitat":"jungle"},
+            {"text":"Octopus vanishes into coral.","image_url":null,"habitat":"ocean"}]},
+  {"step":"design_secret","secret":"Superhydrophobicity!","reveal_hint":"Think bumpy."},
+  {"step":"skill","instructions":"Test surfaces.","skill_refs":["7d8a2f70-0000-0000-0000-000000000001"],
+   "hints":["Wax first."]},
+  {"step":"sketch","prompt":"Design it.","guidance":"Show drainage."},
+  {"step":"build_and_test","instructions":"Pour water.","test_criteria":["Dry?"],"hints":["Small pour first."]},
+  {"step":"celebrate_and_share","celebration_text":"Saved!","share_prompt":"Share it!"}
+]"#;
+
+    let (pool, _pg) = start_postgres().await;
+    let id = insert_challenge(
+        &pool,
+        "flat-test",
+        "Flat Test",
+        1,
+        1,
+        STEPS_FLAT,
+        TOOLS_JSON,
+        VARIANTS_JSON,
+    )
+    .await;
+
+    let app = router(challenge_state(pool.clone()), None);
+    let token = register_and_token(&app, "flat@test.com").await;
+    let res = app
+        .oneshot(authed_get(&format!("/challenges/{id}"), &token))
+        .await
+        .unwrap();
+    let body = body_json(res).await;
+
+    assert_eq!(body["brief"], "The picnic is in danger.");
+    assert_eq!(body["emoji"], "🚀");
+    assert_eq!(body["completion_xp"], 20);
+    assert_eq!(body["design_secret"], "Superhydrophobicity!");
+    assert_eq!(body["design_secret_story"], "Think bumpy.");
+    assert_eq!(
+        body["skill_lesson_id"], "7d8a2f70-0000-0000-0000-000000000001",
+        "first skill_ref becomes the lesson link"
+    );
+
+    let clues = body["nature_clues"].as_array().unwrap();
+    assert_eq!(clues.len(), 2);
+    assert_eq!(clues[0]["emoji"], "🌿");
+    assert_eq!(clues[0]["title"], "From the jungle");
+    assert_eq!(clues[0]["description"], "Lotus leaves shed water.");
+    assert_eq!(clues[0]["xp_reward"], 5);
+    assert_eq!(clues[0]["explore_video_id"], Value::Null);
+    assert_eq!(clues[1]["emoji"], "🌊");
+
+    // Steps with no skill_refs / empty clues stay safe defaults.
+    let res = app_less_challenge(&pool).await;
+    assert_eq!(res["nature_clues"], serde_json::json!([]));
+    assert_eq!(res["skill_lesson_id"], Value::Null);
+}
+
+/// Helper: a legacy-shaped challenge (empty clues, no refs) round-tripped
+/// through the detail endpoint.
+async fn app_less_challenge(pool: &PgPool) -> Value {
+    let id = insert_challenge(
+        &pool.clone(),
+        "flat-legacy",
+        "Flat Legacy",
+        1,
+        2,
+        STEPS_MAX,
+        TOOLS_JSON,
+        VARIANTS_JSON,
+    )
+    .await;
+    let app = router(challenge_state(pool.clone()), None);
+    let token = register_and_token(&app, "flat-legacy@test.com").await;
+    let res = app
+        .oneshot(authed_get(&format!("/challenges/{id}"), &token))
+        .await
+        .unwrap();
+    body_json(res).await
+}

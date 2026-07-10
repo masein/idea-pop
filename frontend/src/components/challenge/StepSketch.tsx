@@ -37,6 +37,13 @@ export default function StepSketch({ challenge, ageMode, onNext, onBack }: StepS
     }
   }
 
+
+  // Real DTO tools are {kind, age_mode} pairs; pick this kid's age mode,
+  // falling back to every authored kind if none match.
+  const allTools = challenge.tools ?? [];
+  const forAge = allTools.filter((t) => t.age_mode === ageMode).map((t) => t.kind);
+  const toolKinds = [...new Set(forAge.length > 0 ? forAge : allTools.map((t) => t.kind))];
+
   return (
     <div data-testid="step-sketch" className="flex flex-col gap-4 px-4 py-6">
       <div>
@@ -47,9 +54,9 @@ export default function StepSketch({ challenge, ageMode, onNext, onBack }: StepS
       </div>
 
       {/* Creativity tools accordion — only when challenge includes tools */}
-      {challenge.tools && challenge.tools.length > 0 && (
+      {toolKinds.length > 0 && (
         <ToolSelector
-          tools={challenge.tools}
+          tools={toolKinds}
           topic={challenge.title}
           ageMode={ageMode}
         />

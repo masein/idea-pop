@@ -26,13 +26,24 @@ function mockChallengeAPIs(page: import('@playwright/test').Page) {
       json: [{ id: 'ch-1', title: 'Build a bridge', emoji: '🌉', tools: ['five_whys'], difficulty: 'easy', time_minutes: 30, xp_reward: 20, mess_level: 1 }],
     })
   );
+  // Mirrors the REAL ChallengeDetail contract (flattened step fields).
   page.route('**/api/challenges/ch-1', (r) =>
     r.fulfill({
       json: {
-        id: 'ch-1', title: 'Build a bridge', emoji: '🌉',
-        brief: 'Design a bridge that can hold a book.', nature_clue: 'Spider webs are stronger than steel by weight.',
-        design_secret: 'Triangles distribute weight efficiently.', skill_title: 'Structural testing', skill_body: 'Load test your bridge.',
-        tools: ['five_whys'], difficulty: 'easy', time_minutes: 30, xp_reward: 20, mess_level: 1,
+        id: 'ch-1', title: 'Build a bridge', slug: 'build-a-bridge',
+        season: 1, week_number: 1, xp_reward: 20, completion_xp: 20, emoji: '🚀',
+        steps: [], related_video_ids: [], related_explore_ids: [],
+        is_premium: false, locked: false, created_at: '2026-07-01T00:00:00Z',
+        brief: 'Design a bridge that can hold a book.',
+        design_secret: 'Triangles distribute weight efficiently.',
+        design_secret_story: 'Which shape refuses to wobble?',
+        nature_clues: [
+          { emoji: '🌿', title: 'From the jungle', description: 'Spider webs are stronger than steel by weight.', image_url: null, explore_video_id: null, xp_reward: 5 },
+          { emoji: '🌊', title: 'From the ocean', description: 'Coral branches spread load in every direction.', image_url: null, explore_video_id: null, xp_reward: 5 },
+        ],
+        skill_lesson_id: null,
+        tools: [{ kind: 'five_whys', age_mode: 'young' }, { kind: 'scamper', age_mode: 'older' }],
+        age_tier_variants: [{ age_tier: '8-10', title_override: null, summary: 'Entry' }],
         skill_hints: ['Try a tiny version first — small tests fail fast and teach fast.', 'The big hint: tape beats glue for quick prototypes!'],
         build_hints: ['Test with something lighter than the book first.', 'The big hint: add triangles — they spread the weight!'],
       },
@@ -334,6 +345,51 @@ test.describe('axe — app pages', () => {
       .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
       .analyze();
     expect(results.violations).toEqual([]);
+  });
+
+  test('mission plays through ALL 8 steps via the inspire-me fork', async ({ page }) => {
+    await setCookie(page, 'ideapop_persona', 'kid');
+    mockChallengeAPIs(page);
+    const errors: string[] = [];
+    page.on('pageerror', (e) => errors.push(e.message));
+
+    await page.goto('/en/challenges/ch-1');
+    // 1 · Brief
+    await expect(page.getByTestId('step-brief')).toBeVisible();
+    await expect(page.getByTestId('step-brief')).toContainText('Design a bridge that can hold a book.');
+    await page.getByTestId('step-brief').getByRole('button').first().click();
+    // 2 · Idea fork — take the NON-jump path (this used to white-screen).
+    await page.getByTestId('idea-no').click();
+    // 3 · Nature clues render with real clue content
+    await expect(page.getByTestId('step-nature-clues')).toBeVisible();
+    await expect(page.getByTestId('nature-clue-0')).toContainText('Spider webs are stronger');
+    await expect(page.getByTestId('nature-clue-1')).toContainText('From the ocean');
+    await page.getByTestId('step-nature-clues').getByRole('button', { name: /secret/i }).click();
+    // 4 · Design secret
+    await expect(page.getByTestId('step-design-secret')).toBeVisible();
+    await expect(page.getByTestId('step-design-secret')).toContainText('Triangles distribute weight');
+    await page.getByTestId('step-design-secret').getByRole('button').first().click();
+    // 5 · Skill (+hints ladder present)
+    await expect(page.getByTestId('step-skill')).toBeVisible();
+    await expect(page.getByTestId('mission-hints')).toBeVisible();
+    await page.getByTestId('step-skill').getByRole('button', { name: /continue/i }).click();
+    // 6 · Sketch (+ thinking tools from the real {kind, age_mode} objects)
+    await expect(page.getByTestId('step-sketch')).toBeVisible();
+    await expect(page.getByTestId('tool-selector')).toBeVisible();
+    await page.getByTestId('field-title').fill('My bridge');
+    await page.getByTestId('field-used').fill('Sticks');
+    await page.getByRole('button', { name: /save my idea/i }).click();
+    // 7 · Build & test (+hints)
+    await expect(page.getByTestId('step-build')).toBeVisible();
+    await expect(page.getByTestId('mission-hints')).toBeVisible();
+    await page.getByTestId('test-worked').click();
+    await page.getByTestId('field-title').fill('My bridge build');
+    await page.getByTestId('field-used').fill('Sticks and tape');
+    await page.getByRole('button', { name: /mission complete/i }).click();
+    // 8 · Celebrate
+    await expect(page.getByTestId('step-celebrate')).toBeVisible();
+
+    expect(errors, `client-side exceptions: ${errors.join(' | ')}`).toEqual([]);
   });
 
   test('studio classify page passes axe', async ({ page }) => {

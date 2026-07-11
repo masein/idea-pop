@@ -23,22 +23,24 @@ export const registerSchema = z
   });
 export type RegisterFormData = z.infer<typeof registerSchema>;
 
+// kidProfileSchema messages are translation KEYS (namespace onboarding.kid),
+// resolved at render via next-intl — the onboarding form is the only consumer.
 export const kidProfileSchema = z.object({
-  avatar_id: z.string().min(1, "Pick a character"),
+  avatar_id: z.string().min(1, "err_avatar"),
   nickname: z
     .string()
-    .min(2, "Nickname must be at least 2 characters")
-    .max(20, "Nickname must be 20 characters or less")
-    .regex(
-      /^[a-zA-Z0-9 _-]+$/,
-      "Only letters, numbers, spaces, _ and - allowed"
-    ),
+    .min(2, "err_nickname_min")
+    .max(20, "err_nickname_max")
+    // Unicode-aware: accept letters/numbers from ANY script (Persian, Arabic,
+    // etc.) plus space, underscore and hyphen. The old /[a-zA-Z0-9]/ rejected
+    // non-ASCII names like "کاوشگر".
+    .regex(/^[\p{L}\p{N} _-]+$/u, "err_nickname_chars"),
   birth_year: z
     .number()
     .int()
-    .min(CURRENT_YEAR - 20, "Must be at most 20 years old")
-    .max(CURRENT_YEAR - 4, "Must be at least 4 years old"),
-  parent_email: z.string().email("Enter a valid parent email"),
+    .min(CURRENT_YEAR - 20, "err_birth_max_age")
+    .max(CURRENT_YEAR - 4, "err_birth_min_age"),
+  parent_email: z.string().email("err_parent_email"),
 });
 export type KidProfileFormData = z.infer<typeof kidProfileSchema>;
 

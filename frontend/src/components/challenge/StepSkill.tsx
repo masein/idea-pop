@@ -47,7 +47,7 @@ export default function StepSkill({
 
           <div className="flex flex-col gap-1 flex-1 min-w-0">
             <p className="font-display text-base text-ink">{t('skill_lesson_title')}</p>
-            <span className="bg-library/10 text-library text-xs px-2 py-0.5 rounded-full w-fit">
+            <span dir="ltr" className="bg-library/10 text-library text-xs px-2 py-0.5 rounded-full w-fit">
               {t('xp_chip', { xp: 10 })}
             </span>
           </div>

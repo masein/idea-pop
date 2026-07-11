@@ -73,7 +73,7 @@ export default function StepNatureClues({
                 <span className="bg-tint-lime text-ink/70 text-xs px-2 py-0.5 rounded-full">
                   {clue.title}
                 </span>
-                <span className="bg-explore/10 text-explore text-xs px-2 py-0.5 rounded-full">
+                <span dir="ltr" className="bg-explore/10 text-explore text-xs px-2 py-0.5 rounded-full">
                   {t('xp_chip', { xp: clue.xp_reward })}
                 </span>
 

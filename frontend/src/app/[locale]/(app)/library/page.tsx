@@ -299,7 +299,8 @@ function QuickMakeTile({ make }: { make: QuickMakeResponse }) {
       </span>
 
       <span className="inline-flex items-center gap-1 rounded-pill bg-black/20 px-2.5 py-0.5 font-body text-xs font-bold">
-        {emoji} {studioLabel(t, make.studio)} {t('xp_reward', { xp: make.xp_reward })}
+        {emoji} {studioLabel(t, make.studio)}{' '}
+        <span dir="ltr">{t('xp_reward', { xp: make.xp_reward })}</span>
       </span>
       <p className="font-display text-base font-bold leading-tight">{make.title}</p>
 

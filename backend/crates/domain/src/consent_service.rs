@@ -579,6 +579,19 @@ mod tests {
     }
 
     #[test]
+    fn nickname_accepts_unicode_letters() {
+        // COPPA collects a nickname only — any script is fine (Persian, Arabic,
+        // CJK, emoji-free letters). The frontend mirrors this with a \p{L}\p{N}
+        // pattern; the backend never restricted characters, only length/blank.
+        assert!(validate_nickname("کاوشگر").is_ok());
+        assert!(validate_nickname("Élodie").is_ok());
+        assert!(validate_nickname("さくら").is_ok());
+        assert!(validate_nickname("Pixel_7").is_ok());
+        assert!(validate_nickname("   ").is_err()); // blank after trim
+        assert!(validate_nickname(&"x".repeat(31)).is_err()); // too long
+    }
+
+    #[test]
     fn revoked_denies_all_gated_actions() {
         assert!(!ConsentGate::can(
             &ConsentStatus::Revoked,

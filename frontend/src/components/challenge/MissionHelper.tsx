@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { askMissionHelper } from '@/lib/api/client';
 
@@ -8,20 +8,34 @@ interface MissionHelperProps {
   challengeId: string;
   /** Mission step number 1-8 — the helper only knows about THIS step. */
   step: number;
+  /** Render already expanded (e.g. when opened from a CTA). */
+  defaultOpen?: boolean;
+  /** Increment to open the panel from outside (Brainstorm-with-Popi CTA). */
+  openSignal?: number;
 }
 
 type Phase = 'idle' | 'loading' | 'answered' | 'blocked' | 'error';
 
 /**
- * Scoped AI mission helper (AI-helper-spec.md) — same accordion anatomy as
- * MissionHints. Not an open chat: one question at a time, about the current
- * step only. The browser sends nothing but the typed question; the server
- * owns the model key, moderation, consent/rate gates, and the transcript
- * that parents and teachers can review.
+ * "Ask Popi" — the scoped AI mission helper (AI-helper-spec.md), fronted by
+ * the same penguin character as the floating Ask-Me mascot. Same accordion
+ * anatomy as MissionHints. Not an open chat: one question at a time, about
+ * the current step only. The browser sends nothing but the typed question;
+ * the server owns the model key, moderation, consent/rate gates, and the
+ * transcript that parents and teachers can review.
  */
-export default function MissionHelper({ challengeId, step }: MissionHelperProps) {
+export default function MissionHelper({
+  challengeId,
+  step,
+  defaultOpen = false,
+  openSignal = 0,
+}: MissionHelperProps) {
   const t = useTranslations('helper');
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(defaultOpen);
+
+  useEffect(() => {
+    if (openSignal > 0) setOpen(true);
+  }, [openSignal]);
   const [question, setQuestion] = useState('');
   const [phase, setPhase] = useState<Phase>('idle');
   const [answer, setAnswer] = useState('');
@@ -55,9 +69,18 @@ export default function MissionHelper({ challengeId, step }: MissionHelperProps)
         data-testid="helper-toggle"
         onClick={() => setOpen((prev) => !prev)}
         aria-expanded={open}
-        className="flex w-full items-center justify-between bg-tint-lavender px-4 py-3 font-display text-sm text-ink transition-colors hover:bg-tint-lavender/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ink/40"
+        className="flex w-full items-center justify-between bg-tint-lavender px-4 py-3 font-display text-sm text-ink transition-colors hover:bg-tint-lavender-deep focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ink/40"
       >
-        <span>{t('toggle')}</span>
+        <span className="flex items-center gap-2">
+          {/* Same penguin as the floating Ask-Me mascot — Popi is ONE character. */}
+          <span
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-challenge text-lg"
+            aria-hidden="true"
+          >
+            🐧
+          </span>
+          {t('toggle')}
+        </span>
         <span
           className="text-ink/50 transition-transform duration-200"
           style={{ transform: open ? 'rotate(180deg)' : 'rotate(0deg)' }}
@@ -110,7 +133,7 @@ export default function MissionHelper({ challengeId, step }: MissionHelperProps)
 
           {phase === 'answered' && (
             <div data-testid="helper-answer" className="rounded-card bg-tint-blue p-3">
-              <p className="font-display text-xs font-bold text-ink/60">{t('answer_label')} 🐧</p>
+              <p className="font-display text-xs font-bold text-ink/60">🐧 {t('answer_label')}</p>
               <p className="mt-1 font-body text-sm text-ink">{answer}</p>
             </div>
           )}

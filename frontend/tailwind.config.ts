@@ -27,6 +27,7 @@ const config: Config = {
           cream: "var(--color-tint-cream)",
           blue: "var(--color-tint-blue)",
           lavender: "var(--color-tint-lavender)",
+          "lavender-deep": "var(--color-tint-lavender-deep)",
           blush: "var(--color-tint-blush)",
         },
         ink: "var(--color-ink)",

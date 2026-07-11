@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import CaptureCard, { type CaptureData } from './CaptureCard';
 import ClassifierPanel from '@/components/ai/ClassifierPanel';
 import MissionHints from './MissionHints';
@@ -42,6 +42,9 @@ export default function StepBuild({
 }: StepBuildProps) {
   const [checked, setChecked] = useState<Set<number>>(new Set());
   const [testResult, setTestResult] = useState<TestResult>(null);
+  // Brainstorm-with-Popi CTA opens this step's helper and scrolls to it.
+  const [helperSignal, setHelperSignal] = useState(0);
+  const helperRef = useRef<HTMLDivElement>(null);
   const [submitting, setSubmitting] = useState(false);
 
   function toggleCheck(index: number) {
@@ -107,9 +110,11 @@ export default function StepBuild({
         </div>
       )}
 
-      <div className="mb-4 flex flex-col gap-4">
+      <div ref={helperRef} className="mb-4 flex flex-col gap-4">
         <MissionHints hints={challenge.build_hints ?? []} />
-        {HELPER_ON && <MissionHelper challengeId={challenge.id} step={7} />}
+        {HELPER_ON && (
+          <MissionHelper challengeId={challenge.id} step={7} openSignal={helperSignal} />
+        )}
       </div>
 
       {/* Test question card */}
@@ -159,6 +164,10 @@ export default function StepBuild({
         ageMode={ageMode}
         onSubmit={handleSubmit}
         submitting={submitting}
+        onBrainstorm={() => {
+          setHelperSignal((s) => s + 1);
+          helperRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }}
       />
 
       <button

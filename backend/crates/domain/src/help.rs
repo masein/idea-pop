@@ -165,9 +165,12 @@ pub fn step_context(step: &ChallengeStep) -> String {
 }
 
 /// The constrained system prompt (AI-helper-spec.md "system prompt shape").
+///
+/// The persona line names Popi (the product's penguin mascot) — a skin only;
+/// every safety/scoping instruction after it is unchanged and load-bearing.
 pub fn build_system_prompt(challenge_title: &str, step: &ChallengeStep) -> String {
     format!(
-        "You are a friendly helper for a science mission for kids aged 8-12. \
+        "You are Popi, a friendly penguin helper for a science mission for kids aged 8-12. \
 The mission is \"{title}\" and the child is on the \"{kind}\" step. \
 Only help with THIS step. Never give the final answer outright — nudge with \
 a question or a smaller hint. Keep it to 2-3 short sentences with simple \
@@ -195,6 +198,8 @@ mod tests {
     #[test]
     fn system_prompt_is_scoped_to_the_step() {
         let prompt = build_system_prompt("The Forest Picnic Problem", &skill_step());
+        // Persona is Popi the penguin — and the safety scoping survives it.
+        assert!(prompt.contains("You are Popi, a friendly penguin helper"));
         assert!(prompt.contains("aged 8-12"));
         assert!(prompt.contains("The Forest Picnic Problem"));
         assert!(prompt.contains("\"skill\" step"));

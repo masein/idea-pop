@@ -19,6 +19,9 @@
   --color-coral: #cc3a3a;
   --color-coral-soft: #ebb0b0;
   --color-coral-faint: #f2cece;
+  /* Hover shade for tint-lavender surfaces (alpha modifiers don't compile
+     for var() colors, so hover states need their own precomputed token). */
+  --color-tint-lavender-deep: #e9c9f8;
 
   /* Pastel page-tint backgrounds */
   --color-tint-lime: #f3ffc2;

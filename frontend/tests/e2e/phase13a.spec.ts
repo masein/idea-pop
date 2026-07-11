@@ -364,15 +364,25 @@ test.describe('axe — app pages', () => {
     await page.getByTestId('step-build').waitFor();
 
     await expect(page.getByTestId('mission-helper')).toBeVisible();
+    // The helper IS Popi — same penguin as the floating Ask-Me mascot.
+    await expect(page.getByTestId('helper-toggle')).toContainText('Ask Popi');
     await page.getByTestId('helper-toggle').click();
     await page.getByTestId('helper-question-input').fill('Why does my bridge fall?');
     await page.getByTestId('helper-ask-btn').click();
     await expect(page.getByTestId('helper-answer')).toContainText('Try one coin first');
+    await expect(page.getByTestId('helper-answer')).toContainText('Popi says');
 
     const results = await new AxeBuilder({ page })
       .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
       .analyze();
     expect(results.violations).toEqual([]);
+
+    // The capture card's "Brainstorm with Popi" CTA opens this same helper.
+    await page.getByTestId('helper-toggle').click(); // collapse
+    await expect(page.getByTestId('helper-question-input')).toHaveCount(0);
+    await page.getByTestId('ai-hint').click();
+    await expect(page.getByTestId('helper-toggle')).toHaveAttribute('aria-expanded', 'true');
+    await expect(page.getByTestId('helper-question-input')).toBeVisible();
   });
 
   test('mission plays through ALL 8 steps via the inspire-me fork', async ({ page }) => {

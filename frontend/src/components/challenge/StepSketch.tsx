@@ -77,6 +77,7 @@ export default function StepSketch({ challenge, ageMode, onNext, onBack }: StepS
         ageMode={ageMode}
         onSubmit={handleSubmit}
         submitting={submitting}
+        helper={{ challengeId: challenge.id, step: 6 }}
       />
 
       <button

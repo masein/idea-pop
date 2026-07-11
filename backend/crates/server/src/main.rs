@@ -156,16 +156,16 @@ async fn main() -> anyhow::Result<()> {
 
     // Scoped AI mission helper — ships dark (MISSION_HELPER_ENABLED=false by
     // default). The Metis key is server-side only; without a key the flag
-    // stays off regardless.
+    // stays off regardless. Empty values count as unset: docker-compose
+    // passes optional vars through as `${VAR:-}`, which arrives as "".
     let helper_enabled = std::env::var("MISSION_HELPER_ENABLED").as_deref() == Ok("true");
-    let metis_key = std::env::var("METIS_API_KEY").ok();
+    let metis_key = non_empty_env("METIS_API_KEY");
     let state = match (helper_enabled, metis_key) {
         (true, Some(key)) => {
-            let base_url = std::env::var("METIS_BASE_URL")
-                .unwrap_or_else(|_| "https://api.metisai.ir/openai/v1".into());
-            let model = std::env::var("METIS_MODEL").unwrap_or_else(|_| "gpt-4o-mini".into());
-            let hourly_limit: i64 = std::env::var("HELPER_HOURLY_LIMIT")
-                .ok()
+            let base_url = non_empty_env("METIS_BASE_URL")
+                .unwrap_or_else(|| "https://api.metisai.ir/openai/v1".into());
+            let model = non_empty_env("METIS_MODEL").unwrap_or_else(|| "gpt-4o-mini".into());
+            let hourly_limit: i64 = non_empty_env("HELPER_HOURLY_LIMIT")
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(10);
             tracing::info!("mission helper enabled (model {model})");
@@ -253,4 +253,10 @@ fn init_tracing() {
             .with_env_filter(filter)
             .init();
     }
+}
+
+/// Read an env var, treating empty/whitespace values as unset — optional vars
+/// arrive as "" when compose substitutes `${VAR:-}` from an .env without them.
+fn non_empty_env(name: &str) -> Option<String> {
+    std::env::var(name).ok().filter(|v| !v.trim().is_empty())
 }

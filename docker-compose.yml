@@ -27,6 +27,15 @@ services:
       # Override per environment; NEVER use these values in production.
       JWT_SECRET: ${JWT_SECRET:-dev-secret-at-least-32-bytes-long!!}
       RUN_MIGRATIONS: "true"
+      # AI mission helper — DARK by default. Values come from the untracked
+      # root .env via compose substitution (never put the real METIS_API_KEY
+      # in a tracked file). Empty = unset to the server. See docs/runbook §9.
+      MISSION_HELPER_ENABLED: ${MISSION_HELPER_ENABLED:-false}
+      METIS_API_KEY: ${METIS_API_KEY:-}
+      METIS_BASE_URL: ${METIS_BASE_URL:-}
+      METIS_MODEL: ${METIS_MODEL:-}
+      HELPER_HOURLY_LIMIT: ${HELPER_HOURLY_LIMIT:-}
+      HELP_MESSAGE_RETENTION_DAYS: ${HELP_MESSAGE_RETENTION_DAYS:-}
     ports:
       - "8080:8080"
     depends_on:
@@ -41,6 +50,9 @@ services:
         # Server-side /api/* rewrite destination — the backend service on the
         # compose network. Baked at build time (standalone output).
         API_URL: http://backend:8080
+        # Helper UI flag — baked at `next build`, DARK by default. Set it in
+        # the untracked root .env and rebuild (up -d --build) to change.
+        NEXT_PUBLIC_MISSION_HELPER: ${NEXT_PUBLIC_MISSION_HELPER:-false}
     ports:
       - "3000:3000"
     depends_on:

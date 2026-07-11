@@ -251,10 +251,36 @@ test.describe('axe — app pages', () => {
     );
     await page.goto('/en/library');
     await page.waitForLoadState('networkidle');
+    // The classifier's standalone entry point lives here now (not in the nav),
+    // so the axe pass below also contrast-checks the purple tool card.
+    await expect(page.getByTestId('tool-card-classifier')).toBeVisible();
     const results = await new AxeBuilder({ page })
       .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
       .analyze();
     expect(results.violations).toEqual([]);
+  });
+
+  test('kid sidebar shows exactly the designed nav items (no AI Studio)', async ({ page }) => {
+    await setCookie(page, 'ideapop_persona', 'kid');
+    page.route('**/api/library/**', (r) => r.fulfill({ json: [] }));
+    await page.goto('/en/library');
+    // On narrow viewports the nav lives in the drawer — open it first.
+    const openBtn = page.getByRole('button', { name: 'Open navigation' });
+    if (await openBtn.isVisible()) await openBtn.click();
+    const nav = page.locator('nav[aria-label="Main navigation"]:visible').first();
+    await expect(nav.getByRole('link', { name: 'Library' })).toBeVisible();
+    const labels = await nav.locator('ul[role="list"] a > span:first-child').allTextContents();
+    expect(labels).toEqual(['My profile', 'Exploring', 'Library', 'Challenges', 'Account']);
+  });
+
+  test('library tool card opens the Machine Trainer', async ({ page }) => {
+    await setCookie(page, 'ideapop_persona', 'kid');
+    page.route('**/api/library/**', (r) => r.fulfill({ json: [] }));
+    await page.goto('/en/library');
+    await page.getByTestId('tool-card-classifier').click();
+    await page.waitForURL('**/studio/classify');
+    await expect(page.getByTestId('classifier-power-up')).toBeVisible();
+    await expect(page.getByTestId('classifier-privacy-note')).toBeVisible();
   });
 
   test('challenges list page passes axe', async ({ page }) => {

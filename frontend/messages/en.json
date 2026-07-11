@@ -312,7 +312,14 @@
     "cta_1": "Every plan starts with",
     "cta_2": "free. Start here.",
     "cta_start": "Start free",
-    "cta_watch": "Watch a sample"
+    "cta_watch": "Watch a sample",
+    "free_label": "Free",
+    "free_price": "$0",
+    "standard_label": "Plus",
+    "monthly_price": "$9.99",
+    "per_month": "/month",
+    "annual_note": "or $59.90 /year",
+    "kid_note": "A grown-up finishes the upgrade — you can't be charged here."
   },
   "explore": {
     "heading": "Animal Superpowers",
@@ -719,7 +726,25 @@
     "parent_handoff_body": "Show this screen to your parent. They can upgrade from their account.",
     "parent_handoff_dismiss": "Got it",
     "xp_label": "XP",
-    "level_label": "Level {n}"
+    "level_label": "Level {n, number}",
+    "default_nickname": "Explorer",
+    "free_feat_1": "Watch any Explore video",
+    "free_feat_2": "Try 1 mission per month",
+    "free_feat_3": "Basic library access",
+    "free_cta": "Start for free",
+    "plus_feat_1": "Unlimited missions",
+    "plus_feat_2": "Full expert library",
+    "plus_feat_3": "Private portfolio",
+    "plus_feat_4": "XP, badges & themes",
+    "plus_cta": "Start free trial",
+    "demo_mission_title": "Seed Launcher Challenge · Due Sunday",
+    "demo_mission_sub": "Design a seed that travels the farthest",
+    "demo_explore_1": "Masters of Disguise · 3 min",
+    "demo_explore_2": "How Plants Talk · 4 min",
+    "demo_explore_3": "Engineers in Silk · 2 min",
+    "demo_explore_xp": "+{xp, number} XP",
+    "demo_library_1": "Build a Raft · Beginner",
+    "demo_library_2": "Seed Launcher · Intermediate"
   },
   "profile": {
     "page_title": "My Profile",

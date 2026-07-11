@@ -49,8 +49,16 @@ export default function StepSketch({ challenge, ageMode, onNext, onBack }: StepS
       <div>
         <h2 className="font-display text-2xl text-challenge">YOUR idea! ✏️</h2>
         <p className="font-body text-sm text-ink/50 mt-1">
-          Sketch or photo your crossing machine
+          {challenge.sketch_prompt?.trim() || 'Sketch or photo your idea'}
         </p>
+        {challenge.sketch_guidance?.trim() && (
+          <p
+            data-testid="sketch-guidance"
+            className="mt-2 rounded-card bg-tint-cream px-3 py-2 font-body text-sm text-ink/70"
+          >
+            💡 {challenge.sketch_guidance}
+          </p>
+        )}
       </div>
 
       {/* Creativity tools accordion — only when challenge includes tools */}

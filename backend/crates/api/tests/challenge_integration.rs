@@ -748,6 +748,8 @@ async fn detail_flattens_step_fields_for_the_player() {
     assert_eq!(body["completion_xp"], 20);
     assert_eq!(body["design_secret"], "Superhydrophobicity!");
     assert_eq!(body["design_secret_story"], "Think bumpy.");
+    assert_eq!(body["sketch_prompt"], "Design it.");
+    assert_eq!(body["sketch_guidance"], "Show drainage.");
     assert_eq!(
         body["skill_lesson_id"], "7d8a2f70-0000-0000-0000-000000000001",
         "first skill_ref becomes the lesson link"

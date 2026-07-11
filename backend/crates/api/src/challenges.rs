@@ -79,6 +79,9 @@ pub struct ChallengeResponse {
     pub completion_xp: i16,
     /// The Design-secret step's secret text.
     pub design_secret: String,
+    /// The Sketch step's own prompt/guidance (frontend `sketch_prompt` etc.).
+    pub sketch_prompt: String,
+    pub sketch_guidance: String,
     /// The Design-secret step's reveal hint (teaser shown to older kids).
     pub design_secret_story: Option<String>,
     /// The Nature-clues step's clues, flattened for the player.
@@ -154,6 +157,8 @@ fn challenge_to_dto(c: Challenge, has_premium: bool) -> ChallengeResponse {
     let mut design_secret = String::new();
     let mut design_secret_story = None;
     let mut nature_clues = Vec::new();
+    let mut sketch_prompt = String::new();
+    let mut sketch_guidance = String::new();
     let mut skill_lesson_id = None;
     for step in &c.steps {
         match step {
@@ -187,6 +192,10 @@ fn challenge_to_dto(c: Challenge, has_premium: bool) -> ChallengeResponse {
             } => {
                 skill_hints = hints.clone();
                 skill_lesson_id = skill_refs.first().copied();
+            }
+            ChallengeStep::Sketch { prompt, guidance } => {
+                sketch_prompt = prompt.clone();
+                sketch_guidance = guidance.clone();
             }
             ChallengeStep::BuildAndTest { hints, .. } => build_hints = hints.clone(),
             _ => {}
@@ -227,6 +236,8 @@ fn challenge_to_dto(c: Challenge, has_premium: bool) -> ChallengeResponse {
         completion_xp: c.xp_reward,
         design_secret,
         design_secret_story,
+        sketch_prompt,
+        sketch_guidance,
         nature_clues,
         skill_lesson_id,
         related_explore_ids: c.related_video_ids.clone(),

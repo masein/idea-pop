@@ -62,13 +62,15 @@ export default function StepNatureClues({
                 </div>
               )}
 
-              <span className="text-4xl">{clue.emoji}</span>
+              <span className="text-4xl" aria-hidden="true">{clue.emoji}</span>
 
-              <p className="font-display text-lg text-ink">{clue.title}</p>
-
-              <p className="font-body text-sm text-ink/70">{clue.description}</p>
+              {/* The clue itself is the star — habitat is just a tag. */}
+              <p className="font-display text-base text-ink">{clue.description}</p>
 
               <div className="flex items-center gap-2 flex-wrap">
+                <span className="bg-tint-lime text-ink/70 text-xs px-2 py-0.5 rounded-full">
+                  {clue.title}
+                </span>
                 <span className="bg-explore/10 text-explore text-xs px-2 py-0.5 rounded-full">
                   +{clue.xp_reward} XP
                 </span>

@@ -42,6 +42,8 @@ function mockChallengeAPIs(page: import('@playwright/test').Page) {
           { emoji: '🌊', title: 'From the ocean', description: 'Coral branches spread load in every direction.', image_url: null, explore_video_id: null, xp_reward: 5 },
         ],
         skill_lesson_id: null,
+        sketch_prompt: 'Draw the bridge that saves the day.',
+        sketch_guidance: 'Label the strongest part.',
         tools: [{ kind: 'five_whys', age_mode: 'young' }, { kind: 'scamper', age_mode: 'older' }],
         age_tier_variants: [{ age_tier: '8-10', title_override: null, summary: 'Entry' }],
         skill_hints: ['Try a tiny version first — small tests fail fast and teach fast.', 'The big hint: tape beats glue for quick prototypes!'],
@@ -375,6 +377,10 @@ test.describe('axe — app pages', () => {
     await page.getByTestId('step-skill').getByRole('button', { name: /continue/i }).click();
     // 6 · Sketch (+ thinking tools from the real {kind, age_mode} objects)
     await expect(page.getByTestId('step-sketch')).toBeVisible();
+    // The mission's OWN sketch prompt — never the stale Help-Max copy.
+    await expect(page.getByTestId('step-sketch')).toContainText('Draw the bridge that saves the day.');
+    await expect(page.getByTestId('sketch-guidance')).toContainText('Label the strongest part.');
+    await expect(page.getByTestId('step-sketch')).not.toContainText('crossing machine');
     await expect(page.getByTestId('tool-selector')).toBeVisible();
     await page.getByTestId('field-title').fill('My bridge');
     await page.getByTestId('field-used').fill('Sticks');

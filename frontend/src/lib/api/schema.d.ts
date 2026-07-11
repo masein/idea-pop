@@ -788,6 +788,9 @@ export interface components {
       completion_xp: number;
       design_secret: string;
       design_secret_story: string | null;
+      /** The Sketch step's own prompt/guidance (empty string when absent). */
+      sketch_prompt?: string;
+      sketch_guidance?: string;
       nature_clues: components["schemas"]["NatureClue"][];
       skill_lesson_id: string | null;
       related_explore_ids: string[];

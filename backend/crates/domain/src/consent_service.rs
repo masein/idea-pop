@@ -136,6 +136,51 @@ impl ConsentService {
     /// Parent revokes consent for a child → child returns to RESTRICTED.
     ///
     /// Only the parent who owns the child profile may revoke.
+    /// In-app consent grant by the AUTHENTICATED parent (no email token).
+    ///
+    /// The token/email flow stays the primary verifiable-consent path for
+    /// parents without accounts; a signed-in parent approving their OWN
+    /// child is an equally recorded human approval. Ownership-checked;
+    /// scope "class" -> ClassGranted, "public"/"all" -> Granted.
+    pub async fn grant_consent_by_parent(
+        &self,
+        child_id: Uuid,
+        parent_account_id: Uuid,
+        scope: &str,
+    ) -> Result<(), DomainError> {
+        let status = match scope {
+            "class" => ConsentStatus::ClassGranted,
+            "public" | "all" => ConsentStatus::Granted,
+            _ => {
+                return Err(DomainError::Validation(
+                    "scope must be one of class | public | all".into(),
+                ));
+            }
+        };
+
+        let child = self
+            .child_repo
+            .find_by_id(child_id)
+            .await?
+            .ok_or(DomainError::NotFound)?;
+        if child.parent_account_id != parent_account_id {
+            return Err(DomainError::Forbidden(
+                "not the parent of this child".into(),
+            ));
+        }
+
+        let consent = self
+            .consent_repo
+            .find_latest_by_child(child_id)
+            .await?
+            .ok_or(DomainError::NotFound)?;
+
+        let now = self.clock.now();
+        self.consent_repo
+            .update_status(consent.id, status, now)
+            .await
+    }
+
     pub async fn revoke_consent(
         &self,
         child_id: Uuid,
@@ -647,6 +692,52 @@ mod tests {
             .await
             .unwrap_err();
         assert!(matches!(err, DomainError::Validation(_)));
+    }
+
+    #[tokio::test]
+    async fn parent_grants_consent_in_app_by_child_id() {
+        let (_, svc) = make_service();
+        let parent_id = Uuid::new_v4();
+        let (child, _) = svc
+            .create_child(
+                parent_id,
+                "Zip".into(),
+                "cat".into(),
+                2016,
+                "z@e.com".into(),
+            )
+            .await
+            .unwrap();
+
+        // class scope → ClassGranted
+        svc.grant_consent_by_parent(child.id, parent_id, "class")
+            .await
+            .unwrap();
+        svc.check_gate(child.id, &GatedAction::Share).await.unwrap();
+
+        // all scope → Granted (full)
+        svc.grant_consent_by_parent(child.id, parent_id, "all")
+            .await
+            .unwrap();
+        svc.check_gate(child.id, &GatedAction::CollectExtraData)
+            .await
+            .unwrap();
+
+        // wrong parent → Forbidden; bad scope → Validation
+        let err = svc
+            .grant_consent_by_parent(child.id, Uuid::new_v4(), "all")
+            .await
+            .unwrap_err();
+        assert!(matches!(err, DomainError::Forbidden(_)));
+        let err = svc
+            .grant_consent_by_parent(child.id, parent_id, "everything")
+            .await
+            .unwrap_err();
+        assert!(matches!(err, DomainError::Validation(_)));
+
+        // and the parent can revoke again → gate closes
+        svc.revoke_consent(child.id, parent_id).await.unwrap();
+        assert!(svc.check_gate(child.id, &GatedAction::Share).await.is_err());
     }
 
     #[tokio::test]

@@ -225,6 +225,7 @@ pub struct CreateHealthLogRequest {
         parent::set_display_mode, parent::list_approvals,
         parent::approve_approval, parent::dismiss_approval,
         consents::grant_consent, consents::revoke_consent,
+        consents::grant_consent_in_app, consents::revoke_consent_in_app,
         classes::create_class, classes::join_class,
         teacher::get_class, teacher::assign_mission, teacher::class_gallery,
         explore::list_explore, explore::get_explore,
@@ -253,6 +254,7 @@ pub struct CreateHealthLogRequest {
         UpdateDisplayModeRequest, DisplayModeResponse,
         ParentApprovalResponse, ResolveApprovalRequest, ResolveApprovalResponse,
         CreateClassRequest, CreateClassResponse, JoinClassResponse,
+        consents::ConsentToggleRequest,
         TeacherClassResponse, ClassGalleryItemResponse, AssignMissionRequest,
         ExploreVideoResponse, ExplorePageResponse,
         StudioCountResponse, CourseSummaryResponse, QuickMakeResponse, QuickMakePageResponse,
@@ -537,6 +539,9 @@ pub fn router_with_metrics(
             "/parent/approvals/:id/dismiss",
             post(parent::dismiss_approval),
         )
+        // In-app parent toggles (static segments — no clash with :token/:child_id)
+        .route("/consents/grant", post(consents::grant_consent_in_app))
+        .route("/consents/revoke", post(consents::revoke_consent_in_app))
         .route("/consents/:token/grant", post(consents::grant_consent))
         .route("/consents/:child_id/revoke", post(consents::revoke_consent))
         // Classes

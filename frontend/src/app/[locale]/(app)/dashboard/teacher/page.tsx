@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/routing';
 import {
   fetchTeacherClass,
@@ -25,6 +26,7 @@ function avatarEmoji(id: string): string {
 // ── Header ────────────────────────────────────────────────────────────────────
 
 function DashboardHeader({ classData }: { classData: TeacherClass }) {
+  const t = useTranslations('teacher_dashboard');
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex items-center gap-4">
@@ -36,10 +38,10 @@ function DashboardHeader({ classData }: { classData: TeacherClass }) {
         </div>
         <div>
           <h1 className="font-display text-2xl font-bold text-ink">
-            Welcome to your teacher portal
+            {t('heading')}
           </h1>
           <p className="font-body text-sm text-ink/60">
-            {classData.student_count} students in your class
+            {t('students_in_class', { count: classData.student_count })}
           </p>
         </div>
       </div>
@@ -52,7 +54,7 @@ function DashboardHeader({ classData }: { classData: TeacherClass }) {
           className="rounded-pill px-5 py-2 font-display text-sm font-bold text-white shadow-sm transition-all hover:brightness-110 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
           style={{ backgroundColor: DEEP }}
         >
-          Add more class
+          {t('add_class')}
         </a>
       </div>
     </div>
@@ -62,6 +64,7 @@ function DashboardHeader({ classData }: { classData: TeacherClass }) {
 // ── Class code bar ──────────────────────────────────────────────────────────
 
 function ClassCodeBar({ classData }: { classData: TeacherClass }) {
+  const t = useTranslations('teacher_dashboard');
   const [copied, setCopied] = useState(false);
 
   async function handleCopy() {
@@ -76,8 +79,8 @@ function ClassCodeBar({ classData }: { classData: TeacherClass }) {
       className="flex flex-col gap-3 rounded-card bg-[#EDF6C5] px-5 py-3 sm:flex-row sm:items-center sm:justify-between"
     >
       <p className="font-body text-base font-bold text-ink">
-        Class code:{' '}
-        <span data-testid="class-code" className="tracking-wide text-[#2E5F4B]">
+        {t('class_code_label')}:{' '}
+        <span data-testid="class-code" dir="ltr" className="tracking-wide text-[#2E5F4B]">
           {classData.class_code}
         </span>
       </p>
@@ -88,7 +91,7 @@ function ClassCodeBar({ classData }: { classData: TeacherClass }) {
           onClick={handleCopy}
           className="rounded-pill bg-[#CDEB5A] px-6 py-2 font-display text-sm font-bold text-[#1F4D33] shadow-sm transition-all hover:brightness-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1F4D33] focus-visible:ring-offset-2"
         >
-          {copied ? '✓ Copied' : 'Copy'}
+          {copied ? t('copied') : t('copy_code')}
         </button>
         <button
           type="button"
@@ -96,7 +99,7 @@ function ClassCodeBar({ classData }: { classData: TeacherClass }) {
           onClick={() => window.print()}
           className="rounded-pill border-2 border-[#2E5F4B]/60 bg-white px-6 py-2 font-display text-sm font-bold text-[#2E5F4B] transition-all hover:bg-[#F4FADD] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2E5F4B] focus-visible:ring-offset-2"
         >
-          Print
+          {t('print_letter')}
         </button>
       </div>
     </div>
@@ -114,6 +117,7 @@ function MissionSection({
   challenges: ChallengeDetail[];
   onAssigned: (challengeId: string) => void;
 }) {
+  const t = useTranslations('teacher_dashboard');
   const [selectedId, setSelectedId] = useState(classData.assigned_challenge_id ?? '');
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -135,13 +139,16 @@ function MissionSection({
 
   return (
     <section className="flex flex-col gap-3">
-      <h2 className="font-display text-xl font-bold text-ink">This week&apos;s mission</h2>
+      <h2 className="font-display text-xl font-bold text-ink">{t('mission_heading')}</h2>
       <div
         data-testid="assign-mission-section"
         className="flex flex-col gap-4 rounded-card bg-[#CDEBFA] p-5"
       >
         <p className="font-display text-lg font-bold text-[#17567D]">
-          🏔️ {classData.assigned_challenge_title ?? 'No mission assigned yet'}
+          🏔️{' '}
+          {classData.assigned_challenge_title
+            ? t('mission_current', { title: classData.assigned_challenge_title })
+            : t('mission_none')}
         </p>
 
         {/* progress: assigned = full, unassigned = empty (no finished-count from API) */}
@@ -152,12 +159,12 @@ function MissionSection({
           />
         </div>
         <p className="font-body text-sm font-semibold text-[#17567D]">
-          {classData.student_count} students in this class
+          {t('students_in_this_class', { count: classData.student_count })}
         </p>
 
         <div className="flex flex-col gap-2 sm:flex-row">
           <label htmlFor="challenge-select" className="sr-only">
-            Choose a challenge to assign
+            {t('challenge_select_label')}
           </label>
           <select
             id="challenge-select"
@@ -166,7 +173,7 @@ function MissionSection({
             onChange={(e) => setSelectedId(e.target.value)}
             className="flex-1 rounded-pill border border-[#17567D]/25 bg-white px-4 py-2.5 font-body text-sm text-ink focus:outline-none focus:ring-2 focus:ring-[#1E7FB8]"
           >
-            <option value="">— Choose a challenge —</option>
+            <option value="">{t('mission_placeholder')}</option>
             {challenges.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.emoji} {c.title}
@@ -181,7 +188,7 @@ function MissionSection({
             className="rounded-pill px-6 py-2.5 font-display text-sm font-bold text-white shadow-sm transition-all hover:brightness-110 active:scale-95 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
             style={{ backgroundColor: BLUE }}
           >
-            {saving ? 'Assigning…' : saved ? '✓ Assigned!' : 'Assign new mission →'}
+            {saving ? t('assigning') : saved ? t('assigned') : t('assign_btn')}
           </button>
         </div>
       </div>
@@ -192,12 +199,13 @@ function MissionSection({
 // ── Class gallery ─────────────────────────────────────────────────────────────
 
 function ClassGallery({ items }: { items: ClassGalleryItem[] }) {
+  const t = useTranslations('teacher_dashboard');
   return (
     <section data-testid="class-gallery" className="flex flex-col gap-3">
-      <h2 className="font-display text-xl font-bold text-ink">Class gallery 🏫</h2>
+      <h2 className="font-display text-xl font-bold text-ink">{t('gallery_heading')} 🏫</h2>
       {items.length === 0 ? (
         <p className="rounded-card bg-white p-6 text-center font-body text-sm text-ink/50">
-          No submissions yet — students appear here after completing a mission.
+          {t('gallery_empty')}
         </p>
       ) : (
         <div className="flex gap-4 overflow-x-auto pb-2">
@@ -232,6 +240,7 @@ function ClassGallery({ items }: { items: ClassGalleryItem[] }) {
 // ── My students ───────────────────────────────────────────────────────────────
 
 function MyStudents({ items }: { items: ClassGalleryItem[] }) {
+  const t = useTranslations('teacher_dashboard');
   // Derive a roster from gallery submissions (no dedicated roster endpoint yet).
   const seen = new Set<string>();
   const students = items.filter((i) => {
@@ -244,7 +253,7 @@ function MyStudents({ items }: { items: ClassGalleryItem[] }) {
 
   return (
     <section className="flex flex-col gap-3">
-      <h2 className="font-display text-xl font-bold text-ink">My students</h2>
+      <h2 className="font-display text-xl font-bold text-ink">{t('students_heading')}</h2>
       <ul className="flex flex-col gap-2" role="list">
         {students.map((s) => (
           <li
@@ -255,7 +264,7 @@ function MyStudents({ items }: { items: ClassGalleryItem[] }) {
               {avatarEmoji(s.student_avatar_id)}
             </span>
             <span className="font-display font-bold text-ink">{s.student_nickname}</span>
-            <span className="font-body text-sm text-ink/60">— made {s.project_title}</span>
+            <span className="font-body text-sm text-ink/60">{t('student_made', { title: s.project_title })}</span>
           </li>
         ))}
       </ul>
@@ -266,16 +275,17 @@ function MyStudents({ items }: { items: ClassGalleryItem[] }) {
 // ── Info box ──────────────────────────────────────────────────────────────────
 
 function BringHomeBox() {
+  const t = useTranslations('teacher_dashboard');
   return (
     <div className="rounded-card border-2 border-dashed border-ink/20 bg-tint-lavender/40 p-5">
-      <p className="font-display font-bold text-[#2E5F4B]">🏫 Bring Idea Pop home</p>
+      <p className="font-display font-bold text-[#2E5F4B]">{t('bring_home_title')}</p>
       <p className="mt-1 font-body text-sm text-ink/70">
-        🖨️ Print parent letters (class code inside) · parents sign kids up free
+        {t('bring_home_body')}
       </p>
       <p className="mt-1 font-body text-sm text-ink/70">
-        School / site licensing →{' '}
+        {t('licensing_label')}{' '}
         <a href="/for-teachers" className="font-bold text-[#2E5F4B] underline-offset-2 hover:underline">
-          talk to us
+          {t('licensing_cta')}
         </a>
       </p>
     </div>
@@ -285,6 +295,7 @@ function BringHomeBox() {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function TeacherDashboardPage() {
+  const t = useTranslations('teacher_dashboard');
   const [classData, setClassData] = useState<TeacherClass | null>(null);
   const [challenges, setChallenges] = useState<ChallengeDetail[]>([]);
   const [gallery, setGallery] = useState<ClassGalleryItem[]>([]);
@@ -336,15 +347,15 @@ export default function TeacherDashboardPage() {
         </>
       ) : (
         <div className="flex flex-col gap-3 rounded-card bg-tint-cream p-6 text-center">
-          <p className="font-display text-lg font-bold text-ink">No class yet</p>
+          <p className="font-display text-lg font-bold text-ink">{t('no_class_heading')}</p>
           <p className="font-body text-sm text-ink/60">
-            Set up a class to get your unique class code
+            {t('no_class_hint')}
           </p>
           <Link
             href="/onboarding/teacher"
             className="font-body text-sm font-bold text-explore underline"
           >
-            Set up a class →
+            {t('no_class_cta')}
           </Link>
         </div>
       )}

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useTranslations, useFormatter } from 'next-intl';
 import {
   fetchModerationQueue,
   approveItem,
@@ -23,6 +24,7 @@ function ModerationCard({
   onApprove: (id: string) => void;
   onReject: (id: string) => void;
 }) {
+  const t = useTranslations('reviewer_dashboard');
   const [rejectMode, setRejectMode] = useState(false);
   const [reason, setReason] = useState('');
   const [busy, setBusy] = useState(false);
@@ -66,7 +68,8 @@ function ModerationCard({
         <div className="flex-1 min-w-0">
           <p className="font-display text-sm text-ink line-clamp-2">{item.content_title}</p>
           <p className="font-body text-xs text-ink/50 mt-0.5">
-            by {item.author_nickname} · {new Date(item.submitted_at).toLocaleDateString()}
+            {t('authored_by', { author: item.author_nickname })} ·{' '}
+            <span dir="ltr">{new Date(item.submitted_at).toLocaleDateString()}</span>
           </p>
         </div>
         <span
@@ -78,7 +81,11 @@ function ModerationCard({
                 : 'bg-ink/10 text-ink/60'
           }`}
         >
-          {item.status}
+          {item.status === 'pending'
+            ? t('filter_pending')
+            : item.status === 'approved'
+              ? t('filter_approved')
+              : t('filter_rejected')}
         </span>
       </div>
 
@@ -92,7 +99,7 @@ function ModerationCard({
             disabled={busy}
             className="flex-1 bg-tint-lime border border-explore text-ink font-body text-sm py-2 rounded-card disabled:opacity-50"
           >
-            {busy ? '…' : '✓ Approve'}
+            {busy ? t('busy') : t('approve_btn')}
           </button>
           <button
             type="button"
@@ -101,7 +108,7 @@ function ModerationCard({
             disabled={busy}
             className="flex-1 border border-ink/20 text-ink font-body text-sm py-2 rounded-card disabled:opacity-50"
           >
-            ✕ Reject
+            {t('reject_btn')}
           </button>
         </div>
       )}
@@ -109,13 +116,13 @@ function ModerationCard({
       {/* Reject reason form */}
       {rejectMode && (
         <div className="flex flex-col gap-2" data-testid="reject-form">
-          <label className="font-body text-xs text-ink/60">Reason for rejection</label>
+          <label className="font-body text-xs text-ink/60">{t('reject_reason_label')}</label>
           <input
             type="text"
             data-testid="reject-reason-input"
             value={reason}
             onChange={(e) => setReason(e.target.value)}
-            placeholder="e.g. Inappropriate content"
+            placeholder={t('reject_reason_placeholder')}
             className="w-full rounded-card border border-ink/20 px-3 py-2 font-body text-sm focus:outline-none focus:ring-2 focus:ring-challenge"
           />
           <div className="flex gap-3">
@@ -126,14 +133,14 @@ function ModerationCard({
               disabled={busy || !reason.trim()}
               className="flex-1 bg-ink text-white font-body text-sm py-2 rounded-card disabled:opacity-50"
             >
-              {busy ? 'Rejecting…' : 'Confirm reject'}
+              {busy ? t('rejecting') : t('confirm_reject')}
             </button>
             <button
               type="button"
               onClick={() => { setRejectMode(false); setReason(''); }}
               className="flex-1 border border-ink/20 text-ink font-body text-sm py-2 rounded-card"
             >
-              Cancel
+              {t('cancel')}
             </button>
           </div>
         </div>
@@ -145,22 +152,24 @@ function ModerationCard({
 // ── Reports list ──────────────────────────────────────────────────────────────
 
 function ReportsList({ reports }: { reports: ContentReport[] }) {
+  const t = useTranslations('reviewer_dashboard');
+  const format = useFormatter();
   const unresolved = reports.filter((r) => !r.resolved);
 
   return (
     <div data-testid="reports-section" className="flex flex-col gap-3">
       <h2 className="font-display text-lg text-ink">
-        Reports
+        {t('reports_heading')}
         {unresolved.length > 0 && (
           <span className="ml-2 bg-ink text-white text-xs font-body px-2 py-0.5 rounded-full">
-            {unresolved.length}
+            <span dir="ltr">{format.number(unresolved.length)}</span>
           </span>
         )}
       </h2>
 
       {reports.length === 0 ? (
         <p className="font-body text-sm text-ink/50 bg-white rounded-card p-4 text-center">
-          No reports — all clear!
+          {t('reports_empty')}
         </p>
       ) : (
         <div className="flex flex-col gap-2">
@@ -177,11 +186,12 @@ function ReportsList({ reports }: { reports: ContentReport[] }) {
               <div className="flex-1 min-w-0">
                 <p className="font-body text-sm text-ink">{r.reason}</p>
                 <p className="font-body text-xs text-ink/50 mt-0.5">
-                  {r.content_type} · {new Date(r.created_at).toLocaleDateString()}
+                  {r.content_type} ·{' '}
+                  <span dir="ltr">{new Date(r.created_at).toLocaleDateString()}</span>
                 </p>
               </div>
               {r.resolved && (
-                <span className="font-body text-xs text-ink/40 flex-shrink-0">resolved</span>
+                <span className="font-body text-xs text-ink/40 flex-shrink-0">{t('report_resolved')}</span>
               )}
             </div>
           ))}
@@ -194,6 +204,7 @@ function ReportsList({ reports }: { reports: ContentReport[] }) {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function ReviewerDashboardPage() {
+  const t = useTranslations('reviewer_dashboard');
   const [queue, setQueue] = useState<ModerationItem[]>([]);
   const [reports, setReports] = useState<ContentReport[]>([]);
   const [loading, setLoading] = useState(true);
@@ -225,10 +236,10 @@ export default function ReviewerDashboardPage() {
   return (
     <div data-testid="reviewer-dashboard" className="max-w-2xl mx-auto px-4 py-8 flex flex-col gap-8">
       <div className="flex items-center justify-between">
-        <h1 className="font-display text-2xl text-ink">Moderation queue</h1>
+        <h1 className="font-display text-2xl text-ink">{t('heading')}</h1>
         {pendingCount > 0 && (
           <span className="bg-ink text-white font-body text-sm px-3 py-1 rounded-full">
-            {pendingCount} pending
+            {t('pending_count', { n: pendingCount })}
           </span>
         )}
       </div>
@@ -248,7 +259,7 @@ export default function ReviewerDashboardPage() {
                 : 'bg-white text-ink/60 hover:bg-tint-blue'
             }`}
           >
-            {status}
+            {t(`filter_${status}`)}
           </button>
         ))}
       </div>
@@ -265,7 +276,7 @@ export default function ReviewerDashboardPage() {
           data-testid="queue-empty"
           className="font-body text-sm text-ink/50 bg-white rounded-card p-8 text-center"
         >
-          Nothing to review right now 🎉
+          {t('queue_empty')}
         </p>
       ) : (
         <div className="flex flex-col gap-4" data-testid="moderation-queue">

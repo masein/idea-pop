@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import { useTranslations } from 'next-intl';
 import type { components } from '@/lib/api/schema';
 
 type IdeaWallEntry = components['schemas']['IdeaWallEntry'];
@@ -21,6 +22,7 @@ function resolveAvatar(avatarId: string): string {
 }
 
 export default function IdeaCard({ idea, onReact, onRemix, remixing = false }: IdeaCardProps) {
+  const t = useTranslations('mission');
   const avatar = resolveAvatar(idea.author_avatar_id);
 
   return (
@@ -44,7 +46,7 @@ export default function IdeaCard({ idea, onReact, onRemix, remixing = false }: I
         <div className="relative w-full h-40 rounded-card overflow-hidden mb-2">
           <Image
             src={idea.project_photo_url}
-            alt={`${idea.author_nickname}'s project`}
+            alt={t('project_photo_alt', { nickname: idea.author_nickname })}
             fill
             className="object-cover"
           />
@@ -92,7 +94,7 @@ export default function IdeaCard({ idea, onReact, onRemix, remixing = false }: I
           disabled={remixing}
           className="flex items-center gap-1 px-3 py-1.5 rounded-full border border-ink/10 text-ink text-sm font-body hover:bg-tint-blue transition-colors disabled:opacity-50 disabled:cursor-not-allowed ml-auto"
         >
-          ↻ {remixing ? 'Remixing…' : 'Remix idea'}
+          ↻ {remixing ? t('remixing') : t('remix_idea')}
         </button>
       </div>
     </div>

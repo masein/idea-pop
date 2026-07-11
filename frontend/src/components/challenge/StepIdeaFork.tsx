@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useTranslations } from 'next-intl';
 
 type ChallengeDetail = import('@/lib/api/schema').components['schemas']['ChallengeDetail'];
 type AgeMode = import('@/lib/hooks/useAgeMode').AgeMode;
@@ -20,11 +21,13 @@ export default function StepIdeaFork({
   onNo,
   onBack,
 }: StepIdeaForkProps) {
+  const t = useTranslations('mission');
+
   return (
     <div data-testid="step-idea-fork" className="mx-auto flex max-w-lg flex-col items-center gap-8 px-4 py-8">
       {/* Heading */}
       <h2 className="font-display text-2xl text-challenge text-center">
-        Do you already have an idea?
+        {t('fork_heading')}
       </h2>
 
       {/* Two choice cards */}
@@ -35,11 +38,11 @@ export default function StepIdeaFork({
           onClick={onYes}
           className="flex cursor-pointer flex-col items-center gap-3 rounded-card border-2 border-transparent bg-white p-6 text-center shadow-sm transition-all hover:border-challenge hover:shadow-md active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-challenge focus-visible:ring-offset-2"
         >
-          <span className="text-5xl" role="img" aria-label="Light bulb">
+          <span className="text-5xl" role="img" aria-label={t('fork_yes_emoji_label')}>
             💡
           </span>
-          <span className="font-display text-lg text-ink">YES! I have an idea</span>
-          <span className="font-body text-sm text-ink/50">Jump straight to sketching</span>
+          <span className="font-display text-lg text-ink">{t('fork_yes_title')}</span>
+          <span className="font-body text-sm text-ink/50">{t('fork_yes_sub')}</span>
         </button>
 
         {/* NO card */}
@@ -48,11 +51,11 @@ export default function StepIdeaFork({
           onClick={onNo}
           className="flex cursor-pointer flex-col items-center gap-3 rounded-card border-2 border-transparent bg-white p-6 text-center shadow-sm transition-all hover:border-challenge hover:shadow-md active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-challenge focus-visible:ring-offset-2"
         >
-          <span className="text-5xl" role="img" aria-label="Leaf">
+          <span className="text-5xl" role="img" aria-label={t('fork_no_emoji_label')}>
             🌿
           </span>
-          <span className="font-display text-lg text-ink">Not yet — inspire me!</span>
-          <span className="font-body text-sm text-ink/50">See how nature solves it</span>
+          <span className="font-display text-lg text-ink">{t('fork_no_title')}</span>
+          <span className="font-body text-sm text-ink/50">{t('fork_no_sub')}</span>
         </button>
       </div>
 
@@ -61,7 +64,7 @@ export default function StepIdeaFork({
         onClick={onBack}
         className="font-body text-sm text-ink/50 underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/30 focus-visible:ring-offset-2 rounded"
       >
-        ← Back
+        {t('back')}
       </button>
     </div>
   );

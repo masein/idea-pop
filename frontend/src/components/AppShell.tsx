@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
+import { useTranslations } from 'next-intl';
 import { usePathname } from '@/i18n/routing';
 import Logo from './Logo';
 import PenguinMascot from './PenguinMascot';
@@ -31,33 +32,33 @@ function personaFromPath(path: string): Persona {
 
 interface NavItem {
   id: Section | 'account';
-  label: string;
+  labelKey: string;
   href: string;
 }
 
 // The active item is always coral (the sidebar's own accent) — the chameleon
 // section colours live in the content-area tint, not the nav labels.
 const KID_NAV: NavItem[] = [
-  { id: 'profile', label: 'My profile', href: '/profile' },
-  { id: 'explore', label: 'Exploring', href: '/explore' },
-  { id: 'library', label: 'Library', href: '/library' },
-  { id: 'challenge', label: 'Challenges', href: '/challenges' },
-  { id: 'account', label: 'Account', href: '/profile' },
+  { id: 'profile', labelKey: 'nav.profile', href: '/profile' },
+  { id: 'explore', labelKey: 'nav.explore', href: '/explore' },
+  { id: 'library', labelKey: 'nav.library', href: '/library' },
+  { id: 'challenge', labelKey: 'nav.challenges', href: '/challenges' },
+  { id: 'account', labelKey: 'shell.account', href: '/profile' },
 ];
 // The Machine Trainer classifier is a TOOL, not a section: it's reachable from
 // the Library tool card and the in-mission Build-step embed, not the main nav.
 // /studio/* keeps its Section entry so the page shell still gets its tint.
 
 const PARENT_NAV: NavItem[] = [
-  { id: 'profile', label: 'My profile', href: '/dashboard/parent' },
-  { id: 'account', label: 'Account', href: '/dashboard/parent#account' },
+  { id: 'profile', labelKey: 'nav.profile', href: '/dashboard/parent' },
+  { id: 'account', labelKey: 'shell.account', href: '/dashboard/parent#account' },
 ];
 
 const TEACHER_NAV: NavItem[] = [
-  { id: 'profile', label: 'My profile', href: '/dashboard/teacher' },
-  { id: 'explore', label: 'Exploring', href: '/explore' },
-  { id: 'library', label: 'Library', href: '/library' },
-  { id: 'challenge', label: 'Challenges', href: '/challenges' },
+  { id: 'profile', labelKey: 'nav.profile', href: '/dashboard/teacher' },
+  { id: 'explore', labelKey: 'nav.explore', href: '/explore' },
+  { id: 'library', labelKey: 'nav.library', href: '/library' },
+  { id: 'challenge', labelKey: 'nav.challenges', href: '/challenges' },
 ];
 
 const NAV: Record<Persona, NavItem[]> = { kid: KID_NAV, parent: PARENT_NAV, teacher: TEACHER_NAV };
@@ -135,6 +136,7 @@ function AppShellInner({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const t = useTranslations();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [kid, setKid] = useState<{ nickname: string; avatar_id: string } | null>(null);
 
@@ -157,12 +159,16 @@ function AppShellInner({
   }, []);
 
   const displayName =
-    persona === 'kid' ? (kid?.nickname ?? 'Explorer') : persona === 'teacher' ? 'Teacher' : 'Parent';
+    persona === 'kid'
+      ? (kid?.nickname ?? t('shell.default_kid_name'))
+      : persona === 'teacher'
+        ? t('shell.teacher_name')
+        : t('shell.parent_name');
   const avatar = kid ? AVATARS.find((a) => a.id === kid.avatar_id) : undefined;
 
   const sidebar = (
     <nav
-      aria-label="Main navigation"
+      aria-label={t('shell.main_nav')}
       className="flex h-full flex-col gap-6 rounded-[1.75rem] border border-coral-faint bg-white px-3 py-6 shadow-md"
     >
       {/* Avatar (animated gradient ring + goggles badge) + name header */}
@@ -203,7 +209,7 @@ function AppShellInner({
                     : 'text-ink/70 hover:bg-tint-blush hover:text-ink focus-visible:ring-ink/20',
                 ].join(' ')}
               >
-                <span>{item.label}</span>
+                <span>{t(item.labelKey)}</span>
                 {/* The floating circle IS the active icon on md+ — hide the
                     inline one there so they don't overlap at the row edge. */}
                 <NavIcon id={item.id} className={isActive ? 'shrink-0 md:opacity-0' : 'shrink-0'} />
@@ -230,10 +236,10 @@ function AppShellInner({
         >
           <Image src="/kid/upgrade-girl.png" alt="" width={72} height={72} className="h-16 w-auto" aria-hidden="true" />
           <span className="font-body text-xs font-semibold text-ink/70">
-            Unlock full access to the Idea Pop platform
+            {t('shell.upgrade_body')}
           </span>
           <span className="rounded-pill bg-explore px-5 py-1.5 font-display text-sm font-bold text-white">
-            Upgrade
+            {t('shell.upgrade_cta')}
           </span>
         </a>
       )}
@@ -260,13 +266,13 @@ function AppShellInner({
           'fixed inset-y-0 z-30 flex w-64 flex-col bg-tint-blush px-3 pb-3 transition-transform duration-200 ltr:left-0 rtl:right-0 md:hidden',
           drawerOpen ? 'translate-x-0' : 'ltr:-translate-x-full rtl:translate-x-full',
         ].join(' ')}
-        aria-label="Main navigation"
+        aria-label={t('shell.main_nav')}
       >
         <button
           type="button"
           onClick={() => setDrawerOpen(false)}
           className="m-3 self-end rounded-full p-1.5 text-ink/40 hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/30"
-          aria-label="Close navigation"
+          aria-label={t('shell.close_nav')}
         >
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
             <path d="M5 5l10 10M15 5L5 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
@@ -282,7 +288,7 @@ function AppShellInner({
           <button
             type="button"
             onClick={() => setDrawerOpen(true)}
-            aria-label="Open navigation"
+            aria-label={t('shell.open_nav')}
             className="rounded-card p-2 text-ink/60 transition-colors hover:bg-ink/5 hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/30"
           >
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">

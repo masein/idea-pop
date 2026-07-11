@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { useAgeMode } from '@/lib/hooks/useAgeMode';
 import { fetchKidProgress, fetchMyProjects } from '@/lib/api/client';
 import { AVATARS } from '@/lib/avatars';
@@ -18,6 +19,7 @@ const LIME = '#CDEB5A';
 // ── Parent handoff modal ──────────────────────────────────────────────────────
 
 function ParentHandoffModal({ onDismiss }: { onDismiss: () => void }) {
+  const t = useTranslations('profile');
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-ink/50"
@@ -28,10 +30,10 @@ function ParentHandoffModal({ onDismiss }: { onDismiss: () => void }) {
       <div className="mx-4 w-full max-w-sm rounded-2xl bg-white p-8 shadow-xl">
         <div className="mb-4 text-center text-5xl">🤝</div>
         <h2 className="mb-2 text-center font-display text-xl font-bold text-ink">
-          Get a parent to help!
+          {t('handoff_heading')}
         </h2>
         <p className="mb-6 text-center font-body text-ink/70">
-          Show this screen to your parent. They can upgrade from their account.
+          {t('handoff_body')}
         </p>
         <button
           type="button"
@@ -39,7 +41,7 @@ function ParentHandoffModal({ onDismiss }: { onDismiss: () => void }) {
           data-testid="handoff-dismiss"
           className="w-full rounded-card border border-ink/20 py-2.5 font-body text-sm text-ink transition-colors hover:bg-tint-blue"
         >
-          Got it
+          {t('handoff_dismiss')}
         </button>
       </div>
     </div>
@@ -49,11 +51,12 @@ function ParentHandoffModal({ onDismiss }: { onDismiss: () => void }) {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function ProfilePage() {
+  const t = useTranslations('profile');
   const ageMode = useAgeMode();
 
   const [progress, setProgress] = useState<KidProgressResponse | null>(null);
   const [loading, setLoading] = useState(true);
-  const [nickname, setNickname] = useState('Explorer');
+  const [nickname, setNickname] = useState('');
   const [avatarId, setAvatarId] = useState<string>('');
   const [showHandoff, setShowHandoff] = useState(false);
   const [projectsList, setProjectsList] = useState<KidProjectSummary[]>([]);
@@ -141,18 +144,22 @@ export default function ProfilePage() {
             )}
           </div>
           <div className="flex-1">
-            <h1 className="font-display text-2xl font-bold text-ink">Hi {nickname}</h1>
+            <h1 className="font-display text-2xl font-bold text-ink">
+              {t('greeting', { name: nickname || t('default_nickname') })}
+            </h1>
             <div className="mt-2 flex flex-wrap items-center gap-3">
               <span
                 className="inline-flex items-center gap-1.5 rounded-pill px-4 py-1.5 font-display text-sm font-bold text-[#1F4D33]"
                 style={{ backgroundColor: LIME }}
               >
                 <Image src="/kid/xp-star.png" alt="" width={16} height={16} className="h-4 w-4" aria-hidden="true" />
-                Start your level
+                {t('start_your_level')}
               </span>
               <span className="font-body text-sm font-semibold text-ink/70">
-                {prog.xp_this_level}/{prog.xp_to_next_level} XP —{' '}
-                <span className="text-ink">{xpToNext} XP to Lv {prog.level + 1}</span>
+                {t('xp_progress', { current: prog.xp_this_level, max: prog.xp_to_next_level })}{' '}
+                <span className="text-ink">
+                  {t('xp_to_level', { remaining: xpToNext, next: prog.level + 1 })}
+                </span>
               </span>
               <span className="text-lg" aria-hidden="true">🏁</span>
             </div>
@@ -165,7 +172,7 @@ export default function ProfilePage() {
                 aria-valuenow={pct}
                 aria-valuemin={0}
                 aria-valuemax={100}
-                aria-label={`${prog.xp_this_level} of ${prog.xp_to_next_level} XP`}
+                aria-label={t('xp_bar_aria', { current: prog.xp_this_level, max: prog.xp_to_next_level })}
               />
               <span className="absolute inset-0 flex items-center justify-center font-body text-xs font-bold text-ink/60">
                 {pct}%
@@ -175,16 +182,16 @@ export default function ProfilePage() {
         </div>
 
         <p className="w-fit rounded-pill bg-white px-4 py-1.5 font-body text-sm font-semibold text-ink shadow-sm">
-          ⚡ When you earn {prog.xp_to_next_level} XP = level up!
+          ⚡ {t('level_up_hint', { xp: prog.xp_to_next_level })}
         </p>
 
         {/* 3 adventures */}
         <section className="flex flex-col gap-2">
           <h2 className="font-display text-2xl font-bold text-ink">
-            Your XP comes from 3 adventures
+            {t('xp_source_heading', { count: 3 })}
           </h2>
           <p className="font-body font-semibold text-ink/70">
-            Explore to get inspired · Learn from experts · Solve real problems — solving pays the most!
+            {t('adventures_sub')}
           </p>
 
           <button
@@ -193,7 +200,7 @@ export default function ProfilePage() {
             aria-expanded={detailsOpen}
             className="mt-2 flex w-full items-center justify-between border-t border-explore/30 pt-2 font-display text-sm font-bold text-[#1E5B2E] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-explore"
           >
-            More details
+            {t('more_details')}
             <span aria-hidden="true">{detailsOpen ? '▲' : '▼'}</span>
           </button>
 
@@ -201,14 +208,14 @@ export default function ProfilePage() {
             <div className="mt-3 flex flex-col gap-4">
               <div className="grid grid-cols-3 gap-3">
                 {[
-                  { label: 'Explore', xp: prog.explore_xp, emoji: '🌿' },
-                  { label: 'Learn', xp: prog.learn_xp, emoji: '📚' },
-                  { label: 'Solve', xp: prog.solve_xp, emoji: '🔧' },
+                  { key: 'adventure_explore', xp: prog.explore_xp, emoji: '🌿' },
+                  { key: 'adventure_learn', xp: prog.learn_xp, emoji: '📚' },
+                  { key: 'adventure_solve', xp: prog.solve_xp, emoji: '🔧' },
                 ].map((a) => (
-                  <div key={a.label} className="rounded-card bg-white p-4 text-center shadow-sm">
+                  <div key={a.key} className="rounded-card bg-white p-4 text-center shadow-sm">
                     <div className="text-2xl" aria-hidden="true">{a.emoji}</div>
-                    <p className="mt-1 font-display font-bold text-ink">{a.label}</p>
-                    <p className="font-body text-sm text-ink/60">{a.xp} XP</p>
+                    <p className="mt-1 font-display font-bold text-ink">{t(a.key)}</p>
+                    <p className="font-body text-sm text-ink/60">{t('xp_amount', { xp: a.xp })}</p>
                   </div>
                 ))}
               </div>
@@ -247,15 +254,15 @@ export default function ProfilePage() {
             aria-hidden="true"
           />
           <div className="flex flex-col items-center gap-2 sm:items-start">
-            <p className="font-display text-base font-bold text-ink">Want more missions?</p>
-            <p className="font-body text-sm text-ink/60">Ask a parent to upgrade your plan</p>
+            <p className="font-display text-base font-bold text-ink">{t('upgrade_heading')}</p>
+            <p className="font-body text-sm text-ink/60">{t('upgrade_handoff')}</p>
             <button
               type="button"
               data-testid="upgrade-btn"
               onClick={() => setShowHandoff(true)}
               className="mt-1 rounded-pill bg-challenge px-6 py-2.5 font-display text-sm font-bold text-white transition-all hover:brightness-110 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-challenge focus-visible:ring-offset-2"
             >
-              Upgrade
+              {t('upgrade_cta')}
             </button>
           </div>
         </div>

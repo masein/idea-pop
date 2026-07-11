@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { updateVisibility } from '@/lib/api/client';
 
 interface AudiencePickerProps {
@@ -9,6 +10,8 @@ interface AudiencePickerProps {
 }
 
 export default function AudiencePicker({ projectId, onDone }: AudiencePickerProps) {
+  const t = useTranslations('mission');
+  const tWall = useTranslations('ideas_wall');
   const [selected, setSelected] = useState<'private' | 'class' | 'public'>('private');
   const [saving, setSaving] = useState(false);
   const [restrictedError, setRestrictedError] = useState(false);
@@ -38,7 +41,7 @@ export default function AudiencePicker({ projectId, onDone }: AudiencePickerProp
 
   return (
     <div data-testid="audience-picker" className="rounded-card bg-tint-blue p-4">
-      <h2 className="font-display text-lg text-ink mb-4">Who can see your project?</h2>
+      <h2 className="font-display text-lg text-ink mb-4">{t('audience_heading')}</h2>
 
       <div className="flex flex-col gap-3 mb-4">
         {/* Option 1: Private */}
@@ -53,8 +56,8 @@ export default function AudiencePicker({ projectId, onDone }: AudiencePickerProp
             className="mt-1"
           />
           <div>
-            <span className="font-display text-ink">🔒 Only me</span>
-            <p className="font-body text-sm text-ink/70">Your private portfolio</p>
+            <span className="font-display text-ink">{t('audience_private')}</span>
+            <p className="font-body text-sm text-ink/70">{t('audience_private_sub')}</p>
           </div>
         </label>
 
@@ -70,8 +73,8 @@ export default function AudiencePicker({ projectId, onDone }: AudiencePickerProp
             className="mt-1"
           />
           <div>
-            <span className="font-display text-ink">🏫 My class</span>
-            <p className="font-body text-sm text-ink/70">Your teacher can see &amp; cheer</p>
+            <span className="font-display text-ink">{t('audience_class')}</span>
+            <p className="font-body text-sm text-ink/70">{t('audience_class_sub')}</p>
           </div>
         </label>
 
@@ -86,15 +89,15 @@ export default function AudiencePicker({ projectId, onDone }: AudiencePickerProp
             className="mt-1 cursor-not-allowed"
           />
           <div>
-            <span className="font-display text-ink">🌍 Idea Gallery</span>
-            <p className="font-body text-sm text-ink/70">Ask a parent to unlock this</p>
+            <span className="font-display text-ink">{t('audience_public')}</span>
+            <p className="font-body text-sm text-ink/70">{t('audience_public_sub')}</p>
           </div>
         </label>
       </div>
 
       {/* Safety note */}
       <p className="font-body text-sm text-ink/60 mb-4">
-        🛡 Grown-ups check public posts before others can see them
+        {t('audience_safety')}
       </p>
 
       {/* Restricted error banner */}
@@ -103,7 +106,7 @@ export default function AudiencePicker({ projectId, onDone }: AudiencePickerProp
           data-testid="restricted-banner"
           className="bg-challenge/10 text-challenge rounded-card px-3 py-2 text-sm font-body mb-4"
         >
-          A grown-up needs to turn on sharing first
+          {tWall('restricted_share')}
         </div>
       )}
 
@@ -114,7 +117,7 @@ export default function AudiencePicker({ projectId, onDone }: AudiencePickerProp
         disabled={saving || saved || projectId === null}
         className="bg-challenge text-white font-display px-6 py-2 rounded-card disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        {saving ? 'Saving…' : saved ? '✓ Saved!' : 'Save'}
+        {saving ? t('saving') : saved ? t('saved') : t('save')}
       </button>
     </div>
   );

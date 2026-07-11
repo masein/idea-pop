@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 
 type ChallengeDetail = import('@/lib/api/schema').components['schemas']['ChallengeDetail'];
 
@@ -17,6 +18,7 @@ export default function StepNatureClues({
   onNext,
   onBack,
 }: StepNatureCluesProps) {
+  const t = useTranslations('mission');
   const [watched, setWatched] = useState<Set<number>>(new Set());
 
   const toggleWatched = (index: number) => {
@@ -39,10 +41,10 @@ export default function StepNatureClues({
     <div data-testid="step-nature-clues" className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
         <h2 className="font-display text-2xl text-challenge">
-          How does nature solve this? 🌿
+          {t('clues_heading')}
         </h2>
         <p className="font-body text-sm text-ink/50">
-          Each clue earns +{exampleXp} XP
+          {t('clue_xp_each', { xp: exampleXp })}
         </p>
       </div>
 
@@ -72,7 +74,7 @@ export default function StepNatureClues({
                   {clue.title}
                 </span>
                 <span className="bg-explore/10 text-explore text-xs px-2 py-0.5 rounded-full">
-                  +{clue.xp_reward} XP
+                  {t('xp_chip', { xp: clue.xp_reward })}
                 </span>
 
                 {clue.explore_video_id && (
@@ -81,7 +83,7 @@ export default function StepNatureClues({
                     onClick={() => toggleWatched(index)}
                     className="text-xs font-body text-challenge underline underline-offset-2 hover:opacity-80 transition-opacity"
                   >
-                    {isWatched ? 'Watched ✓' : 'Watch clip'}
+                    {isWatched ? t('watched') : t('watch_clip')}
                   </button>
                 )}
               </div>
@@ -95,14 +97,14 @@ export default function StepNatureClues({
           onClick={onNext}
           className="w-full sm:w-auto bg-challenge text-white font-body text-sm font-semibold px-6 py-3 rounded-card shadow-sm hover:opacity-90 active:opacity-80 transition-opacity"
         >
-          Got it — show me the secret →
+          {t('got_it_secret')}
         </button>
 
         <button
           onClick={onBack}
           className="font-body text-sm text-ink/50 hover:text-ink transition-colors"
         >
-          ← Back
+          {t('back')}
         </button>
       </div>
     </div>

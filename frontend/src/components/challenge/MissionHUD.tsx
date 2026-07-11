@@ -1,17 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-
-const STEP_NAMES: Record<number, string> = {
-  1: 'Brief',
-  2: 'Your idea?',
-  3: 'Nature clues',
-  4: 'Design secret',
-  5: 'Skill',
-  6: 'Sketch',
-  7: 'Build & test',
-  8: 'Celebrate & share',
-};
+import { useTranslations } from 'next-intl';
 
 const ALL_STEPS = [1, 2, 3, 4, 5, 6, 7, 8] as const;
 
@@ -29,6 +19,7 @@ export default function MissionHUD({
   reachedSteps,
   onJumpTo,
 }: MissionHUDProps) {
+  const t = useTranslations('challenge');
   const [menuOpen, setMenuOpen] = useState(false);
 
   function handleStepClick(step: number) {
@@ -45,7 +36,7 @@ export default function MissionHUD({
         {/* Left: menu toggle */}
         <button
           data-testid="mission-menu-button"
-          aria-label="Mission menu"
+          aria-label={t('hud_menu_aria')}
           aria-expanded={menuOpen}
           onClick={() => setMenuOpen((v) => !v)}
           className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-ink hover:bg-tint-blue transition-colors"
@@ -60,7 +51,7 @@ export default function MissionHUD({
 
         {/* Right: XP badge */}
         <span className="shrink-0 rounded-pill bg-challenge/10 px-3 py-1 font-body text-xs font-semibold text-challenge">
-          +{challenge.completion_xp} XP
+          {t('hud_xp', { xp: challenge.completion_xp })}
         </span>
       </div>
 
@@ -77,7 +68,10 @@ export default function MissionHUD({
               data-testid={`progress-dot-${step}`}
               // aria-label is prohibited on a bare span; img role permits it
               role="img"
-              aria-label={`Step ${step}${isCurrent ? ' (current)' : isCompleted ? ' (done)' : ''}`}
+              aria-label={t('hud_step_aria', {
+                step,
+                state: isCurrent ? 'current' : isCompleted ? 'done' : 'other',
+              })}
               className={[
                 'block rounded-full transition-all duration-300',
                 isCompleted
@@ -133,7 +127,7 @@ export default function MissionHUD({
                     </span>
 
                     {/* Step name */}
-                    <span className="flex-1">{STEP_NAMES[step]}</span>
+                    <span className="flex-1">{t(`step_name_${step}`)}</span>
 
                     {/* Current indicator */}
                     {isCurrent && (

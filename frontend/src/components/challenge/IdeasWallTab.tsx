@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import type { components } from '@/lib/api/schema';
 import { fetchIdeas, reactToIdea, remixIdea } from '@/lib/api/client';
 import IdeaCard from './IdeaCard';
@@ -22,10 +23,12 @@ export default function IdeasWallTab({
   wallUnlocked,
   onWriteMyIdea,
 }: IdeasWallTabProps) {
+  const t = useTranslations('mission');
+  const tWall = useTranslations('ideas_wall');
   const [ideas, setIdeas] = useState<IdeaWallEntry[]>([]);
   const [sort, setSort] = useState<Sort>('newest');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<boolean>(false);
   const [remixingId, setRemixingId] = useState<string | null>(null);
   const [restrictedError, setRestrictedError] = useState(false);
   const [remixToast, setRemixToast] = useState(false);
@@ -37,12 +40,12 @@ export default function IdeasWallTab({
 
     async function load() {
       setLoading(true);
-      setError(null);
+      setError(false);
       try {
         const data = await fetchIdeas(challengeId, sort);
         if (!cancelled) setIdeas(data);
       } catch (err) {
-        if (!cancelled) setError('Could not load ideas. Please try again.');
+        if (!cancelled) setError(true);
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -105,12 +108,12 @@ export default function IdeasWallTab({
           data-testid="wall-locked"
         >
           <p className="text-4xl">🔒</p>
-          <h2 className="font-display text-challenge text-ink">Send your idea first!</h2>
+          <h2 className="font-display text-challenge text-ink">{tWall('locked_heading')}</h2>
           <p className="font-body text-sm text-ink/50">
-            The wall opens after you share your own idea — no peeking 😉
+            {tWall('locked_body')}
           </p>
           <p className="font-body text-xs text-ink/50">
-            🛡 Every idea is checked by a grown-up before it appears here
+            {tWall('safety_note')}
           </p>
           <button
             type="button"
@@ -118,7 +121,7 @@ export default function IdeasWallTab({
             data-testid="write-my-idea-cta"
             className="mt-2 px-5 py-2.5 rounded-full bg-tint-blue text-ink font-display text-sm hover:opacity-80 transition-opacity"
           >
-            ✍️ Write my idea
+            {tWall('locked_cta')}
           </button>
         </div>
       </div>
@@ -133,7 +136,7 @@ export default function IdeasWallTab({
         className="bg-tint-blue rounded-card px-4 py-2.5 font-body text-sm text-ink border border-ink/10"
         data-testid="safety-note"
       >
-        🛡 Every idea is checked by a grown-up before it appears here
+        {tWall('safety_note')}
       </div>
 
       {/* Restricted error banner */}
@@ -142,14 +145,14 @@ export default function IdeasWallTab({
           className="bg-white rounded-card px-4 py-2.5 font-body text-sm text-ink border border-ink/10"
           data-testid="restricted-banner"
         >
-          A grown-up needs to turn on sharing first
+          {tWall('restricted_share')}
         </div>
       )}
 
       {/* Remix toast */}
       {remixToast && (
         <div className="bg-white rounded-card px-4 py-2.5 font-body text-sm text-ink border border-ink/10 shadow-sm">
-          ↻ Starting from their idea…
+          {t('remix_toast')}
         </div>
       )}
 
@@ -165,7 +168,7 @@ export default function IdeasWallTab({
               : 'bg-white text-ink/50 border-ink/10 hover:bg-tint-blue hover:text-ink'
           }`}
         >
-          Newest
+          {tWall('sort_newest')}
         </button>
         <button
           type="button"
@@ -177,7 +180,7 @@ export default function IdeasWallTab({
               : 'bg-white text-ink/50 border-ink/10 hover:bg-tint-blue hover:text-ink'
           }`}
         >
-          Most remixed
+          {tWall('sort_remixed')}
         </button>
       </div>
 
@@ -197,7 +200,7 @@ export default function IdeasWallTab({
           className="font-body text-sm text-ink/50 text-center py-6"
           data-testid="wall-error"
         >
-          {error}
+          {t('wall_load_error')}
         </div>
       )}
 
@@ -215,7 +218,7 @@ export default function IdeasWallTab({
           ))}
           {ideas.length === 0 && (
             <p className="font-body text-sm text-ink/50 text-center py-6">
-              No ideas yet — be the first! 🌟
+              {t('wall_empty')}
             </p>
           )}
         </div>

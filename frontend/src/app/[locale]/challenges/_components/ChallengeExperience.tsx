@@ -45,7 +45,7 @@ export default function ChallengeExperience() {
       </header>
 
       {/* 1. Brief */}
-      <section aria-label="Mission brief" className="pt-10">
+      <section aria-label={t("section_brief_aria")} className="pt-10">
         <Reveal className="mx-auto max-w-5xl px-4">
           <p className="font-display text-xl font-bold md:text-2xl" style={{ color: INK }}>
             {t.rich("brief_lead", rich)}
@@ -67,7 +67,7 @@ export default function ChallengeExperience() {
       </section>
 
       {/* 2. Your idea */}
-      <section aria-label="Your idea" className="px-4 py-12">
+      <section aria-label={t("section_idea_aria")} className="px-4 py-12">
         <Reveal className="mx-auto max-w-4xl">
           <div className="rounded-[1.75rem] bg-white p-6 shadow-lg">
             <label htmlFor="idea" className="sr-only">
@@ -101,7 +101,7 @@ export default function ChallengeExperience() {
       </section>
 
       {/* 3. No idea → thinking process */}
-      <section aria-label="Get inspired" className="relative overflow-hidden px-4 py-16">
+      <section aria-label={t("section_inspire_aria")} className="relative overflow-hidden px-4 py-16">
         <Reveal className="mx-auto max-w-4xl text-center">
           <p className="font-display text-xl font-bold md:text-2xl" style={{ color: INK }}>
             {t("noidea_lead")}
@@ -136,7 +136,7 @@ export default function ChallengeExperience() {
       </section>
 
       {/* 4. Brainstorm with AI */}
-      <section aria-label="Brainstorm with Idea Pop AI" className="relative overflow-hidden px-4 py-16">
+      <section aria-label={t("brainstorm_label")} className="relative overflow-hidden px-4 py-16">
         <div className="mx-auto grid max-w-5xl grid-cols-1 items-end gap-4 md:grid-cols-[200px_1fr]">
           <Reveal from="left" className="flex justify-center md:justify-start">
             <Image
@@ -190,7 +190,7 @@ export default function ChallengeExperience() {
       </section>
 
       {/* 5. CTA band */}
-      <section aria-label="Try Idea Pop" className="bg-[#1E6E8C] px-3 pb-0 pt-10 md:px-6 md:pt-16">
+      <section aria-label={t("section_cta_aria")} className="bg-[#1E6E8C] px-3 pb-0 pt-10 md:px-6 md:pt-16">
         <Reveal className="mx-auto max-w-6xl">
           <div
             className="relative overflow-hidden rounded-t-[2.5rem] px-6 md:rounded-[2.5rem] md:px-14"

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import MissionHints from './MissionHints';
 import MissionHelper from './MissionHelper';
 
@@ -22,6 +23,7 @@ export default function StepSkill({
   onNext,
   onBack,
 }: StepSkillProps) {
+  const t = useTranslations('mission');
   const [toastVisible, setToastVisible] = useState(false);
 
   const handleOpenLesson = () => {
@@ -32,8 +34,8 @@ export default function StepSkill({
   return (
     <div data-testid="step-skill" className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
-        <h2 className="font-display text-2xl text-challenge">Learn a skill 📚</h2>
-        <p className="font-body text-sm text-ink/50">Optional — pick one or skip</p>
+        <h2 className="font-display text-2xl text-challenge">{t('skill_heading')}</h2>
+        <p className="font-body text-sm text-ink/50">{t('skill_optional')}</p>
       </div>
 
       {challenge.skill_lesson_id ? (
@@ -44,9 +46,9 @@ export default function StepSkill({
           <span className="text-4xl shrink-0">📚</span>
 
           <div className="flex flex-col gap-1 flex-1 min-w-0">
-            <p className="font-display text-base text-ink">Related library lesson</p>
+            <p className="font-display text-base text-ink">{t('skill_lesson_title')}</p>
             <span className="bg-library/10 text-library text-xs px-2 py-0.5 rounded-full w-fit">
-              +10 XP
+              {t('xp_chip', { xp: 10 })}
             </span>
           </div>
 
@@ -54,13 +56,13 @@ export default function StepSkill({
             onClick={handleOpenLesson}
             className="shrink-0 bg-library text-white font-body text-sm font-semibold px-4 py-2 rounded-card hover:opacity-90 active:opacity-80 transition-opacity"
           >
-            ▶ Lesson
+            {t('skill_lesson_btn')}
           </button>
         </div>
       ) : (
         <div className="bg-white rounded-card shadow-sm p-4">
           <p className="font-body text-sm text-ink/50">
-            No specific skill needed — you&apos;re ready!
+            {t('skill_none')}
           </p>
         </div>
       )}
@@ -76,7 +78,7 @@ export default function StepSkill({
           className="bg-white rounded-card shadow-md border border-library/20 p-3 text-center"
         >
           <p className="font-body text-sm text-ink">
-            Opens the Library — come back when done! 📖
+            {t('skill_toast')}
           </p>
         </div>
       )}
@@ -86,7 +88,7 @@ export default function StepSkill({
           onClick={onNext}
           className="w-full sm:w-auto bg-challenge text-white font-body text-sm font-semibold px-6 py-3 rounded-card shadow-sm hover:opacity-90 active:opacity-80 transition-opacity"
         >
-          Continue to sketch →
+          {t('continue_sketch')}
         </button>
 
         <button
@@ -94,14 +96,14 @@ export default function StepSkill({
           onClick={onNext}
           className="text-challenge font-body text-sm hover:underline transition-all"
         >
-          Skip to my idea →
+          {t('skip_to_idea')}
         </button>
 
         <button
           onClick={onBack}
           className="font-body text-sm text-ink/50 hover:text-ink transition-colors"
         >
-          ← Back
+          {t('back')}
         </button>
       </div>
     </div>

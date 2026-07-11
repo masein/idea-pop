@@ -1,6 +1,17 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import type { ReactElement } from 'react';
+import { render as rtlRender, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
+import { NextIntlClientProvider } from 'next-intl';
 import StepIdeaFork from './StepIdeaFork';
+import en from '../../../messages/en.json';
+
+function render(ui: ReactElement) {
+  return rtlRender(
+    <NextIntlClientProvider locale="en" messages={en}>
+      {ui}
+    </NextIntlClientProvider>,
+  );
+}
 
 const mockChallenge = {
   id: 'c1',

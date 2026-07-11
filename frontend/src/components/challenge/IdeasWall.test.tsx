@@ -1,7 +1,18 @@
+import type { ReactElement } from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render as rtlRender, screen, fireEvent, waitFor } from '@testing-library/react';
+import { NextIntlClientProvider } from 'next-intl';
 import IdeasWallTab from './IdeasWallTab';
 import IdeaCard from './IdeaCard';
+import en from '../../../messages/en.json';
+
+function render(ui: ReactElement) {
+  return rtlRender(
+    <NextIntlClientProvider locale="en" messages={en}>
+      {ui}
+    </NextIntlClientProvider>,
+  );
+}
 
 // ── Mock API client ──────────────────────────────────────────────────────────
 

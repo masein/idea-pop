@@ -1,6 +1,9 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
+import type { ComponentProps } from 'react';
+import { NextIntlClientProvider } from 'next-intl';
 import MissionHUD from './MissionHUD';
+import en from '../../../messages/en.json';
 
 const mockChallenge = {
   title: 'Help Max Cross The River',
@@ -15,16 +18,24 @@ const defaultProps = {
   onJumpTo: vi.fn(),
 };
 
+function renderHUD(props: Partial<ComponentProps<typeof MissionHUD>> = {}) {
+  render(
+    <NextIntlClientProvider locale="en" messages={en}>
+      <MissionHUD {...defaultProps} {...props} />
+    </NextIntlClientProvider>,
+  );
+}
+
 describe('MissionHUD', () => {
   it('renders mission title and XP badge', () => {
-    render(<MissionHUD {...defaultProps} />);
+    renderHUD();
 
     expect(screen.getByText(/Help Max Cross The River/)).toBeInTheDocument();
     expect(screen.getByText(/\+20 XP/)).toBeInTheDocument();
   });
 
   it('shows 8 progress dots', () => {
-    render(<MissionHUD {...defaultProps} />);
+    renderHUD();
 
     const dots: HTMLElement[] = [];
     for (let i = 1; i <= 8; i++) {
@@ -34,7 +45,7 @@ describe('MissionHUD', () => {
   });
 
   it('opens mission menu on button click', () => {
-    render(<MissionHUD {...defaultProps} />);
+    renderHUD();
 
     expect(screen.queryByTestId('mission-menu')).not.toBeInTheDocument();
 
@@ -45,7 +56,7 @@ describe('MissionHUD', () => {
 
   it('clicking a reached step calls onJumpTo', () => {
     const onJumpTo = vi.fn();
-    render(<MissionHUD {...defaultProps} onJumpTo={onJumpTo} />);
+    renderHUD({ onJumpTo });
 
     // Open the menu first
     fireEvent.click(screen.getByTestId('mission-menu-button'));
@@ -59,7 +70,7 @@ describe('MissionHUD', () => {
 
   it('clicking an unreached step does nothing', () => {
     const onJumpTo = vi.fn();
-    render(<MissionHUD {...defaultProps} onJumpTo={onJumpTo} />);
+    renderHUD({ onJumpTo });
 
     // Open the menu first
     fireEvent.click(screen.getByTestId('mission-menu-button'));

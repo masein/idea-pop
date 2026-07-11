@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useTranslations } from 'next-intl';
 
 type ChallengeDetail = import('@/lib/api/schema').components['schemas']['ChallengeDetail'];
 type AgeMode = import('@/lib/hooks/useAgeMode').AgeMode;
@@ -12,6 +13,7 @@ interface StepBriefProps {
 }
 
 export default function StepBrief({ challenge, ageMode, onNext }: StepBriefProps) {
+  const t = useTranslations('mission');
   const isYoung = ageMode === 'young';
 
   return (
@@ -29,7 +31,7 @@ export default function StepBrief({ challenge, ageMode, onNext }: StepBriefProps
             isYoung ? 'text-3xl' : 'text-2xl',
           ].join(' ')}
         >
-          Your mission
+          {t('brief_title')}
         </h2>
         <h3
           className={[
@@ -53,7 +55,7 @@ export default function StepBrief({ challenge, ageMode, onNext }: StepBriefProps
 
       {/* XP chip */}
       <span className="rounded-full bg-challenge/10 px-3 py-1 font-body text-sm text-challenge">
-        +{challenge.completion_xp} XP to earn
+        {t('xp_to_earn', { xp: challenge.completion_xp })}
       </span>
 
       {/* CTA */}
@@ -61,7 +63,7 @@ export default function StepBrief({ challenge, ageMode, onNext }: StepBriefProps
         onClick={onNext}
         className="w-full rounded-card bg-challenge px-8 py-4 font-display text-lg text-white transition-all hover:brightness-110 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-challenge focus-visible:ring-offset-2"
       >
-        {"Let's go! 🚀"}
+        {t('lets_go')}
       </button>
     </div>
   );

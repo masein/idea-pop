@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import CaptureCard, { type CaptureData } from './CaptureCard';
 import ClassifierPanel from '@/components/ai/ClassifierPanel';
 import MissionHints from './MissionHints';
@@ -25,11 +26,7 @@ interface StepBuildProps {
   onBack: () => void;
 }
 
-const CHECKLIST_ITEMS = [
-  'Gather what you need',
-  'Ask a grown-up if you need scissors or tools',
-  'Find a safe place to work and test',
-];
+const CHECKLIST_KEYS = ['build_check_1', 'build_check_2', 'build_check_3'] as const;
 
 type TestResult = 'worked' | 'needs_fix' | null;
 
@@ -40,6 +37,7 @@ export default function StepBuild({
   onNext,
   onBack,
 }: StepBuildProps) {
+  const t = useTranslations('mission');
   const [checked, setChecked] = useState<Set<number>>(new Set());
   const [testResult, setTestResult] = useState<TestResult>(null);
   // Brainstorm-with-Popi CTA opens this step's helper and scrolls to it.
@@ -82,14 +80,14 @@ export default function StepBuild({
   return (
     <div data-testid="step-build" className="flex flex-col gap-4 px-4 py-6">
       <div>
-        <h2 className="font-display text-2xl text-challenge">Build it &amp; test it! 🔧</h2>
+        <h2 className="font-display text-2xl text-challenge">{t('build_heading')}</h2>
       </div>
 
       {/* Checklist card */}
       <div data-testid="build-checklist" className="bg-white rounded-card p-4 mb-4">
-        <p className="font-display text-base text-ink mb-3">Gather your materials</p>
+        <p className="font-display text-base text-ink mb-3">{t('build_checklist_title')}</p>
         <div className="flex flex-col gap-2">
-          {CHECKLIST_ITEMS.map((item, i) => (
+          {CHECKLIST_KEYS.map((key, i) => (
             <label key={i} className="flex items-center gap-3 cursor-pointer font-body text-sm text-ink">
               <input
                 type="checkbox"
@@ -97,7 +95,7 @@ export default function StepBuild({
                 onChange={() => toggleCheck(i)}
                 className="accent-challenge w-4 h-4 rounded"
               />
-              <span className={checked.has(i) ? 'line-through text-ink/40' : ''}>{item}</span>
+              <span className={checked.has(i) ? 'line-through text-ink/40' : ''}>{t(key)}</span>
             </label>
           ))}
         </div>
@@ -119,7 +117,7 @@ export default function StepBuild({
 
       {/* Test question card */}
       <div className="bg-tint-blue rounded-card p-4 text-center mb-4">
-        <p className="font-display text-base text-ink mb-3">Can it do the job? 🧪</p>
+        <p className="font-display text-base text-ink mb-3">{t('test_question')}</p>
         <div className="flex gap-3 justify-center">
           <button
             data-testid="test-worked"
@@ -131,7 +129,7 @@ export default function StepBuild({
                 : 'bg-white text-ink border-explore/40'
             }`}
           >
-            ✅ It worked!
+            {t('test_worked')}
           </button>
           <button
             data-testid="test-needs-fix"
@@ -143,15 +141,15 @@ export default function StepBuild({
                 : 'bg-white text-ink border-amber-300'
             }`}
           >
-            🔁 Needs a fix
+            {t('test_needs_fix')}
           </button>
         </div>
         {testResult === 'worked' && (
-          <p className="font-body text-sm text-ink/70 mt-3">Amazing! Now document it 📸</p>
+          <p className="font-body text-sm text-ink/70 mt-3">{t('test_worked_note')}</p>
         )}
         {testResult === 'needs_fix' && (
           <p className="font-body text-sm text-ink/70 mt-3">
-            That&apos;s okay — every inventor iterates!
+            {t('test_needs_fix_note')}
           </p>
         )}
       </div>
@@ -159,8 +157,8 @@ export default function StepBuild({
       {/* Capture card */}
       <CaptureCard
         showExtendedFields={true}
-        photoPrompt="📷 Show us what you made"
-        submitLabel="Mission complete! →"
+        photoPrompt={t('build_photo_prompt')}
+        submitLabel={t('build_submit')}
         ageMode={ageMode}
         onSubmit={handleSubmit}
         submitting={submitting}
@@ -175,7 +173,7 @@ export default function StepBuild({
         onClick={onBack}
         className="font-body text-sm text-ink/50 text-left mt-2"
       >
-        ← Back
+        {t('back')}
       </button>
     </div>
   );

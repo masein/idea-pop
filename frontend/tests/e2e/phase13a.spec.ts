@@ -270,7 +270,7 @@ test.describe('axe — app pages', () => {
     const nav = page.locator('nav[aria-label="Main navigation"]:visible').first();
     await expect(nav.getByRole('link', { name: 'Library' })).toBeVisible();
     const labels = await nav.locator('ul[role="list"] a > span:first-child').allTextContents();
-    expect(labels).toEqual(['My profile', 'Exploring', 'Library', 'Challenges', 'Account']);
+    expect(labels).toEqual(['My Profile', 'Exploring', 'Library', 'Challenges', 'Account']);
   });
 
   test('library tool card opens the Machine Trainer', async ({ page }) => {

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { fetchExplore } from '@/lib/api/client';
 import { useAgeMode } from '@/lib/hooks/useAgeMode';
 import { useXpToast } from '@/lib/hooks/useXpToast';
@@ -16,40 +17,30 @@ type XpAwardResponse = components['schemas']['XpAwardResponse'];
 
 const CATEGORIES = [
   {
-    slug: 'masters_of_disguise',
-    label: 'Masters of Disguise',
-    tagline: 'change to survive',
+    slug: 'masters_of_disguise' as const,
     color: 'bg-tint-blue',
     emoji: '🦎',
-    catN: 'Category 1',
   },
   {
-    slug: 'soft_engineers',
-    label: 'Soft Engineers',
-    tagline: 'bodies that think',
+    slug: 'soft_engineers' as const,
     color: 'bg-tint-cream',
     emoji: '🐙',
-    catN: 'Category 2',
   },
   {
-    slug: 'speed_champions',
-    label: 'Speed Champions',
-    tagline: 'ultimate movement',
+    slug: 'speed_champions' as const,
     color: 'bg-tint-blush',
     emoji: '🦅',
-    catN: 'Category 3',
   },
   {
-    slug: 'master_builders',
-    label: 'Master Builders',
-    tagline: 'construct perfect structures',
+    slug: 'master_builders' as const,
     color: 'bg-tint-lavender',
     emoji: '🐝',
-    catN: 'Category 4',
   },
 ];
 
 export default function CategoryPage() {
+  const t = useTranslations('explore');
+  const tErrors = useTranslations('errors');
   const params = useParams<{ locale: string; category: string }>();
   const category = params.category ?? '';
 
@@ -94,7 +85,7 @@ export default function CategoryPage() {
           href="/explore"
           className="inline-flex items-center gap-1 font-body text-sm text-ink/60 hover:text-ink transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-explore rounded"
         >
-          <span aria-hidden="true">←</span> Animal Superpowers
+          <span aria-hidden="true">←</span> {t('heading')}
         </Link>
 
         {/* Category header */}
@@ -105,8 +96,12 @@ export default function CategoryPage() {
                 {catMeta.emoji}
               </span>
               <div>
-                <h1 className="font-display text-3xl text-ink">{catMeta.label}</h1>
-                <p className="font-body text-ink/60 capitalize">{catMeta.tagline}</p>
+                <h1 className="font-display text-3xl text-ink">
+                  {t(`categories.${catMeta.slug}`)}
+                </h1>
+                <p className="font-body text-ink/60 capitalize">
+                  {t(`taglines.${catMeta.slug}`)}
+                </p>
               </div>
             </div>
           </div>
@@ -129,17 +124,17 @@ export default function CategoryPage() {
           </div>
         ) : error ? (
           <p className="font-body text-ink/70">
-            Something went wrong.{' '}
+            {tErrors('something_went_wrong')}{' '}
             <button
               type="button"
               onClick={load}
               className="underline text-explore font-semibold hover:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-explore rounded"
             >
-              Try again
+              {tErrors('try_again')}
             </button>
           </p>
         ) : videos.length === 0 ? (
-          <p className="font-body text-ink/50">No videos in this category yet.</p>
+          <p className="font-body text-ink/50">{t('no_videos_category')}</p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {videos.map((video) => (

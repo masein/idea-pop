@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { fetchExplore } from '@/lib/api/client';
 import { useAgeMode } from '@/lib/hooks/useAgeMode';
 import { useXpToast } from '@/lib/hooks/useXpToast';
@@ -16,8 +17,6 @@ type XpAwardResponse = components['schemas']['XpAwardResponse'];
 const CATEGORIES = [
   {
     slug: 'masters_of_disguise' as const,
-    label: 'Masters of Disguise',
-    tagline: 'change to survive',
     card: '#C0F0FF',
     ink: '#0E3742',
     avatar: '/explore/reptile-avatar.png',
@@ -25,8 +24,6 @@ const CATEGORIES = [
   },
   {
     slug: 'soft_engineers' as const,
-    label: 'Soft Engineers',
-    tagline: 'bodies that think',
     card: '#F1D8FB',
     ink: '#46204F',
     avatar: '/explore/mollusca-avatar.png',
@@ -34,8 +31,6 @@ const CATEGORIES = [
   },
   {
     slug: 'speed_champions' as const,
-    label: 'Speed Champions',
-    tagline: 'ultimate movement',
     card: '#F9DED7',
     ink: '#63281B',
     avatar: '/explore/bird-avatar.png',
@@ -43,8 +38,6 @@ const CATEGORIES = [
   },
   {
     slug: 'master_builders' as const,
-    label: 'Master Builders',
-    tagline: 'construct perfect structures',
     card: '#FBF7D5',
     ink: '#494015',
     avatar: '/explore/arthropoda-avatar.png',
@@ -55,6 +48,8 @@ const CATEGORIES = [
 type CategorySlug = (typeof CATEGORIES)[number]['slug'];
 
 export default function ExplorePage() {
+  const t = useTranslations('explore');
+  const tErrors = useTranslations('errors');
   const ageMode = useAgeMode();
   const { visible, award, show, dismiss } = useXpToast();
 
@@ -96,9 +91,9 @@ export default function ExplorePage() {
       <div className="mx-auto flex max-w-5xl flex-col gap-8">
         {/* Header */}
         <div className="flex flex-col gap-1">
-          <h1 className="font-display text-3xl font-bold text-ink">Animal Superpowers</h1>
+          <h1 className="font-display text-3xl font-bold text-ink">{t('heading')}</h1>
           <p className="max-w-lg font-body font-semibold text-ink/70">
-            Grouped by superpower, not species — because that&apos;s how real engineers think.
+            {t('subheading_grouped')}
           </p>
         </div>
 
@@ -115,13 +110,13 @@ export default function ExplorePage() {
           </div>
         ) : error ? (
           <p className="font-body text-ink/70">
-            Something went wrong.{' '}
+            {tErrors('something_went_wrong')}{' '}
             <button
               type="button"
               onClick={load}
               className="rounded font-semibold text-explore underline hover:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-explore"
             >
-              Try again
+              {tErrors('try_again')}
             </button>
           </p>
         ) : (
@@ -129,13 +124,14 @@ export default function ExplorePage() {
             {CATEGORIES.map((cat) => {
               const count = videos.filter((v) => v.superpower_category === cat.slug).length;
               const isActive = selectedCategory === cat.slug;
+              const label = t(`categories.${cat.slug}`);
               return (
                 <button
                   key={cat.slug}
                   type="button"
                   data-testid="explore-category-card"
                   aria-pressed={isActive}
-                  aria-label={`${cat.label} — ${count} animals`}
+                  aria-label={t('category_animals_aria', { label, count })}
                   onClick={() => setSelectedCategory(isActive ? null : cat.slug)}
                   className="group relative block rounded-[1.75rem] text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-explore focus-visible:ring-offset-2"
                 >
@@ -150,18 +146,18 @@ export default function ExplorePage() {
                       className="relative z-20 font-display text-2xl font-bold leading-tight"
                       style={{ color: cat.ink }}
                     >
-                      {cat.label}
+                      {label}
                     </h2>
                     <p
                       className="relative z-20 mt-0.5 font-body text-sm font-semibold capitalize"
                       style={{ color: cat.ink }}
                     >
-                      {cat.tagline}
+                      {t(`taglines.${cat.slug}`)}
                     </p>
                     <span
                       className="relative z-20 mt-3 inline-flex items-center rounded-pill bg-white/70 px-3 py-1 font-body text-xs font-bold text-ink/70 backdrop-blur-sm"
                     >
-                      {count} {count === 1 ? 'animal' : 'animals'}
+                      {t('animal_count', { count })}
                     </span>
 
                     {/* soft circle behind the animal */}
@@ -189,7 +185,10 @@ export default function ExplorePage() {
 
         {/* Video grid */}
         {!loading && !error && selectedCategory && (
-          <section aria-label={`${activeMeta?.label} videos`} className="flex flex-col gap-4">
+          <section
+            aria-label={t('category_videos_aria', { label: t(`categories.${selectedCategory}`) })}
+            className="flex flex-col gap-4"
+          >
             <div className="flex items-center gap-3">
               {activeMeta?.icon && (
                 <Image
@@ -201,12 +200,14 @@ export default function ExplorePage() {
                   className="h-10 w-10 object-contain"
                 />
               )}
-              <h2 className="font-display text-2xl font-bold text-ink">{activeMeta?.label}</h2>
+              <h2 className="font-display text-2xl font-bold text-ink">
+                {t(`categories.${selectedCategory}`)}
+              </h2>
             </div>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {categoryVideos.length === 0 ? (
                 <p className="col-span-full font-body text-ink/50">
-                  No videos in this superpower yet.
+                  {t('no_videos_superpower')}
                 </p>
               ) : (
                 categoryVideos.map((video) => (

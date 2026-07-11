@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import MissionHelper from './MissionHelper';
 
 // Dark-launch flag for the scoped AI helper (server enforces the real gates).
@@ -37,6 +38,7 @@ export default function CaptureCard({
   onBrainstorm,
   helper,
 }: CaptureCardProps) {
+  const t = useTranslations('mission');
   const [photoSelected, setPhotoSelected] = useState(false);
   const [title, setTitle] = useState('');
   const [whatIMade, setWhatIMade] = useState('');
@@ -82,7 +84,7 @@ export default function CaptureCard({
               }}
               className="font-body text-sm text-ink/60 underline"
             >
-              Remove photo
+              {t('remove_photo')}
             </button>
           </div>
         ) : (
@@ -97,7 +99,7 @@ export default function CaptureCard({
 
       {/* Title / What did you make? */}
       <div className="flex flex-col gap-1">
-        <label className="font-body text-sm text-ink/60">What did you make?</label>
+        <label className="font-body text-sm text-ink/60">{t('capture_title_label')}</label>
         <input
           data-testid="field-title"
           type="text"
@@ -106,20 +108,20 @@ export default function CaptureCard({
             setTitle(e.target.value);
             setWhatIMade(e.target.value);
           }}
-          placeholder="Describe your creation…"
+          placeholder={t('capture_title_placeholder')}
           className={inputClass}
         />
       </div>
 
       {/* What did you use? */}
       <div className="flex flex-col gap-1">
-        <label className="font-body text-sm text-ink/60">What did you use?</label>
+        <label className="font-body text-sm text-ink/60">{t('capture_used_label')}</label>
         <input
           data-testid="field-used"
           type="text"
           value={whatIUsed}
           onChange={(e) => setWhatIUsed(e.target.value)}
-          placeholder="Materials, tools, apps…"
+          placeholder={t('capture_used_placeholder')}
           className={inputClass}
         />
       </div>
@@ -128,24 +130,24 @@ export default function CaptureCard({
       {showExtendedFields && (
         <>
           <div className="flex flex-col gap-1">
-            <label className="font-body text-sm text-ink/60">What was hard?</label>
+            <label className="font-body text-sm text-ink/60">{t('capture_hard_label')}</label>
             <input
               data-testid="field-hard"
               type="text"
               value={whatWasHard}
               onChange={(e) => setWhatWasHard(e.target.value)}
-              placeholder="The trickiest part was…"
+              placeholder={t('capture_hard_placeholder')}
               className={inputClass}
             />
           </div>
           <div className="flex flex-col gap-1">
-            <label className="font-body text-sm text-ink/60">What would you improve?</label>
+            <label className="font-body text-sm text-ink/60">{t('capture_improve_label')}</label>
             <input
               data-testid="field-improve"
               type="text"
               value={whatIdImprove}
               onChange={(e) => setWhatIdImprove(e.target.value)}
-              placeholder="Next time I'd…"
+              placeholder={t('capture_improve_placeholder')}
               className={inputClass}
             />
           </div>
@@ -165,7 +167,7 @@ export default function CaptureCard({
           className="flex w-full items-center gap-2 rounded-card bg-tint-lavender p-3 font-body text-sm text-ink/60 transition-colors hover:bg-tint-lavender-deep focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ink/40"
         >
           <span aria-hidden="true">🐧</span>
-          <span>Stuck? Brainstorm with Popi</span>
+          <span>{t('brainstorm_popi')}</span>
         </button>
         {showPopi &&
           (HELPER_ON && helper ? (
@@ -175,7 +177,7 @@ export default function CaptureCard({
           ) : (
             !HELPER_ON && (
               <div className="mt-1 rounded-card border border-ink/10 bg-white px-3 py-2 font-body text-sm text-ink/60 shadow-sm">
-                Coming soon — Popi is being trained!
+                {t('popi_coming_soon')}
               </div>
             )
           ))}
@@ -189,7 +191,7 @@ export default function CaptureCard({
         onClick={handleSubmit}
         className="bg-challenge text-white font-display text-lg px-6 py-3 rounded-card w-full disabled:opacity-40"
       >
-        {submitting ? 'Saving…' : submitLabel}
+        {submitting ? t('saving') : submitLabel}
       </button>
     </div>
   );

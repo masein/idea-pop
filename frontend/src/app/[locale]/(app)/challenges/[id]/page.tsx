@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { useAgeMode } from '@/lib/hooks/useAgeMode';
 import { useXpToast } from '@/lib/hooks/useXpToast';
 import { fetchChallenge, startAttempt, advanceStep } from '@/lib/api/client';
@@ -25,17 +26,6 @@ type XpAward = components['schemas']['XpAwardResponse'];
 type StepNum = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 type ActiveTab = 'mission' | 'wall';
 
-const STEP_NAMES: Record<StepNum, string> = {
-  1: 'Brief',
-  2: 'Your idea?',
-  3: 'Nature clues',
-  4: 'Design secret',
-  5: 'Skill',
-  6: 'Sketch',
-  7: 'Build & test',
-  8: 'Celebrate & share',
-};
-
 function isStepNum(n: number): n is StepNum {
   return n >= 1 && n <= 8;
 }
@@ -46,13 +36,14 @@ function wallStorageKey(challengeId: string) {
 
 export default function ChallengePage() {
   const params = useParams<{ id: string }>();
+  const t = useTranslations('challenge');
   const ageMode = useAgeMode();
   const { visible, award, show, dismiss } = useXpToast();
 
   const [challenge, setChallenge] = useState<ChallengeDetail | null>(null);
   const [attempt, setAttempt] = useState<ChallengeAttempt | null>(null);
   const [loading, setLoading] = useState(true);
-  const [fetchError, setFetchError] = useState<string | null>(null);
+  const [fetchError, setFetchError] = useState(false);
 
   const [activeTab, setActiveTab] = useState<ActiveTab>('mission');
   const [currentStep, setCurrentStep] = useState<StepNum>(1);
@@ -65,7 +56,7 @@ export default function ChallengePage() {
   useEffect(() => {
     fetchChallenge(params.id)
       .then((c) => setChallenge(c as ChallengeDetail))
-      .catch(() => setFetchError('Could not load this mission. Please try again.'))
+      .catch(() => setFetchError(true))
       .finally(() => setLoading(false));
   }, [params.id]);
 
@@ -140,7 +131,7 @@ export default function ChallengePage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-tint-blue">
-        <div className="animate-pulse font-display text-lg text-challenge">Loading mission…</div>
+        <div className="animate-pulse font-display text-lg text-challenge">{t('loading_mission')}</div>
       </div>
     );
   }
@@ -148,9 +139,9 @@ export default function ChallengePage() {
   if (fetchError || !challenge) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-tint-blue gap-4 p-8">
-        <p className="font-body text-ink/70">{fetchError ?? 'Mission not found.'}</p>
+        <p className="font-body text-ink/70">{fetchError ? t('load_error') : t('not_found')}</p>
         <a href="/challenges" className="text-challenge font-body text-sm underline">
-          ← Back to challenges
+          {t('back_to_challenges')}
         </a>
       </div>
     );
@@ -182,7 +173,7 @@ export default function ChallengePage() {
                 : 'bg-white text-ink/60 hover:bg-tint-blue'
             }`}
           >
-            🚀 Mission
+            {t('tab_mission')}
           </button>
           <button
             role="tab"
@@ -195,7 +186,7 @@ export default function ChallengePage() {
                 : 'bg-white text-ink/60 hover:bg-tint-blue'
             }`}
           >
-            💡 Ideas Wall
+            {t('tab_wall')}
           </button>
         </div>
       </div>

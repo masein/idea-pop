@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useTranslations } from 'next-intl';
 
 export interface PenguinMascotProps {
   label?: string;
@@ -9,15 +10,17 @@ export interface PenguinMascotProps {
 }
 
 export default function PenguinMascot({
-  label = 'Ask Me',
+  label,
   onClick,
   className = '',
 }: PenguinMascotProps) {
+  const t = useTranslations('mascot');
+  const text = label ?? t('ask_me');
   return (
     <button
       type="button"
       onClick={onClick}
-      aria-label={label}
+      aria-label={text}
       className={[
         'flex items-center gap-2 rounded-full bg-challenge text-white shadow-lg',
         'px-4 py-3 font-body font-semibold text-sm',
@@ -27,7 +30,7 @@ export default function PenguinMascot({
       ].join(' ')}
     >
       <span className="text-xl select-none" aria-hidden="true">🐧</span>
-      <span>{label}</span>
+      <span>{text}</span>
     </button>
   );
 }

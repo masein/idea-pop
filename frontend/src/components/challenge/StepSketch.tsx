@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import CaptureCard, { type CaptureData } from './CaptureCard';
 import ToolSelector from './tool/ToolSelector';
 import { createProject } from '@/lib/api/client';
@@ -15,6 +16,7 @@ interface StepSketchProps {
 }
 
 export default function StepSketch({ challenge, ageMode, onNext, onBack }: StepSketchProps) {
+  const t = useTranslations('mission');
   const [submitting, setSubmitting] = useState(false);
 
   async function handleSubmit(data: CaptureData) {
@@ -47,9 +49,9 @@ export default function StepSketch({ challenge, ageMode, onNext, onBack }: StepS
   return (
     <div data-testid="step-sketch" className="flex flex-col gap-4 px-4 py-6">
       <div>
-        <h2 className="font-display text-2xl text-challenge">YOUR idea! ✏️</h2>
+        <h2 className="font-display text-2xl text-challenge">{t('sketch_heading')}</h2>
         <p className="font-body text-sm text-ink/50 mt-1">
-          {challenge.sketch_prompt?.trim() || 'Sketch or photo your idea'}
+          {challenge.sketch_prompt?.trim() || t('sketch_prompt_fallback')}
         </p>
         {challenge.sketch_guidance?.trim() && (
           <p
@@ -72,8 +74,8 @@ export default function StepSketch({ challenge, ageMode, onNext, onBack }: StepS
 
       <CaptureCard
         showExtendedFields={false}
-        photoPrompt="📷 Sketch or photo — projects, not faces"
-        submitLabel="Save my idea · +20 XP ⭐"
+        photoPrompt={t('sketch_photo_prompt')}
+        submitLabel={t('sketch_submit')}
         ageMode={ageMode}
         onSubmit={handleSubmit}
         submitting={submitting}
@@ -85,7 +87,7 @@ export default function StepSketch({ challenge, ageMode, onNext, onBack }: StepS
         onClick={onBack}
         className="font-body text-sm text-ink/50 text-left mt-2"
       >
-        ← Back
+        {t('back')}
       </button>
     </div>
   );

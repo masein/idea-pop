@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/routing';
 import { fetchCourse, fetchCreator } from '@/lib/api/client';
 import type { components } from '@/lib/api/schema';
@@ -16,16 +17,21 @@ type XpAwardResponse = components['schemas']['XpAwardResponse'];
 // Library brand section color (WCAG AA-safe with white text — 5.3:1).
 const ORANGE = '#a85500';
 
-const STUDIO: Record<string, { label: string; emoji: string }> = {
-  craft: { label: 'Craft & Build', emoji: '🔨' },
-  art: { label: 'Art & Sketching', emoji: '🎨' },
-  music: { label: 'Music & Sound', emoji: '🎵' },
-  code: { label: 'Code & Games', emoji: '💻' },
-  science: { label: 'Science Lab', emoji: '🧪' },
-  nature: { label: 'Nature Design', emoji: '🌿' },
+// Studio slug -> emoji; labels come from the `library.studios` translations.
+const STUDIO_EMOJI: Record<string, string> = {
+  craft: '🔨',
+  art: '🎨',
+  music: '🎵',
+  code: '💻',
+  science: '🧪',
+  nature: '🌿',
 };
 
-const DIFFICULTY: Record<number, string> = { 1: 'Easy', 2: 'Medium', 3: 'Hard' };
+const DIFFICULTY_KEYS: Record<number, string> = {
+  1: 'difficulty_easy',
+  2: 'difficulty_medium',
+  3: 'difficulty_hard',
+};
 
 const LS_KEY = (courseId: string) => `completedLessons_${courseId}`;
 
@@ -54,6 +60,8 @@ interface PageParams {
 
 export default function CourseDetailPage({ params }: { params: PageParams }) {
   const { id } = params;
+  const t = useTranslations('library');
+  const tExplore = useTranslations('explore');
   const xpToast = useXpToast();
 
   const [course, setCourse] = useState<CourseDetailResponse | null>(null);
@@ -99,7 +107,13 @@ export default function CourseDetailPage({ params }: { params: PageParams }) {
   const doneCount = lessons.filter((l) => completed.has(l.id)).length;
   // First not-yet-completed lesson = the "now" lesson (the current frontier).
   const currentIdx = lessons.findIndex((l) => !completed.has(l.id));
-  const studioMeta = course ? (STUDIO[course.studio] ?? { label: course.studio, emoji: '📚' }) : null;
+  // Unknown studio slugs fall back to the raw slug itself.
+  const studioMeta = course
+    ? {
+        label: STUDIO_EMOJI[course.studio] ? t(`studios.${course.studio}`) : course.studio,
+        emoji: STUDIO_EMOJI[course.studio] ?? '📚',
+      }
+    : null;
 
   return (
     <div
@@ -107,9 +121,9 @@ export default function CourseDetailPage({ params }: { params: PageParams }) {
       className="mx-auto flex max-w-3xl flex-col gap-6 px-4 py-6 md:px-8"
     >
       {/* Breadcrumb */}
-      <nav aria-label="Breadcrumb" className="font-body text-sm text-ink/60">
+      <nav aria-label={t('breadcrumb_aria')} className="font-body text-sm text-ink/60">
         <Link href="/library" className="rounded hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-library">
-          Library
+          {t('breadcrumb_library')}
         </Link>
         {studioMeta && (
           <span>
@@ -120,7 +134,7 @@ export default function CourseDetailPage({ params }: { params: PageParams }) {
       </nav>
 
       {loading && (
-        <div className="flex flex-col gap-4" aria-busy="true" aria-label="Loading course">
+        <div className="flex flex-col gap-4" aria-busy="true" aria-label={t('loading_course_aria')}>
           <div className="h-24 animate-pulse rounded-card bg-white" />
           <div className="h-16 animate-pulse rounded-card bg-white" />
           <div className="h-16 animate-pulse rounded-card bg-white" />
@@ -128,7 +142,7 @@ export default function CourseDetailPage({ params }: { params: PageParams }) {
       )}
 
       {!loading && !course && (
-        <p className="font-body text-sm text-ink/50">Course not found.</p>
+        <p className="font-body text-sm text-ink/50">{t('course_not_found')}</p>
       )}
 
       {!loading && course && studioMeta && (
@@ -145,15 +159,15 @@ export default function CourseDetailPage({ params }: { params: PageParams }) {
               <h1 className="font-display text-3xl font-bold text-ink">{course.title}</h1>
               {creator && (
                 <p className="w-fit rounded-pill bg-tint-lavender px-3 py-1 font-body text-sm font-semibold text-[#7A3D8A]">
-                  With {creator.display_name}
+                  {t('with_instructor', { name: creator.display_name })}
                   {creator.bio ? ` · ${creator.bio.split('.')[0]}` : ''}
                 </p>
               )}
               <div className="flex flex-wrap gap-2">
-                <MetaPill>{lessons.length} lessons</MetaPill>
-                <MetaPill>⭐ {DIFFICULTY[course.difficulty] ?? 'Easy'}</MetaPill>
-                <MetaPill>{course.age_min}+</MetaPill>
-                <MetaPill>+{lessons[0]?.xp_reward ?? 10} XP / lesson</MetaPill>
+                <MetaPill>{t('course_lessons', { count: lessons.length })}</MetaPill>
+                <MetaPill>⭐ {t(DIFFICULTY_KEYS[course.difficulty] ?? 'difficulty_easy')}</MetaPill>
+                <MetaPill>{t('age_plus', { age: course.age_min })}</MetaPill>
+                <MetaPill>{t('xp_per_lesson', { xp: lessons[0]?.xp_reward ?? 10 })}</MetaPill>
                 {course.materials.length > 0 && (
                   <MetaPill>🏠 {course.materials.join(' + ')}</MetaPill>
                 )}
@@ -166,7 +180,7 @@ export default function CourseDetailPage({ params }: { params: PageParams }) {
                   className="mt-1 w-fit rounded-pill px-6 py-2.5 font-display text-sm font-bold text-white transition-all hover:brightness-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
                   style={{ backgroundColor: ORANGE, ['--tw-ring-color' as string]: ORANGE }}
                 >
-                  Continue · Lesson {lessons[currentIdx].ordinal} ▶
+                  {t('continue_lesson_btn', { n: lessons[currentIdx].ordinal })}
                 </button>
               )}
             </div>
@@ -185,12 +199,12 @@ export default function CourseDetailPage({ params }: { params: PageParams }) {
               />
             </div>
             <span className="font-display text-sm font-bold text-ink/70">
-              {doneCount} of {lessons.length} done
+              {t('lessons_done', { done: doneCount, total: lessons.length })}
             </span>
           </div>
 
           {/* Lessons */}
-          <ul className="flex flex-col gap-2.5" aria-label="Lessons">
+          <ul className="flex flex-col gap-2.5" aria-label={t('lessons_aria')}>
             {lessons.map((lesson, i) => {
               const isDone = completed.has(lesson.id);
               const isNow = !isDone && i === currentIdx;
@@ -229,17 +243,17 @@ export default function CourseDetailPage({ params }: { params: PageParams }) {
               href="/explore"
               className="rounded-[1.25rem] bg-tint-lime p-4 font-display text-sm font-bold text-explore transition-shadow hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-explore"
             >
-              🌿 Pairs with Exploring:
+              🌿 {t('pairs_with_exploring')}
               <br />
-              <span className="text-base">Masters of Disguise →</span>
+              <span className="text-base">{tExplore('categories.masters_of_disguise')} →</span>
             </Link>
             <Link
               href="/challenges"
               className="rounded-[1.25rem] bg-tint-blue p-4 font-display text-sm font-bold text-[#135A85] transition-shadow hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-challenge"
             >
-              🧱 Helps the challenge:
+              🧱 {t('helps_the_challenge')}
               <br />
-              <span className="text-base">Hide Max&apos;s cabin →</span>
+              <span className="text-base">{t('challenge_link_demo')} →</span>
             </Link>
           </div>
         </>
@@ -286,6 +300,7 @@ function LessonItem({
   state: LessonState;
   onWatch: () => void;
 }) {
+  const t = useTranslations('library');
   const durationMin = Math.round(lesson.duration_s / 60);
   const clickable = state !== 'locked';
 
@@ -304,11 +319,11 @@ function LessonItem({
               {lesson.ordinal} · {lesson.title}
             </p>
             <p className="font-body text-xs text-ink/60">
-              → saves to your portfolio · share it if you like · +{lesson.xp_reward} XP
+              {t('project_lesson_hint', { xp: lesson.xp_reward })}
             </p>
           </div>
           <span className="shrink-0 font-body text-xs font-bold text-explore">
-            your turn!
+            {t('your_turn')}
           </span>
         </button>
       </li>
@@ -345,17 +360,19 @@ function LessonItem({
           className="shrink-0 rounded-pill px-2 py-0.5 font-body text-[11px] font-bold text-white"
           style={{ backgroundColor: ORANGE }}
         >
-          now
+          {t('now_pill')}
         </span>
       )}
-      <span className="shrink-0 font-body text-xs text-ink/70">{durationMin} min</span>
+      <span className="shrink-0 font-body text-xs text-ink/70">
+        {t('time_min', { min: durationMin })}
+      </span>
       <span
         className={[
           'shrink-0 font-body text-xs font-semibold',
           state === 'done' ? 'text-explore' : 'text-ink/70',
         ].join(' ')}
       >
-        +{lesson.xp_reward}
+        {t('xp_plus', { xp: lesson.xp_reward })}
         {state === 'done' ? ' ✓' : ''}
       </span>
     </>
@@ -368,7 +385,7 @@ function LessonItem({
           type="button"
           data-testid={`lesson-row-${lesson.id}`}
           onClick={onWatch}
-          aria-label={`Lesson ${lesson.ordinal}: ${lesson.title}`}
+          aria-label={t('lesson_aria', { n: lesson.ordinal, title: lesson.title })}
           className={[
             'flex w-full items-center gap-3 rounded-[1rem] bg-white px-4 py-3 text-left shadow-sm transition-shadow hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-library',
             state === 'now' ? 'ring-2 ring-[color:var(--now)]' : '',
@@ -381,7 +398,7 @@ function LessonItem({
         <div
           data-testid={`lesson-row-${lesson.id}`}
           className="flex items-center gap-3 rounded-[1rem] bg-black/[0.03] px-4 py-3"
-          aria-label={`Lesson ${lesson.ordinal}: ${lesson.title} (locked)`}
+          aria-label={t('lesson_locked_aria', { n: lesson.ordinal, title: lesson.title })}
         >
           {content}
         </div>

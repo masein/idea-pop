@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { useRouter } from '@/i18n/routing';
 import { useAgeMode } from '@/lib/hooks/useAgeMode';
 import { fetchChallenges, requestPremiumUnlock } from '@/lib/api/client';
@@ -15,6 +16,8 @@ const CHALLENGE = '#1a6fa6'; // --color-challenge (AA-safe with white)
 // ── Parent handoff (kids never check out — CLAUDE.md safety rule) ───────────────
 
 function UpgradeHandoffModal({ onDismiss }: { onDismiss: () => void }) {
+  const t = useTranslations('challenge');
+
   // Queue a "Needs your OK" item on the parent dashboard (idempotent
   // server-side; fine to fire every time the modal opens).
   useEffect(() => {
@@ -33,17 +36,14 @@ function UpgradeHandoffModal({ onDismiss }: { onDismiss: () => void }) {
     >
       <div className="w-full max-w-sm rounded-2xl bg-white p-8 text-center shadow-xl">
         <div className="mb-4 text-5xl" aria-hidden="true">🤝</div>
-        <h2 className="mb-2 font-display text-xl font-bold text-ink">Ask a grown-up to unlock!</h2>
-        <p className="mb-5 font-body text-sm text-ink/70">
-          More missions unlock with Idea Pop premium. A parent completes the upgrade on their own
-          account — you can&apos;t be charged here.
-        </p>
+        <h2 className="mb-2 font-display text-xl font-bold text-ink">{t('upgrade_modal_title')}</h2>
+        <p className="mb-5 font-body text-sm text-ink/70">{t('upgrade_modal_body')}</p>
         <button
           type="button"
           onClick={onDismiss}
           className="rounded-pill bg-tint-blue px-6 py-2.5 font-display text-sm font-bold text-[#135A85] transition-all hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-challenge"
         >
-          Got it
+          {t('upgrade_modal_dismiss')}
         </button>
       </div>
     </div>
@@ -55,6 +55,7 @@ function UpgradeHandoffModal({ onDismiss }: { onDismiss: () => void }) {
 type Tab = 'mission' | 'wall';
 
 export default function ChallengesList() {
+  const t = useTranslations('challenge');
   const router = useRouter();
   const ageMode = useAgeMode();
 
@@ -89,11 +90,14 @@ export default function ChallengesList() {
       {/* Header */}
       <header className="text-center">
         <h1 className="font-display text-4xl font-bold text-ink md:text-5xl">
-          Let&apos;s Accomplish A Mission!
+          {t('header_title')}
         </h1>
         {featured && (
           <p className="mt-2 font-display text-lg font-bold text-ink/80 md:text-xl">
-            Today&apos;s mission is to <span className="text-library">{featured.title}</span>!
+            {t.rich('header_today', {
+              title: featured.title,
+              hl: (chunks) => <span className="text-library">{chunks}</span>,
+            })}
           </p>
         )}
       </header>
@@ -111,7 +115,7 @@ export default function ChallengesList() {
             }`}
             style={tab === 'mission' ? { backgroundColor: CHALLENGE } : undefined}
           >
-            🚀 Mission
+            {t('tab_mission')}
           </button>
           <button
             role="tab"
@@ -123,7 +127,7 @@ export default function ChallengesList() {
             }`}
             style={tab === 'wall' ? { backgroundColor: CHALLENGE } : undefined}
           >
-            💡 Ideas Wall
+            {t('tab_wall')}
           </button>
         </div>
       </div>
@@ -135,8 +139,8 @@ export default function ChallengesList() {
         <div className="flex flex-col gap-6">
           {/* Continue */}
           {featured && (
-            <section aria-label="Continue your mission" className="flex flex-col gap-2">
-              <h2 className="font-display text-2xl font-bold text-ink">Continue</h2>
+            <section aria-label={t('continue_aria')} className="flex flex-col gap-2">
+              <h2 className="font-display text-2xl font-bold text-ink">{t('continue_heading')}</h2>
               <button
                 type="button"
                 data-testid="continue-mission"
@@ -157,14 +161,14 @@ export default function ChallengesList() {
                   className="hidden shrink-0 rounded-pill px-5 py-2.5 font-display text-sm font-bold text-white sm:inline-block"
                   style={{ backgroundColor: CHALLENGE }}
                 >
-                  Continue ▶
+                  {t('continue_button')}
                 </span>
               </button>
             </section>
           )}
 
           {/* Challenge grid */}
-          <section aria-label="Challenges" className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <section aria-label={t('challenges_aria')} className="grid grid-cols-1 gap-5 sm:grid-cols-2">
             {challenges.map((c, i) => {
               // Prefer the server's entitlement decision; fall back to "first free".
               const locked = c.locked ?? i > 0;
@@ -207,6 +211,8 @@ function UnlockedChallengeCard({
   challenge: ChallengeDetail;
   onOpen: () => void;
 }) {
+  const t = useTranslations('challenge');
+
   return (
     <button
       type="button"
@@ -231,7 +237,7 @@ function UnlockedChallengeCard({
           className="absolute bottom-3 right-3 flex h-16 w-16 items-center justify-center rounded-full text-center font-display text-xs font-bold leading-tight text-white shadow-md"
           style={{ backgroundColor: CHALLENGE }}
         >
-          challenge {index}
+          {t('challenge_badge', { index })}
         </span>
       </div>
     </button>
@@ -239,12 +245,14 @@ function UnlockedChallengeCard({
 }
 
 function LockedChallengeCard({ index, onUpgrade }: { index: number; onUpgrade: () => void }) {
+  const t = useTranslations('challenge');
+
   return (
     <button
       type="button"
       data-testid="challenge-card-locked"
       onClick={onUpgrade}
-      aria-label={`Challenge ${index} — locked. Ask a grown-up to upgrade.`}
+      aria-label={t('locked_card_aria', { index })}
       className="group relative flex min-h-[15rem] flex-col items-center justify-center overflow-hidden rounded-[1.5rem] p-6 text-center shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-challenge focus-visible:ring-offset-2"
     >
       {/* Blurred, dimmed cover */}
@@ -259,13 +267,13 @@ function LockedChallengeCard({ index, onUpgrade }: { index: number; onUpgrade: (
       <div className="absolute inset-0 bg-tint-blue/70" aria-hidden="true" />
       <span className="relative text-4xl" aria-hidden="true">🔒</span>
       <p className="relative mt-3 font-display text-lg font-bold text-ink">
-        Upgrade Idea Pop to unlock everything
+        {t('locked_card_title')}
       </p>
       <span
         className="absolute bottom-3 right-3 flex h-16 w-16 items-center justify-center rounded-full font-display text-xs font-bold text-white shadow-md"
         style={{ backgroundColor: CHALLENGE }}
       >
-        challenge {index}
+        {t('challenge_badge', { index })}
       </span>
     </button>
   );

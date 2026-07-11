@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import AudiencePicker from './AudiencePicker';
 import { submitIdea } from '@/lib/api/client';
@@ -18,11 +19,11 @@ interface StepCelebrateProps {
 }
 
 const XP_BREAKDOWN = [
-  { label: 'Watched clue', xp: 5 },
-  { label: 'Learned skill', xp: 10 },
-  { label: 'Built & tested', xp: 20 },
-  { label: 'Creative Cycle bonus', xp: 15 },
-];
+  { labelKey: 'xp_watched_clue', xp: 5 },
+  { labelKey: 'xp_learned_skill', xp: 10 },
+  { labelKey: 'xp_built_tested', xp: 20 },
+  { labelKey: 'xp_cycle_bonus', xp: 15 },
+] as const;
 
 export default function StepCelebrate({
   challenge,
@@ -33,6 +34,8 @@ export default function StepCelebrate({
   onWallSubmitted,
   onRestart,
 }: StepCelebrateProps) {
+  const t = useTranslations('mission');
+  const tWall = useTranslations('ideas_wall');
   const [caption, setCaption] = useState('');
   const [sending, setSending] = useState(false);
   const [wallDone, setWallDone] = useState(wallAlreadySubmitted);
@@ -48,9 +51,9 @@ export default function StepCelebrate({
       onWallSubmitted();
     } catch (err: unknown) {
       if (err instanceof Error && (err as Error & { code?: string }).code === 'restricted') {
-        setWallError('A grown-up needs to turn on sharing first');
+        setWallError(tWall('restricted_submit'));
       } else {
-        setWallError('Could not post — try again');
+        setWallError(t('wall_post_error'));
       }
     } finally {
       setSending(false);
@@ -62,17 +65,17 @@ export default function StepCelebrate({
       {/* Celebration header */}
       <div className="text-center py-8">
         <div className="text-6xl">🎉</div>
-        <h2 className="font-display text-3xl text-challenge mt-3">MISSION COMPLETE!</h2>
+        <h2 className="font-display text-3xl text-challenge mt-3">{t('celebrate_heading')}</h2>
       </div>
 
       {/* XP card */}
       <div data-testid="celebrate-xp" className="bg-challenge text-white rounded-card p-6 text-center mb-6">
-        <p className="font-display text-4xl">+{completionXp} XP</p>
+        <p className="font-display text-4xl">{t('xp_chip', { xp: completionXp })}</p>
         {ageMode === 'older' && (
           <div className="mt-3 flex flex-col items-center gap-1">
-            {XP_BREAKDOWN.map(({ label, xp }) => (
-              <p key={label} className="font-body text-sm text-white/80">
-                {label}: +{xp}
+            {XP_BREAKDOWN.map(({ labelKey, xp }) => (
+              <p key={labelKey} className="font-body text-sm text-white/80">
+                {t(labelKey)}: +{xp}
               </p>
             ))}
           </div>
@@ -88,16 +91,16 @@ export default function StepCelebrate({
           data-testid="wall-submit-section"
           className="bg-white rounded-card shadow-sm p-4 flex flex-col gap-3"
         >
-          <p className="font-display text-base text-ink">Post to Ideas Wall?</p>
+          <p className="font-display text-base text-ink">{t('wall_post_heading')}</p>
           <p className="font-body text-sm text-ink/50">
-            Your idea will be checked by a grown-up before others can see it.
+            {t('wall_post_note')}
           </p>
 
           <textarea
             data-testid="wall-caption"
             value={caption}
             onChange={(e) => setCaption(e.target.value)}
-            placeholder="Add a caption (optional)"
+            placeholder={tWall('submit_caption')}
             rows={2}
             className="w-full rounded-card border border-ink/20 px-3 py-2 font-body text-sm focus:outline-none focus:ring-2 focus:ring-challenge resize-none"
           />
@@ -115,11 +118,11 @@ export default function StepCelebrate({
             disabled={sending || !sketchProjectId}
             className="bg-challenge text-white font-display text-base px-5 py-2.5 rounded-card disabled:opacity-40"
           >
-            {sending ? 'Sending…' : '📤 Share to Ideas Wall'}
+            {sending ? tWall('submit_sending') : t('wall_share_button')}
           </button>
 
           <p className="font-body text-xs text-ink/50">
-            🛡 Reviewed by a grown-up before appearing
+            {t('wall_review_note')}
           </p>
         </div>
       ) : (
@@ -127,7 +130,7 @@ export default function StepCelebrate({
           data-testid="wall-submitted-note"
           className="bg-tint-blue rounded-card p-4 text-center font-body text-sm text-ink"
         >
-          Your idea is being reviewed 🛡
+          {tWall('submit_done')}
         </div>
       )}
 
@@ -136,7 +139,7 @@ export default function StepCelebrate({
         href="/challenges"
         className="bg-challenge text-white font-display text-lg px-6 py-3 rounded-card w-full text-center block"
       >
-        Next mission →
+        {t('next_mission')}
       </Link>
     </div>
   );

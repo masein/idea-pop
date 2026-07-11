@@ -13,6 +13,12 @@
   --color-library: #a85500;   /* 4.97:1 with white */
   --color-challenge: #1a6fa6; /* 5.02:1 with white */
   --color-pricing: #7c3cc9;   /* 5.79:1 with white */
+  /* Sidebar accent — active nav label/icon on the white panel (4.96:1).
+     soft/faint are precomputed 40%/25% mixes on white: alpha modifiers
+     (coral/40) don't compile for plain var() Tailwind colors. */
+  --color-coral: #cc3a3a;
+  --color-coral-soft: #ebb0b0;
+  --color-coral-faint: #f2cece;
 
   /* Pastel page-tint backgrounds */
   --color-tint-lime: #f3ffc2;
@@ -40,6 +46,18 @@ html {
 /* RTL mirror: flip sidebar layout direction */
 [dir="rtl"] .sidebar-flip {
   flex-direction: row-reverse;
+}
+
+/* Animated avatar ring (kid sidebar) — lime → purple → pink swirl.
+   The prefers-reduced-motion rule below freezes it to a static gradient. */
+.avatar-ring {
+  background: conic-gradient(from 40deg, #a8e04a, #7c3cc9, #ff7ab6, #a8e04a);
+  animation: avatar-ring-spin 8s linear infinite;
+}
+@keyframes avatar-ring-spin {
+  to {
+    transform: rotate(1turn);
+  }
 }
 
 /* Respect the user's motion preference — collapse all animations/transitions */

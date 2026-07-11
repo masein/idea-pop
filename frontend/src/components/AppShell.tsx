@@ -33,30 +33,31 @@ interface NavItem {
   id: Section | 'account';
   label: string;
   href: string;
-  activeClass: string;
 }
 
+// The active item is always coral (the sidebar's own accent) — the chameleon
+// section colours live in the content-area tint, not the nav labels.
 const KID_NAV: NavItem[] = [
-  { id: 'profile', label: 'My profile', href: '/profile', activeClass: 'text-ink' },
-  { id: 'explore', label: 'Exploring', href: '/explore', activeClass: 'text-explore' },
-  { id: 'library', label: 'Library', href: '/library', activeClass: 'text-library' },
-  { id: 'challenge', label: 'Challenges', href: '/challenges', activeClass: 'text-challenge' },
-  { id: 'account', label: 'Account', href: '/profile', activeClass: 'text-ink' },
+  { id: 'profile', label: 'My profile', href: '/profile' },
+  { id: 'explore', label: 'Exploring', href: '/explore' },
+  { id: 'library', label: 'Library', href: '/library' },
+  { id: 'challenge', label: 'Challenges', href: '/challenges' },
+  { id: 'account', label: 'Account', href: '/profile' },
 ];
 // The Machine Trainer classifier is a TOOL, not a section: it's reachable from
 // the Library tool card and the in-mission Build-step embed, not the main nav.
 // /studio/* keeps its Section entry so the page shell still gets its tint.
 
 const PARENT_NAV: NavItem[] = [
-  { id: 'profile', label: 'My profile', href: '/dashboard/parent', activeClass: 'text-ink' },
-  { id: 'account', label: 'Account', href: '/dashboard/parent#account', activeClass: 'text-ink' },
+  { id: 'profile', label: 'My profile', href: '/dashboard/parent' },
+  { id: 'account', label: 'Account', href: '/dashboard/parent#account' },
 ];
 
 const TEACHER_NAV: NavItem[] = [
-  { id: 'profile', label: 'My profile', href: '/dashboard/teacher', activeClass: 'text-ink' },
-  { id: 'explore', label: 'Exploring', href: '/explore', activeClass: 'text-explore' },
-  { id: 'library', label: 'Library', href: '/library', activeClass: 'text-library' },
-  { id: 'challenge', label: 'Challenges', href: '/challenges', activeClass: 'text-challenge' },
+  { id: 'profile', label: 'My profile', href: '/dashboard/teacher' },
+  { id: 'explore', label: 'Exploring', href: '/explore' },
+  { id: 'library', label: 'Library', href: '/library' },
+  { id: 'challenge', label: 'Challenges', href: '/challenges' },
 ];
 
 const NAV: Record<Persona, NavItem[]> = { kid: KID_NAV, parent: PARENT_NAV, teacher: TEACHER_NAV };
@@ -160,25 +161,33 @@ function AppShellInner({
   const avatar = kid ? AVATARS.find((a) => a.id === kid.avatar_id) : undefined;
 
   const sidebar = (
-    <nav aria-label="Main navigation" className="flex h-full flex-col gap-4 px-3 py-5">
-      {/* Avatar + name header */}
-      <div className="flex flex-col items-center gap-2 rounded-[1.5rem] bg-white px-3 py-4 shadow-sm">
-        <span
-          className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full text-3xl ring-4 ring-tint-lime"
-          style={{ backgroundColor: avatar?.bg ?? '#FBF7D5' }}
-          aria-hidden="true"
-        >
-          {persona === 'kid' && avatar?.img ? (
-            <Image src={avatar.img} alt="" width={64} height={64} className="h-full w-full object-contain" />
-          ) : (
-            <span>{persona === 'kid' ? (avatar?.emoji ?? '🐧') : persona === 'teacher' ? '🧑‍🏫' : '🧑'}</span>
-          )}
+    <nav
+      aria-label="Main navigation"
+      className="flex h-full flex-col gap-6 rounded-[1.75rem] border border-coral-faint bg-white px-3 py-6 shadow-md"
+    >
+      {/* Avatar (animated gradient ring + goggles badge) + name header */}
+      <div className="flex flex-col items-center gap-2 px-3">
+        <span className="relative flex h-20 w-20 items-center justify-center" aria-hidden="true">
+          <span className="avatar-ring absolute inset-0 rounded-full" />
+          <span
+            className="relative flex h-16 w-16 items-center justify-center overflow-hidden rounded-full text-3xl"
+            style={{ backgroundColor: avatar?.bg ?? '#FBF7D5' }}
+          >
+            {persona === 'kid' && avatar?.img ? (
+              <Image src={avatar.img} alt="" width={64} height={64} className="h-full w-full object-contain" />
+            ) : (
+              <span>{persona === 'kid' ? (avatar?.emoji ?? '🐧') : persona === 'teacher' ? '🧑‍🏫' : '🧑'}</span>
+            )}
+          </span>
+          <span className="absolute -bottom-1 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-white text-sm shadow-sm ltr:-right-1 rtl:-left-1">
+            🥽
+          </span>
         </span>
-        <span className="font-display text-base font-bold text-ink">{displayName}</span>
+        <span className="font-display text-lg font-bold text-ink">{displayName}</span>
       </div>
 
       {/* Nav */}
-      <ul className="flex flex-1 flex-col gap-1" role="list">
+      <ul className="flex flex-1 flex-col gap-2" role="list">
         {items.map((item) => {
           const isActive = item.id !== 'account' && activeSection === item.id;
           return (
@@ -187,23 +196,25 @@ function AppShellInner({
                 href={item.href}
                 aria-current={isActive ? 'page' : undefined}
                 className={[
-                  'flex items-center justify-between gap-3 rounded-card px-3 py-2.5 font-body text-sm font-semibold transition-colors duration-150',
+                  'flex items-center justify-between gap-3 rounded-card px-3 py-3 font-body text-sm font-bold transition-colors duration-150',
                   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1',
                   isActive
-                    ? `${item.activeClass} bg-white shadow-sm focus-visible:ring-ink/30`
-                    : 'text-ink/50 hover:bg-white/50 hover:text-ink/80 focus-visible:ring-ink/20',
+                    ? 'text-coral ring-1 ring-coral-soft focus-visible:ring-coral'
+                    : 'text-ink/70 hover:bg-tint-blush hover:text-ink focus-visible:ring-ink/20',
                 ].join(' ')}
               >
                 <span>{item.label}</span>
-                <NavIcon id={item.id} className="shrink-0" />
+                {/* The floating circle IS the active icon on md+ — hide the
+                    inline one there so they don't overlap at the row edge. */}
+                <NavIcon id={item.id} className={isActive ? 'shrink-0 md:opacity-0' : 'shrink-0'} />
               </a>
-              {/* Floating section indicator — protrudes into the content seam */}
+              {/* Floating section indicator — straddles the panel's edge */}
               {isActive && (
                 <span
-                  className="pointer-events-none absolute top-1/2 z-20 hidden h-14 w-14 -translate-y-1/2 items-center justify-center rounded-full bg-white shadow-md ring-1 ring-black/5 ltr:-right-8 rtl:-left-8 md:flex"
+                  className="pointer-events-none absolute top-1/2 z-20 hidden h-14 w-14 -translate-y-1/2 items-center justify-center rounded-full bg-white text-coral shadow-md ring-1 ring-coral-faint ltr:-right-8 rtl:-left-8 md:flex"
                   aria-hidden="true"
                 >
-                  <NavIcon id={item.id} className={`h-6 w-6 ${item.activeClass}`} />
+                  <NavIcon id={item.id} className="h-6 w-6" />
                 </span>
               )}
             </li>
@@ -230,9 +241,9 @@ function AppShellInner({
   );
 
   return (
-    <div className="flex h-screen overflow-hidden bg-tint-lime font-body">
-      {/* Desktop sidebar */}
-      <aside className="hidden w-64 shrink-0 flex-col md:flex">{sidebar}</aside>
+    <div className="flex h-screen overflow-hidden bg-tint-blush font-body">
+      {/* Desktop sidebar — white panel floating on the blush background */}
+      <aside className="hidden w-64 shrink-0 flex-col p-3 md:flex">{sidebar}</aside>
 
       {/* Mobile drawer backdrop */}
       {drawerOpen && (
@@ -246,7 +257,7 @@ function AppShellInner({
       {/* Mobile drawer */}
       <aside
         className={[
-          'fixed inset-y-0 z-30 flex w-64 flex-col bg-tint-lime transition-transform duration-200 ltr:left-0 rtl:right-0 md:hidden',
+          'fixed inset-y-0 z-30 flex w-64 flex-col bg-tint-blush px-3 pb-3 transition-transform duration-200 ltr:left-0 rtl:right-0 md:hidden',
           drawerOpen ? 'translate-x-0' : 'ltr:-translate-x-full rtl:translate-x-full',
         ].join(' ')}
         aria-label="Main navigation"
@@ -264,8 +275,8 @@ function AppShellInner({
         {sidebar}
       </aside>
 
-      {/* Main content area */}
-      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+      {/* Main content area — dashed coral seam against the sidebar */}
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden border-dashed border-coral-soft md:ltr:border-l md:rtl:border-r">
         {/* Mobile top bar */}
         <header className="flex shrink-0 items-center gap-3 border-b border-ink/10 bg-white px-4 py-3 md:hidden">
           <button

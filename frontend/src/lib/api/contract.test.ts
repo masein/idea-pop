@@ -52,14 +52,8 @@ function normalize(clientPath: string): string {
 /**
  * Known, deliberate drift — each entry needs a product decision, not a
  * silent fix. Anything NOT on this list fails the build.
- *
- * - POST /consents/grant + /consents/revoke: the parent-dashboard sharing
- *   toggles call these with {child_id, scope}, but the backend only has the
- *   token-based COPPA flow (/consents/{token}/grant emailed to the parent).
- *   An adult-authenticated grant-by-dashboard endpoint is a consent-model
- *   decision — tracked for the next auth/consent PR.
  */
-const KNOWN_DRIFT = new Set(['POST /consents/grant', 'POST /consents/revoke']);
+const KNOWN_DRIFT = new Set<string>();
 
 describe('frontend↔backend API contract', () => {
   it('every client call has a matching backend route (method + path)', () => {

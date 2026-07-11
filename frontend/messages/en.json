@@ -467,7 +467,9 @@
       "submit": "Create account",
       "already": "Already have an account?",
       "log_in": "Log in",
-      "error_generic": "Something went wrong. Please try again."
+      "error_generic": "Something went wrong. Please try again.",
+      "error_exists": "That email is already registered —",
+      "error_exists_login": "log in instead"
     },
     "verify_email": {
       "heading": "Check your inbox",

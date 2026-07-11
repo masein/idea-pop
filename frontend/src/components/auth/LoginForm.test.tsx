@@ -9,7 +9,7 @@ import messages from '../../../messages/en.json';
 // ---------------------------------------------------------------------------
 const mocks = vi.hoisted(() => ({
   login: vi.fn(),
-  getPersona: vi.fn<() => string | null>().mockReturnValue(null),
+  reconcilePersona: vi.fn().mockReturnValue('parent'),
   dashboardHref: vi.fn().mockReturnValue('/dashboard/parent'),
   push: vi.fn(),
 }));
@@ -37,7 +37,7 @@ vi.mock('@/lib/api/client', () => ({
 }));
 
 vi.mock('@/lib/auth/persona', () => ({
-  getPersona: mocks.getPersona,
+  reconcilePersona: mocks.reconcilePersona,
   dashboardHref: mocks.dashboardHref,
 }));
 
@@ -119,8 +119,7 @@ function render(ui: React.ReactElement) {
 describe('LoginForm', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.getPersona.mockReturnValue(null);
-    mocks.dashboardHref.mockReturnValue('/dashboard/parent');
+        mocks.dashboardHref.mockReturnValue('/dashboard/parent');
   });
 
   it('renders email and password fields', () => {
@@ -143,9 +142,8 @@ describe('LoginForm', () => {
 
   it('calls login() with email and password on valid submit', async () => {
     const user = userEvent.setup();
-    mocks.login.mockResolvedValueOnce(undefined);
-    mocks.getPersona.mockReturnValue('parent');
-    render(<LoginForm />);
+    mocks.login.mockResolvedValueOnce({ account_id: 'a1', role: 'parent' });
+        render(<LoginForm />);
     await user.type(screen.getByLabelText('Email'), 'parent@example.com');
     await user.type(screen.getByLabelText('Password'), 'securepass1');
     await user.click(screen.getByRole('button', { name: /log in/i }));
@@ -173,30 +171,34 @@ describe('LoginForm', () => {
     });
   });
 
-  it('redirects to dashboardHref when persona cookie exists after login', async () => {
+  it('routes by the ACCOUNT role, reconciling the persona cookie', async () => {
     const user = userEvent.setup();
-    mocks.login.mockResolvedValueOnce(undefined);
-    mocks.getPersona.mockReturnValue('parent');
+    mocks.login.mockResolvedValueOnce({ account_id: 'a1', role: 'parent' });
+    mocks.reconcilePersona.mockReturnValue('parent');
     mocks.dashboardHref.mockReturnValue('/dashboard/parent');
     render(<LoginForm />);
     await user.type(screen.getByLabelText('Email'), 'parent@example.com');
     await user.type(screen.getByLabelText('Password'), 'securepass1');
     await user.click(screen.getByRole('button', { name: /log in/i }));
     await waitFor(() => {
+      // A stale kid-persona cookie must be overwritten by the real role.
+      expect(mocks.reconcilePersona).toHaveBeenCalledWith('parent');
       expect(mocks.push).toHaveBeenCalledWith('/dashboard/parent');
     });
   });
 
-  it('redirects to /sign-up when no persona cookie is found after login', async () => {
+  it('a teacher account lands on the teacher dashboard regardless of cookie', async () => {
     const user = userEvent.setup();
-    mocks.login.mockResolvedValueOnce(undefined);
-    mocks.getPersona.mockReturnValue(null);
+    mocks.login.mockResolvedValueOnce({ account_id: 'a2', role: 'teacher' });
+    mocks.reconcilePersona.mockReturnValue('teacher');
+    mocks.dashboardHref.mockReturnValue('/dashboard/teacher');
     render(<LoginForm />);
-    await user.type(screen.getByLabelText('Email'), 'new@example.com');
+    await user.type(screen.getByLabelText('Email'), 't@school.com');
     await user.type(screen.getByLabelText('Password'), 'securepass1');
     await user.click(screen.getByRole('button', { name: /log in/i }));
     await waitFor(() => {
-      expect(mocks.push).toHaveBeenCalledWith('/sign-up');
+      expect(mocks.dashboardHref).toHaveBeenCalledWith('teacher');
+      expect(mocks.push).toHaveBeenCalledWith('/dashboard/teacher');
     });
   });
 

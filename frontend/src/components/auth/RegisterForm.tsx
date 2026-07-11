@@ -19,7 +19,7 @@ export default function RegisterForm({ role }: RegisterFormProps) {
   const t = useTranslations("auth.register");
   const ta = useTranslations("auth");
   const router = useRouter();
-  const [serverError, setServerError] = useState<string | null>(null);
+  const [serverError, setServerError] = useState<"exists" | "generic" | null>(null);
 
   const {
     register: field,
@@ -37,8 +37,9 @@ export default function RegisterForm({ role }: RegisterFormProps) {
       await register(data.email, data.password, role);
       setPersona(role);
       router.push(dashboardHref(role));
-    } catch {
-      setServerError(t("error_generic"));
+    } catch (err) {
+      const code = (err as Error & { code?: string }).code;
+      setServerError(code === "email_exists" ? "exists" : "generic");
     }
   }
 
@@ -51,9 +52,19 @@ export default function RegisterForm({ role }: RegisterFormProps) {
       {serverError && (
         <div
           role="alert"
+          data-testid="register-error"
           className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700 mb-5"
         >
-          {serverError}
+          {serverError === "exists" ? (
+            <>
+              {t("error_exists")}{" "}
+              <Link href="/login" className="font-semibold underline">
+                {t("error_exists_login")}
+              </Link>
+            </>
+          ) : (
+            t("error_generic")
+          )}
         </div>
       )}
 

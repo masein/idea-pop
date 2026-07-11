@@ -7,7 +7,7 @@ import { useTranslations } from "next-intl";
 import { useRouter, Link } from "@/i18n/routing";
 import { loginSchema, type LoginFormData } from "@/lib/schemas/auth";
 import { login } from "@/lib/api/client";
-import { getPersona, dashboardHref } from "@/lib/auth/persona";
+import { dashboardHref, reconcilePersona } from "@/lib/auth/persona";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 
@@ -28,13 +28,12 @@ export default function LoginForm() {
   async function onSubmit(data: LoginFormData) {
     setServerError(null);
     try {
-      await login(data.email, data.password);
-      const persona = getPersona();
-      if (persona) {
-        router.push(dashboardHref(persona));
-      } else {
-        router.push("/sign-up");
-      }
+      const { role } = await login(data.email, data.password);
+      // The account's role is the source of truth — never the stale persona
+      // cookie (a parent logging in on a kid-onboarded browser must land on
+      // the parent dashboard, not in the kid UI).
+      const persona = reconcilePersona(role);
+      router.push(dashboardHref(persona));
     } catch (err) {
       const message = err instanceof Error ? err.message : "";
       if (message.includes("401") || message.toLowerCase().includes("login failed")) {

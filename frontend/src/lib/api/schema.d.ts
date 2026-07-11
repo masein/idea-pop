@@ -620,8 +620,11 @@ export interface components {
       password: string;
     };
     AuthLoginResponse: {
+      account_id: string;
+      role: string;
+      email_verified: boolean;
       access_token: string;
-      token_type: string;
+      refresh_token: string;
       expires_in: number;
     };
     AuthRegisterRequest: {

@@ -56,13 +56,18 @@ export const apiClient = createClient<paths>({
 });
 apiClient.use(authMiddleware);
 
-/** Login helper — stores the returned access token in memory. */
-export async function login(email: string, password: string): Promise<void> {
+/** Login helper — stores the access token and returns the account info
+ * (the caller must route by the REAL role, never the stale persona cookie). */
+export async function login(
+  email: string,
+  password: string
+): Promise<{ account_id: string; role: string }> {
   const { data, error } = await apiClient.POST("/api/auth/login", {
     body: { email, password },
   });
   if (error) throw new Error("Login failed");
   setAccessToken(data.access_token);
+  return { account_id: data.account_id, role: data.role };
 }
 
 /** Register a new adult account (parent or teacher). */
@@ -71,9 +76,14 @@ export async function register(
   password: string,
   role: "parent" | "teacher" = "parent"
 ): Promise<void> {
-  const { error } = await apiClient.POST("/api/auth/register", {
+  const { error, response } = await apiClient.POST("/api/auth/register", {
     body: { email, password, role },
   });
+  if (response.status === 409) {
+    const e = new Error("email_exists");
+    (e as Error & { code: string }).code = "email_exists";
+    throw e;
+  }
   if (error) throw new Error("Registration failed");
 }
 

@@ -11,10 +11,10 @@ vi.mock('@/lib/api/client', () => ({
 
 const mockAsk = vi.mocked(askMissionHelper);
 
-function renderHelper() {
+function renderHelper(props: { defaultOpen?: boolean; openSignal?: number } = {}) {
   render(
     <NextIntlClientProvider locale="en" messages={en}>
-      <MissionHelper challengeId="ch-1" step={7} />
+      <MissionHelper challengeId="ch-1" step={7} {...props} />
     </NextIntlClientProvider>,
   );
 }
@@ -89,5 +89,24 @@ describe('MissionHelper', () => {
     expect(screen.getByTestId('helper-ask-btn')).toBeDisabled();
     fireEvent.click(screen.getByTestId('helper-ask-btn'));
     await waitFor(() => expect(mockAsk).not.toHaveBeenCalled());
+  });
+
+  it('speaks as Popi — the toggle and answers carry the penguin persona', async () => {
+    mockAsk.mockResolvedValue({ answer: 'Try a wider base!', blocked: false });
+    renderHelper();
+    expect(screen.getByTestId('helper-toggle')).toHaveTextContent('Ask Popi');
+    openAndAsk('Why does my bridge fall?');
+    expect(await screen.findByTestId('helper-answer')).toHaveTextContent('Popi says');
+  });
+
+  it('opens when the external openSignal fires (Brainstorm CTA)', () => {
+    renderHelper({ openSignal: 1 });
+    expect(screen.getByTestId('helper-question-input')).toBeInTheDocument();
+    expect(screen.getByTestId('helper-toggle')).toHaveAttribute('aria-expanded', 'true');
+  });
+
+  it('renders expanded with defaultOpen (embedded via the capture-card CTA)', () => {
+    renderHelper({ defaultOpen: true });
+    expect(screen.getByTestId('helper-question-input')).toBeInTheDocument();
   });
 });

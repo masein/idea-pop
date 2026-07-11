@@ -1,6 +1,10 @@
 'use client';
 
 import { useState } from 'react';
+import MissionHelper from './MissionHelper';
+
+// Dark-launch flag for the scoped AI helper (server enforces the real gates).
+const HELPER_ON = process.env.NEXT_PUBLIC_MISSION_HELPER === 'true';
 
 export interface CaptureData {
   title: string;
@@ -17,6 +21,10 @@ interface CaptureCardProps {
   submitting?: boolean;
   submitLabel: string;
   ageMode: 'young' | 'older';
+  /** Step already renders its own MissionHelper: the CTA opens THAT one. */
+  onBrainstorm?: () => void;
+  /** No helper on this step yet: the CTA reveals an embedded one. */
+  helper?: { challengeId: string; step: number };
 }
 
 export default function CaptureCard({
@@ -26,6 +34,8 @@ export default function CaptureCard({
   submitting = false,
   submitLabel,
   ageMode,
+  onBrainstorm,
+  helper,
 }: CaptureCardProps) {
   const [photoSelected, setPhotoSelected] = useState(false);
   const [title, setTitle] = useState('');
@@ -142,21 +152,33 @@ export default function CaptureCard({
         </>
       )}
 
-      {/* AI hint — always shown (can scope to young only if needed) */}
+      {/* Brainstorm with Popi — opens the step's real helper when the
+          dark-launch flag is on; otherwise keeps the coming-soon note. */}
       <div className="relative">
-        <div
+        <button
+          type="button"
           data-testid="ai-hint"
-          onClick={() => setShowPopi((prev) => !prev)}
-          className="bg-tint-lavender rounded-card p-3 flex items-center gap-2 cursor-pointer font-body text-sm text-ink/60"
+          onClick={() => {
+            if (HELPER_ON && onBrainstorm) onBrainstorm();
+            else setShowPopi((prev) => !prev);
+          }}
+          className="flex w-full items-center gap-2 rounded-card bg-tint-lavender p-3 font-body text-sm text-ink/60 transition-colors hover:bg-tint-lavender-deep focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ink/40"
         >
-          <span>🤖</span>
+          <span aria-hidden="true">🐧</span>
           <span>Stuck? Brainstorm with Popi</span>
-        </div>
-        {showPopi && (
-          <div className="mt-1 bg-white border border-ink/10 rounded-card px-3 py-2 font-body text-sm text-ink/60 shadow-sm">
-            Coming soon — Popi is being trained!
-          </div>
-        )}
+        </button>
+        {showPopi &&
+          (HELPER_ON && helper ? (
+            <div className="mt-1">
+              <MissionHelper challengeId={helper.challengeId} step={helper.step} defaultOpen />
+            </div>
+          ) : (
+            !HELPER_ON && (
+              <div className="mt-1 rounded-card border border-ink/10 bg-white px-3 py-2 font-body text-sm text-ink/60 shadow-sm">
+                Coming soon — Popi is being trained!
+              </div>
+            )
+          ))}
       </div>
 
       {/* Submit */}

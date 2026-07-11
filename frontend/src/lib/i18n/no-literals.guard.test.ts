@@ -27,13 +27,12 @@ const GUARDED_DIRS = [
   'src/app/[locale]/(app)/library',
   'src/app/[locale]/(app)/profile',
   'src/app/[locale]/(app)/challenges',
+  // All four dashboards (kid, parent, teacher, reviewer) are now localised.
+  'src/app/[locale]/(app)/dashboard',
 ];
 const GUARDED_FILES = [
   'src/components/AppShell.tsx',
   'src/components/PenguinMascot.tsx',
-  // Kid dashboard is fully localised; parent/teacher/reviewer dashboards are
-  // not yet, so guard the kid page individually rather than the whole dir.
-  'src/app/[locale]/(app)/dashboard/kid/page.tsx',
 ];
 
 function walkTsx(dir: string): string[] {

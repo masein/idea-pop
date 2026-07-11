@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
+import { useTranslations, useFormatter } from 'next-intl';
 import {
   fetchParentChildren,
   fetchChildReport,
@@ -71,6 +72,8 @@ function WeeklyReportModal({
   report: ChildReport | null;
   onClose: () => void;
 }) {
+  const t = useTranslations('parent_dashboard');
+  const format = useFormatter();
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-ink/50 p-4"
@@ -83,8 +86,8 @@ function WeeklyReportModal({
     >
       <div className="flex w-full max-w-md flex-col gap-4 rounded-card bg-white p-6 shadow-xl">
         <div className="flex items-center justify-between">
-          <h2 className="font-display text-lg font-bold text-ink">{childNickname}&apos;s week</h2>
-          <button type="button" onClick={onClose} aria-label="Close" className="text-ink/40 hover:text-ink">
+          <h2 className="font-display text-lg font-bold text-ink">{t('report_heading', { name: childNickname })}</h2>
+          <button type="button" onClick={onClose} aria-label={t('close')} className="text-ink/40 hover:text-ink">
             ✕
           </button>
         </div>
@@ -93,23 +96,25 @@ function WeeklyReportModal({
           <>
             <div className="grid grid-cols-3 gap-3 text-center" data-testid="report-stats">
               <div className="rounded-card bg-tint-lime py-3">
-                <p className="font-display text-2xl font-bold text-ink">{report.explore_videos_watched}</p>
-                <p className="font-body text-xs text-ink/60">Videos</p>
+                <p className="font-display text-2xl font-bold text-ink">{format.number(report.explore_videos_watched)}</p>
+                <p className="font-body text-xs text-ink/60">{t('report_videos')}</p>
               </div>
               <div className="rounded-card bg-tint-cream py-3">
-                <p className="font-display text-2xl font-bold text-ink">{report.lessons_completed}</p>
-                <p className="font-body text-xs text-ink/60">Lessons</p>
+                <p className="font-display text-2xl font-bold text-ink">{format.number(report.lessons_completed)}</p>
+                <p className="font-body text-xs text-ink/60">{t('report_lessons')}</p>
               </div>
               <div className="rounded-card bg-tint-blue py-3">
-                <p className="font-display text-2xl font-bold text-ink">{report.challenges_completed}</p>
-                <p className="font-body text-xs text-ink/60">Challenges</p>
+                <p className="font-display text-2xl font-bold text-ink">{format.number(report.challenges_completed)}</p>
+                <p className="font-body text-xs text-ink/60">{t('report_challenges')}</p>
               </div>
             </div>
-            <p className="font-body text-sm text-ink/60">+{report.xp_earned} XP earned this week</p>
+            <p className="font-body text-sm text-ink/60">
+              <span dir="ltr">{t('report_xp', { xp: report.xp_earned })}</span>
+            </p>
 
             {report.projects.length > 0 && (
               <div>
-                <p className="mb-2 font-display text-sm font-bold text-ink">Projects this week</p>
+                <p className="mb-2 font-display text-sm font-bold text-ink">{t('report_projects')}</p>
                 <div className="flex flex-col gap-2">
                   {report.projects.map((p) => (
                     <div
@@ -135,6 +140,7 @@ function WeeklyReportModal({
 // ── Page ─────────────────────────────────────────────────────────────────────
 
 export default function ParentDashboardPage() {
+  const t = useTranslations('parent_dashboard');
   const [children, setChildren] = useState<ParentChild[]>([]);
   const [reports, setReports] = useState<Record<string, ChildReport>>({});
   const [sub, setSub] = useState<SubscriptionResponse | null>(null);
@@ -305,9 +311,9 @@ export default function ParentDashboardPage() {
         </span>
         <div>
           <h1 className="font-display text-3xl font-bold text-ink">
-            {greetingName ? `Hi ${greetingName}` : 'Welcome'}
+            {greetingName ? t('greeting', { name: greetingName }) : t('welcome')}
           </h1>
-          <p className="font-body font-semibold text-ink/60">Welcome to your parent portal.</p>
+          <p className="font-body font-semibold text-ink/60">{t('portal_subtitle')}</p>
         </div>
       </header>
 
@@ -315,40 +321,36 @@ export default function ParentDashboardPage() {
         {/* My account */}
         <section id="account" className="flex flex-col gap-3 rounded-card bg-white p-5 shadow-sm scroll-mt-4">
           <div className="flex items-center justify-between">
-            <h2 className="font-display text-lg font-bold text-ink">My account</h2>
+            <h2 className="font-display text-lg font-bold text-ink">{t('account_heading')}</h2>
             <a href="/login" className="font-body text-sm font-semibold text-explore hover:underline">
-              Forgot password
+              {t('forgot_password')}
             </a>
           </div>
           <p className="font-body text-sm font-semibold text-ink">
-            {account?.email || 'Your login email & password.'}
+            {account?.email || t('account_email_fallback')}
           </p>
 
           <div className="mt-1 flex flex-col gap-3 border-t border-ink/10 pt-3">
             <p className="font-body text-xs font-semibold uppercase tracking-wide text-ink/50">
-              Email settings
+              {t('email_settings')}
             </p>
             <EmailPref
-              label="Receive marketing emails"
-              hint="Updates about Idea Pop, new features, and weekly events."
+              label={t('email_marketing_label')}
+              hint={t('email_marketing_hint')}
               checked={emailPrefs.marketing}
               testid="email-pref-marketing"
               onChange={(v) => handleEmailPref('marketing', v)}
             />
             <EmailPref
-              label="Receive new content alerts"
-              hint="When a new mission, course, or lesson is added."
+              label={t('email_new_content_label')}
+              hint={t('email_new_content_hint')}
               checked={emailPrefs.new_content}
               testid="email-pref-new-content"
               onChange={(v) => handleEmailPref('new_content', v)}
             />
             <EmailPref
-              label="Receive activity reports"
-              hint={
-                isPremium
-                  ? "Your child's account activity, progress, and community interactions."
-                  : 'Weekly activity reports unlock on the full plan.'
-              }
+              label={t('email_activity_label')}
+              hint={isPremium ? t('email_activity_hint') : t('email_activity_hint_locked')}
               checked={isPremium && emailPrefs.activity_reports}
               disabled={!isPremium}
               testid="email-pref-activity-reports"
@@ -362,14 +364,14 @@ export default function ParentDashboardPage() {
           data-testid="billing-section"
           className="flex flex-col gap-3 rounded-card bg-white p-5 shadow-sm"
         >
-          <h2 className="font-display text-lg font-bold text-ink">My plan</h2>
+          <h2 className="font-display text-lg font-bold text-ink">{t('billing_heading')}</h2>
           <div className="rounded-card border border-explore/30 bg-tint-lime/40 p-4">
             {isPremium ? (
               <>
-                <p className="font-display font-bold text-ink">{sub?.plan ?? 'Premium'} plan · active</p>
+                <p className="font-display font-bold text-ink">{t('billing_active', { plan: sub?.plan ?? t('plan_default') })}</p>
                 {sub?.current_period_end && (
                   <p className="mt-1 font-body text-sm text-ink/60">
-                    Renews {new Date(sub.current_period_end).toLocaleDateString()}
+                    {t('billing_renews', { date: new Date(sub.current_period_end).toLocaleDateString() })}
                   </p>
                 )}
                 <button
@@ -379,15 +381,14 @@ export default function ParentDashboardPage() {
                   disabled={billingLoading}
                   className="mt-3 font-body text-sm font-semibold text-explore underline disabled:opacity-50"
                 >
-                  Manage billing →
+                  {t('billing_manage')}
                 </button>
               </>
             ) : (
               <>
-                <p className="font-display font-bold text-ink">Free plan</p>
+                <p className="font-display font-bold text-ink">{t('plan_free')}</p>
                 <p className="mt-1 font-body text-sm text-ink/70">
-                  Your child can explore 2 missions a month, save 3 favorite makes, and try the first
-                  lesson of every course. Upgrade to unlock unlimited missions and a personal AI helper.
+                  {t('plan_free_desc')}
                 </p>
                 <div className="mt-3 flex gap-2">
                   <button
@@ -398,7 +399,7 @@ export default function ParentDashboardPage() {
                     className="flex-1 rounded-pill px-4 py-2.5 font-display text-sm font-bold text-white transition-all hover:brightness-105 disabled:opacity-50"
                     style={{ backgroundColor: GREEN }}
                   >
-                    Monthly
+                    {t('billing_monthly')}
                   </button>
                   <button
                     type="button"
@@ -407,7 +408,7 @@ export default function ParentDashboardPage() {
                     disabled={billingLoading}
                     className="flex-1 rounded-pill border-2 border-explore px-4 py-2.5 font-display text-sm font-bold text-explore transition-all hover:bg-tint-lime disabled:opacity-50"
                   >
-                    Annual · save 20%
+                    {t('billing_annual')}
                   </button>
                 </div>
               </>
@@ -417,12 +418,12 @@ export default function ParentDashboardPage() {
       </div>
 
       {/* My kid(s) */}
-      <section aria-label="My children" className="flex flex-col gap-3">
-        <h2 className="font-display text-2xl font-bold text-ink">My kid</h2>
+      <section aria-label={t('children_heading')} className="flex flex-col gap-3">
+        <h2 className="font-display text-2xl font-bold text-ink">{t('children_heading')}</h2>
         {loading ? (
           <div className="h-28 animate-pulse rounded-card bg-white" />
         ) : children.length === 0 ? (
-          <p className="font-body text-sm text-ink/60">No children added yet.</p>
+          <p className="font-body text-sm text-ink/60">{t('no_children')}</p>
         ) : (
           children.map((child) => {
             const r = reports[child.id];
@@ -436,15 +437,20 @@ export default function ParentDashboardPage() {
                   <AvatarBubble avatarId={child.avatar_id} />
                   <div>
                     <p className="font-display text-base font-bold text-ink">
-                      {child.nickname} · Lv {child.level}
+                      {child.nickname} · <span dir="ltr">{t('level_short', { level: child.level })}</span>
                     </p>
-                    <p className="font-body text-xs text-ink/60">{child.total_xp} XP</p>
+                    <p className="font-body text-xs text-ink/60">
+                      <span dir="ltr">{t('xp_label', { xp: child.total_xp })}</span>
+                    </p>
                   </div>
                 </div>
                 {r && (
                   <p className="font-body text-sm font-semibold text-ink/70">
-                    this week: 🌿{r.explore_videos_watched} videos · 📚{r.lessons_completed} lessons ·
-                    💡{r.challenges_completed} challenges
+                    {t('week_summary', {
+                      videos: r.explore_videos_watched,
+                      lessons: r.lessons_completed,
+                      challenges: r.challenges_completed,
+                    })}
                   </p>
                 )}
                 <button
@@ -453,7 +459,7 @@ export default function ParentDashboardPage() {
                   onClick={() => handleViewReport(child)}
                   className="w-fit font-display text-sm font-bold text-explore hover:underline"
                 >
-                  see details →
+                  {t('view_report')}
                 </button>
               </div>
             );
@@ -464,17 +470,17 @@ export default function ParentDashboardPage() {
           data-testid="add-child-btn"
           className="flex items-center justify-center gap-2 rounded-card border-2 border-dashed border-explore/50 py-4 font-display text-sm font-bold text-explore transition-colors hover:border-explore hover:bg-tint-lime/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-explore"
         >
-          <span aria-hidden="true">+</span> Add another child
+          <span aria-hidden="true">+</span> {t('invite_child')}
         </a>
       </section>
 
       {/* Needs your OK — pending consent + the real approval queue */}
       {!loading && (
-        <section aria-label="Needs your OK" className="flex flex-col gap-3">
-          <h2 className="font-display text-2xl font-bold text-ink">Needs your OK</h2>
+        <section aria-label={t('needs_ok_heading')} className="flex flex-col gap-3">
+          <h2 className="font-display text-2xl font-bold text-ink">{t('needs_ok_heading')}</h2>
           {pendingConsent.length === 0 && approvals.length === 0 ? (
             <div className="rounded-card bg-white p-4 font-body text-sm text-ink/60 shadow-sm">
-              ✅ You&apos;re all caught up — nothing needs your approval right now.
+              ✅ {t('all_caught_up')}
             </div>
           ) : (
             <>
@@ -484,7 +490,7 @@ export default function ParentDashboardPage() {
                   className="flex flex-col items-start justify-between gap-3 rounded-card bg-white p-4 shadow-sm sm:flex-row sm:items-center"
                 >
                   <p className="font-display text-base font-bold text-ink">
-                    🛡️ Approve {child.nickname}&apos;s account to unlock sharing
+                    🛡️ {t('approve_account', { name: child.nickname })}
                   </p>
                   <button
                     type="button"
@@ -492,7 +498,7 @@ export default function ParentDashboardPage() {
                     className="rounded-pill px-5 py-2 font-display text-sm font-bold text-white"
                     style={{ backgroundColor: GREEN }}
                   >
-                    Review
+                    {t('review')}
                   </button>
                 </div>
               ))}
@@ -504,12 +510,16 @@ export default function ParentDashboardPage() {
                 >
                   <p className="font-display text-base font-bold text-ink">
                     {item.kind === 'premium_unlock' ? (
-                      <>🔓 {item.child_nickname} asked to unlock premium missions</>
+                      <>🔓 {t('approval_premium', { name: item.child_nickname })}</>
                     ) : (
                       <>
-                        📤 {item.child_nickname} wants to share
-                        {item.title ? ` “${item.title}”` : ' a post'}
-                        {item.requested_visibility ? ` with their ${item.requested_visibility === 'public' ? 'community' : 'class'}` : ''}
+                        📤{' '}
+                        {t('approval_share', {
+                          name: item.child_nickname,
+                          hasTitle: item.title ? 'true' : 'false',
+                          title: item.title ?? '',
+                          place: item.requested_visibility ?? 'none',
+                        })}
                       </>
                     )}
                   </p>
@@ -521,7 +531,7 @@ export default function ParentDashboardPage() {
                       className="rounded-pill px-5 py-2 font-display text-sm font-bold text-white transition-all hover:brightness-105"
                       style={{ backgroundColor: GREEN }}
                     >
-                      Approve
+                      {t('approve')}
                     </button>
                     <button
                       type="button"
@@ -529,7 +539,7 @@ export default function ParentDashboardPage() {
                       onClick={() => handleResolveApproval(item, false)}
                       className="rounded-pill border-2 border-ink/20 px-5 py-2 font-display text-sm font-bold text-ink/70 transition-colors hover:border-ink/40"
                     >
-                      Dismiss
+                      {t('dismiss')}
                     </button>
                   </div>
                 </div>
@@ -541,46 +551,46 @@ export default function ParentDashboardPage() {
 
       {/* Safety */}
       {!loading && children.length > 0 && (
-        <section aria-label="Safety" className="flex flex-col gap-3 rounded-card bg-white p-5 shadow-sm">
-          <h2 className="font-display text-lg font-bold text-ink">Safety</h2>
+        <section aria-label={t('safety_heading')} className="flex flex-col gap-3 rounded-card bg-white p-5 shadow-sm">
+          <h2 className="font-display text-lg font-bold text-ink">{t('safety_heading')}</h2>
           {children.map((child) => (
             <div key={child.id} className="flex flex-col gap-3">
               {children.length > 1 && (
                 <p className="font-body text-sm font-semibold text-ink/60">{child.nickname}</p>
               )}
               <SafetyToggle
-                label="Community gallery sharing 🌐"
+                label={t('public_sharing_label')}
                 checked={child.public_sharing_enabled}
                 testid="toggle-public-sharing"
-                ariaLabel={`Community gallery sharing for ${child.nickname}`}
+                ariaLabel={t('aria_public_sharing', { name: child.nickname })}
                 onToggle={() => handleTogglePublic(child)}
               />
               <SafetyToggle
-                label="Class / club sharing 🏫"
+                label={t('class_sharing_label')}
                 checked={child.class_sharing_enabled}
                 testid="toggle-class-sharing"
-                ariaLabel={`Class sharing for ${child.nickname}`}
+                ariaLabel={t('aria_class_sharing', { name: child.nickname })}
                 onToggle={() => handleToggleClass(child)}
               />
               <SafetyToggle
-                label="AI mission helper 🤖"
+                label={`🤖 ${t('helper_label')}`}
                 checked={child.helper_enabled}
                 testid="toggle-mission-helper"
-                ariaLabel={`AI mission helper for ${child.nickname}`}
+                ariaLabel={t('aria_helper', { name: child.nickname })}
                 onToggle={() => handleToggleHelper(child)}
               />
               <div className="flex items-center justify-between gap-3">
-                <span className="font-body text-sm text-ink">Show my child as</span>
+                <span className="font-body text-sm text-ink">{t('display_mode_label')}</span>
                 <select
-                  aria-label={`Show ${child.nickname} as`}
+                  aria-label={t('aria_display_mode', { name: child.nickname })}
                   data-testid="display-mode-select"
                   value={child.display_mode}
                   onChange={(e) => handleDisplayMode(child, e.target.value as DisplayMode)}
                   className="rounded-pill bg-tint-lime px-3 py-1.5 font-body text-sm font-semibold text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-explore"
                 >
-                  <option value="avatar_nickname">Avatar + nickname</option>
-                  <option value="first_name">First name only</option>
-                  <option value="anonymous">Anonymous</option>
+                  <option value="avatar_nickname">{t('display_avatar_nickname')}</option>
+                  <option value="first_name">{t('display_first_name')}</option>
+                  <option value="anonymous">{t('display_anonymous')}</option>
                 </select>
               </div>
             </div>

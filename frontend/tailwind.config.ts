@@ -17,6 +17,11 @@ const config: Config = {
         library: "var(--color-library)",
         challenge: "var(--color-challenge)",
         pricing: "var(--color-pricing)",
+        coral: {
+          DEFAULT: "var(--color-coral)",
+          soft: "var(--color-coral-soft)",
+          faint: "var(--color-coral-faint)",
+        },
         tint: {
           lime: "var(--color-tint-lime)",
           cream: "var(--color-tint-cream)",

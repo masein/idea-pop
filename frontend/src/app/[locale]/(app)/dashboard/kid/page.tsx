@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useFormatter } from 'next-intl';
 import { Button } from '@/components/ui/Button';
 
 // ─── ParentHandoffModal ───────────────────────────────────────────────────────
@@ -40,16 +40,18 @@ function ParentHandoffModal({ onDismiss }: { onDismiss: () => void }) {
 }
 
 // ─── Mock content helpers ─────────────────────────────────────────────────────
+// Placeholder preview content (titles come from the catalog) shown until the
+// real Explore/Library data loads for an unlocked account.
 
 const exploreVideos = [
-  { emoji: '🦑', title: 'Masters of Disguise · 3 min', xp: '+5 XP' },
-  { emoji: '🌿', title: 'How Plants Talk · 4 min', xp: '+5 XP' },
-  { emoji: '🕷️', title: 'Engineers in Silk · 2 min', xp: '+5 XP' },
+  { emoji: '🦑', titleKey: 'demo_explore_1', xp: 5 },
+  { emoji: '🌿', titleKey: 'demo_explore_2', xp: 5 },
+  { emoji: '🕷️', titleKey: 'demo_explore_3', xp: 5 },
 ];
 
 const libraryCards = [
-  { emoji: '🔨', title: 'Build a Raft · Beginner' },
-  { emoji: '🌱', title: 'Seed Launcher · Intermediate' },
+  { emoji: '🔨', titleKey: 'demo_library_1' },
+  { emoji: '🌱', titleKey: 'demo_library_2' },
 ];
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
@@ -57,14 +59,17 @@ const libraryCards = [
 export default function KidDashboardPage() {
   const t = useTranslations('kid_dashboard');
   const tp = useTranslations('pricing');
+  const format = useFormatter();
 
-  const [nickname, setNickname] = useState('Explorer');
+  const [nickname, setNickname] = useState('');
   const [showHandoff, setShowHandoff] = useState(false);
 
   useEffect(() => {
     const stored = localStorage.getItem('ideapop_nickname');
     if (stored) setNickname(stored);
   }, []);
+
+  const displayName = nickname || t('default_nickname');
 
   function openHandoff() {
     // Safety: intercepting all upgrade/paid CTAs for kids — show parent handoff
@@ -91,10 +96,11 @@ export default function KidDashboardPage() {
           <span className="text-3xl" aria-hidden="true">🐧</span>
           <div>
             <p className="font-display font-bold text-ink text-lg leading-none">
-              {t('welcome', { nickname })}
+              {t('welcome', { nickname: displayName })}
             </p>
             <p className="font-body text-sm text-ink/60 mt-0.5">
-              {t('level_label', { n: 1 })} · 0 {t('xp_label')}
+              {t('level_label', { n: 1 })} ·{' '}
+              <span dir="ltr">{format.number(0)} {t('xp_label')}</span>
             </p>
           </div>
         </div>
@@ -107,16 +113,16 @@ export default function KidDashboardPage() {
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {exploreVideos.map((v) => (
-                <div key={v.title} className="bg-white rounded-card overflow-hidden shadow-sm">
+                <div key={v.titleKey} className="bg-white rounded-card overflow-hidden shadow-sm">
                   <div className="h-20 bg-ink/5 flex items-center justify-center text-4xl">
                     {v.emoji}
                   </div>
                   <div className="p-3 flex items-center justify-between">
                     <p className="font-body text-xs text-ink font-semibold leading-snug">
-                      {v.title}
+                      {t(v.titleKey)}
                     </p>
-                    <span className="text-xs font-semibold text-explore bg-tint-lime rounded-pill px-2 py-0.5 ml-2 shrink-0">
-                      {v.xp}
+                    <span dir="ltr" className="text-xs font-semibold text-explore bg-tint-lime rounded-pill px-2 py-0.5 ml-2 shrink-0">
+                      {t('demo_explore_xp', { xp: v.xp })}
                     </span>
                   </div>
                 </div>
@@ -131,12 +137,12 @@ export default function KidDashboardPage() {
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {libraryCards.map((c) => (
-                <div key={c.title} className="relative bg-white rounded-card overflow-hidden shadow-sm">
+                <div key={c.titleKey} className="relative bg-white rounded-card overflow-hidden shadow-sm">
                   <div className="h-24 bg-ink/5 flex items-center justify-center text-4xl">
                     {c.emoji}
                   </div>
                   <div className="p-3">
-                    <p className="font-body text-sm text-ink font-semibold">{c.title}</p>
+                    <p className="font-body text-sm text-ink font-semibold">{t(c.titleKey)}</p>
                   </div>
                   {/* Locked overlay */}
                   <div className="absolute inset-0 bg-ink/60 rounded-card flex items-center justify-center text-white font-semibold gap-2">
@@ -159,10 +165,10 @@ export default function KidDashboardPage() {
               </div>
               <div className="p-4">
                 <p className="font-body text-sm text-ink font-semibold">
-                  Seed Launcher Challenge · Due Sunday
+                  {t('demo_mission_title')}
                 </p>
                 <p className="font-body text-xs text-ink/60 mt-1">
-                  Design a seed that travels the farthest
+                  {t('demo_mission_sub')}
                 </p>
               </div>
               {/* Locked overlay */}
@@ -189,16 +195,16 @@ export default function KidDashboardPage() {
                 <p className="font-display font-bold text-lg text-ink mb-0.5">
                   {tp('free_label')}
                 </p>
-                <p className="font-display text-3xl font-bold text-ink mb-4">$0</p>
+                <p dir="ltr" className="font-display text-3xl font-bold text-ink mb-4">{tp('free_price')}</p>
                 <ul className="space-y-1 mb-5">
                   <li className="font-body text-sm text-ink/70 flex items-start gap-1.5">
-                    <span className="text-explore mt-0.5">✓</span> Watch any Explore video
+                    <span className="text-explore mt-0.5">✓</span> {t('free_feat_1')}
                   </li>
                   <li className="font-body text-sm text-ink/70 flex items-start gap-1.5">
-                    <span className="text-explore mt-0.5">✓</span> Try 1 mission per month
+                    <span className="text-explore mt-0.5">✓</span> {t('free_feat_2')}
                   </li>
                   <li className="font-body text-sm text-ink/70 flex items-start gap-1.5">
-                    <span className="text-explore mt-0.5">✓</span> Basic library access
+                    <span className="text-explore mt-0.5">✓</span> {t('free_feat_3')}
                   </li>
                 </ul>
                 {/* Safety: clicking this opens the parent handoff modal, NOT checkout */}
@@ -207,7 +213,7 @@ export default function KidDashboardPage() {
                   className="w-full"
                   onClick={openHandoff}
                 >
-                  Start for free
+                  {t('free_cta')}
                 </Button>
               </div>
 
@@ -216,25 +222,25 @@ export default function KidDashboardPage() {
                 <p className="font-display font-bold text-lg text-ink mb-0.5">
                   {tp('standard_label')}
                 </p>
-                <p className="font-display text-3xl font-bold text-ink mb-0.5">
+                <p dir="ltr" className="font-display text-3xl font-bold text-ink mb-0.5">
                   {tp('monthly_price')}
-                  <span className="text-base font-body font-normal text-ink/60"> /month</span>
+                  <span className="text-base font-body font-normal text-ink/60"> {tp('per_month')}</span>
                 </p>
-                <p className="font-body text-xs text-ink/50 mb-4">
-                  or {tp('annual_price')} /year
+                <p dir="ltr" className="font-body text-xs text-ink/50 mb-4">
+                  {tp('annual_note')}
                 </p>
                 <ul className="space-y-1 mb-5">
                   <li className="font-body text-sm text-ink/70 flex items-start gap-1.5">
-                    <span className="text-explore mt-0.5">✓</span> Unlimited missions
+                    <span className="text-explore mt-0.5">✓</span> {t('plus_feat_1')}
                   </li>
                   <li className="font-body text-sm text-ink/70 flex items-start gap-1.5">
-                    <span className="text-explore mt-0.5">✓</span> Full expert library
+                    <span className="text-explore mt-0.5">✓</span> {t('plus_feat_2')}
                   </li>
                   <li className="font-body text-sm text-ink/70 flex items-start gap-1.5">
-                    <span className="text-explore mt-0.5">✓</span> Private portfolio
+                    <span className="text-explore mt-0.5">✓</span> {t('plus_feat_3')}
                   </li>
                   <li className="font-body text-sm text-ink/70 flex items-start gap-1.5">
-                    <span className="text-explore mt-0.5">✓</span> XP, badges & themes
+                    <span className="text-explore mt-0.5">✓</span> {t('plus_feat_4')}
                   </li>
                 </ul>
                 {/* Safety: clicking this opens the parent handoff modal, NOT checkout */}
@@ -243,7 +249,7 @@ export default function KidDashboardPage() {
                   className="w-full"
                   onClick={openHandoff}
                 >
-                  Start free trial
+                  {t('plus_cta')}
                 </Button>
               </div>
             </div>

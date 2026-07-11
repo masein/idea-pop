@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useTranslations } from "next-intl";
+import { useTranslations, useFormatter } from "next-intl";
 import { useRouter } from "@/i18n/routing";
 import { kidProfileSchema, type KidProfileFormData } from "@/lib/schemas/auth";
 import { AVATARS } from "@/lib/avatars";
@@ -26,8 +26,13 @@ const darkInput =
 
 export default function KidOnboardingPage() {
   const t = useTranslations("onboarding.kid");
+  const format = useFormatter();
   const router = useRouter();
   const [step, setStep] = useState(1);
+
+  // Validation messages are catalog keys; fall back to any raw zod default
+  // (e.g. an invalid_type message) that isn't a known key.
+  const errMsg = (m?: string) => (m && t.has(m) ? t(m) : (m ?? ""));
   const [apiError, setApiError] = useState<string | null>(null);
 
   const {
@@ -94,7 +99,7 @@ export default function KidOnboardingPage() {
         style={{ backgroundColor: CARD }}
       >
         <p className="mb-5 text-center font-display text-lg font-bold text-[#CDEB5A]">
-          {step} · {stepTitle[step]}
+          {format.number(step)} · {stepTitle[step]}
         </p>
 
         <form onSubmit={handleSubmit(onSubmit)} noValidate>
@@ -158,7 +163,7 @@ export default function KidOnboardingPage() {
 
               {errors.avatar_id && (
                 <p role="alert" className="mt-3 text-center text-xs text-red-300">
-                  {errors.avatar_id.message}
+                  {errMsg(errors.avatar_id.message)}
                 </p>
               )}
 
@@ -202,7 +207,7 @@ export default function KidOnboardingPage() {
               />
               {errors.nickname && (
                 <p role="alert" className="mt-2 text-xs text-red-300">
-                  {errors.nickname.message}
+                  {errMsg(errors.nickname.message)}
                 </p>
               )}
               <div className="mt-6 flex justify-center gap-3">
@@ -239,7 +244,7 @@ export default function KidOnboardingPage() {
               </select>
               {errors.birth_year && (
                 <p role="alert" className="mt-2 text-xs text-red-300">
-                  {errors.birth_year.message}
+                  {errMsg(errors.birth_year.message)}
                 </p>
               )}
               <div className="mt-6 flex justify-center gap-3">
@@ -273,7 +278,7 @@ export default function KidOnboardingPage() {
               />
               {errors.parent_email && (
                 <p role="alert" className="mt-2 text-xs text-red-300">
-                  {errors.parent_email.message}
+                  {errMsg(errors.parent_email.message)}
                 </p>
               )}
               {apiError && (

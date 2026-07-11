@@ -49,8 +49,8 @@ export default function MissionHUD({
           {challenge.emoji} {challenge.title}
         </p>
 
-        {/* Right: XP badge */}
-        <span className="shrink-0 rounded-pill bg-challenge/10 px-3 py-1 font-body text-xs font-semibold text-challenge">
+        {/* Right: XP badge — dir=ltr so "+N XP" doesn't reorder in RTL */}
+        <span dir="ltr" className="shrink-0 rounded-pill bg-challenge/10 px-3 py-1 font-body text-xs font-semibold text-challenge">
           {t('hud_xp', { xp: challenge.completion_xp })}
         </span>
       </div>

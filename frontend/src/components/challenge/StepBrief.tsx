@@ -53,8 +53,8 @@ export default function StepBrief({ challenge, ageMode, onNext }: StepBriefProps
         {challenge.brief}
       </p>
 
-      {/* XP chip */}
-      <span className="rounded-full bg-challenge/10 px-3 py-1 font-body text-sm text-challenge">
+      {/* XP chip — dir=ltr so "+N XP" doesn't reorder in RTL */}
+      <span dir="ltr" className="rounded-full bg-challenge/10 px-3 py-1 font-body text-sm text-challenge">
         {t('xp_to_earn', { xp: challenge.completion_xp })}
       </span>
 

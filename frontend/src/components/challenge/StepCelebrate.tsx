@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useFormatter } from 'next-intl';
 import Link from 'next/link';
 import AudiencePicker from './AudiencePicker';
 import { submitIdea } from '@/lib/api/client';
@@ -35,6 +35,7 @@ export default function StepCelebrate({
   onRestart,
 }: StepCelebrateProps) {
   const t = useTranslations('mission');
+  const format = useFormatter();
   const tWall = useTranslations('ideas_wall');
   const [caption, setCaption] = useState('');
   const [sending, setSending] = useState(false);
@@ -70,12 +71,13 @@ export default function StepCelebrate({
 
       {/* XP card */}
       <div data-testid="celebrate-xp" className="bg-challenge text-white rounded-card p-6 text-center mb-6">
-        <p className="font-display text-4xl">{t('xp_chip', { xp: completionXp })}</p>
+        <p dir="ltr" className="font-display text-4xl">{t('xp_chip', { xp: completionXp })}</p>
         {ageMode === 'older' && (
           <div className="mt-3 flex flex-col items-center gap-1">
             {XP_BREAKDOWN.map(({ labelKey, xp }) => (
               <p key={labelKey} className="font-body text-sm text-white/80">
-                {t(labelKey)}: +{xp}
+                {t(labelKey)}:{' '}
+                <span dir="ltr">+{format.number(xp)}</span>
               </p>
             ))}
           </div>

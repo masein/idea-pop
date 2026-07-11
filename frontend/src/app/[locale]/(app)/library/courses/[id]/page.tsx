@@ -167,7 +167,7 @@ export default function CourseDetailPage({ params }: { params: PageParams }) {
                 <MetaPill>{t('course_lessons', { count: lessons.length })}</MetaPill>
                 <MetaPill>⭐ {t(DIFFICULTY_KEYS[course.difficulty] ?? 'difficulty_easy')}</MetaPill>
                 <MetaPill>{t('age_plus', { age: course.age_min })}</MetaPill>
-                <MetaPill>{t('xp_per_lesson', { xp: lessons[0]?.xp_reward ?? 10 })}</MetaPill>
+                <MetaPill><span dir="ltr">{t('xp_per_lesson', { xp: lessons[0]?.xp_reward ?? 10 })}</span></MetaPill>
                 {course.materials.length > 0 && (
                   <MetaPill>🏠 {course.materials.join(' + ')}</MetaPill>
                 )}
@@ -372,7 +372,7 @@ function LessonItem({
           state === 'done' ? 'text-explore' : 'text-ink/70',
         ].join(' ')}
       >
-        {t('xp_plus', { xp: lesson.xp_reward })}
+        <span dir="ltr">{t('xp_plus', { xp: lesson.xp_reward })}</span>
         {state === 'done' ? ' ✓' : ''}
       </span>
     </>

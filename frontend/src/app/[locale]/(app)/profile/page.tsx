@@ -155,7 +155,7 @@ export default function ProfilePage() {
                 <Image src="/kid/xp-star.png" alt="" width={16} height={16} className="h-4 w-4" aria-hidden="true" />
                 {t('start_your_level')}
               </span>
-              <span className="font-body text-sm font-semibold text-ink/70">
+              <span dir="ltr" className="font-body text-sm font-semibold text-ink/70">
                 {t('xp_progress', { current: prog.xp_this_level, max: prog.xp_to_next_level })}{' '}
                 <span className="text-ink">
                   {t('xp_to_level', { remaining: xpToNext, next: prog.level + 1 })}
@@ -215,7 +215,7 @@ export default function ProfilePage() {
                   <div key={a.key} className="rounded-card bg-white p-4 text-center shadow-sm">
                     <div className="text-2xl" aria-hidden="true">{a.emoji}</div>
                     <p className="mt-1 font-display font-bold text-ink">{t(a.key)}</p>
-                    <p className="font-body text-sm text-ink/60">{t('xp_amount', { xp: a.xp })}</p>
+                    <p dir="ltr" className="font-body text-sm text-ink/60">{t('xp_amount', { xp: a.xp })}</p>
                   </div>
                 ))}
               </div>

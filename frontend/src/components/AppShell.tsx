@@ -41,9 +41,11 @@ const KID_NAV: NavItem[] = [
   { id: 'explore', label: 'Exploring', href: '/explore', activeClass: 'text-explore' },
   { id: 'library', label: 'Library', href: '/library', activeClass: 'text-library' },
   { id: 'challenge', label: 'Challenges', href: '/challenges', activeClass: 'text-challenge' },
-  { id: 'studio', label: 'AI Studio', href: '/studio/classify', activeClass: 'text-pricing' },
   { id: 'account', label: 'Account', href: '/profile', activeClass: 'text-ink' },
 ];
+// The Machine Trainer classifier is a TOOL, not a section: it's reachable from
+// the Library tool card and the in-mission Build-step embed, not the main nav.
+// /studio/* keeps its Section entry so the page shell still gets its tint.
 
 const PARENT_NAV: NavItem[] = [
   { id: 'profile', label: 'My profile', href: '/dashboard/parent', activeClass: 'text-ink' },
@@ -108,16 +110,6 @@ function NavIcon({ id, className }: { id: NavItem['id']; className?: string }) {
         <svg {...common}>
           <path d="M5 15c-1 2-1 4-1 4s2 0 4-1M14 4c3 1 6 4 6 6 0 3-4 7-8 9l-3-3c2-4 6-8 9-8" />
           <circle cx="15" cy="9" r="1.5" />
-        </svg>
-      );
-    case 'studio':
-      return (
-        <svg {...common}>
-          <rect x="5" y="8" width="14" height="10" rx="2" />
-          <path d="M12 8V5M9 5h6" />
-          <circle cx="9.5" cy="12.5" r="0.75" fill="currentColor" />
-          <circle cx="14.5" cy="12.5" r="0.75" fill="currentColor" />
-          <path d="M9.5 15.5h5" />
         </svg>
       );
     case 'account':

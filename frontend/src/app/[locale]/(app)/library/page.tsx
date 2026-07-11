@@ -13,6 +13,8 @@ type CourseSummaryResponse = components['schemas']['CourseSummaryResponse'];
 
 // Library brand section color (WCAG AA-safe with white text — 5.3:1).
 const ORANGE = '#a85500';
+// Tool-card accent — the pricing/AI purple (AA-safe with white text — 5.79:1).
+const PURPLE = '#7c3cc9';
 
 // ── Studio config (labels + emoji + taglines for empty studios) ────────────────
 
@@ -204,6 +206,24 @@ export default function LibraryPage() {
                 </button>
               );
             })}
+            {/* Machine Trainer — an on-device AI TOOL, not a content studio:
+                purple (vs studio orange) and a direct route instead of a
+                ?studio= filter. This is the classifier's standalone entry
+                point now that it's out of the main nav. */}
+            <button
+              type="button"
+              data-testid="tool-card-classifier"
+              onClick={() => router.push('/studio/classify')}
+              aria-label="Machine Trainer: AI tool — teach the computer to see"
+              className="flex min-h-[6.5rem] flex-col justify-center gap-1 rounded-[1.25rem] px-5 py-4 text-left text-white shadow-sm transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+              style={{ backgroundColor: PURPLE, ['--tw-ring-color' as string]: PURPLE }}
+            >
+              <span className="font-display text-xl font-bold leading-tight">Machine Trainer</span>
+              <span className="flex items-center gap-1.5 font-body text-sm font-semibold text-white">
+                <span aria-hidden="true">🤖</span>
+                <span>AI tool · teach the computer to see</span>
+              </span>
+            </button>
           </div>
           <Image
             src="/kid/pointing-girl.png"

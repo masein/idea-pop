@@ -343,3 +343,33 @@ feeds without exposing anything to children. Keep every flag **off in the
 production-for-kids environment** until the Metis data-retention terms are
 confirmed and the privacy policy is published (see
 `docs/privacy-mission-helper-draft.md`).
+
+### 9.4 Enabling on the Docker Compose stack
+
+Compose substitutes the helper variables from the **untracked root `.env`**
+into the backend service environment and the frontend build args
+(`docker-compose.yml` passes them as `${VAR:-…}` with dark defaults). Empty
+values count as unset, so a bare `.env.example` copy stays dark.
+
+1. In the repo-root `.env` (never a tracked file), set:
+
+   ```bash
+   MISSION_HELPER_ENABLED=true
+   METIS_API_KEY=…                 # real secret, server-side only
+   NEXT_PUBLIC_MISSION_HELPER=true # frontend BUILD arg — needs a rebuild
+   # optional: METIS_BASE_URL / METIS_MODEL / HELPER_HOURLY_LIMIT /
+   #           HELP_MESSAGE_RETENTION_DAYS (see the table in §9.2)
+   ```
+
+2. Rebuild + recreate both services (`--build` is required —
+   `NEXT_PUBLIC_MISSION_HELPER` is baked into the frontend image at
+   `next build`; the backend just needs a recreate to pick up env):
+
+   ```bash
+   docker compose up -d --build backend frontend
+   ```
+
+3. Verify: backend logs show `mission helper enabled (model …)`
+   (`docker compose logs backend | grep "mission helper"`), and the
+   mission player renders the helper UI. To go dark again, unset the
+   flags (or set them to `false`) and run the same `up -d --build`.

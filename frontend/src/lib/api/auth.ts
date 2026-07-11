@@ -1,5 +1,7 @@
 "use client";
 
+import { reconcilePersona } from "@/lib/auth/persona";
+
 /**
  * In-memory access token store.
  *
@@ -41,7 +43,19 @@ async function doRefresh(): Promise<string | null> {
   }
   const data = (await res.json()) as { access_token: string };
   accessToken = data.access_token;
+  syncPersonaFromToken(data.access_token);
   return accessToken;
+}
+
+/** Keep the UI persona cookie in lockstep with the authenticated role.
+ * The JWT payload carries the role claim, so this costs no extra request. */
+function syncPersonaFromToken(token: string): void {
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")));
+    if (typeof payload.role === "string") reconcilePersona(payload.role);
+  } catch {
+    /* malformed token — leave the cookie alone */
+  }
 }
 
 export function clearAuth(): void {

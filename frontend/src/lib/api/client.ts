@@ -102,6 +102,26 @@ export async function createChild(data: {
   return res;
 }
 
+/**
+ * Add a child from a signed-in parent's session. Same endpoint as
+ * `createChild`, but deliberately does NOT adopt the returned kid token: the
+ * parent keeps their own session (the backend also skips the kid refresh
+ * cookie for authenticated adults). The parent's email is resolved server-side
+ * from their token, so `parent_email` is just the consent-email destination.
+ */
+export async function addChild(data: {
+  nickname: string;
+  avatar_id: string;
+  birth_year: number;
+  parent_email: string;
+}): Promise<{ id: string; access_token: string }> {
+  const { data: res, error } = await apiClient.POST("/api/children", {
+    body: data,
+  });
+  if (error || !res) throw new Error("Could not create profile");
+  return res;
+}
+
 /** Verify consent token (parent arrives from email link). */
 export async function verifyConsent(token: string): Promise<void> {
   // The emailed consent token IS the grant credential (COPPA verifiable consent).

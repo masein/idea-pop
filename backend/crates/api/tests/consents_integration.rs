@@ -256,3 +256,61 @@ async fn consent_grant_rejects_wrong_parent_bad_scope_and_kid_tokens() {
     assert_eq!(row["consent_granted"], json!(false));
     assert_eq!(row["class_sharing_enabled"], json!(false));
 }
+
+/// Helper: does the response set the shared `ideapop_refresh` cookie?
+fn sets_refresh_cookie(res: &axum::http::Response<Body>) -> bool {
+    res.headers()
+        .get_all("set-cookie")
+        .iter()
+        .any(|v| v.to_str().unwrap_or_default().contains("ideapop_refresh="))
+}
+
+#[tokio::test]
+async fn signed_in_parent_add_child_keeps_own_session() {
+    let (pool, _pg) = start_postgres().await;
+    let app = router(state(pool), None);
+    let token = register_parent(&app, "parent@example.com").await;
+
+    // A signed-in parent adds a child from their dashboard.
+    let res = app
+        .clone()
+        .oneshot(post_json(
+            "/children",
+            json!({"nickname": "Pixel", "avatar_id": "cat", "birth_year": 2016,
+                   "parent_email": "parent@example.com"}),
+            Some(&token),
+        ))
+        .await
+        .unwrap();
+    assert_eq!(res.status(), StatusCode::CREATED, "create child failed");
+    // The kid refresh cookie must NOT clobber the parent's own session cookie:
+    // adding a child leaves the parent signed in as themselves.
+    assert!(
+        !sets_refresh_cookie(&res),
+        "parent add-child must not set a kid refresh cookie"
+    );
+}
+
+#[tokio::test]
+async fn anonymous_kid_self_signup_gets_refresh_cookie() {
+    let (pool, _pg) = start_postgres().await;
+    let app = router(state(pool), None);
+
+    // No auth token: anonymous kid self-signup naming a parent by email.
+    let res = app
+        .clone()
+        .oneshot(post_json(
+            "/children",
+            json!({"nickname": "Pixel", "avatar_id": "cat", "birth_year": 2016,
+                   "parent_email": "newparent@example.com"}),
+            None,
+        ))
+        .await
+        .unwrap();
+    assert_eq!(res.status(), StatusCode::CREATED, "create child failed");
+    // The kid needs a refresh cookie or the next full page load signs them out.
+    assert!(
+        sets_refresh_cookie(&res),
+        "kid self-signup must set a kid refresh cookie"
+    );
+}

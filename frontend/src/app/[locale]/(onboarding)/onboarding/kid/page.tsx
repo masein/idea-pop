@@ -1,17 +1,16 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations, useFormatter } from "next-intl";
 import { useRouter } from "@/i18n/routing";
 import { kidProfileSchema, type KidProfileFormData } from "@/lib/schemas/auth";
 import { AVATARS } from "@/lib/avatars";
-import { createChild } from "@/lib/api/client";
-import { setPersona } from "@/lib/auth/persona";
+import { addChild, createChild, fetchMe } from "@/lib/api/client";
+import { getPersona, setPersona } from "@/lib/auth/persona";
 
-const TOTAL_STEPS = 4;
 const BIRTH_YEARS = Array.from({ length: 17 }, (_, i) => 2022 - i);
 
 const CARD = "#2A2A2A";
@@ -30,6 +29,15 @@ export default function KidOnboardingPage() {
   const router = useRouter();
   const [step, setStep] = useState(1);
 
+  // A signed-in parent adding a child (dashboard → "Invite your child") vs. a
+  // kid self-signing up. Parents skip the parent-email step — we already know
+  // their email — and stay in their OWN session afterward instead of being
+  // dropped into the new kid's app.
+  const [isParent, setIsParent] = useState(false);
+  const [parentEmailReady, setParentEmailReady] = useState(false);
+  const totalSteps = isParent ? 3 : 4;
+  const exitHref = isParent ? "/dashboard/parent" : "/sign-up";
+
   // Validation messages are catalog keys; fall back to any raw zod default
   // (e.g. an invalid_type message) that isn't a known key.
   const errMsg = (m?: string) => (m && t.has(m) ? t(m) : (m ?? ""));
@@ -41,6 +49,7 @@ export default function KidOnboardingPage() {
     handleSubmit,
     watch,
     trigger,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<KidProfileFormData>({
     resolver: zodResolver(kidProfileSchema),
@@ -52,6 +61,25 @@ export default function KidOnboardingPage() {
       parent_email: "",
     },
   });
+
+  // Parent flow: resolve the parent's own email server-side and pre-fill it, so
+  // there's no reason to ask for it again. If we can't (e.g. session expired),
+  // fall back to the full kid flow that asks for a parent email.
+  useEffect(() => {
+    if (getPersona() !== "parent") return;
+    setIsParent(true);
+    fetchMe()
+      .then((me) => {
+        const email = (me as { email?: string })?.email;
+        if (email) {
+          setValue("parent_email", email, { shouldValidate: true });
+          setParentEmailReady(true);
+        } else {
+          setIsParent(false);
+        }
+      })
+      .catch(() => setIsParent(false));
+  }, [setValue]);
 
   const selectedAvatar = watch("avatar_id");
 
@@ -78,13 +106,20 @@ export default function KidOnboardingPage() {
 
   async function onSubmit(data: KidProfileFormData) {
     setApiError(null);
+    const payload = {
+      nickname: data.nickname,
+      avatar_id: data.avatar_id,
+      birth_year: data.birth_year,
+      parent_email: data.parent_email,
+    };
     try {
-      await createChild({
-        nickname: data.nickname,
-        avatar_id: data.avatar_id,
-        birth_year: data.birth_year,
-        parent_email: data.parent_email,
-      });
+      if (isParent) {
+        // Keep the parent's session; the child appears in "Your children".
+        await addChild(payload);
+        router.push("/dashboard/parent");
+        return;
+      }
+      await createChild(payload);
       setPersona("kid");
       router.push("/dashboard/kid");
     } catch {
@@ -101,6 +136,12 @@ export default function KidOnboardingPage() {
         <p className="mb-5 text-center font-display text-lg font-bold text-[#CDEB5A]">
           {format.number(step)} · {stepTitle[step]}
         </p>
+
+        {isParent && (
+          <p className="-mt-3 mb-5 text-center font-body text-sm text-white/60">
+            {t("parent_add_note")}
+          </p>
+        )}
 
         <form onSubmit={handleSubmit(onSubmit)} noValidate>
           {step === 1 && (
@@ -152,7 +193,7 @@ export default function KidOnboardingPage() {
                     <button
                       type="button"
                       aria-label={t("ai_make")}
-                      onClick={() => router.push("/sign-up")}
+                      onClick={() => router.push(exitHref)}
                       className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-white text-3xl text-[#2A2A2A] transition-transform duration-150 hover:scale-105"
                     >
                       +
@@ -172,7 +213,7 @@ export default function KidOnboardingPage() {
               </p>
 
               <div className="mt-6 flex justify-center gap-3">
-                <button type="button" className={backBtn} onClick={() => router.push("/sign-up")}>
+                <button type="button" className={backBtn} onClick={() => router.push(exitHref)}>
                   {t("before")}
                 </button>
                 <button
@@ -247,18 +288,33 @@ export default function KidOnboardingPage() {
                   {errMsg(errors.birth_year.message)}
                 </p>
               )}
+              {isParent && apiError && (
+                <div className="mt-3 rounded-lg border border-red-400/40 bg-red-500/15 px-4 py-3 text-sm text-red-200">
+                  {apiError}
+                </div>
+              )}
               <div className="mt-6 flex justify-center gap-3">
                 <button type="button" className={backBtn} onClick={() => setStep((s) => s - 1)}>
                   {t("before")}
                 </button>
-                <button type="button" className={nextBtn} onClick={advanceStep}>
-                  {t("next")}
-                </button>
+                {isParent ? (
+                  <button
+                    type="submit"
+                    className={nextBtn}
+                    disabled={isSubmitting || !parentEmailReady}
+                  >
+                    {isSubmitting ? t("add_submitting") : t("add_submit")}
+                  </button>
+                ) : (
+                  <button type="button" className={nextBtn} onClick={advanceStep}>
+                    {t("next")}
+                  </button>
+                )}
               </div>
             </section>
           )}
 
-          {step === 4 && (
+          {step === 4 && !isParent && (
             <section data-testid="step-4">
               <p className="mb-4 text-center font-body text-sm text-white/60">
                 {t("step_parent_email_sub")}
@@ -300,7 +356,7 @@ export default function KidOnboardingPage() {
 
         {/* progress dots */}
         <div className="mt-6 flex justify-center gap-2" aria-hidden="true">
-          {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
+          {Array.from({ length: totalSteps }).map((_, i) => (
             <span
               key={i}
               className="h-2 rounded-full transition-all"

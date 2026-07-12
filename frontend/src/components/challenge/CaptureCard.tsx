@@ -96,6 +96,7 @@ export default function CaptureCard({
           ref={fileInputRef}
           type="file"
           accept="image/*"
+          aria-label={photoPrompt}
           data-testid="photo-input"
           onChange={handlePhotoChange}
           className="sr-only"

@@ -90,10 +90,14 @@ export default function ProfilePage() {
 
     Promise.all([
       fetchKidProgress().catch(() => EMPTY_PROGRESS),
-      fetchMyProjects().catch(() => [] as KidProjectSummary[]),
+      fetchMyProjects().catch(() => ({ items: [] as KidProjectSummary[] })),
     ]).then(([prog, projs]) => {
       setProgress(prog as KidProgressResponse);
-      setProjectsList((projs ?? []) as KidProjectSummary[]);
+      // /api/me/projects returns { items: [...] }; stay array-safe regardless of shape.
+      const items = Array.isArray(projs)
+        ? projs
+        : ((projs as { items?: KidProjectSummary[] } | null)?.items ?? []);
+      setProjectsList(items as KidProjectSummary[]);
       setLoading(false);
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps

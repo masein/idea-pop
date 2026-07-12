@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useTranslations, useFormatter } from 'next-intl';
+import { Link } from '@/i18n/routing';
 import { Button } from '@/components/ui/Button';
 
 // ─── ParentHandoffModal ───────────────────────────────────────────────────────
@@ -113,7 +114,12 @@ export default function KidDashboardPage() {
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {exploreVideos.map((v) => (
-                <div key={v.titleKey} className="bg-white rounded-card overflow-hidden shadow-sm">
+                <Link
+                  key={v.titleKey}
+                  href="/explore"
+                  aria-label={t(v.titleKey)}
+                  className="bg-white rounded-card overflow-hidden shadow-sm transition-shadow hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-explore focus-visible:ring-offset-2"
+                >
                   <div className="h-20 bg-ink/5 flex items-center justify-center text-4xl">
                     {v.emoji}
                   </div>
@@ -125,7 +131,7 @@ export default function KidDashboardPage() {
                       {t('demo_explore_xp', { xp: v.xp })}
                     </span>
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           </section>

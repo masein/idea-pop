@@ -29,7 +29,7 @@ use idea_pop_domain::{
 use crate::{
     error::{problem, ApiError},
     extractor::{AdultAuth, KidAuth},
-    parent::assert_own_child,
+    parent::{assert_own_child, require_parent},
     state::AppState,
 };
 
@@ -281,6 +281,7 @@ pub async fn parent_help_messages(
     State(state): State<AppState>,
     Path(child_id): Path<Uuid>,
 ) -> Result<Json<Vec<HelpMessageResponse>>, ApiError> {
+    require_parent(&claims.role)?;
     assert_own_child(&state, claims.account_id, child_id).await?;
     let rows = sqlx::query(
         r#"SELECT h.id, h.child_id, c.nickname, ch.title, h.step, h.question, h.answer,
@@ -367,6 +368,7 @@ pub async fn set_helper_enabled(
     Path(child_id): Path<Uuid>,
     Json(body): Json<UpdateHelperEnabledRequest>,
 ) -> Result<Json<HelperEnabledResponse>, ApiError> {
+    require_parent(&claims.role)?;
     assert_own_child(&state, claims.account_id, child_id).await?;
     sqlx::query("UPDATE child_profiles SET helper_enabled = $1 WHERE id = $2")
         .bind(body.enabled)

@@ -466,7 +466,7 @@ export default function ParentDashboardPage() {
           })
         )}
         <a
-          href="/sign-up/kid"
+          href="/onboarding/kid"
           data-testid="add-child-btn"
           className="flex items-center justify-center gap-2 rounded-card border-2 border-dashed border-explore/50 py-4 font-display text-sm font-bold text-explore transition-colors hover:border-explore hover:bg-tint-lime/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-explore"
         >

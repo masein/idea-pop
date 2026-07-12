@@ -793,7 +793,9 @@
     "adventure_learn": "Learn",
     "adventure_solve": "Solve",
     "xp_amount": "{xp, number} XP",
-    "upgrade_heading": "Want more missions?"
+    "upgrade_heading": "Want more missions?",
+    "adventure_count": "{count, number}",
+    "new_project": "new project"
   },
   "parent_dashboard": {
     "heading": "Your family dashboard",

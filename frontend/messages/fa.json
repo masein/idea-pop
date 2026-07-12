@@ -682,7 +682,9 @@
     "adventure_learn": "یادگیری",
     "adventure_solve": "حل کردن",
     "xp_amount": "{xp, number} XP",
-    "upgrade_heading": "مأموریت‌های بیشتری می‌خوای؟"
+    "upgrade_heading": "مأموریت‌های بیشتری می‌خوای؟",
+    "adventure_count": "{count, number}",
+    "new_project": "پروژهٔ جدید"
   },
   "parent_dashboard": {
     "heading": "داشبورد خانوادگی",

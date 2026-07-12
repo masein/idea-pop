@@ -5,9 +5,9 @@ import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useAgeMode } from '@/lib/hooks/useAgeMode';
 import { fetchKidProgress, fetchMyProjects } from '@/lib/api/client';
+import { levelProgress } from '@/lib/progress';
 import { AVATARS } from '@/lib/avatars';
 import KidMedals from '@/components/profile/KidMedals';
-import KidStickerBook from '@/components/profile/KidStickerBook';
 import KidProjectsGrid from '@/components/profile/KidProjectsGrid';
 import type { components } from '@/lib/api/schema';
 
@@ -63,17 +63,15 @@ export default function ProfilePage() {
   const [detailsOpen, setDetailsOpen] = useState(false);
 
   const EMPTY_PROGRESS: KidProgressResponse = {
+    xp_total: 0,
     level: 1,
-    total_xp: 0,
-    xp_this_level: 0,
-    xp_to_next_level: 150,
     rank: 'Explorer',
-    explore_xp: 0,
-    learn_xp: 0,
-    solve_xp: 0,
-    creative_cycle_active: false,
-    stickers: [],
-    medals: { bronze: 0, silver: 0, gold: 0 },
+    explore_count: 0,
+    learn_count: 0,
+    solve_count: 0,
+    medals: { explore: null, learn: null, solve: null },
+    creative_cycles_completed: 0,
+    badges: [],
   };
 
   useEffect(() => {
@@ -105,10 +103,13 @@ export default function ProfilePage() {
 
   const prog = progress ?? EMPTY_PROGRESS;
   const avatar = AVATARS.find((a) => a.id === avatarId) ?? AVATARS[0];
-  const pct = prog.xp_to_next_level > 0
-    ? Math.round((prog.xp_this_level / prog.xp_to_next_level) * 100)
-    : 0;
-  const xpToNext = Math.max(prog.xp_to_next_level - prog.xp_this_level, 0);
+  // Derive level-bracket progress from xp_total (never NaN — see lib/progress).
+  const lp = levelProgress(prog.xp_total, prog.level);
+  const pct = lp.pct;
+  const xpToNext = lp.remaining;
+  // Backend medals are per-adventure tier strings; tally them into tier counts.
+  const medalTiers = [prog.medals.explore, prog.medals.learn, prog.medals.solve];
+  const medalCount = (tier: string) => medalTiers.filter((m) => m === tier).length;
 
   function handleVisibilityChanged(
     projectId: string,
@@ -160,9 +161,9 @@ export default function ProfilePage() {
                 {t('start_your_level')}
               </span>
               <span dir="ltr" className="font-body text-sm font-semibold text-ink/70">
-                {t('xp_progress', { current: prog.xp_this_level, max: prog.xp_to_next_level })}{' '}
+                {t('xp_progress', { current: lp.into, max: lp.span })}{' '}
                 <span className="text-ink">
-                  {t('xp_to_level', { remaining: xpToNext, next: prog.level + 1 })}
+                  {t('xp_to_level', { remaining: xpToNext, next: lp.nextLevel })}
                 </span>
               </span>
               <span className="text-lg" aria-hidden="true">🏁</span>
@@ -176,17 +177,14 @@ export default function ProfilePage() {
                 aria-valuenow={pct}
                 aria-valuemin={0}
                 aria-valuemax={100}
-                aria-label={t('xp_bar_aria', { current: prog.xp_this_level, max: prog.xp_to_next_level })}
+                aria-label={t('xp_bar_aria', { current: lp.into, max: lp.span })}
               />
-              <span className="absolute inset-0 flex items-center justify-center font-body text-xs font-bold text-ink/60">
-                {pct}%
-              </span>
             </div>
           </div>
         </div>
 
         <p className="w-fit rounded-pill bg-white px-4 py-1.5 font-body text-sm font-semibold text-ink shadow-sm">
-          ⚡ {t('level_up_hint', { xp: prog.xp_to_next_level })}
+          ⚡ {t('level_up_hint', { xp: lp.remaining })}
         </p>
 
         {/* 3 adventures */}
@@ -212,25 +210,26 @@ export default function ProfilePage() {
             <div className="mt-3 flex flex-col gap-4">
               <div className="grid grid-cols-3 gap-3">
                 {[
-                  { key: 'adventure_explore', xp: prog.explore_xp, emoji: '🌿' },
-                  { key: 'adventure_learn', xp: prog.learn_xp, emoji: '📚' },
-                  { key: 'adventure_solve', xp: prog.solve_xp, emoji: '🔧' },
+                  { key: 'adventure_explore', count: prog.explore_count, emoji: '🌿' },
+                  { key: 'adventure_learn', count: prog.learn_count, emoji: '📚' },
+                  { key: 'adventure_solve', count: prog.solve_count, emoji: '🔧' },
                 ].map((a) => (
                   <div key={a.key} className="rounded-card bg-white p-4 text-center shadow-sm">
                     <div className="text-2xl" aria-hidden="true">{a.emoji}</div>
                     <p className="mt-1 font-display font-bold text-ink">{t(a.key)}</p>
-                    <p dir="ltr" className="font-body text-sm text-ink/60">{t('xp_amount', { xp: a.xp })}</p>
+                    <p className="font-body text-sm text-ink/60">
+                      {t('adventure_count', { count: Number.isFinite(a.count) ? a.count : 0 })}
+                    </p>
                   </div>
                 ))}
               </div>
               {ageMode === 'older' && (
                 <KidMedals
-                  bronze={prog.medals.bronze}
-                  silver={prog.medals.silver}
-                  gold={prog.medals.gold}
+                  bronze={medalCount('bronze')}
+                  silver={medalCount('silver')}
+                  gold={medalCount('gold')}
                 />
               )}
-              <KidStickerBook stickers={prog.stickers} />
             </div>
           )}
         </section>

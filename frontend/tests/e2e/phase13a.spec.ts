@@ -68,12 +68,14 @@ function mockChallengeAPIs(page: import('@playwright/test').Page) {
 }
 
 function mockProfileAPIs(page: import('@playwright/test').Page) {
+  // Real ProgressResponse shape (xp_total/level/rank/counts/medal-strings).
   page.route('**/api/me/progress', (r) =>
     r.fulfill({
       json: {
-        level: 2, total_xp: 85, xp_this_level: 35, xp_to_next_level: 150,
-        rank: 'Maker', explore_xp: 25, learn_xp: 40, solve_xp: 20,
-        creative_cycle_active: false, stickers: ['spark', 'leaf'], medals: { bronze: 1, silver: 0, gold: 0 },
+        xp_total: 85, level: 3, rank: 'Maker',
+        explore_count: 5, learn_count: 4, solve_count: 1,
+        medals: { explore: 'bronze', learn: null, solve: null },
+        creative_cycles_completed: 0, badges: [],
       },
     })
   );
@@ -569,9 +571,10 @@ test.describe('golden path — kid signs up and completes a challenge', () => {
     page.route('**/api/me/progress', (r) =>
       r.fulfill({
         json: {
-          level: 1, total_xp: 0, xp_this_level: 0, xp_to_next_level: 150, rank: 'Explorer',
-          explore_xp: 0, learn_xp: 0, solve_xp: 0, creative_cycle_active: false,
-          stickers: [], medals: { bronze: 0, silver: 0, gold: 0 },
+          xp_total: 0, level: 1, rank: 'Explorer',
+          explore_count: 0, learn_count: 0, solve_count: 0,
+          medals: { explore: null, learn: null, solve: null },
+          creative_cycles_completed: 0, badges: [],
         },
       })
     );
@@ -872,9 +875,9 @@ test.describe('locale switch and RTL', () => {
   test('AppShell sidebar flips ltr:left to rtl:right in FA', async ({ page }) => {
     await setCookie(page, 'ideapop_persona', 'kid');
     page.route('**/api/me/progress', (r) =>
-      r.fulfill({ json: { level: 1, total_xp: 0, xp_this_level: 0, xp_to_next_level: 150, rank: 'Explorer', explore_xp: 0, learn_xp: 0, solve_xp: 0, creative_cycle_active: false, stickers: [], medals: { bronze: 0, silver: 0, gold: 0 } } })
+      r.fulfill({ json: { xp_total: 0, level: 1, rank: 'Explorer', explore_count: 0, learn_count: 0, solve_count: 0, medals: { explore: null, learn: null, solve: null }, creative_cycles_completed: 0, badges: [] } })
     );
-    page.route('**/api/me/projects', (r) => r.fulfill({ json: [] }));
+    page.route('**/api/me/projects', (r) => r.fulfill({ json: { items: [] } }));
 
     await page.goto('/fa/profile');
     // Floating penguin should be on the left side in RTL

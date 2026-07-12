@@ -1,6 +1,7 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslations } from 'next-intl';
 import { recordLessonComplete } from '@/lib/api/client';
 import type { components } from '@/lib/api/schema';
@@ -36,6 +37,10 @@ export default function LessonVideoPlayer({
   const videoRef = useRef<HTMLVideoElement>(null);
   const [posting, setPosting] = useState(false);
   const [completed, setCompleted] = useState(false);
+  // Portal to <body> so the fixed overlay covers the viewport regardless of any
+  // transformed/overflow ancestor in the app shell.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   async function handleEnded() {
     if (completed) return;
@@ -51,13 +56,15 @@ export default function LessonVideoPlayer({
     }
   }
 
-  return (
+  if (!mounted) return null;
+
+  return createPortal(
     <div
       data-testid="lesson-player"
       role="dialog"
       aria-modal="true"
       aria-label={`${courseTitle} — ${lessonLabel}: ${lesson.title}`}
-      className="fixed inset-0 z-40 bg-ink/90 flex flex-col"
+      className="fixed inset-0 z-50 flex h-[100dvh] w-screen flex-col bg-ink/90"
     >
       {/* Top bar */}
       <div className="flex items-center gap-3 px-4 py-3 flex-shrink-0">
@@ -84,9 +91,9 @@ export default function LessonVideoPlayer({
         </button>
       </div>
 
-      {/* Video */}
-      <div className="flex-1 overflow-y-auto px-4 pb-4 flex flex-col gap-4">
-        <div className="relative">
+      {/* Video — centered in the remaining space */}
+      <div className="flex-1 overflow-y-auto px-4 pb-4 flex flex-col items-center justify-center gap-4">
+        <div className="relative w-full max-w-4xl">
           <video
             ref={videoRef}
             src={lesson.video_url}
@@ -123,6 +130,7 @@ export default function LessonVideoPlayer({
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

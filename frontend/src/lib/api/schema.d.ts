@@ -877,22 +877,28 @@ export interface components {
       total_xp: number;
       rank: string;
     };
+    // Mirrors the backend ProgressResponse (GET /api/me/progress). Level-progress
+    // (into/remaining) is derived client-side from xp_total via the level curve.
     KidProgressResponse: {
+      xp_total: number;
       level: number;
-      total_xp: number;
-      xp_this_level: number;
-      xp_to_next_level: number;
       rank: string;
-      explore_xp: number;
-      learn_xp: number;
-      solve_xp: number;
-      creative_cycle_active: boolean;
-      stickers: string[];
+      explore_count: number;
+      learn_count: number;
+      solve_count: number;
       medals: {
-        bronze: number;
-        silver: number;
-        gold: number;
+        explore: string | null;
+        learn: string | null;
+        solve: string | null;
       };
+      creative_cycles_completed: number;
+      badges: {
+        badge_id: string;
+        slug: string;
+        name: string;
+        icon_url: string;
+        awarded_at: string;
+      }[];
     };
     KidProjectSummary: {
       id: string;

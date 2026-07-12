@@ -54,8 +54,10 @@ html {
 /* Animated avatar ring (kid sidebar) — lime → purple → pink swirl.
    The prefers-reduced-motion rule below freezes it to a static gradient. */
 .avatar-ring {
-  background: conic-gradient(from 40deg, #a8e04a, #7c3cc9, #ff7ab6, #a8e04a);
-  animation: avatar-ring-spin 8s linear infinite;
+  /* Soft pastel gradient (not neon) that drifts slowly — a gentle shimmer
+     rather than a loud rainbow. Kept thin by the avatar sizing in AppShell. */
+  background: conic-gradient(from 40deg, #d7f0a3, #c9b3ef, #f7c6d8, #d7f0a3);
+  animation: avatar-ring-spin 18s linear infinite;
 }
 @keyframes avatar-ring-spin {
   to {

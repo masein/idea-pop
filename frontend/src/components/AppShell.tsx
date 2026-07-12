@@ -181,29 +181,27 @@ function AppShellInner({
       aria-label={t('shell.main_nav')}
       className="flex h-full flex-col gap-6 rounded-[1.75rem] border border-coral-faint bg-white px-3 py-6 shadow-md"
     >
-      {/* Avatar (animated gradient ring + goggles badge) + name header */}
-      <div className="flex flex-col items-center gap-2 px-3">
+      {/* Avatar — slim, gently-shimmering gradient ring around the avatar */}
+      <div className="flex flex-col items-center gap-2.5 px-3">
         <span className="relative flex h-20 w-20 items-center justify-center" aria-hidden="true">
           <span className="avatar-ring absolute inset-0 rounded-full" />
+          {/* 72px inner inside the 80px ring → a thin 4px ring */}
           <span
-            className="relative flex h-16 w-16 items-center justify-center overflow-hidden rounded-full text-3xl"
+            className="relative flex h-[4.5rem] w-[4.5rem] items-center justify-center overflow-hidden rounded-full text-3xl"
             style={{ backgroundColor: avatar?.bg ?? '#FBF7D5' }}
           >
             {persona === 'kid' && avatar?.img ? (
-              <Image src={avatar.img} alt="" width={64} height={64} className="h-full w-full object-contain" />
+              <Image src={avatar.img} alt="" width={72} height={72} className="h-full w-full object-contain" />
             ) : (
               <span>{persona === 'kid' ? (avatar?.emoji ?? '🐧') : persona === 'teacher' ? '🧑‍🏫' : '🧑'}</span>
             )}
-          </span>
-          <span className="absolute -bottom-1 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-white text-sm shadow-sm ltr:-right-1 rtl:-left-1">
-            🥽
           </span>
         </span>
         <span className="font-display text-lg font-bold text-ink">{displayName}</span>
       </div>
 
       {/* Nav */}
-      <ul className="flex flex-1 flex-col gap-2" role="list">
+      <ul className="flex flex-1 flex-col gap-3" role="list">
         {items.map((item) => {
           const isActive = item.id !== 'account' && activeSection === item.id;
           return (
@@ -212,7 +210,7 @@ function AppShellInner({
                 href={item.href}
                 aria-current={isActive ? 'page' : undefined}
                 className={[
-                  'flex items-center justify-between gap-3 rounded-card px-3 py-3 font-body text-sm font-bold transition-colors duration-150',
+                  'flex items-center justify-between gap-3 rounded-card px-4 py-3.5 font-body text-[15px] font-bold transition-colors duration-150',
                   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1',
                   isActive
                     ? 'text-coral ring-1 ring-coral-soft focus-visible:ring-coral'
@@ -242,20 +240,21 @@ function AppShellInner({
       {showUpgrade && (
         <a
           href={persona === 'parent' ? '/dashboard/parent#account' : '/profile'}
-          className="flex flex-col items-center gap-2 rounded-[1.25rem] bg-tint-lime p-3 text-center transition-shadow hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-explore"
+          className="flex flex-col items-center gap-2 rounded-[1.25rem] bg-tint-lime p-3 text-center transition-shadow hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-coral"
         >
           <Image src="/kid/upgrade-girl.png" alt="" width={72} height={72} className="h-16 w-auto" aria-hidden="true" />
           <span className="font-body text-xs font-semibold text-ink/70">
             {t('shell.upgrade_body')}
           </span>
-          <span className="rounded-pill bg-explore px-5 py-1.5 font-display text-sm font-bold text-white">
+          <span className="rounded-pill bg-coral px-5 py-1.5 font-display text-sm font-bold text-white">
             {t('shell.upgrade_cta')}
           </span>
         </a>
       )}
 
-      {/* In-app language switch (all personas) */}
-      <div className="flex justify-center pt-1">
+      {/* In-app language switch (all personas) — quiet footer, off the design
+          but a needed feature; a hairline separates it from the nav. */}
+      <div className="flex justify-center border-t border-ink/5 pt-3">
         <LocaleSwitcher variant="light" />
       </div>
     </nav>

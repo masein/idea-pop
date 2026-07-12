@@ -77,11 +77,14 @@ function mockProfileAPIs(page: import('@playwright/test').Page) {
       },
     })
   );
+  // Real API shape: ProjectListResponse { items: [...] }, NOT a bare array.
   page.route('**/api/me/projects', (r) =>
     r.fulfill({
-      json: [
-        { id: 'proj-1', title: 'My bridge', what_i_made: 'A cool bridge', project_photo_url: null, visibility: 'private', visibility_pending: false, created_at: '2026-06-01T00:00:00Z', challenge_title: 'Build a bridge' },
-      ],
+      json: {
+        items: [
+          { id: 'proj-1', title: 'My bridge', what_i_made: 'A cool bridge', project_photo_url: null, visibility: 'private', visibility_pending: false, created_at: '2026-06-01T00:00:00Z', challenge_title: 'Build a bridge' },
+        ],
+      },
     })
   );
 }
@@ -558,6 +561,28 @@ test.describe('golden path — kid signs up and completes a challenge', () => {
     await page.goto('/en/profile');
     await expect(page.getByTestId('profile-page')).toBeVisible();
     await expect(page.getByTestId('xp-bar')).toBeVisible();
+  });
+
+  test('fresh kid opens profile without crashing — empty state renders', async ({ page }) => {
+    await setCookie(page, 'ideapop_persona', 'kid');
+    // A brand-new kid: default progress, and /me/projects returns { items: [] }.
+    page.route('**/api/me/progress', (r) =>
+      r.fulfill({
+        json: {
+          level: 1, total_xp: 0, xp_this_level: 0, xp_to_next_level: 150, rank: 'Explorer',
+          explore_xp: 0, learn_xp: 0, solve_xp: 0, creative_cycle_active: false,
+          stickers: [], medals: { bronze: 0, silver: 0, gold: 0 },
+        },
+      })
+    );
+    page.route('**/api/me/projects', (r) => r.fulfill({ json: { items: [] } }));
+    const errors: string[] = [];
+    page.on('pageerror', (e) => errors.push(e.message));
+
+    await page.goto('/en/profile');
+    await expect(page.getByTestId('profile-page')).toBeVisible();
+    await expect(page.getByTestId('projects-empty')).toBeVisible();
+    expect(errors, `client exceptions: ${errors.join(' | ')}`).toEqual([]);
   });
 
   test('kid Upgrade CTA opens parent handoff, not billing page', async ({ page }) => {

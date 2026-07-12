@@ -12,6 +12,8 @@ interface KidProjectsGridProps {
 }
 
 export default function KidProjectsGrid({ projects, onVisibilityChanged }: KidProjectsGridProps) {
+  // Defensive: never crash if a non-array slips through (API shape drift).
+  const list = Array.isArray(projects) ? projects : [];
   const [sharingProjectId, setSharingProjectId] = useState<string | null>(null);
 
   function handleShare(projectId: string) {
@@ -62,7 +64,7 @@ export default function KidProjectsGrid({ projects, onVisibilityChanged }: KidPr
       <div data-testid="projects-grid" className="flex flex-col gap-4">
         <h2 className="font-display text-lg font-bold text-ink">My projects</h2>
 
-        {projects.length === 0 ? (
+        {list.length === 0 ? (
           <a
             href="/challenges"
             data-testid="projects-empty"
@@ -73,7 +75,7 @@ export default function KidProjectsGrid({ projects, onVisibilityChanged }: KidPr
           </a>
         ) : (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-            {projects.map((project) => (
+            {list.map((project) => (
               <KidProjectCard
                 key={project.id}
                 project={project}

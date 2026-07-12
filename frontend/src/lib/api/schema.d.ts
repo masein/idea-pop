@@ -231,7 +231,10 @@ export interface paths {
       responses: {
         200: {
           content: {
-            "application/json": components["schemas"]["KidProjectSummary"][];
+            // Backend returns ProjectListResponse { items: [...] }, not a bare array.
+            "application/json": {
+              items: components["schemas"]["KidProjectSummary"][];
+            };
           };
         };
       };

@@ -639,6 +639,24 @@ test.describe('golden path — parent', () => {
     await expect(page.getByTestId('report-stats')).toBeVisible();
   });
 
+  test('invite-child button links to the kid onboarding, not a dead route', async ({ page }) => {
+    await setCookie(page, 'ideapop_persona', 'parent');
+    mockParentAPIs(page);
+
+    await page.goto('/en/dashboard/parent');
+    const invite = page.getByTestId('add-child-btn');
+    await expect(invite).toBeVisible();
+    // Points at the real kid-onboarding flow, not the old dead /sign-up/kid.
+    await expect(invite).toHaveAttribute('href', /\/onboarding\/kid$/);
+  });
+
+  test('kid onboarding route renders (invite-child destination is real)', async ({ page }) => {
+    await setCookie(page, 'ideapop_persona', 'parent');
+    await page.goto('/en/onboarding/kid');
+    await expect(page.getByTestId('avatar-grid')).toBeVisible();
+    await expect(page.getByTestId('not-found')).toHaveCount(0);
+  });
+
   test('parent consent toggle grants class sharing', async ({ page }) => {
     await setCookie(page, 'ideapop_persona', 'parent');
     mockParentAPIs(page);

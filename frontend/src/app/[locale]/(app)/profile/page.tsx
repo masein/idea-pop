@@ -179,9 +179,6 @@ export default function ProfilePage() {
                 aria-valuemax={100}
                 aria-label={t('xp_bar_aria', { current: lp.into, max: lp.span })}
               />
-              <span className="absolute inset-0 flex items-center justify-center font-body text-xs font-bold text-ink/60">
-                {pct}%
-              </span>
             </div>
           </div>
         </div>

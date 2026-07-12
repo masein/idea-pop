@@ -4,7 +4,18 @@ import { routing } from "./i18n/routing";
 
 const intlMiddleware = createMiddleware(routing);
 
-const PROTECTED_PREFIXES = ["/dashboard", "/onboarding", "/profile"];
+// Every in-app route requires a session. A logged-out visitor is redirected to
+// sign-up rather than being shown the (fake) logged-in kid shell. Marketing
+// routes (/, /method, /pricing, /for-teachers, /sign-up, /login) stay public.
+const PROTECTED_PREFIXES = [
+  "/dashboard",
+  "/onboarding",
+  "/profile",
+  "/explore",
+  "/library",
+  "/challenges",
+  "/studio",
+];
 
 // These paths require a specific persona — any other persona (including kids)
 // is redirected to the sign-up page.

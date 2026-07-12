@@ -78,6 +78,15 @@ export default function LoginForm() {
           {...register("password")}
         />
 
+        <div className="-mt-2 text-right">
+          <Link
+            href="/forgot-password"
+            className="font-body text-sm font-semibold text-explore underline-offset-2 hover:underline"
+          >
+            {t("forgot_password")}
+          </Link>
+        </div>
+
         <Button
           variant="primary"
           size="lg"

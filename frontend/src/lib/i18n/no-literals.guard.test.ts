@@ -33,6 +33,9 @@ const GUARDED_DIRS = [
 const GUARDED_FILES = [
   'src/components/AppShell.tsx',
   'src/components/PenguinMascot.tsx',
+  'src/components/HelpPanel.tsx',
+  'src/components/explore/VideoPlayer.tsx',
+  'src/components/library/LessonVideoPlayer.tsx',
 ];
 
 function walkTsx(dir: string): string[] {

@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { recordLessonComplete } from '@/lib/api/client';
 import type { components } from '@/lib/api/schema';
 
@@ -29,6 +30,9 @@ export default function LessonVideoPlayer({
   onComplete,
   onClose,
 }: LessonVideoPlayerProps) {
+  const t = useTranslations('player');
+  const tl = useTranslations('library');
+  const lessonLabel = tl('lesson_n', { n: lesson.ordinal });
   const videoRef = useRef<HTMLVideoElement>(null);
   const [posting, setPosting] = useState(false);
   const [completed, setCompleted] = useState(false);
@@ -52,7 +56,7 @@ export default function LessonVideoPlayer({
       data-testid="lesson-player"
       role="dialog"
       aria-modal="true"
-      aria-label={`${courseTitle} — Lesson ${lesson.ordinal}: ${lesson.title}`}
+      aria-label={`${courseTitle} — ${lessonLabel}: ${lesson.title}`}
       className="fixed inset-0 z-40 bg-ink/90 flex flex-col"
     >
       {/* Top bar */}
@@ -60,15 +64,24 @@ export default function LessonVideoPlayer({
         <button
           type="button"
           onClick={onClose}
-          aria-label="Close lesson player"
           className="flex items-center gap-1 text-white/80 hover:text-white font-body text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 rounded-pill px-2 py-1"
         >
-          <span aria-hidden="true">←</span> Back
+          <span aria-hidden="true">←</span> {t('back')}
         </button>
 
         <h2 className="flex-1 font-display text-base text-white line-clamp-1">
-          {courseTitle} — Lesson {lesson.ordinal}: {lesson.title}
+          {courseTitle} — {lessonLabel}: {lesson.title}
         </h2>
+
+        <button
+          type="button"
+          data-testid="close-player"
+          onClick={onClose}
+          aria-label={t('close')}
+          className="flex-shrink-0 flex h-10 w-10 items-center justify-center rounded-full bg-white/15 text-xl text-white hover:bg-white/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+        >
+          <span aria-hidden="true">✕</span>
+        </button>
       </div>
 
       {/* Video */}
@@ -87,7 +100,7 @@ export default function LessonVideoPlayer({
             <div
               className="absolute inset-0 flex items-center justify-center bg-black/40"
               aria-live="polite"
-              aria-label="Saving progress"
+              aria-label={t('saving')}
             >
               <span
                 className="w-8 h-8 border-4 border-white/30 border-t-white rounded-full animate-spin"
@@ -105,7 +118,7 @@ export default function LessonVideoPlayer({
               onClick={onClose}
               className="inline-flex items-center gap-2 rounded-pill bg-library text-white font-body font-semibold text-sm px-5 py-2.5 hover:brightness-110 active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-library focus-visible:ring-offset-2"
             >
-              Continue
+              {t('continue')}
             </button>
           </div>
         )}

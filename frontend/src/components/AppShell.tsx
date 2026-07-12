@@ -6,6 +6,8 @@ import { useTranslations } from 'next-intl';
 import { usePathname } from '@/i18n/routing';
 import Logo from './Logo';
 import PenguinMascot from './PenguinMascot';
+import LocaleSwitcher from './marketing/LocaleSwitcher';
+import HelpPanel, { type HelpSection } from './HelpPanel';
 import { AVATARS } from '@/lib/avatars';
 
 export type Section = 'profile' | 'explore' | 'library' | 'challenge' | 'studio';
@@ -26,6 +28,13 @@ function personaFromPath(path: string): Persona {
   if (path.startsWith('/dashboard/parent')) return 'parent';
   if (path.startsWith('/dashboard/teacher')) return 'teacher';
   return 'kid';
+}
+
+// Which help blurb the floating penguin shows. A mission route (/challenges/:id)
+// is distinct from the challenges LIST (/challenges).
+function helpSectionFromPath(path: string): HelpSection {
+  if (/^\/challenges\/[^/]+/.test(path)) return 'mission';
+  return sectionFromPath(path) ?? 'default';
 }
 
 // ── Nav config per persona ──────────────────────────────────────────────────────
@@ -138,6 +147,7 @@ function AppShellInner({
   const pathname = usePathname();
   const t = useTranslations();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
   const [kid, setKid] = useState<{ nickname: string; avatar_id: string } | null>(null);
 
   const persona = personaFromPath(pathname);
@@ -243,6 +253,11 @@ function AppShellInner({
           </span>
         </a>
       )}
+
+      {/* In-app language switch (all personas) */}
+      <div className="flex justify-center pt-1">
+        <LocaleSwitcher variant="light" />
+      </div>
     </nav>
   );
 
@@ -312,10 +327,14 @@ function AppShellInner({
         </main>
       </div>
 
-      {/* Floating penguin mascot (flips to the left in RTL) */}
+      {/* Floating penguin mascot (flips to the left in RTL) — opens the help panel */}
       <div className="fixed bottom-6 z-40 ltr:right-6 rtl:left-6">
-        <PenguinMascot />
+        <PenguinMascot onClick={() => setHelpOpen(true)} />
       </div>
+
+      {helpOpen && (
+        <HelpPanel section={helpSectionFromPath(pathname)} onClose={() => setHelpOpen(false)} />
+      )}
     </div>
   );
 }

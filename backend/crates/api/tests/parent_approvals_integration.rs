@@ -91,6 +91,35 @@ async fn register_parent(app: &axum::Router, email: &str) -> String {
         .to_owned()
 }
 
+/// Register + log in a TEACHER; returns the access token.
+async fn register_teacher(app: &axum::Router, email: &str) -> String {
+    let res = app
+        .clone()
+        .oneshot(post_json(
+            "/auth/register",
+            json!({"email": email, "password": "password123",
+                   "role": "teacher", "display_name": "Teach"}),
+            None,
+        ))
+        .await
+        .unwrap();
+    assert_eq!(res.status(), StatusCode::CREATED, "teacher register failed");
+
+    let res = app
+        .clone()
+        .oneshot(post_json(
+            "/auth/login",
+            json!({"email": email, "password": "password123"}),
+            None,
+        ))
+        .await
+        .unwrap();
+    body_json(res).await["access_token"]
+        .as_str()
+        .unwrap()
+        .to_owned()
+}
+
 /// Create a child via the API; returns (child_id, kid_token).
 async fn create_child(app: &axum::Router, parent_token: &str, email: &str) -> (Uuid, String) {
     let res = app
@@ -449,4 +478,49 @@ async fn display_mode_roundtrips_and_validates() {
         .await
         .unwrap();
     assert_eq!(res.status(), StatusCode::FORBIDDEN);
+}
+
+#[tokio::test]
+async fn parent_routes_reject_non_parent_roles() {
+    let (pool, _pg) = start_postgres().await;
+    let app = router(state(pool.clone()), None);
+
+    // Parent: still 200 on the parent endpoints.
+    let parent = register_parent(&app, "gate-parent@test.com").await;
+    for uri in ["/parent/children", "/parent/approvals"] {
+        let res = app
+            .clone()
+            .oneshot(get_req(uri, Some(&parent)))
+            .await
+            .unwrap();
+        assert_eq!(res.status(), StatusCode::OK, "parent should reach {uri}");
+    }
+
+    // Teacher: parent endpoints authorize by role, not just adult-ness → 403.
+    let teacher = register_teacher(&app, "gate-teacher@test.com").await;
+    for uri in ["/parent/children", "/parent/approvals"] {
+        let res = app
+            .clone()
+            .oneshot(get_req(uri, Some(&teacher)))
+            .await
+            .unwrap();
+        assert_eq!(
+            res.status(),
+            StatusCode::FORBIDDEN,
+            "teacher token must be 403 on {uri}"
+        );
+    }
+
+    // Kid tokens were already rejected by AdultAuth (401/403); keep that true.
+    let (_child, kid) = create_child(&app, &parent, "gate-parent@test.com").await;
+    let res = app
+        .clone()
+        .oneshot(get_req("/parent/children", Some(&kid)))
+        .await
+        .unwrap();
+    assert!(
+        res.status() == StatusCode::FORBIDDEN || res.status() == StatusCode::UNAUTHORIZED,
+        "kid token must not reach /parent/children (got {})",
+        res.status()
+    );
 }

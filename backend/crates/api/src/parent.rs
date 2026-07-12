@@ -18,9 +18,20 @@ use sqlx::Row;
 use utoipa::ToSchema;
 use uuid::Uuid;
 
-use idea_pop_domain::{progress::level_from_xp, DomainError};
+use idea_pop_domain::{progress::level_from_xp, DomainError, Role};
 
 use crate::{error::ApiError, extractor::AdultAuth, portfolio, state::AppState};
+
+/// Parent-only guard for `/parent/*` routes. `AdultAuth` alone accepts any
+/// adult role (teacher/reviewer/admin), so these endpoints additionally require
+/// the caller to actually be a parent — mirrors `require_teacher` in teacher.rs.
+pub(crate) fn require_parent(role: &Role) -> Result<(), ApiError> {
+    if matches!(role, Role::Parent) {
+        Ok(())
+    } else {
+        Err(DomainError::Forbidden("Parent role required".into()).into())
+    }
+}
 
 // ── DTOs (match the frontend ParentChild / ChildReport contract) ────────────────
 
@@ -82,6 +93,7 @@ pub async fn list_children(
     AdultAuth(claims): AdultAuth,
     State(state): State<AppState>,
 ) -> Result<Json<Vec<ParentChildResponse>>, ApiError> {
+    require_parent(&claims.role)?;
     let rows = sqlx::query(
         r#"SELECT c.id, c.nickname, c.avatar_id, c.birth_year, c.display_mode, c.helper_enabled,
                   COALESCE((SELECT SUM(amount) FROM xp_events WHERE child_id = c.id), 0) AS total_xp,
@@ -140,6 +152,7 @@ pub async fn child_report(
     State(state): State<AppState>,
     Path(child_id): Path<Uuid>,
 ) -> Result<Json<ChildReportResponse>, ApiError> {
+    require_parent(&claims.role)?;
     // Ownership: only the parent who owns the child may read the report.
     let owner: Option<Uuid> =
         sqlx::query_scalar("SELECT parent_account_id FROM child_profiles WHERE id = $1")
@@ -247,6 +260,7 @@ pub async fn set_display_mode(
     Path(child_id): Path<Uuid>,
     Json(body): Json<UpdateDisplayModeRequest>,
 ) -> Result<Json<DisplayModeResponse>, ApiError> {
+    require_parent(&claims.role)?;
     const ALLOWED: [&str; 3] = ["avatar_nickname", "first_name", "anonymous"];
     if !ALLOWED.contains(&body.display_mode.as_str()) {
         return Err(DomainError::Validation(
@@ -333,6 +347,7 @@ pub async fn list_approvals(
     AdultAuth(claims): AdultAuth,
     State(state): State<AppState>,
 ) -> Result<Json<Vec<ParentApprovalResponse>>, ApiError> {
+    require_parent(&claims.role)?;
     let share_rows = sqlx::query(
         r#"SELECT m.id, m.created_at, c.id AS child_id, c.nickname,
                   COALESCE(p.title, i.text) AS title,
@@ -413,6 +428,7 @@ pub async fn approve_approval(
     Path(item_id): Path<Uuid>,
     Json(body): Json<ResolveApprovalRequest>,
 ) -> Result<Json<ResolveApprovalResponse>, ApiError> {
+    require_parent(&claims.role)?;
     resolve_approval(&state, claims.account_id, item_id, &body.kind, true).await
 }
 
@@ -433,6 +449,7 @@ pub async fn dismiss_approval(
     Path(item_id): Path<Uuid>,
     Json(body): Json<ResolveApprovalRequest>,
 ) -> Result<Json<ResolveApprovalResponse>, ApiError> {
+    require_parent(&claims.role)?;
     resolve_approval(&state, claims.account_id, item_id, &body.kind, false).await
 }
 

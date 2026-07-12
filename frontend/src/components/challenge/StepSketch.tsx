@@ -53,6 +53,12 @@ export default function StepSketch({ challenge, ageMode, onNext, onBack }: StepS
         <p className="font-body text-sm text-ink/50 mt-1">
           {challenge.sketch_prompt?.trim() || t('sketch_prompt_fallback')}
         </p>
+        <p
+          data-testid="sketch-instruction"
+          className="mt-2 rounded-card bg-tint-blue px-3 py-2 font-body text-sm text-ink/80"
+        >
+          ✏️ {t('sketch_instruction')}
+        </p>
         {challenge.sketch_guidance?.trim() && (
           <p
             data-testid="sketch-guidance"

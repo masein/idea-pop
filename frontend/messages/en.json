@@ -484,7 +484,8 @@
       "our_experts": "Our experts",
       "blog": "Blog & free printables",
       "careers": "Careers"
-    }
+    },
+    "language": "Language"
   },
   "auth": {
     "persona_select": {
@@ -1103,6 +1104,24 @@
     "remixing": "Remixing…",
     "remix_toast": "↻ Starting from their idea…",
     "wall_load_error": "Could not load ideas. Please try again.",
-    "wall_empty": "No ideas yet — be the first! 🌟"
+    "wall_empty": "No ideas yet — be the first! 🌟",
+    "sketch_instruction": "Draw it on paper, then take a photo — or just describe it in words. A photo is optional."
+  },
+  "player": {
+    "back": "Back",
+    "continue": "Continue",
+    "close": "Close",
+    "saving": "Saving progress"
+  },
+  "help_panel": {
+    "title": "How this works",
+    "close": "Close",
+    "body_profile": "This is your profile — your XP, badges, and the projects you've made all live here.",
+    "body_explore": "Watch short nature videos and earn XP. Tap any card to start watching.",
+    "body_library": "Pick a studio, follow an expert course, or make something quick with simple materials.",
+    "body_challenge": "Missions turn a real problem into 8 fun steps. Pick one and start building!",
+    "body_studio": "Train the computer to see! Show it examples, then test what it learned — all on your device.",
+    "body_mission": "You're on a mission! Follow the steps at the top. Stuck? Tap “Ask Popi” on the Skill or Build step for a hint.",
+    "body_default": "Explore, learn, and build — and earn XP along the way. Tap around to get started!"
   }
 }

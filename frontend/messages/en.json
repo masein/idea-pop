@@ -513,7 +513,8 @@
       "no_account": "Don't have an account?",
       "sign_up": "Sign up",
       "error_invalid": "Wrong email or password. Please try again.",
-      "error_generic": "Something went wrong. Please try again."
+      "error_generic": "Something went wrong. Please try again.",
+      "forgot_password": "Forgot password?"
     },
     "register": {
       "heading_parent": "Create your parent account",
@@ -541,7 +542,12 @@
       "success_body": "Your account is ready. Let's get started."
     },
     "show_password": "Show password",
-    "hide_password": "Hide password"
+    "hide_password": "Hide password",
+    "forgot": {
+      "heading": "Forgot your password?",
+      "body": "Resetting your password isn't available here just yet — we're building it! For now, head back and try logging in again.",
+      "back_to_login": "← Back to log in"
+    }
   },
   "onboarding": {
     "kid": {
@@ -1125,5 +1131,10 @@
     "body_studio": "Train the computer to see! Show it examples, then test what it learned — all on your device.",
     "body_mission": "You're on a mission! Follow the steps at the top. Stuck? Tap “Ask Popi” on the Skill or Build step for a hint.",
     "body_default": "Explore, learn, and build — and earn XP along the way. Tap around to get started!"
+  },
+  "not_found": {
+    "title": "Oops! This page wandered off",
+    "body": "We couldn't find the page you were looking for. Let's get you back to exploring!",
+    "home": "Take me home"
   }
 }

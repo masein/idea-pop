@@ -957,3 +957,41 @@ test('prefers-reduced-motion disables CSS animations', async ({ page }) => {
   // Expect less than 1ms — effectively no animation
   expect(animDurationMs).toBeLessThan(1);
 });
+
+// ── Logged-out auth gating + branded 404 + forgot-password ────────────────────
+
+test.describe('logged-out gating, 404 & forgot-password', () => {
+  // No ideapop_persona cookie is set in these tests — the visitor is anonymous.
+
+  for (const route of ['/en/explore', '/en/library', '/en/profile', '/fa/library']) {
+    test(`anonymous visit to ${route} redirects to sign-up (never the kid shell)`, async ({ page }) => {
+      await page.goto(route);
+      await expect(page).toHaveURL(/\/(en|fa)\/sign-up/);
+    });
+  }
+
+  test('login page has a working Forgot-password link (en)', async ({ page }) => {
+    await page.goto('/en/login');
+    await page.getByRole('link', { name: /forgot password/i }).click();
+    await expect(page).toHaveURL(/\/en\/forgot-password/);
+    await expect(page.getByTestId('forgot-password')).toBeVisible();
+  });
+
+  test('forgot-password page passes axe (fa)', async ({ page }) => {
+    await page.goto('/fa/forgot-password');
+    await expect(page.getByTestId('forgot-password')).toBeVisible();
+    const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze();
+    expect(results.violations).toEqual([]);
+  });
+
+  for (const locale of ['en', 'fa']) {
+    test(`unknown URL shows the branded 404 with a way home (${locale})`, async ({ page }) => {
+      await page.goto(`/${locale}/this-page-does-not-exist-123`);
+      await expect(page.getByTestId('not-found')).toBeVisible();
+      const home = page.getByTestId('not-found').getByRole('link');
+      await expect(home).toBeVisible();
+      const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze();
+      expect(results.violations).toEqual([]);
+    });
+  }
+});

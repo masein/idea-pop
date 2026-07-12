@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import MissionHelper from './MissionHelper';
 
@@ -39,7 +39,8 @@ export default function CaptureCard({
   helper,
 }: CaptureCardProps) {
   const t = useTranslations('mission');
-  const [photoSelected, setPhotoSelected] = useState(false);
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [title, setTitle] = useState('');
   const [whatIMade, setWhatIMade] = useState('');
   const [whatIUsed, setWhatIUsed] = useState('');
@@ -48,6 +49,24 @@ export default function CaptureCard({
   const [showPopi, setShowPopi] = useState(false);
 
   const canSubmit = title.trim().length > 0 && whatIMade.trim().length > 0;
+
+  // Revoke the object URL when it changes or the card unmounts, so previewing
+  // a photo doesn't leak blob URLs.
+  useEffect(() => {
+    if (!photoUrl) return;
+    return () => URL.revokeObjectURL(photoUrl);
+  }, [photoUrl]);
+
+  function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setPhotoUrl(URL.createObjectURL(file));
+  }
+
+  function removePhoto() {
+    setPhotoUrl(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  }
 
   function handleSubmit() {
     if (!canSubmit || submitting) return;
@@ -67,33 +86,58 @@ export default function CaptureCard({
 
   return (
     <div data-testid="capture-card" className="flex flex-col gap-4">
-      {/* Photo upload area */}
+      {/* Photo upload area — a real file picker with a live preview. Optional:
+          nothing is submitted if no photo is chosen. */}
       <div
         data-testid="photo-area"
-        onClick={() => setPhotoSelected(true)}
-        className="bg-tint-blue rounded-card border-2 border-dashed border-challenge/30 flex flex-col items-center justify-center py-10 cursor-pointer"
+        className="bg-tint-blue rounded-card border-2 border-dashed border-challenge/30"
       >
-        {photoSelected ? (
-          <div className="flex flex-col items-center gap-3 w-full px-6">
-            <div className="w-full h-32 bg-ink/10 rounded-card" />
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                setPhotoSelected(false);
-              }}
-              className="font-body text-sm text-ink/60 underline"
-            >
-              {t('remove_photo')}
-            </button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          data-testid="photo-input"
+          onChange={handlePhotoChange}
+          className="sr-only"
+        />
+        {photoUrl ? (
+          <div className="flex flex-col items-center gap-3 p-4">
+            {/* Blob preview of the chosen image — next/image can't size a blob. */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={photoUrl}
+              alt=""
+              data-testid="photo-preview"
+              className="max-h-56 w-full rounded-card object-contain"
+            />
+            <div className="flex gap-5">
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="font-body text-sm text-ink/60 underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-challenge"
+              >
+                {t('change_photo')}
+              </button>
+              <button
+                type="button"
+                onClick={removePhoto}
+                className="font-body text-sm text-ink/60 underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-challenge"
+              >
+                {t('remove_photo')}
+              </button>
+            </div>
           </div>
         ) : (
-          <>
-            <span className="text-4xl">📷</span>
-            <p className="font-body text-sm text-ink/50 text-center mt-2 px-4">
-              {photoPrompt}
-            </p>
-          </>
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="flex w-full flex-col items-center justify-center py-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-challenge"
+          >
+            <span className="text-4xl" aria-hidden="true">
+              📷
+            </span>
+            <p className="font-body text-sm text-ink/50 text-center mt-2 px-4">{photoPrompt}</p>
+          </button>
         )}
       </div>
 

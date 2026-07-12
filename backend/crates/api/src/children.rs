@@ -6,6 +6,7 @@
 use axum::{
     extract::State,
     http::{header, HeaderMap, StatusCode},
+    response::IntoResponse,
     Json,
 };
 use serde::{Deserialize, Serialize};
@@ -56,7 +57,7 @@ pub async fn create_child(
     State(state): State<AppState>,
     headers: HeaderMap,
     Json(body): Json<CreateChildRequest>,
-) -> Result<impl axum::response::IntoResponse, ApiError> {
+) -> Result<axum::response::Response, ApiError> {
     body.validate()
         .map_err(|e| idea_pop_domain::DomainError::Validation(e.to_string()))?;
 
@@ -64,7 +65,8 @@ pub async fn create_child(
     // otherwise (anonymous kid self-signup) the parent is identified by
     // email — reusing their account when it exists, or creating a pending
     // one they claim via the consent flow. Invalid input is 422, never 401.
-    let parent_id = match adult_claims(&state, &headers).await {
+    let adult_caller = adult_claims(&state, &headers).await;
+    let parent_id = match adult_caller {
         Some(account_id) => account_id,
         None => resolve_or_invite_parent(&state, &body.parent_email).await?,
     };
@@ -81,22 +83,31 @@ pub async fn create_child(
         .await
         .map_err(ApiError::Domain)?;
 
-    // Kid refresh cookie: without it any full page load signs the kid out
-    // (adults got this in the auth-refresh fix; kids need it just as much).
-    let refresh_token = state.auth.issue_kid_refresh(child.id, parent_id).await?;
+    let payload = Json(CreateChildResponse {
+        child_id: child.id,
+        nickname: child.nickname,
+        access_token: token,
+    });
 
+    // When a signed-in parent adds a child, they keep their OWN session — we
+    // must NOT overwrite the shared `ideapop_refresh` cookie with a kid token
+    // (that would silently drop the parent into the kid app on next load).
+    // Only the anonymous kid self-signup gets a kid refresh cookie: without it
+    // any full page load would sign the freshly-created kid straight back out.
+    if adult_caller.is_some() {
+        return Ok((StatusCode::CREATED, payload).into_response());
+    }
+
+    let refresh_token = state.auth.issue_kid_refresh(child.id, parent_id).await?;
     Ok((
         StatusCode::CREATED,
         axum::response::AppendHeaders([(
             header::SET_COOKIE,
             crate::auth::set_refresh_cookie(&refresh_token, state.cookie_secure),
         )]),
-        Json(CreateChildResponse {
-            child_id: child.id,
-            nickname: child.nickname,
-            access_token: token,
-        }),
-    ))
+        payload,
+    )
+        .into_response())
 }
 
 /// The caller's account id when a valid ADULT bearer token is present.

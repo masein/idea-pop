@@ -406,21 +406,15 @@ export interface paths {
     post: {
       parameters: { path: { id: string } };
       responses: {
-        201: {
-          content: {
-            "application/json": components["schemas"]["ChallengeAttempt"];
-          };
-        };
-      };
-    };
-  };
-  "/api/challenges/{id}/attempts": {
-    get: {
-      parameters: { path: { id: string } };
-      responses: {
+        // 200 = existing in-progress attempt resumed; 201 = freshly created.
         200: {
           content: {
-            "application/json": components["schemas"]["ChallengeAttempt"][];
+            "application/json": components["schemas"]["StartAttemptResponse"];
+          };
+        };
+        201: {
+          content: {
+            "application/json": components["schemas"]["StartAttemptResponse"];
           };
         };
       };
@@ -437,7 +431,7 @@ export interface paths {
       responses: {
         200: {
           content: {
-            "application/json": components["schemas"]["XpAwardResponse"];
+            "application/json": components["schemas"]["AdvanceStepResponse"];
           };
         };
       };
@@ -975,11 +969,21 @@ export interface components {
     UpdateVisibilityRequest: {
       visibility: "private" | "class" | "public";
     };
-    ChallengeAttempt: {
-      id: string;
+    // Mirrors the backend StartAttemptResponse — note `attempt_id`, not `id`
+    // (the old hand-written shape drifted and silently broke step tracking).
+    StartAttemptResponse: {
+      attempt_id: string;
       challenge_id: string;
-      step: number;
-      started_at: string;
+      current_step: number;
+      status: string;
+    };
+    // Mirrors the backend AdvanceStepResponse (PATCH /attempts/{id}/step).
+    AdvanceStepResponse: {
+      attempt_id: string;
+      current_step: number;
+      status: string;
+      xp_earned: number;
+      cycle_bonus_earned: boolean;
     };
     ProjectCreateRequest: {
       title: string;

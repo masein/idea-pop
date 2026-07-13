@@ -912,6 +912,13 @@ impl ProgressRepo for NullProgressRepo {
     async fn find_attempt(&self, _: Uuid) -> Result<Option<ChallengeAttempt>, DomainError> {
         Ok(None)
     }
+    async fn find_in_progress_attempt(
+        &self,
+        _: Uuid,
+        _: Uuid,
+    ) -> Result<Option<ChallengeAttempt>, DomainError> {
+        Ok(None)
+    }
     async fn update_attempt(
         &self,
         _: Uuid,

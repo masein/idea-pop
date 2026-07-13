@@ -52,12 +52,14 @@ function mockChallengeAPIs(page: import('@playwright/test').Page) {
     })
   );
   page.route('**/api/challenges/ch-1/attempts', (r) =>
-    r.fulfill({ json: { attempt_id: 'att-1', current_step: 1 } })
+    r.fulfill({ json: { attempt_id: 'att-1', challenge_id: 'ch-1', current_step: 1, status: 'in_progress' } })
   );
   page.route('**/api/challenges/ch-1/steps/*/help', (r) =>
     r.fulfill({ json: { answer: 'Try one coin first — does it hold? 🐧', blocked: false } })
   );
-  page.route('**/api/attempts/att-1/step', (r) => r.fulfill({ json: {} }));
+  page.route('**/api/attempts/att-1/step', (r) =>
+    r.fulfill({ json: { attempt_id: 'att-1', current_step: 2, status: 'in_progress', xp_earned: 0, cycle_bonus_earned: false } })
+  );
   page.route('**/api/projects', (r) =>
     r.fulfill({ json: { id: 'proj-1', title: 'My bridge' } })
   );

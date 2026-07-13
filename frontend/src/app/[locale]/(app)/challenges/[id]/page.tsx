@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useAgeMode } from '@/lib/hooks/useAgeMode';
@@ -20,7 +20,7 @@ import XpBurst from '@/components/explore/XpBurst';
 import type { components } from '@/lib/api/schema';
 
 type ChallengeDetail = components['schemas']['ChallengeDetail'];
-type ChallengeAttempt = components['schemas']['ChallengeAttempt'];
+type StartAttempt = components['schemas']['StartAttemptResponse'];
 type XpAward = components['schemas']['XpAwardResponse'];
 
 type StepNum = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
@@ -41,7 +41,10 @@ export default function ChallengePage() {
   const { visible, award, show, dismiss } = useXpToast();
 
   const [challenge, setChallenge] = useState<ChallengeDetail | null>(null);
-  const [attempt, setAttempt] = useState<ChallengeAttempt | null>(null);
+  const [attempt, setAttempt] = useState<StartAttempt | null>(null);
+  // Highest step already recorded server-side — PATCH only when the kid moves
+  // FORWARD past it, so revisiting earlier steps never regresses the report.
+  const highestRecordedRef = useRef(1);
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState(false);
 
@@ -67,11 +70,17 @@ export default function ChallengePage() {
     if (stored === 'true') setWallUnlocked(true);
   }, [params.id]);
 
-  // Start attempt once challenge is loaded (once)
+  // Start (or resume) the attempt once the challenge is loaded. The server is
+  // idempotent: re-opening a mission returns the existing in-progress attempt.
   useEffect(() => {
     if (!challenge || attempt) return;
     startAttempt(challenge.id)
-      .then((a) => setAttempt(a as ChallengeAttempt))
+      .then((a) => {
+        if (!a) return;
+        setAttempt(a);
+        // Resuming mid-mission: don't re-record steps already reached.
+        highestRecordedRef.current = Math.max(1, a.current_step);
+      })
       .catch(() => { /* silently fail — don't block the UI */ });
   }, [challenge, attempt]);
 
@@ -79,15 +88,17 @@ export default function ChallengePage() {
     async (step: number) => {
       if (!isStepNum(step)) return;
 
-      // Fire PATCH for analytics + possible XP award
-      if (attempt) {
+      // Record real progress (and the step-8 completion + XP) — only when the
+      // kid moves FORWARD past what's already recorded; failures never block.
+      if (attempt && step > highestRecordedRef.current) {
         try {
-          const res = await advanceStep(attempt.id, step);
-          if (res && (res as XpAward).xp_earned) {
-            show(res as XpAward);
+          const res = await advanceStep(attempt.attempt_id, step);
+          highestRecordedRef.current = step;
+          if (res && res.xp_earned) {
+            show(res as unknown as XpAward);
           }
         } catch {
-          // Don't block navigation on analytics failure
+          // Don't block navigation on tracking failure
         }
       }
 

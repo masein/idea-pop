@@ -8,7 +8,9 @@ import {
   initialClasses,
   MAX_CLASSES,
   MIN_CLASSES,
+  countTrainedClasses,
   readyToPredict,
+  readyToQuiz,
   recordTest,
   removeClass,
   renameClass,
@@ -67,6 +69,28 @@ describe('readyToPredict', () => {
     expect(readyToPredict(classes)).toBe(false); // dog still empty
     classes = addExamples(classes, classes[1].id);
     expect(readyToPredict(classes)).toBe(true);
+  });
+});
+
+describe('training progress signals', () => {
+  it('counts only teams that have examples', () => {
+    let classes = initialClasses('cat', 'dog');
+    expect(countTrainedClasses(classes)).toBe(0);
+    classes = addExamples(classes, classes[0].id, 3);
+    expect(countTrainedClasses(classes)).toBe(1);
+    classes = addExamples(classes, classes[1].id);
+    expect(countTrainedClasses(classes)).toBe(2);
+  });
+
+  it('is ready to quiz once TWO teams have examples (even with a third empty)', () => {
+    let classes = addClass(initialClasses('cat', 'dog'), 'bird'); // 3 teams
+    expect(readyToQuiz(classes)).toBe(false);
+    classes = addExamples(classes, classes[0].id);
+    expect(readyToQuiz(classes)).toBe(false); // only one team trained
+    classes = addExamples(classes, classes[1].id);
+    expect(readyToQuiz(classes)).toBe(true); // two trained, bird still empty
+    // …and readyToPredict stays stricter: it wants the empty team taught too.
+    expect(readyToPredict(classes)).toBe(false);
   });
 });
 

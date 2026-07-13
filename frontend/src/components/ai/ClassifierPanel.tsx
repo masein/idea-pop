@@ -11,26 +11,32 @@ const ImageClassifier = dynamic(() => import('./ImageClassifier'), {
   loading: () => <div className="h-24 animate-pulse rounded-card bg-ink/5" aria-hidden="true" />,
 });
 
+interface ClassifierPanelProps {
+  /** Start expanded so the trainer is visible without hunting (mission step). */
+  defaultOpen?: boolean;
+}
+
 /**
- * Accordion wrapper used inside the Build & test step of the AI missions —
- * same anatomy as the thinking-tools accordion (ToolSelector).
+ * Accordion wrapper used inside the Build & test step of the AI missions. On
+ * the mission step it opens by default (`defaultOpen`) so kids see the trainer
+ * straight away; the header stays a prominent toggle they can collapse.
  */
-export default function ClassifierPanel() {
+export default function ClassifierPanel({ defaultOpen = false }: ClassifierPanelProps) {
   const t = useTranslations('classifier');
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(defaultOpen);
 
   return (
-    <div data-testid="classifier-panel" className="overflow-hidden rounded-card border border-ink/20">
+    <div data-testid="classifier-panel" className="overflow-hidden rounded-card border-2 border-challenge/30">
       <button
         type="button"
         data-testid="classifier-panel-toggle"
         onClick={() => setOpen((prev) => !prev)}
         aria-expanded={open}
-        className="flex w-full items-center justify-between bg-tint-lavender px-4 py-3 font-display text-sm text-ink transition-colors hover:bg-tint-lavender/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ink/40"
+        className="flex w-full items-center justify-between bg-challenge/10 px-4 py-3 font-display text-base font-bold text-challenge transition-colors hover:bg-challenge/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-challenge"
       >
         <span>{t('panel_title')}</span>
         <span
-          className="text-ink/50 transition-transform duration-200"
+          className="text-challenge/60 transition-transform duration-200"
           style={{ transform: open ? 'rotate(180deg)' : 'rotate(0deg)' }}
           aria-hidden="true"
         >

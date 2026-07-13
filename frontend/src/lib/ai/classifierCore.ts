@@ -75,6 +75,20 @@ export function readyToPredict(classes: ClassInfo[]): boolean {
   return classes.length >= MIN_CLASSES && classes.every((c) => c.exampleCount > 0);
 }
 
+/** How many teams have been taught at least one example ("trained"). */
+export function countTrainedClasses(classes: ClassInfo[]): number {
+  return classes.filter((c) => c.exampleCount > 0).length;
+}
+
+/**
+ * The machine can be quizzed once at least two teams each have an example —
+ * that's enough for the KNN to tell them apart, even if a third team is still
+ * empty. (Looser than `readyToPredict`, which wants every team taught.)
+ */
+export function readyToQuiz(classes: ClassInfo[]): boolean {
+  return countTrainedClasses(classes) >= MIN_CLASSES;
+}
+
 /** Record one graded test: did the machine's guess match the real answer? */
 export function recordTest(stats: TestStats, predictedId: string, actualId: string): TestStats {
   return {

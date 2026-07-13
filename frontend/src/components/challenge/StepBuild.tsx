@@ -104,7 +104,7 @@ export default function StepBuild({
       {/* On-device image classifier for the AI missions */}
       {CLASSIFIER_SLUGS.has(challenge.slug) && (
         <div className="mb-4">
-          <ClassifierPanel />
+          <ClassifierPanel defaultOpen />
         </div>
       )}
 

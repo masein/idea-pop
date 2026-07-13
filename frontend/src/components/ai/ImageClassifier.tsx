@@ -11,7 +11,7 @@ import {
   initialClasses,
   MAX_CLASSES,
   MIN_CLASSES,
-  readyToPredict,
+  readyToQuiz,
   recordTest,
   removeClass,
   renameClass,
@@ -218,7 +218,7 @@ export default function ImageClassifier({ hideIntro = false }: ImageClassifierPr
     const idx = classes.findIndex((c) => c.id === id);
     return classes[idx]?.name.trim() || t('class_name_label', { number: idx + 1 });
   };
-  const trained = readyToPredict(classes);
+  const trained = readyToQuiz(classes);
   const accuracy = accuracyPercent(stats);
 
   // ── Idle / loading / error gate ──────────────────────────────────────────────
@@ -311,6 +311,14 @@ export default function ImageClassifier({ hideIntro = false }: ImageClassifierPr
                 <span data-testid={`class-count-${i}`} className="font-body text-xs text-ink/60">
                   {t('example_count', { count: cls.exampleCount })}
                 </span>
+                {cls.exampleCount > 0 && (
+                  <span
+                    data-testid={`class-trained-${i}`}
+                    className="rounded-full bg-explore/15 px-2 py-0.5 font-body text-xs font-semibold text-explore"
+                  >
+                    {t('trained_badge')}
+                  </span>
+                )}
                 {classes.length > MIN_CLASSES && (
                   <button
                     type="button"
@@ -406,6 +414,18 @@ export default function ImageClassifier({ hideIntro = false }: ImageClassifierPr
           />
         )}
       </section>
+
+      {/* Ready signal — makes "adding photos = teaching the machine" land, and
+          points kids to the quiz once two teams have examples. */}
+      {trained && (
+        <p
+          data-testid="machine-ready"
+          role="status"
+          className="rounded-card bg-explore/15 px-4 py-3 text-center font-display text-base font-bold text-explore"
+        >
+          {t('machine_ready')}
+        </p>
+      )}
 
       {/* 3 · Quiz */}
       <section aria-label={t('test_heading')} className="flex flex-col gap-3 rounded-card bg-tint-blue p-4">

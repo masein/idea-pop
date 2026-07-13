@@ -1035,7 +1035,7 @@
     "title": "Machine Trainer 🤖",
     "subtitle": "Teach a tiny machine brain to tell your pictures apart — just like real AI scientists!",
     "privacy": "🔒 Your photos stay on this device. Nothing is ever uploaded.",
-    "power_up": "Power up the trainer! ⚡",
+    "power_up": "Start training →",
     "loading": "Downloading the tiny brain… this happens once and can take a moment.",
     "load_error": "Hmm, the brain didn't download. Check your internet and try again.",
     "retry": "Try again",
@@ -1069,7 +1069,9 @@
     "working": "Thinking…",
     "panel_title": "Try the Machine Trainer! 🤖",
     "panel_hint": "Train it right here — your photos never leave this device.",
-    "open_tool": "Open the Machine Trainer"
+    "open_tool": "Open the Machine Trainer",
+    "trained_badge": "Trained ✓",
+    "machine_ready": "Your machine is ready — quiz it! 🎉"
   },
   "hints": {
     "toggle": "Need a hint? 💡",

@@ -142,6 +142,80 @@ export async function createClass(
   return res;
 }
 
+// ── Teacher-managed class students (PIN login) ──────────────────────────────
+
+export interface ClassStudent {
+  child_id: string;
+  nickname: string;
+  avatar_id: string;
+  has_login_pin: boolean;
+}
+
+/** Roster for the teacher's own class. */
+export async function fetchClassStudents(): Promise<ClassStudent[]> {
+  const { data, error } = await apiClient.GET("/api/teacher/class/students");
+  if (error || !data) throw new Error("Failed to load students");
+  return data;
+}
+
+/** Create a student; returns the one-time login PIN (shown once). */
+export async function createStudent(body: {
+  nickname: string;
+  avatar_id: string;
+  birth_year: number;
+}): Promise<{ child_id: string; nickname: string; login_pin: string }> {
+  const { data, error } = await apiClient.POST("/api/teacher/class/students", {
+    body,
+  });
+  if (error || !data) throw new Error("Could not create student");
+  return data;
+}
+
+/** Regenerate a student's login PIN (shown once). */
+export async function resetStudentPin(
+  childId: string
+): Promise<{ child_id: string; login_pin: string }> {
+  const { data, error } = await apiClient.POST(
+    "/api/teacher/class/students/{id}/reset-pin",
+    { params: { path: { id: childId } } }
+  );
+  if (error || !data) throw new Error("Could not reset PIN");
+  return data;
+}
+
+/** Public: the pickable names for a class (nickname + avatar only). */
+export async function fetchClassRoster(
+  code: string
+): Promise<{ child_id: string; nickname: string; avatar_id: string }[]> {
+  const { data, error } = await apiClient.GET("/api/classes/{code}/roster", {
+    params: { path: { code } },
+  });
+  if (error || !data) throw new Error("Failed to load class");
+  return data;
+}
+
+/**
+ * Public kid sign-in: class code + child + PIN. Adopts the returned kid token
+ * (the server also sets the kid refresh cookie). The caller sets persona=kid.
+ */
+export async function classLogin(
+  code: string,
+  childId: string,
+  pin: string
+): Promise<{ child_id: string; nickname: string; access_token: string }> {
+  const { data, error } = await apiClient.POST("/api/classes/{code}/login", {
+    params: { path: { code } },
+    body: { child_id: childId, pin },
+  });
+  if (error || !data) {
+    const e = new Error("login_failed") as Error & { code?: string };
+    e.code = "login_failed";
+    throw e;
+  }
+  setAccessToken(data.access_token);
+  return data;
+}
+
 // ── Explore ───────────────────────────────────────────────────────────────────
 
 export async function fetchExplore(params?: {

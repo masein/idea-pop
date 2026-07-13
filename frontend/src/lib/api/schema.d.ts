@@ -46,6 +46,93 @@ export interface paths {
   "/api/classes": {
     post: operations["createClass"];
   };
+  "/api/classes/{code}/roster": {
+    get: {
+      parameters: { path: { code: string } };
+      responses: {
+        200: {
+          content: {
+            "application/json": {
+              child_id: string;
+              nickname: string;
+              avatar_id: string;
+            }[];
+          };
+        };
+      };
+    };
+  };
+  "/api/classes/{code}/login": {
+    post: {
+      parameters: { path: { code: string } };
+      requestBody: {
+        content: {
+          "application/json": { child_id: string; pin: string };
+        };
+      };
+      responses: {
+        200: {
+          content: {
+            "application/json": {
+              child_id: string;
+              nickname: string;
+              access_token: string;
+            };
+          };
+        };
+      };
+    };
+  };
+  "/api/teacher/class/students": {
+    get: {
+      responses: {
+        200: {
+          content: {
+            "application/json": {
+              child_id: string;
+              nickname: string;
+              avatar_id: string;
+              has_login_pin: boolean;
+            }[];
+          };
+        };
+      };
+    };
+    post: {
+      requestBody: {
+        content: {
+          "application/json": {
+            nickname: string;
+            avatar_id: string;
+            birth_year: number;
+          };
+        };
+      };
+      responses: {
+        201: {
+          content: {
+            "application/json": {
+              child_id: string;
+              nickname: string;
+              login_pin: string;
+            };
+          };
+        };
+      };
+    };
+  };
+  "/api/teacher/class/students/{id}/reset-pin": {
+    post: {
+      parameters: { path: { id: string } };
+      responses: {
+        200: {
+          content: {
+            "application/json": { child_id: string; login_pin: string };
+          };
+        };
+      };
+    };
+  };
   "/api/children/{id}/class": {
     post: {
       parameters: {

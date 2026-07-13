@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from '@/i18n/routing';
 import { useAgeMode } from '@/lib/hooks/useAgeMode';
-import { fetchChallenges, requestPremiumUnlock } from '@/lib/api/client';
+import { fetchChallenges, fetchClassMission, requestPremiumUnlock } from '@/lib/api/client';
 import IdeasWallTab from '@/components/challenge/IdeasWallTab';
 import type { components } from '@/lib/api/schema';
 
@@ -60,6 +60,7 @@ export default function ChallengesList() {
   const ageMode = useAgeMode();
 
   const [challenges, setChallenges] = useState<ChallengeDetail[]>([]);
+  const [assignedId, setAssignedId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<Tab>('mission');
   const [showUpgrade, setShowUpgrade] = useState(false);
@@ -70,9 +71,15 @@ export default function ChallengesList() {
       .then((c) => setChallenges((c ?? []) as ChallengeDetail[]))
       .catch(() => {})
       .finally(() => setLoading(false));
+    // The teacher's class assignment is the kid's real "current mission".
+    fetchClassMission()
+      .then((m) => setAssignedId(m?.challenge_id ?? null))
+      .catch(() => {});
   }, []);
 
-  const featured = challenges[0] ?? null;
+  // Prefer the class-assigned mission; fall back to the first challenge.
+  const featured =
+    (assignedId && challenges.find((c) => c.id === assignedId)) || challenges[0] || null;
 
   useEffect(() => {
     if (!featured) return;
@@ -172,13 +179,20 @@ export default function ChallengesList() {
             {challenges.map((c, i) => {
               // Prefer the server's entitlement decision; fall back to "first free".
               const locked = c.locked ?? i > 0;
+              const assigned = c.id === assignedId;
               return locked ? (
-                <LockedChallengeCard key={c.id} index={i + 1} onUpgrade={() => setShowUpgrade(true)} />
+                <LockedChallengeCard
+                  key={c.id}
+                  index={i + 1}
+                  assigned={assigned}
+                  onUpgrade={() => setShowUpgrade(true)}
+                />
               ) : (
                 <UnlockedChallengeCard
                   key={c.id}
                   index={i + 1}
                   challenge={c}
+                  assigned={assigned}
                   onOpen={() => router.push(`/challenges/${c.id}`)}
                 />
               );
@@ -205,10 +219,12 @@ export default function ChallengesList() {
 function UnlockedChallengeCard({
   index,
   challenge,
+  assigned = false,
   onOpen,
 }: {
   index: number;
   challenge: ChallengeDetail;
+  assigned?: boolean;
   onOpen: () => void;
 }) {
   const t = useTranslations('challenge');
@@ -217,9 +233,20 @@ function UnlockedChallengeCard({
     <button
       type="button"
       data-testid="challenge-card"
+      data-assigned={assigned || undefined}
       onClick={onOpen}
-      className="group relative overflow-hidden rounded-[1.5rem] text-left shadow-sm transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-challenge focus-visible:ring-offset-2"
+      className={`group relative overflow-hidden rounded-[1.5rem] text-left shadow-sm transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-challenge focus-visible:ring-offset-2 ${
+        assigned ? 'ring-2 ring-library ring-offset-2' : ''
+      }`}
     >
+      {assigned && (
+        <span
+          data-testid="assigned-badge"
+          className="absolute left-3 top-3 z-10 rounded-pill bg-library px-3 py-1 font-display text-xs font-bold text-white shadow-md"
+        >
+          {t('pinned_badge')}
+        </span>
+      )}
       <div className="px-5 py-4 text-white" style={{ backgroundColor: CHALLENGE }}>
         <p className="font-display text-xl font-bold leading-tight">{challenge.title}</p>
         <p className="mt-0.5 line-clamp-1 font-body text-sm text-white/90">{challenge.brief}</p>
@@ -244,17 +271,36 @@ function UnlockedChallengeCard({
   );
 }
 
-function LockedChallengeCard({ index, onUpgrade }: { index: number; onUpgrade: () => void }) {
+function LockedChallengeCard({
+  index,
+  assigned = false,
+  onUpgrade,
+}: {
+  index: number;
+  assigned?: boolean;
+  onUpgrade: () => void;
+}) {
   const t = useTranslations('challenge');
 
   return (
     <button
       type="button"
       data-testid="challenge-card-locked"
+      data-assigned={assigned || undefined}
       onClick={onUpgrade}
       aria-label={t('locked_card_aria', { index })}
-      className="group relative flex min-h-[15rem] flex-col items-center justify-center overflow-hidden rounded-[1.5rem] p-6 text-center shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-challenge focus-visible:ring-offset-2"
+      className={`group relative flex min-h-[15rem] flex-col items-center justify-center overflow-hidden rounded-[1.5rem] p-6 text-center shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-challenge focus-visible:ring-offset-2 ${
+        assigned ? 'ring-2 ring-library ring-offset-2' : ''
+      }`}
     >
+      {assigned && (
+        <span
+          data-testid="assigned-badge"
+          className="absolute left-3 top-3 z-10 rounded-pill bg-library px-3 py-1 font-display text-xs font-bold text-white shadow-md"
+        >
+          {t('pinned_badge')}
+        </span>
+      )}
       {/* Blurred, dimmed cover */}
       <Image
         src="/challenge/mission-cover.png"

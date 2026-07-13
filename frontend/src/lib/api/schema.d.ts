@@ -311,6 +311,21 @@ export interface paths {
       };
     };
   };
+  "/api/me/class-mission": {
+    get: {
+      responses: {
+        200: {
+          content: {
+            // The kid's class-assigned challenge, or null when none.
+            "application/json": {
+              challenge_id: string;
+              title: string;
+            } | null;
+          };
+        };
+      };
+    };
+  };
   "/api/account/email-preferences": {
     get: {
       responses: {

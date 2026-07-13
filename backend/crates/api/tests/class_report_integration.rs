@@ -1,8 +1,9 @@
-//! Integration tests for the teacher class-progress report (JSON + CSV).
+//! Integration tests for the mission-scoped teacher class report (JSON + CSV).
 //!
-//! A teacher rosters two students, one of whom completes the assigned
-//! challenge (with XP + a shared project). The report must reflect that,
-//! be scoped to the caller's own class, and reject non-teachers.
+//! A teacher rosters two students; one completes the assigned mission (with XP
+//! plus a shared project). The report for that mission must reflect it, stay
+//! scoped to the caller's own class, reject non-teachers, and export one CSV
+//! row per student.
 
 use std::sync::Arc;
 
@@ -60,8 +61,7 @@ async fn register(app: &axum::Router, email: &str, role: &str) -> String {
         .clone()
         .oneshot(post_json(
             "/auth/register",
-            json!({"email": email, "password": "password123",
-                   "role": role, "display_name": "T"}),
+            json!({"email": email, "password": "password123", "role": role, "display_name": "T"}),
             None,
         ))
         .await
@@ -125,6 +125,19 @@ async fn seed_challenge(pool: &PgPool, title: &str, slug: &str) -> Uuid {
     .unwrap()
 }
 
+async fn assign(app: &axum::Router, teacher: &str, challenge_id: Uuid) {
+    let res = app
+        .clone()
+        .oneshot(post_json(
+            "/teacher/class/assign",
+            json!({"challenge_id": challenge_id}),
+            Some(teacher),
+        ))
+        .await
+        .unwrap();
+    assert_eq!(res.status(), StatusCode::OK, "assign failed");
+}
+
 fn get_req(uri: &str, token: Option<&str>) -> Request<Body> {
     let mut b = Request::builder().method("GET").uri(uri);
     if let Some(t) = token {
@@ -155,7 +168,7 @@ async fn body_text(res: axum::response::Response) -> String {
 }
 
 #[tokio::test]
-async fn class_report_reflects_per_student_progress() {
+async fn class_report_reflects_mission_progress() {
     let (pool, _pg) = start_postgres().await;
     let app = router(state(pool.clone()), None);
     let teacher = register(&app, "teacher@example.com", "teacher").await;
@@ -163,26 +176,16 @@ async fn class_report_reflects_per_student_progress() {
     let alice = add_student(&app, &teacher, "Alice").await;
     let _bob = add_student(&app, &teacher, "Bob").await;
 
-    // Assign a challenge to the class.
-    let challenge_id = seed_challenge(&pool, "The Beaver Bridge", "beaver-bridge").await;
-    let res = app
-        .clone()
-        .oneshot(post_json(
-            "/teacher/class/assign",
-            json!({"challenge_id": challenge_id}),
-            Some(&teacher),
-        ))
-        .await
-        .unwrap();
-    assert_eq!(res.status(), StatusCode::OK, "assign failed");
+    let mission = seed_challenge(&pool, "The Beaver Bridge", "beaver-bridge").await;
+    assign(&app, &teacher, mission).await;
 
-    // Alice completes it, earns XP, and shares a project.
+    // Alice completes it, earns its XP, and shares a project for it.
     sqlx::query(
         "INSERT INTO challenge_attempts (child_id, challenge_id, current_step, status, completed_at)
          VALUES ($1, $2, 8, 'completed', now())",
     )
     .bind(alice)
-    .bind(challenge_id)
+    .bind(mission)
     .execute(&pool)
     .await
     .unwrap();
@@ -190,7 +193,7 @@ async fn class_report_reflects_per_student_progress() {
         "INSERT INTO xp_events (child_id, source_type, source_id, amount) VALUES ($1, 'solve', $2, 20)",
     )
     .bind(alice)
-    .bind(challenge_id)
+    .bind(mission)
     .execute(&pool)
     .await
     .unwrap();
@@ -199,11 +202,12 @@ async fn class_report_reflects_per_student_progress() {
          VALUES ($1, 'challenge', $2, 'My Bridge', 'class')",
     )
     .bind(alice)
-    .bind(challenge_id)
+    .bind(mission)
     .execute(&pool)
     .await
     .unwrap();
 
+    // Default (no param) resolves to the assigned mission.
     let res = app
         .clone()
         .oneshot(get_req("/teacher/class/report", Some(&teacher)))
@@ -212,34 +216,42 @@ async fn class_report_reflects_per_student_progress() {
     assert_eq!(res.status(), StatusCode::OK);
     let body = body_json(res).await;
 
+    assert_eq!(body["summary"]["challenge_title"], "The Beaver Bridge");
+    assert_eq!(body["summary"]["challenge_id"], mission.to_string());
     assert_eq!(body["summary"]["student_count"], 2);
-    assert_eq!(
-        body["summary"]["assigned_challenge_title"],
-        "The Beaver Bridge"
-    );
-    assert_eq!(body["summary"]["completed_assigned"], 1);
+    assert_eq!(body["summary"]["completed"], 1);
+    assert_eq!(body["summary"]["in_progress"], 0);
+    assert_eq!(body["summary"]["not_started"], 1);
 
     let students = body["students"].as_array().unwrap();
-    let alice_row = students
-        .iter()
-        .find(|s| s["nickname"] == "Alice")
-        .expect("Alice missing");
-    assert_eq!(alice_row["total_xp"], 20);
-    assert_eq!(alice_row["shared_projects"], 1);
+    let alice_row = students.iter().find(|s| s["nickname"] == "Alice").unwrap();
+    assert_eq!(alice_row["status"], "completed");
+    assert_eq!(alice_row["current_step"], 8);
+    assert_eq!(alice_row["xp"], 20);
+    assert_eq!(alice_row["shared"], true);
     assert!(alice_row["last_active"].is_string());
-    let attempt = &alice_row["attempts"][0];
-    assert_eq!(attempt["status"], "completed");
-    assert_eq!(attempt["current_step"], 8);
-    assert_eq!(attempt["challenge_title"], "The Beaver Bridge");
+    let bob_row = students.iter().find(|s| s["nickname"] == "Bob").unwrap();
+    assert_eq!(bob_row["status"], "not_started");
+    assert_eq!(bob_row["current_step"], 0);
+    assert_eq!(bob_row["shared"], false);
 
-    let bob_row = students
-        .iter()
-        .find(|s| s["nickname"] == "Bob")
-        .expect("Bob missing");
-    assert_eq!(bob_row["total_xp"], 0);
-    assert_eq!(bob_row["attempts"].as_array().unwrap().len(), 0);
+    // A DIFFERENT mission the class hasn't touched → everyone not_started.
+    let other = seed_challenge(&pool, "Spot the Fake", "spot-the-fake").await;
+    let res = app
+        .clone()
+        .oneshot(get_req(
+            &format!("/teacher/class/report?challenge_id={other}"),
+            Some(&teacher),
+        ))
+        .await
+        .unwrap();
+    assert_eq!(res.status(), StatusCode::OK);
+    let body = body_json(res).await;
+    assert_eq!(body["summary"]["challenge_title"], "Spot the Fake");
+    assert_eq!(body["summary"]["completed"], 0);
+    assert_eq!(body["summary"]["not_started"], 2);
 
-    // CSV export: right content type, header, and per-student rows.
+    // CSV export: one row per student (+ header).
     let res = app
         .clone()
         .oneshot(get_req("/teacher/class/report.csv", Some(&teacher)))
@@ -259,54 +271,66 @@ async fn class_report_reflects_per_student_progress() {
         .and_then(|v| v.to_str().ok())
         .unwrap_or_default()
         .to_owned();
-    assert!(disp.contains("attachment"), "disposition was {disp}");
+    assert!(
+        disp.contains("attachment") && disp.contains("beaver-bridge"),
+        "disposition was {disp}"
+    );
     let csv = body_text(res).await;
-    assert!(csv.contains("Nickname,Challenge,Status,Step"));
-    assert!(csv.contains("\"Alice\""));
-    assert!(csv.contains("\"completed\""));
-    assert!(csv.contains("\"not_started\""), "Bob should be not_started");
+    let data_rows = csv
+        .lines()
+        .skip(1) // header
+        .filter(|l| !l.trim().is_empty())
+        .count();
+    assert_eq!(data_rows, 2, "CSV must have one row per student");
+    assert!(csv.contains("\"Alice\"") && csv.contains("\"completed\""));
+    assert!(csv.contains("\"Bob\"") && csv.contains("\"not_started\""));
 }
 
 #[tokio::test]
 async fn class_report_is_scoped_and_teacher_only() {
     let (pool, _pg) = start_postgres().await;
-    let app = router(state(pool), None);
+    let app = router(state(pool.clone()), None);
 
     let teacher_a = register(&app, "a@example.com", "teacher").await;
     create_class(&app, &teacher_a).await;
     add_student(&app, &teacher_a, "Alice").await;
+    let mission = seed_challenge(&pool, "Mission A", "mission-a").await;
+    assign(&app, &teacher_a, mission).await;
 
     let teacher_b = register(&app, "b@example.com", "teacher").await;
     create_class(&app, &teacher_b).await;
 
-    // Teacher B's report shows only B's class — never A's student.
+    // Teacher B, reporting on A's mission id, still sees only B's own (empty) class.
     let res = app
         .clone()
-        .oneshot(get_req("/teacher/class/report", Some(&teacher_b)))
+        .oneshot(get_req(
+            &format!("/teacher/class/report?challenge_id={mission}"),
+            Some(&teacher_b),
+        ))
         .await
         .unwrap();
     assert_eq!(res.status(), StatusCode::OK);
     let body = body_json(res).await;
     assert_eq!(body["summary"]["student_count"], 0);
-    let has_alice = body["students"]
+    let leaks_alice = body["students"]
         .as_array()
         .unwrap()
         .iter()
         .any(|s| s["nickname"] == "Alice");
-    assert!(!has_alice, "must not leak another class's students");
+    assert!(!leaks_alice, "must not leak another class's students");
 
-    // A non-teacher (parent) is rejected.
+    // Non-teacher (parent) is rejected on both endpoints.
     let parent = register(&app, "p@example.com", "parent").await;
-    let res = app
-        .clone()
-        .oneshot(get_req("/teacher/class/report", Some(&parent)))
-        .await
-        .unwrap();
-    assert_eq!(res.status(), StatusCode::FORBIDDEN);
-    let res = app
-        .clone()
-        .oneshot(get_req("/teacher/class/report.csv", Some(&parent)))
-        .await
-        .unwrap();
-    assert_eq!(res.status(), StatusCode::FORBIDDEN);
+    for uri in ["/teacher/class/report", "/teacher/class/report.csv"] {
+        let res = app
+            .clone()
+            .oneshot(get_req(uri, Some(&parent)))
+            .await
+            .unwrap();
+        assert_eq!(
+            res.status(),
+            StatusCode::FORBIDDEN,
+            "{uri} allowed a parent"
+        );
+    }
 }

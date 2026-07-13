@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useTranslations, useFormatter } from 'next-intl';
 import { Link } from '@/i18n/routing';
 import { Button } from '@/components/ui/Button';
+import { fetchClassMission } from '@/lib/api/client';
 
 // ─── ParentHandoffModal ───────────────────────────────────────────────────────
 // Safety rule: kids MUST see this modal when tapping any paid-plan CTA.
@@ -64,10 +65,17 @@ export default function KidDashboardPage() {
 
   const [nickname, setNickname] = useState('');
   const [showHandoff, setShowHandoff] = useState(false);
+  const [classMission, setClassMission] = useState<{ challenge_id: string; title: string } | null>(
+    null,
+  );
 
   useEffect(() => {
     const stored = localStorage.getItem('ideapop_nickname');
     if (stored) setNickname(stored);
+    // Surface the mission the kid's teacher assigned to their class, if any.
+    fetchClassMission()
+      .then(setClassMission)
+      .catch(() => {});
   }, []);
 
   const displayName = nickname || t('default_nickname');
@@ -160,29 +168,52 @@ export default function KidDashboardPage() {
             </div>
           </section>
 
-          {/* ── Section C: This week's mission (locked) ─────────────── */}
+          {/* ── Section C: This week's mission ──────────────────────── */}
           <section className="bg-tint-cream rounded-card p-6">
             <h2 className="font-display font-bold text-xl text-ink mb-4">
               {t('challenges_title')}
             </h2>
-            <div className="relative bg-white rounded-card overflow-hidden shadow-sm">
-              <div className="h-28 bg-ink/5 flex items-center justify-center text-5xl">
-                🏆
+            {classMission ? (
+              // The kid's class has an assigned mission — surface THAT, unlocked
+              // and linking straight into it.
+              <Link
+                href={`/challenges/${classMission.challenge_id}`}
+                data-testid="class-mission-card"
+                className="relative block bg-white rounded-card overflow-hidden shadow-sm transition-shadow hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-challenge focus-visible:ring-offset-2"
+              >
+                <div className="h-28 bg-tint-blue flex items-center justify-center text-5xl">
+                  🏆
+                </div>
+                <div className="p-4">
+                  <span className="inline-block rounded-pill bg-library px-3 py-0.5 font-display text-xs font-bold text-white mb-1.5">
+                    {t('class_mission_badge')}
+                  </span>
+                  <p data-testid="class-mission-title" className="font-body text-sm text-ink font-semibold">
+                    {classMission.title}
+                  </p>
+                  <p className="font-body text-xs text-ink/60 mt-1">{t('class_mission_sub')}</p>
+                </div>
+              </Link>
+            ) : (
+              <div className="relative bg-white rounded-card overflow-hidden shadow-sm">
+                <div className="h-28 bg-ink/5 flex items-center justify-center text-5xl">
+                  🏆
+                </div>
+                <div className="p-4">
+                  <p className="font-body text-sm text-ink font-semibold">
+                    {t('demo_mission_title')}
+                  </p>
+                  <p className="font-body text-xs text-ink/60 mt-1">
+                    {t('demo_mission_sub')}
+                  </p>
+                </div>
+                {/* Locked overlay */}
+                <div className="absolute inset-0 bg-ink/60 rounded-card flex items-center justify-center text-white font-semibold gap-2">
+                  <span aria-hidden="true">🔒</span>
+                  <span className="font-body">{t('locked_label')}</span>
+                </div>
               </div>
-              <div className="p-4">
-                <p className="font-body text-sm text-ink font-semibold">
-                  {t('demo_mission_title')}
-                </p>
-                <p className="font-body text-xs text-ink/60 mt-1">
-                  {t('demo_mission_sub')}
-                </p>
-              </div>
-              {/* Locked overlay */}
-              <div className="absolute inset-0 bg-ink/60 rounded-card flex items-center justify-center text-white font-semibold gap-2">
-                <span aria-hidden="true">🔒</span>
-                <span className="font-body">{t('locked_label')}</span>
-              </div>
-            </div>
+            )}
           </section>
 
           {/* ── Pricing teaser ──────────────────────────────────────── */}

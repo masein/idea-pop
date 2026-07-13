@@ -78,7 +78,7 @@ use crate::{
         CourseDetailResponse, CourseSummaryResponse, CreatorResponse, LessonResponse,
         QuickMakePageResponse, QuickMakeResponse, StudioCountResponse,
     },
-    me::MeResponse,
+    me::{ClassMissionResponse, MeResponse},
     parent::{
         ChildReportResponse, DisplayModeResponse, ParentApprovalResponse, ParentChildResponse,
         ParentProjectSummary, ResolveApprovalRequest, ResolveApprovalResponse,
@@ -225,7 +225,7 @@ pub struct CreateHealthLogRequest {
         health, readyz, example_gated_share,
         create_health_log, list_health_log,
         auth::register, auth::login, auth::refresh, auth::logout, auth::verify_email,
-        me::me,
+        me::me, me::class_mission,
         account::get_email_preferences, account::put_email_preferences,
         children::create_child, children::request_premium_unlock,
         parent::list_children, parent::child_report,
@@ -257,7 +257,7 @@ pub struct CreateHealthLogRequest {
     components(schemas(
         Health, HealthLogEntry, CreateHealthLogRequest, ProblemDetail,
         RegisterRequest, LoginRequest, RefreshRequest, VerifyEmailRequest,
-        AuthResponse, TokenResponse, MeResponse,
+        AuthResponse, TokenResponse, MeResponse, ClassMissionResponse,
         EmailPreferencesResponse, UpdateEmailPreferencesRequest,
         CreateChildRequest, CreateChildResponse, UpgradeRequestResponse,
         ParentChildResponse, ChildReportResponse, ParentProjectSummary,
@@ -524,6 +524,7 @@ pub fn router_with_metrics(
             post(create_health_log).get(list_health_log),
         )
         .route("/me", get(me::me))
+        .route("/me/class-mission", get(me::class_mission))
         // Account settings — adult-only (AdultAuth rejects kid tokens)
         .route(
             "/account/email-preferences",

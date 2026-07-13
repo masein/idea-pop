@@ -122,6 +122,19 @@ export async function addChild(data: {
   return res;
 }
 
+/**
+ * The challenge the kid's teacher assigned to their class — their "current
+ * mission". Null when the kid is in no class or the class has no assignment.
+ */
+export async function fetchClassMission(): Promise<{
+  challenge_id: string;
+  title: string;
+} | null> {
+  const { data, error } = await apiClient.GET("/api/me/class-mission");
+  if (error) return null;
+  return data ?? null;
+}
+
 /** Verify consent token (parent arrives from email link). */
 export async function verifyConsent(token: string): Promise<void> {
   // The emailed consent token IS the grant credential (COPPA verifiable consent).

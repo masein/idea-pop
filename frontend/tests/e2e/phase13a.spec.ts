@@ -155,19 +155,21 @@ function mockTeacherAPIs(page: import('@playwright/test').Page) {
   page.route('**/api/teacher/class/students', (r) =>
     r.fulfill({ json: [{ child_id: 'k1', nickname: 'Pixel', avatar_id: 'cat', has_login_pin: true }] })
   );
-  page.route('**/api/teacher/class/report', (r) =>
+  page.route('**/api/teacher/class/report**', (r) =>
     r.fulfill({
       json: {
         summary: {
+          challenge_id: 'ch-1',
+          challenge_title: 'Build a bridge',
           student_count: 2,
-          assigned_challenge_id: 'ch-1',
-          assigned_challenge_title: 'Build a bridge',
-          completed_assigned: 1,
+          completed: 1,
+          in_progress: 0,
+          not_started: 1,
           average_step_reached: 5.5,
         },
         students: [
-          { child_id: 'k1', nickname: 'Pixel', avatar_id: 'cat', total_xp: 40, last_active: '2026-07-10T10:00:00Z', shared_projects: 2, attempts: [{ challenge_id: 'ch-1', challenge_title: 'Build a bridge', status: 'completed', current_step: 8, completed_at: '2026-07-10T10:00:00Z' }] },
-          { child_id: 'k2', nickname: 'Sparky', avatar_id: 'bee', total_xp: 10, last_active: null, shared_projects: 0, attempts: [] },
+          { child_id: 'k1', nickname: 'Pixel', avatar_id: 'cat', status: 'completed', current_step: 8, xp: 40, last_active: '2026-07-10T10:00:00Z', shared: true },
+          { child_id: 'k2', nickname: 'Sparky', avatar_id: 'bee', status: 'not_started', current_step: 0, xp: 0, last_active: null, shared: false },
         ],
       },
     })

@@ -6,7 +6,7 @@ import { askMissionHelper } from '@/lib/api/client';
 
 interface MissionHelperProps {
   challengeId: string;
-  /** Mission step number 1-8 — the helper only knows about THIS step. */
+  /** Mission step 1-8 — the context the helper is anchored to. */
   step: number;
   /** Render already expanded (e.g. when opened from a CTA). */
   defaultOpen?: boolean;
@@ -17,12 +17,13 @@ interface MissionHelperProps {
 type Phase = 'idle' | 'loading' | 'answered' | 'blocked' | 'error';
 
 /**
- * "Ask Popi" — the scoped AI mission helper (AI-helper-spec.md), fronted by
- * the same penguin character as the floating Ask-Me mascot. Same accordion
- * anatomy as MissionHints. Not an open chat: one question at a time, about
- * the current step only. The browser sends nothing but the typed question;
- * the server owns the model key, moderation, consent/rate gates, and the
- * transcript that parents and teachers can review.
+ * "Ask Popi" — the scoped AI helper (AI-helper-spec.md), fronted by the same
+ * penguin character as the floating Ask-Me mascot. Same accordion anatomy as
+ * MissionHints. NOT an open chat: one moderated question at a time. Scope is
+ * the mission plus related nature/science/how-to-build learning — never
+ * personal, social, or grown-up topics. The browser sends nothing but the
+ * typed question; the server owns the model key, moderation, consent/rate
+ * gates, and the transcript that parents and teachers can review.
  */
 export default function MissionHelper({
   challengeId,

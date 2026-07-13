@@ -77,6 +77,27 @@ html {
   }
 }
 
+/* Parent report printout — while printing, show ONLY the selected child's
+   summary (privacy: no other children's data reaches the parent's copy). */
+.parent-report-print {
+  display: none;
+}
+@media print {
+  body.printing-parent-report * {
+    visibility: hidden;
+  }
+  body.printing-parent-report .parent-report-print,
+  body.printing-parent-report .parent-report-print * {
+    visibility: visible;
+  }
+  body.printing-parent-report .parent-report-print {
+    display: block;
+    position: absolute;
+    inset: 0;
+    padding: 2rem;
+  }
+}
+
 /* Skip navigation — visually hidden until focused */
 .skip-nav {
   position: absolute;

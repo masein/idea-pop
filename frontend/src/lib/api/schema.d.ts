@@ -133,6 +133,40 @@ export interface paths {
       };
     };
   };
+  "/api/teacher/class/report": {
+    get: {
+      responses: {
+        200: {
+          content: {
+            "application/json": {
+              summary: {
+                student_count: number;
+                assigned_challenge_id: string | null;
+                assigned_challenge_title: string | null;
+                completed_assigned: number;
+                average_step_reached: number;
+              };
+              students: {
+                child_id: string;
+                nickname: string;
+                avatar_id: string;
+                total_xp: number;
+                last_active: string | null;
+                shared_projects: number;
+                attempts: {
+                  challenge_id: string;
+                  challenge_title: string;
+                  status: string;
+                  current_step: number;
+                  completed_at: string | null;
+                }[];
+              }[];
+            };
+          };
+        };
+      };
+    };
+  };
   "/api/children/{id}/class": {
     post: {
       parameters: {

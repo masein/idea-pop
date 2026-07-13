@@ -96,8 +96,9 @@ use crate::{
         MedalsResponse, ProgressResponse, StartAttemptResponse, VideoViewRequest, XpAwardResponse,
     },
     teacher::{
-        AssignMissionRequest, ClassGalleryItemResponse, CreateStudentRequest,
-        CreateStudentResponse, ResetPinResponse, StudentRosterItem, TeacherClassResponse,
+        AssignMissionRequest, ClassGalleryItemResponse, ClassReportResponse, ClassReportStudent,
+        ClassReportSummary, CreateStudentRequest, CreateStudentResponse, ResetPinResponse,
+        StudentAttempt, StudentRosterItem, TeacherClassResponse,
     },
 };
 
@@ -236,6 +237,7 @@ pub struct CreateHealthLogRequest {
         classes::class_roster, classes::class_login,
         teacher::get_class, teacher::assign_mission, teacher::class_gallery,
         teacher::create_student, teacher::list_students, teacher::reset_student_pin,
+        teacher::class_report, teacher::class_report_csv,
         explore::list_explore, explore::get_explore,
         library::list_studios, library::list_courses, library::list_quick_makes,
         library::get_course, library::get_creator,
@@ -264,6 +266,7 @@ pub struct CreateHealthLogRequest {
         CreateClassRequest, CreateClassResponse, JoinClassResponse,
         ClassRosterItem, ClassLoginRequest, ClassLoginResponse,
         CreateStudentRequest, CreateStudentResponse, StudentRosterItem, ResetPinResponse,
+        ClassReportResponse, ClassReportSummary, ClassReportStudent, StudentAttempt,
         consents::ConsentToggleRequest,
         TeacherClassResponse, ClassGalleryItemResponse, AssignMissionRequest,
         ExploreVideoResponse, ExplorePageResponse,
@@ -572,6 +575,8 @@ pub fn router_with_metrics(
             "/teacher/class/students/:id/reset-pin",
             post(teacher::reset_student_pin),
         )
+        .route("/teacher/class/report", get(teacher::class_report))
+        .route("/teacher/class/report.csv", get(teacher::class_report_csv))
         // Explore (any authenticated principal; restricted kids CAN read)
         .route("/explore", get(explore::list_explore))
         .route("/explore/:id", get(explore::get_explore))

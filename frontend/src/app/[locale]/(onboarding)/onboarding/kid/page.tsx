@@ -120,6 +120,16 @@ export default function KidOnboardingPage() {
         return;
       }
       await createChild(payload);
+      // Persist identity so the shell/dashboard greet the kid by name.
+      try {
+        localStorage.setItem(
+          "kidProfile",
+          JSON.stringify({ nickname: data.nickname, avatar_id: data.avatar_id }),
+        );
+        localStorage.setItem("ideapop_nickname", data.nickname);
+      } catch {
+        /* private mode — greeting falls back to the generic name */
+      }
       setPersona("kid");
       router.push("/dashboard/kid");
     } catch {

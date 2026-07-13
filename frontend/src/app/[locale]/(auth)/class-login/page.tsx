@@ -55,6 +55,17 @@ export default function ClassLoginPage() {
     setError(null);
     try {
       await classLogin(code.trim(), child.child_id, pin.trim());
+      // Persist the child's identity so the app shell / dashboard greet them by
+      // name (and pick the right avatar) instead of the generic fallback.
+      try {
+        localStorage.setItem(
+          'kidProfile',
+          JSON.stringify({ nickname: child.nickname, avatar_id: child.avatar_id }),
+        );
+        localStorage.setItem('ideapop_nickname', child.nickname);
+      } catch {
+        /* private mode — greeting falls back to the generic name */
+      }
       setPersona('kid');
       router.push('/dashboard/kid');
     } catch {

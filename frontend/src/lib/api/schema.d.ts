@@ -933,6 +933,8 @@ export interface components {
       sketch_guidance?: string;
       nature_clues: components["schemas"]["NatureClue"][];
       skill_lesson_id: string | null;
+      /** The Skill step's authored instructions text, if any. */
+      skill_instructions?: string | null;
       related_explore_ids: string[];
       tools: {
         kind: "five_whys" | "scamper" | "mind_map";

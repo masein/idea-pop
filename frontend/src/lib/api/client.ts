@@ -183,6 +183,40 @@ export async function resetStudentPin(
   return data;
 }
 
+export type ClassReport =
+  paths["/api/teacher/class/report"]["get"]["responses"][200]["content"]["application/json"];
+export type ClassReportStudent = ClassReport["students"][number];
+
+/** The teacher's class progress report (per student). */
+export async function fetchClassReport(): Promise<ClassReport> {
+  const { data, error } = await apiClient.GET("/api/teacher/class/report");
+  if (error || !data) throw new Error("Failed to load class report");
+  return data;
+}
+
+/**
+ * Download the school-facing CSV. openapi-fetch is JSON-oriented, so this uses
+ * a raw authed fetch (the access token lives in memory, not a cookie); it
+ * refreshes once on a 401, mirroring the apiClient middleware.
+ */
+export async function fetchClassReportCsv(): Promise<Blob> {
+  const url = "/api/teacher/class/report.csv";
+  const run = (token: string | null) =>
+    fetch(url, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      credentials: "include",
+    });
+  let res = await run(getAccessToken());
+  if (res.status === 401) {
+    const fresh = await refreshAccessToken();
+    if (fresh) res = await run(fresh);
+  }
+  if (!res.ok) throw new Error("Failed to export report");
+  // Return the raw bytes (blob), NOT res.text() — text() strips the leading
+  // UTF-8 BOM the server adds for spreadsheet/Persian compatibility.
+  return res.blob();
+}
+
 /** Public: the pickable names for a class (nickname + avatar only). */
 export async function fetchClassRoster(
   code: string

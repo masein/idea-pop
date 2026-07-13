@@ -152,6 +152,26 @@ function mockTeacherAPIs(page: import('@playwright/test').Page) {
     r.fulfill({ json: [{ id: 'g1', project_title: "Pixel's bridge", student_nickname: 'Pixel' }] })
   );
   page.route('**/api/teacher/class/assign', (r) => r.fulfill({ json: {} }));
+  page.route('**/api/teacher/class/students', (r) =>
+    r.fulfill({ json: [{ child_id: 'k1', nickname: 'Pixel', avatar_id: 'cat', has_login_pin: true }] })
+  );
+  page.route('**/api/teacher/class/report', (r) =>
+    r.fulfill({
+      json: {
+        summary: {
+          student_count: 2,
+          assigned_challenge_id: 'ch-1',
+          assigned_challenge_title: 'Build a bridge',
+          completed_assigned: 1,
+          average_step_reached: 5.5,
+        },
+        students: [
+          { child_id: 'k1', nickname: 'Pixel', avatar_id: 'cat', total_xp: 40, last_active: '2026-07-10T10:00:00Z', shared_projects: 2, attempts: [{ challenge_id: 'ch-1', challenge_title: 'Build a bridge', status: 'completed', current_step: 8, completed_at: '2026-07-10T10:00:00Z' }] },
+          { child_id: 'k2', nickname: 'Sparky', avatar_id: 'bee', total_xp: 10, last_active: null, shared_projects: 0, attempts: [] },
+        ],
+      },
+    })
+  );
 }
 
 function mockReviewerAPIs(page: import('@playwright/test').Page) {
@@ -468,6 +488,9 @@ test.describe('axe — app pages', () => {
     mockTeacherAPIs(page);
     await page.goto('/en/dashboard/teacher');
     await page.waitForLoadState('networkidle');
+    // The class report (new) must be rendered so axe covers its table + badges.
+    await expect(page.getByTestId('class-report')).toBeVisible();
+    await expect(page.getByTestId('report-row').first()).toBeVisible();
     const results = await new AxeBuilder({ page })
       .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
       .analyze();

@@ -11,6 +11,7 @@ import {
 } from '@/lib/api/client';
 import { AVATARS } from '@/lib/avatars';
 import ClassRoster from '@/components/teacher/ClassRoster';
+import ClassReport from '@/components/teacher/ClassReport';
 import type { components } from '@/lib/api/schema';
 
 type TeacherClass = components['schemas']['TeacherClass'];
@@ -308,6 +309,7 @@ export default function TeacherDashboardPage() {
             onAssigned={handleAssigned}
           />
           <ClassRoster />
+          <ClassReport />
           <ClassGallery items={gallery} />
           <BringHomeBox />
         </>

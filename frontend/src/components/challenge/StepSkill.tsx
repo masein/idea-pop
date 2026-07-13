@@ -38,6 +38,14 @@ export default function StepSkill({
         <p className="font-body text-sm text-ink/50">{t('skill_optional')}</p>
       </div>
 
+      {challenge.skill_instructions && (
+        <div data-testid="skill-instructions" className="bg-white rounded-card shadow-sm p-4">
+          <p className="font-body text-sm text-ink whitespace-pre-line">
+            {challenge.skill_instructions}
+          </p>
+        </div>
+      )}
+
       {challenge.skill_lesson_id ? (
         <div
           data-testid="skill-lesson-card"
@@ -59,13 +67,13 @@ export default function StepSkill({
             {t('skill_lesson_btn')}
           </button>
         </div>
-      ) : (
+      ) : !challenge.skill_instructions ? (
         <div className="bg-white rounded-card shadow-sm p-4">
           <p className="font-body text-sm text-ink/50">
             {t('skill_none')}
           </p>
         </div>
-      )}
+      ) : null}
 
       <MissionHints hints={challenge.skill_hints ?? []} />
 

@@ -84,6 +84,7 @@ export default function ImageClassifier({ hideIntro = false }: ImageClassifierPr
     return () => {
       streamRef.current?.getTracks().forEach((track) => track.stop());
       engineRef.current?.dispose();
+      engineRef.current = null;
       if (previewUrl) URL.revokeObjectURL(previewUrl);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps

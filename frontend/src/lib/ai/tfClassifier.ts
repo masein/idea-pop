@@ -50,8 +50,15 @@ export async function loadEngine(): Promise<ClassifierEngine> {
   // Truncate at the bottleneck: activations there are compact, general
   // image features — ideal for a KNN over 2-3 kid-defined classes.
   const bottleneck = base.getLayer(EMBEDDING_LAYER);
+  // `extractor` is a functional VIEW over `base`: it REUSES base's layer
+  // instances (conv1 … conv_pw_13_relu), it does not copy them. So its
+  // weights are owned by `base` and must be freed exactly once — see dispose().
   const extractor = tf.model({ inputs: base.inputs, outputs: bottleneck.output });
   const knn = knnModule.create();
+
+  // Cleanup fires on BOTH accordion-collapse and step-unmount, so dispose must
+  // be idempotent — otherwise the second call hits already-freed layers.
+  let disposed = false;
 
   /** Image → normalized [-1, 1] tensor → flattened bottleneck embedding. */
   function embed(source: ImageSource) {
@@ -91,9 +98,23 @@ export async function loadEngine(): Promise<ClassifierEngine> {
     },
 
     dispose() {
-      knn.dispose();
-      extractor.dispose();
-      base.dispose();
+      if (disposed) return;
+      disposed = true;
+      // Free the per-session KNN's own tensors.
+      try {
+        knn.dispose();
+      } catch {
+        /* already gone — ignore */
+      }
+      // Free the MobileNet ONCE via `base`, which owns every layer (including
+      // the ones `extractor` re-uses). Disposing `extractor` too would free
+      // those shared layers a second time → "Layer 'conv1' is already
+      // disposed" and a white-screen. So we never dispose `extractor`.
+      try {
+        base.dispose();
+      } catch {
+        /* already gone — ignore */
+      }
     },
   };
 }

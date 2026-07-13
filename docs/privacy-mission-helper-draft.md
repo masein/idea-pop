@@ -14,11 +14,13 @@
 
 ## The AI Mission Helper (proposed policy text)
 
-**What it is.** Inside a mission, your child can ask a short question about
-the step they're working on — for example, "why does my bridge keep
-falling?" — and get a small, age-appropriate nudge back. It is not an open
-chatbot: it only answers about the current mission step, it never gives the
-full answer away, and it refuses anything off-topic.
+**What it is.** Inside a mission, your child can ask a short question and get
+a small, age-appropriate nudge back — about the mission they're working on, or
+about related learning topics such as nature, science, animals, and how things
+work (for example, "why does my bridge keep falling?" or "how do beavers build
+dams?"). It is not an open chatbot: it stays on safe, educational topics, it
+never gives the full answer to a mission away, and it refuses anything
+personal, social, or off-limits.
 
 **What leaves the device.** When your child asks the helper a question, we
 send exactly two things to our server: the text of the question and which

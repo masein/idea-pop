@@ -1,0 +1,88 @@
+# Production stack — pulls pre-built images from OUR registry
+# (docker.netixsystem.com) instead of building locally. The target server has
+# no other egress (it can reach only the operator and the registry), so EVERY
+# image here — including postgres — must live in that registry; never reference
+# docker.io/ghcr.io in this file.
+#
+# One-time (operator machine → server):
+#   scp docker-compose.prod.yml root@<server>:/opt/idea-pop/docker-compose.yml
+#   ssh root@<server> 'cd /opt/idea-pop && cp .env.example .env'   # then fill it
+# Deploy / update:
+#   ssh root@<server> 'cd /opt/idea-pop && docker compose pull && docker compose up -d'
+# Seed reference content (idempotent; challenges upsert by slug):
+#   ssh root@<server> 'cd /opt/idea-pop && docker compose exec -T backend seed'
+#
+# Configure via a .env next to this file (see .env.prod.example). Migrations
+# run automatically at backend boot (RUN_MIGRATIONS=true).
+#
+# Only the frontend is published (WEB_PORT, default 80). The browser never
+# talks to the backend directly — the frontend rewrites /api/* to
+# http://backend:8080 on the compose network — so postgres and the backend
+# stay unreachable from outside.
+
+services:
+  postgres:
+    image: ${POSTGRES_IMAGE:-docker.netixsystem.com/postgres:16-alpine}
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ideapop
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD in .env}
+      POSTGRES_DB: ideapop
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ideapop"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    # Pin an exact tag via BACKEND_IMAGE in .env for reproducible deploys.
+    image: ${BACKEND_IMAGE:-docker.netixsystem.com/idea-pop-backend:latest}
+    pull_policy: always
+    restart: unless-stopped
+    environment:
+      APP_PORT: 8080
+      DATABASE_URL: postgres://ideapop:${DB_PASSWORD:?set DB_PASSWORD in .env}@postgres:5432/ideapop
+      RUST_LOG: ${RUST_LOG:-info}
+      # Session-signing secret — REQUIRED. Generate: `openssl rand -hex 32`.
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env}
+      RUN_MIGRATIONS: "true"
+      # Public origin of the app (used in email links; cosmetic while SMTP is unset).
+      APP_URL: ${APP_URL:-http://localhost}
+      # Refresh-cookie Secure flag — leave false while serving plain HTTP on an
+      # IP; set true once the app is behind HTTPS.
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      # AI mission helper — DARK by default (runbook §9.3: keep it off in the
+      # for-kids production environment until compliance sign-off). Also needs
+      # the frontend image built with NEXT_PUBLIC_MISSION_HELPER=true, and the
+      # server must have outbound access to the Metis API to work at all.
+      MISSION_HELPER_ENABLED: ${MISSION_HELPER_ENABLED:-false}
+      METIS_API_KEY: ${METIS_API_KEY:-}
+      METIS_BASE_URL: ${METIS_BASE_URL:-}
+      METIS_MODEL: ${METIS_MODEL:-}
+      HELPER_HOURLY_LIMIT: ${HELPER_HOURLY_LIMIT:-}
+      HELP_MESSAGE_RETENTION_DAYS: ${HELP_MESSAGE_RETENTION_DAYS:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      # The runtime image has no curl; bash's /dev/tcp probe checks the listener.
+      test: ["CMD-SHELL", "bash -c '</dev/tcp/127.0.0.1/8080' 2>/dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  frontend:
+    image: ${FRONTEND_IMAGE:-docker.netixsystem.com/idea-pop-frontend:latest}
+    pull_policy: always
+    restart: unless-stopped
+    ports:
+      - "${WEB_PORT:-80}:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  pgdata:

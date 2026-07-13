@@ -1,0 +1,109 @@
+name: Publish images
+
+# Builds the backend + frontend images on every merge to main and pushes them
+# to OUR registry (docker.netixsystem.com) — the only registry the production
+# server can reach (see docker-compose.prod.yml + runbook §10). The server then
+# deploys with `docker compose pull && up -d`.
+#
+# Tags per image: `latest` + `sha-<short-sha>` (pin the sha tag in the server
+# .env for reproducible deploys).
+#
+# The registry accepts anonymous push today; if that changes, set the repo
+# secrets REGISTRY_USERNAME / REGISTRY_PASSWORD and the login step kicks in.
+# It sits behind ArvanCloud and occasionally flaps with 502s, so pushes retry;
+# a failed run can also just be re-run (workflow_dispatch or the Re-run button)
+# — layer caching makes retries cheap.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: publish-images
+  cancel-in-progress: false
+
+env:
+  REGISTRY: docker.netixsystem.com
+  BACKEND_IMAGE: docker.netixsystem.com/idea-pop-backend
+  FRONTEND_IMAGE: docker.netixsystem.com/idea-pop-frontend
+
+jobs:
+  build-push:
+    name: Build & push backend + frontend
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to the registry (if credentials are set)
+        env:
+          REG_USER: ${{ secrets.REGISTRY_USERNAME }}
+          REG_PASS: ${{ secrets.REGISTRY_PASSWORD }}
+        run: |
+          if [ -n "$REG_USER" ]; then
+            echo "$REG_PASS" | docker login "$REGISTRY" -u "$REG_USER" --password-stdin
+          else
+            echo "No REGISTRY_USERNAME configured — pushing anonymously."
+          fi
+
+      - name: Compute short sha
+        id: sha
+        run: echo "short=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+
+      # Build locally first (with GHA layer cache), push separately with
+      # retries — the registry occasionally 502s behind its CDN.
+      - name: Build backend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          platforms: linux/amd64
+          load: true
+          tags: |
+            ${{ env.BACKEND_IMAGE }}:latest
+            ${{ env.BACKEND_IMAGE }}:sha-${{ steps.sha.outputs.short }}
+          cache-from: type=gha,scope=backend
+          cache-to: type=gha,scope=backend,mode=max
+
+      - name: Build frontend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          platforms: linux/amd64
+          load: true
+          # Baked at next build: API_URL is the compose-internal backend;
+          # the helper UI stays DARK on for-kids prod (runbook §9.3).
+          build-args: |
+            API_URL=http://backend:8080
+            NEXT_PUBLIC_MISSION_HELPER=false
+          tags: |
+            ${{ env.FRONTEND_IMAGE }}:latest
+            ${{ env.FRONTEND_IMAGE }}:sha-${{ steps.sha.outputs.short }}
+          cache-from: type=gha,scope=frontend
+          cache-to: type=gha,scope=frontend,mode=max
+
+      - name: Push images (with retries)
+        run: |
+          set -u
+          push_with_retry() {
+            local tag="$1"
+            for attempt in 1 2 3 4 5; do
+              if docker push "$tag"; then
+                echo "pushed $tag"
+                return 0
+              fi
+              echo "push failed for $tag (attempt $attempt) — retrying in $((attempt * 15))s"
+              sleep $((attempt * 15))
+            done
+            echo "::error::giving up pushing $tag after 5 attempts"
+            return 1
+          }
+          push_with_retry "$BACKEND_IMAGE:latest"
+          push_with_retry "$BACKEND_IMAGE:sha-${{ steps.sha.outputs.short }}"
+          push_with_retry "$FRONTEND_IMAGE:latest"
+          push_with_retry "$FRONTEND_IMAGE:sha-${{ steps.sha.outputs.short }}"

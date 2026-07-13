@@ -836,7 +836,18 @@
     "print_current_step": "مرحلهٔ فعلی",
     "print_xp": "مجموع امتیاز",
     "print_shared": "پروژه‌های به‌اشتراک‌گذاشته با کلاس",
-    "print_generated": "به‌اشتراک‌گذاشته با Idea Pop · idea-pop.app"
+    "print_generated": "به‌اشتراک‌گذاشته با Idea Pop · idea-pop.app",
+    "mission_label": "مأموریت",
+    "summary_in_progress": "در حال انجام",
+    "summary_not_started": "شروع نشده",
+    "col_shared": "به‌اشتراک‌گذاشته",
+    "shared_yes": "بله",
+    "shared_no": "خیر",
+    "print_mission_label": "مأموریت",
+    "print_status_label": "وضعیت",
+    "print_step_label": "مرحلهٔ رسیده",
+    "print_xp_label": "امتیاز این مأموریت",
+    "print_shared_label": "پروژه‌ای به‌اشتراک گذاشت"
   },
   "class_login": {
     "title": "به کلاست بپیوند",

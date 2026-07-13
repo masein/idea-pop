@@ -947,7 +947,18 @@
     "print_current_step": "Current step",
     "print_xp": "Total XP earned",
     "print_shared": "Projects shared with the class",
-    "print_generated": "Shared via Idea Pop · idea-pop.app"
+    "print_generated": "Shared via Idea Pop · idea-pop.app",
+    "mission_label": "Mission",
+    "summary_in_progress": "In progress",
+    "summary_not_started": "Not started",
+    "col_shared": "Shared",
+    "shared_yes": "Yes",
+    "shared_no": "No",
+    "print_mission_label": "Mission",
+    "print_status_label": "Status",
+    "print_step_label": "Step reached",
+    "print_xp_label": "XP on this mission",
+    "print_shared_label": "Shared a project"
   },
   "class_login": {
     "title": "Join your class",

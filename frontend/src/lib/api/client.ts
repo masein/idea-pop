@@ -200,20 +200,24 @@ export type ClassReport =
   paths["/api/teacher/class/report"]["get"]["responses"][200]["content"]["application/json"];
 export type ClassReportStudent = ClassReport["students"][number];
 
-/** The teacher's class progress report (per student). */
-export async function fetchClassReport(): Promise<ClassReport> {
-  const { data, error } = await apiClient.GET("/api/teacher/class/report");
+/** The teacher's per-student report for one mission (default: assigned). */
+export async function fetchClassReport(challengeId?: string): Promise<ClassReport> {
+  const { data, error } = await apiClient.GET("/api/teacher/class/report", {
+    params: { query: challengeId ? { challenge_id: challengeId } : {} },
+  });
   if (error || !data) throw new Error("Failed to load class report");
   return data;
 }
 
 /**
- * Download the school-facing CSV. openapi-fetch is JSON-oriented, so this uses
- * a raw authed fetch (the access token lives in memory, not a cookie); it
- * refreshes once on a 401, mirroring the apiClient middleware.
+ * Download the school-facing CSV for one mission. openapi-fetch is JSON-oriented,
+ * so this uses a raw authed fetch (the access token lives in memory, not a
+ * cookie); it refreshes once on a 401, mirroring the apiClient middleware.
  */
-export async function fetchClassReportCsv(): Promise<Blob> {
-  const url = "/api/teacher/class/report.csv";
+export async function fetchClassReportCsv(challengeId?: string): Promise<Blob> {
+  const url = challengeId
+    ? `/api/teacher/class/report.csv?challenge_id=${encodeURIComponent(challengeId)}`
+    : "/api/teacher/class/report.csv";
   const run = (token: string | null) =>
     fetch(url, {
       headers: token ? { Authorization: `Bearer ${token}` } : {},

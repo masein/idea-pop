@@ -9,7 +9,7 @@
 //! newly created class is immediately readable here.
 
 use axum::{
-    extract::{Path, State},
+    extract::{Path, Query, State},
     http::{header, StatusCode},
     response::{IntoResponse, Response},
     Json,
@@ -433,14 +433,10 @@ pub async fn reset_student_pin(
 // GET /teacher/class/report.csv  — the same, as a school-facing CSV download.
 // Scoped to the teacher's own class (teacher_account_id + class_memberships).
 
-#[derive(Serialize, ToSchema)]
-pub struct StudentAttempt {
-    pub challenge_id: Uuid,
-    pub challenge_title: String,
-    /// 'in_progress' | 'completed' | 'abandoned'.
-    pub status: String,
-    pub current_step: i16,
-    pub completed_at: Option<String>,
+#[derive(Deserialize, ToSchema)]
+pub struct ClassReportQuery {
+    /// Which mission to report on; defaults to the class's assigned challenge.
+    pub challenge_id: Option<Uuid>,
 }
 
 #[derive(Serialize, ToSchema)]
@@ -448,20 +444,26 @@ pub struct ClassReportStudent {
     pub child_id: Uuid,
     pub nickname: String,
     pub avatar_id: String,
-    pub total_xp: i64,
+    /// Progress on the selected mission: not_started | in_progress | completed.
+    pub status: String,
+    /// 0 when the child has not started this mission.
+    pub current_step: i16,
+    /// XP earned on THIS mission.
+    pub xp: i64,
     pub last_active: Option<String>,
-    pub shared_projects: i64,
-    pub attempts: Vec<StudentAttempt>,
+    /// True if the child shared a project or idea for THIS mission.
+    pub shared: bool,
 }
 
 #[derive(Serialize, ToSchema)]
 pub struct ClassReportSummary {
+    pub challenge_id: Uuid,
+    pub challenge_title: String,
     pub student_count: i64,
-    pub assigned_challenge_id: Option<Uuid>,
-    pub assigned_challenge_title: Option<String>,
-    /// Students who completed the assigned challenge.
-    pub completed_assigned: i64,
-    /// Average current_step reached on the assigned challenge (0 if none).
+    pub completed: i64,
+    pub in_progress: i64,
+    pub not_started: i64,
+    /// Average step reached across the class (not-started counts as 0).
     pub average_step_reached: f64,
 }
 
@@ -471,15 +473,17 @@ pub struct ClassReportResponse {
     pub students: Vec<ClassReportStudent>,
 }
 
-/// Gather the per-student report for the teacher's own class. 404 if no class.
+/// Per-student progress on ONE mission for the teacher's own class. The mission
+/// is `challenge_id`, defaulting to the class's assigned challenge. 404 if the
+/// caller has no class, or no mission can be resolved / doesn't exist.
 async fn build_class_report(
     state: &AppState,
     teacher_account_id: Uuid,
+    challenge_id: Option<Uuid>,
 ) -> Result<ClassReportResponse, ApiError> {
     let class = sqlx::query(
-        r#"SELECT c.id, c.assigned_challenge_id, ch.title AS assigned_title
+        r#"SELECT c.id, c.assigned_challenge_id
            FROM classes c
-           LEFT JOIN challenges ch ON ch.id = c.assigned_challenge_id
            WHERE c.teacher_account_id = $1
            ORDER BY c.created_at DESC
            LIMIT 1"#,
@@ -492,7 +496,17 @@ async fn build_class_report(
 
     let class_id: Uuid = class.try_get("id").map_err(internal)?;
     let assigned_id: Option<Uuid> = class.try_get("assigned_challenge_id").ok().flatten();
-    let assigned_title: Option<String> = class.try_get("assigned_title").ok().flatten();
+
+    // The mission to report on: the query param, else the class's assignment.
+    let target: Uuid = challenge_id
+        .or(assigned_id)
+        .ok_or(ApiError::Domain(DomainError::NotFound))?;
+    let challenge_title: String = sqlx::query_scalar("SELECT title FROM challenges WHERE id = $1")
+        .bind(target)
+        .fetch_optional(&state.db)
+        .await
+        .map_err(internal)?
+        .ok_or(ApiError::Domain(DomainError::NotFound))?;
 
     let student_rows = sqlx::query(
         r#"SELECT p.id, p.nickname, p.avatar_id
@@ -511,53 +525,40 @@ async fn build_class_report(
         .map(|r| r.try_get("id").unwrap_or_default())
         .collect();
 
-    // One query each, keyed by child_id, then stitched together in memory.
+    use std::collections::{HashMap, HashSet};
+
+    // Attempt (status + step) for THIS mission, per child.
     let attempt_rows = sqlx::query(
-        r#"SELECT a.child_id, a.challenge_id, ch.title, a.status, a.current_step, a.completed_at
-           FROM challenge_attempts a
-           JOIN challenges ch ON ch.id = a.challenge_id
-           WHERE a.child_id = ANY($1)
-           ORDER BY a.started_at"#,
+        r#"SELECT child_id, status, current_step
+           FROM challenge_attempts
+           WHERE child_id = ANY($1) AND challenge_id = $2"#,
     )
     .bind(&ids)
+    .bind(target)
     .fetch_all(&state.db)
     .await
     .map_err(internal)?;
+    let mut attempt: HashMap<Uuid, (String, i16)> = HashMap::new();
+    for r in &attempt_rows {
+        attempt.insert(
+            r.try_get("child_id").unwrap_or_default(),
+            (
+                r.try_get("status").unwrap_or_default(),
+                r.try_get("current_step").unwrap_or(0),
+            ),
+        );
+    }
 
+    // XP earned on THIS mission (solve events carry source_id = challenge_id).
     let xp_rows = sqlx::query(
         "SELECT child_id, COALESCE(SUM(amount), 0) AS xp
-         FROM xp_events WHERE child_id = ANY($1) GROUP BY child_id",
+         FROM xp_events WHERE child_id = ANY($1) AND source_id = $2 GROUP BY child_id",
     )
     .bind(&ids)
+    .bind(target)
     .fetch_all(&state.db)
     .await
     .map_err(internal)?;
-
-    let shared_rows = sqlx::query(
-        "SELECT child_id, COUNT(*) AS n
-         FROM projects
-         WHERE child_id = ANY($1) AND effective_visibility IN ('class', 'public')
-         GROUP BY child_id",
-    )
-    .bind(&ids)
-    .fetch_all(&state.db)
-    .await
-    .map_err(internal)?;
-
-    let active_rows = sqlx::query(
-        r#"SELECT child_id, MAX(ts) AS last_active FROM (
-             SELECT child_id, GREATEST(started_at, COALESCE(completed_at, started_at)) AS ts
-               FROM challenge_attempts WHERE child_id = ANY($1)
-             UNION ALL SELECT child_id, created_at FROM xp_events WHERE child_id = ANY($1)
-             UNION ALL SELECT child_id, created_at FROM projects WHERE child_id = ANY($1)
-           ) t GROUP BY child_id"#,
-    )
-    .bind(&ids)
-    .fetch_all(&state.db)
-    .await
-    .map_err(internal)?;
-
-    use std::collections::HashMap;
     let mut xp: HashMap<Uuid, i64> = HashMap::new();
     for r in &xp_rows {
         xp.insert(
@@ -565,98 +566,115 @@ async fn build_class_report(
             r.try_get::<i64, _>("xp").unwrap_or(0),
         );
     }
-    let mut shared: HashMap<Uuid, i64> = HashMap::new();
-    for r in &shared_rows {
-        shared.insert(
-            r.try_get("child_id").unwrap_or_default(),
-            r.try_get::<i64, _>("n").unwrap_or(0),
-        );
-    }
+
+    // Shared a project (class/public) OR an idea for THIS mission.
+    let shared_rows = sqlx::query(
+        r#"SELECT child_id FROM projects
+             WHERE child_id = ANY($1) AND origin_type = 'challenge' AND origin_id = $2
+               AND effective_visibility IN ('class', 'public')
+           UNION
+           SELECT child_id FROM challenge_ideas
+             WHERE child_id = ANY($1) AND challenge_id = $2"#,
+    )
+    .bind(&ids)
+    .bind(target)
+    .fetch_all(&state.db)
+    .await
+    .map_err(internal)?;
+    let shared: HashSet<Uuid> = shared_rows
+        .iter()
+        .map(|r| r.try_get("child_id").unwrap_or_default())
+        .collect();
+
+    // Last activity on THIS mission (attempt / its XP / its shared project).
+    let active_rows = sqlx::query(
+        r#"SELECT child_id, MAX(ts) AS last_active FROM (
+             SELECT child_id, GREATEST(started_at, COALESCE(completed_at, started_at)) AS ts
+               FROM challenge_attempts WHERE child_id = ANY($1) AND challenge_id = $2
+             UNION ALL SELECT child_id, created_at FROM xp_events
+               WHERE child_id = ANY($1) AND source_id = $2
+             UNION ALL SELECT child_id, created_at FROM projects
+               WHERE child_id = ANY($1) AND origin_type = 'challenge' AND origin_id = $2
+           ) t GROUP BY child_id"#,
+    )
+    .bind(&ids)
+    .bind(target)
+    .fetch_all(&state.db)
+    .await
+    .map_err(internal)?;
     let mut active: HashMap<Uuid, String> = HashMap::new();
     for r in &active_rows {
         if let Ok(ts) = r.try_get::<chrono::DateTime<chrono::Utc>, _>("last_active") {
             active.insert(r.try_get("child_id").unwrap_or_default(), ts.to_rfc3339());
         }
     }
-    let mut attempts: HashMap<Uuid, Vec<StudentAttempt>> = HashMap::new();
-    for r in &attempt_rows {
-        let child: Uuid = r.try_get("child_id").unwrap_or_default();
-        let completed_at = r
-            .try_get::<chrono::DateTime<chrono::Utc>, _>("completed_at")
-            .ok()
-            .map(|d| d.to_rfc3339());
-        attempts.entry(child).or_default().push(StudentAttempt {
-            challenge_id: r.try_get("challenge_id").unwrap_or_default(),
-            challenge_title: r.try_get("title").unwrap_or_default(),
-            status: r.try_get("status").unwrap_or_default(),
-            current_step: r.try_get("current_step").unwrap_or(1),
-            completed_at,
-        });
-    }
 
     let students: Vec<ClassReportStudent> = student_rows
         .iter()
         .map(|r| {
             let child_id: Uuid = r.try_get("id").unwrap_or_default();
+            let (status, step) = attempt
+                .get(&child_id)
+                .cloned()
+                .unwrap_or_else(|| ("not_started".to_owned(), 0));
             ClassReportStudent {
                 child_id,
                 nickname: r.try_get("nickname").unwrap_or_default(),
                 avatar_id: r.try_get("avatar_id").unwrap_or_default(),
-                total_xp: xp.get(&child_id).copied().unwrap_or(0),
+                status,
+                current_step: step,
+                xp: xp.get(&child_id).copied().unwrap_or(0),
                 last_active: active.get(&child_id).cloned(),
-                shared_projects: shared.get(&child_id).copied().unwrap_or(0),
-                attempts: attempts.remove(&child_id).unwrap_or_default(),
+                shared: shared.contains(&child_id),
             }
         })
         .collect();
 
-    // Summary metrics on the assigned challenge.
-    let mut completed_assigned = 0i64;
-    let mut step_sum = 0i64;
-    let mut step_count = 0i64;
-    if let Some(aid) = assigned_id {
-        for s in &students {
-            if let Some(a) = s.attempts.iter().find(|a| a.challenge_id == aid) {
-                step_sum += a.current_step as i64;
-                step_count += 1;
-                if a.status == "completed" {
-                    completed_assigned += 1;
-                }
-            }
-        }
-    }
-    let average_step_reached = if step_count > 0 {
-        (step_sum as f64 / step_count as f64 * 10.0).round() / 10.0
-    } else {
+    let completed = students.iter().filter(|s| s.status == "completed").count() as i64;
+    let in_progress = students
+        .iter()
+        .filter(|s| s.status == "in_progress")
+        .count() as i64;
+    let not_started = students.len() as i64 - completed - in_progress;
+    let average_step_reached = if students.is_empty() {
         0.0
+    } else {
+        let sum: i64 = students.iter().map(|s| s.current_step as i64).sum();
+        (sum as f64 / students.len() as f64 * 10.0).round() / 10.0
     };
 
     Ok(ClassReportResponse {
         summary: ClassReportSummary {
+            challenge_id: target,
+            challenge_title,
             student_count: students.len() as i64,
-            assigned_challenge_id: assigned_id,
-            assigned_challenge_title: assigned_title,
-            completed_assigned,
+            completed,
+            in_progress,
+            not_started,
             average_step_reached,
         },
         students,
     })
 }
 
-/// The teacher's class progress report (per-student).
+/// The teacher's per-student progress report for one mission.
 #[utoipa::path(get, path = "/teacher/class/report", tag = "classes",
+    params(("challenge_id" = Option<Uuid>, Query, description = "Mission to report on (default: assigned)")),
     security(("bearer_auth" = [])),
     responses(
-        (status = 200, description = "Per-student class report", body = ClassReportResponse),
+        (status = 200, description = "Per-student mission report", body = ClassReportResponse),
         (status = 403, description = "Teacher/Admin role required", body = crate::ProblemDetail),
-        (status = 404, description = "No class yet", body = crate::ProblemDetail),
+        (status = 404, description = "No class, or no mission to report on", body = crate::ProblemDetail),
     ))]
 pub async fn class_report(
     AdultAuth(claims): AdultAuth,
     State(state): State<AppState>,
+    Query(q): Query<ClassReportQuery>,
 ) -> Result<Json<ClassReportResponse>, ApiError> {
     require_teacher(&claims.role)?;
-    Ok(Json(build_class_report(&state, claims.account_id).await?))
+    Ok(Json(
+        build_class_report(&state, claims.account_id, q.challenge_id).await?,
+    ))
 }
 
 /// Escape one CSV field (RFC 4180: wrap in quotes, double any inner quotes).
@@ -664,66 +682,80 @@ fn csv_field(s: &str) -> String {
     format!("\"{}\"", s.replace('"', "\"\""))
 }
 
-/// The same report as a school-facing CSV — one row per student, keyed to the
-/// class's assigned challenge (status is 'not_started' when they've not begun).
+/// ASCII slug for a filename (spreadsheets choke on non-ASCII header values).
+fn filename_slug(title: &str) -> String {
+    let s: String = title
+        .to_lowercase()
+        .chars()
+        .map(|c| if c.is_ascii_alphanumeric() { c } else { '-' })
+        .collect();
+    let s = s.trim_matches('-').to_owned();
+    // Collapse runs of '-' and cap length.
+    let mut out = String::new();
+    let mut prev_dash = false;
+    for c in s.chars() {
+        if c == '-' {
+            if !prev_dash {
+                out.push(c);
+            }
+            prev_dash = true;
+        } else {
+            out.push(c);
+            prev_dash = false;
+        }
+    }
+    let out = out.trim_matches('-').chars().take(60).collect::<String>();
+    if out.is_empty() {
+        "mission".to_owned()
+    } else {
+        out
+    }
+}
+
+/// School-facing CSV — one row per student for the selected mission.
 #[utoipa::path(get, path = "/teacher/class/report.csv", tag = "classes",
+    params(("challenge_id" = Option<Uuid>, Query, description = "Mission to export (default: assigned)")),
     security(("bearer_auth" = [])),
     responses(
         (status = 200, description = "CSV download"),
         (status = 403, description = "Teacher/Admin role required", body = crate::ProblemDetail),
-        (status = 404, description = "No class yet", body = crate::ProblemDetail),
+        (status = 404, description = "No class, or no mission to report on", body = crate::ProblemDetail),
     ))]
 pub async fn class_report_csv(
     AdultAuth(claims): AdultAuth,
     State(state): State<AppState>,
+    Query(q): Query<ClassReportQuery>,
 ) -> Result<Response, ApiError> {
     require_teacher(&claims.role)?;
-    let report = build_class_report(&state, claims.account_id).await?;
-    let assigned_id = report.summary.assigned_challenge_id;
-    let assigned_title = report.summary.assigned_challenge_title.clone();
+    let report = build_class_report(&state, claims.account_id, q.challenge_id).await?;
 
     // UTF-8 BOM so spreadsheets (incl. Persian text) open it correctly.
     let mut csv = String::from("\u{FEFF}");
-    csv.push_str("Nickname,Challenge,Status,Step,Total XP,Shared projects,Last active\r\n");
+    csv.push_str("Nickname,Status,Step,XP,Last active,Shared\r\n");
     for s in &report.students {
-        let (title, status, step) = match assigned_id {
-            Some(aid) => match s.attempts.iter().find(|a| a.challenge_id == aid) {
-                Some(a) => (
-                    assigned_title.clone().unwrap_or_default(),
-                    a.status.clone(),
-                    format!("{}/8", a.current_step),
-                ),
-                None => (
-                    assigned_title.clone().unwrap_or_default(),
-                    "not_started".to_owned(),
-                    "0/8".to_owned(),
-                ),
-            },
-            None => (String::new(), String::new(), String::new()),
-        };
-        let last = s.last_active.clone().unwrap_or_default();
         let row = [
             csv_field(&s.nickname),
-            csv_field(&title),
-            csv_field(&status),
-            csv_field(&step),
-            s.total_xp.to_string(),
-            s.shared_projects.to_string(),
-            csv_field(&last),
+            csv_field(&s.status),
+            csv_field(&format!("{}/8", s.current_step)),
+            s.xp.to_string(),
+            csv_field(s.last_active.as_deref().unwrap_or("")),
+            csv_field(if s.shared { "yes" } else { "no" }),
         ]
         .join(",");
         csv.push_str(&row);
         csv.push_str("\r\n");
     }
 
+    let filename = format!(
+        "class-report-{}.csv",
+        filename_slug(&report.summary.challenge_title)
+    );
+    let disposition = format!("attachment; filename=\"{filename}\"");
     Ok((
         StatusCode::OK,
         [
-            (header::CONTENT_TYPE, "text/csv; charset=utf-8"),
-            (
-                header::CONTENT_DISPOSITION,
-                "attachment; filename=\"class-report.csv\"",
-            ),
+            (header::CONTENT_TYPE, "text/csv; charset=utf-8".to_owned()),
+            (header::CONTENT_DISPOSITION, disposition),
         ],
         csv,
     )

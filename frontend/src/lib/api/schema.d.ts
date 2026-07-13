@@ -135,31 +135,29 @@ export interface paths {
   };
   "/api/teacher/class/report": {
     get: {
+      parameters: { query?: { challenge_id?: string } };
       responses: {
         200: {
           content: {
             "application/json": {
               summary: {
+                challenge_id: string;
+                challenge_title: string;
                 student_count: number;
-                assigned_challenge_id: string | null;
-                assigned_challenge_title: string | null;
-                completed_assigned: number;
+                completed: number;
+                in_progress: number;
+                not_started: number;
                 average_step_reached: number;
               };
               students: {
                 child_id: string;
                 nickname: string;
                 avatar_id: string;
-                total_xp: number;
+                status: string;
+                current_step: number;
+                xp: number;
                 last_active: string | null;
-                shared_projects: number;
-                attempts: {
-                  challenge_id: string;
-                  challenge_title: string;
-                  status: string;
-                  current_step: number;
-                  completed_at: string | null;
-                }[];
+                shared: boolean;
               }[];
             };
           };

@@ -96,9 +96,9 @@ use crate::{
         MedalsResponse, ProgressResponse, StartAttemptResponse, VideoViewRequest, XpAwardResponse,
     },
     teacher::{
-        AssignMissionRequest, ClassGalleryItemResponse, ClassReportResponse, ClassReportStudent,
-        ClassReportSummary, CreateStudentRequest, CreateStudentResponse, ResetPinResponse,
-        StudentAttempt, StudentRosterItem, TeacherClassResponse,
+        AssignMissionRequest, ClassGalleryItemResponse, ClassReportQuery, ClassReportResponse,
+        ClassReportStudent, ClassReportSummary, CreateStudentRequest, CreateStudentResponse,
+        ResetPinResponse, StudentRosterItem, TeacherClassResponse,
     },
 };
 
@@ -266,7 +266,7 @@ pub struct CreateHealthLogRequest {
         CreateClassRequest, CreateClassResponse, JoinClassResponse,
         ClassRosterItem, ClassLoginRequest, ClassLoginResponse,
         CreateStudentRequest, CreateStudentResponse, StudentRosterItem, ResetPinResponse,
-        ClassReportResponse, ClassReportSummary, ClassReportStudent, StudentAttempt,
+        ClassReportResponse, ClassReportSummary, ClassReportStudent, ClassReportQuery,
         consents::ConsentToggleRequest,
         TeacherClassResponse, ClassGalleryItemResponse, AssignMissionRequest,
         ExploreVideoResponse, ExplorePageResponse,

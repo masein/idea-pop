@@ -342,6 +342,7 @@ pub async fn post_lesson_complete(
     post, path = "/challenges/{id}/attempts", tag = "progress",
     params(("id" = Uuid, Path, description = "Challenge ID")),
     responses(
+        (status = 200, description = "Existing in-progress attempt resumed", body = StartAttemptResponse),
         (status = 201, description = "Attempt started", body = StartAttemptResponse),
         (status = 403, description = "Non-kid token rejected", body = crate::ProblemDetail),
     )
@@ -357,6 +358,26 @@ pub async fn start_attempt(
         .find_by_id(challenge_id)
         .await?
         .ok_or(ApiError::Domain(DomainError::NotFound))?;
+
+    // Idempotent start: re-opening a mission RESUMES the newest in-progress
+    // attempt instead of piling up duplicate step-1 rows (which skewed the
+    // teacher/parent progress reports).
+    if let Some(existing) = state
+        .gamification
+        .progress
+        .find_in_progress_attempt(child_id, challenge_id)
+        .await?
+    {
+        return Ok((
+            StatusCode::OK,
+            Json(StartAttemptResponse {
+                attempt_id: existing.id,
+                challenge_id: existing.challenge_id,
+                current_step: existing.current_step,
+                status: existing.status.as_str().to_owned(),
+            }),
+        ));
+    }
 
     let attempt = ChallengeAttempt {
         id: Uuid::new_v4(),

@@ -196,6 +196,13 @@ pub trait ProgressRepo: Send + Sync {
 
     async fn create_attempt(&self, attempt: &ChallengeAttempt) -> Result<(), DomainError>;
     async fn find_attempt(&self, id: Uuid) -> Result<Option<ChallengeAttempt>, DomainError>;
+    /// The child's newest in-progress attempt for a challenge, if any —
+    /// starting a mission reuses it instead of piling up duplicates.
+    async fn find_in_progress_attempt(
+        &self,
+        child_id: Uuid,
+        challenge_id: Uuid,
+    ) -> Result<Option<ChallengeAttempt>, DomainError>;
     async fn update_attempt(
         &self,
         id: Uuid,

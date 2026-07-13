@@ -527,11 +527,14 @@ async fn build_class_report(
 
     use std::collections::{HashMap, HashSet};
 
-    // Attempt (status + step) for THIS mission, per child.
+    // Attempt (status + step) for THIS mission, per child. Historical data may
+    // hold duplicate attempts per (child, challenge) — pick the BEST one
+    // deterministically: completed first, then furthest step, then newest.
     let attempt_rows = sqlx::query(
-        r#"SELECT child_id, status, current_step
+        r#"SELECT DISTINCT ON (child_id) child_id, status, current_step
            FROM challenge_attempts
-           WHERE child_id = ANY($1) AND challenge_id = $2"#,
+           WHERE child_id = ANY($1) AND challenge_id = $2
+           ORDER BY child_id, (status = 'completed') DESC, current_step DESC, started_at DESC"#,
     )
     .bind(&ids)
     .bind(target)

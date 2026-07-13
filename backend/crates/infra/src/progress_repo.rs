@@ -249,6 +249,41 @@ impl ProgressRepo for SqlxProgressRepo {
         }))
     }
 
+    async fn find_in_progress_attempt(
+        &self,
+        child_id: Uuid,
+        challenge_id: Uuid,
+    ) -> Result<Option<ChallengeAttempt>, DomainError> {
+        let row = sqlx::query(
+            "SELECT id, child_id, challenge_id, current_step, status, started_at, completed_at
+             FROM challenge_attempts
+             WHERE child_id = $1 AND challenge_id = $2 AND status = 'in_progress'
+             ORDER BY started_at DESC
+             LIMIT 1",
+        )
+        .bind(child_id)
+        .bind(challenge_id)
+        .fetch_optional(&self.pool)
+        .await
+        .map_err(db_err)?;
+
+        let Some(row) = row else { return Ok(None) };
+
+        let status_str: &str = row.try_get("status").map_err(db_err)?;
+        let status = AttemptStatus::from_db(status_str)
+            .ok_or_else(|| domain_err(format!("unknown attempt status: {status_str}")))?;
+
+        Ok(Some(ChallengeAttempt {
+            id: row.try_get("id").map_err(db_err)?,
+            child_id: row.try_get("child_id").map_err(db_err)?,
+            challenge_id: row.try_get("challenge_id").map_err(db_err)?,
+            current_step: row.try_get("current_step").map_err(db_err)?,
+            status,
+            started_at: row.try_get("started_at").map_err(db_err)?,
+            completed_at: row.try_get("completed_at").map_err(db_err)?,
+        }))
+    }
+
     async fn update_attempt(
         &self,
         id: Uuid,

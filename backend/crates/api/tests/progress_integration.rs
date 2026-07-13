@@ -419,6 +419,76 @@ async fn challenge_attempt_creation_and_step_advance() {
 }
 
 #[tokio::test]
+async fn start_attempt_resumes_the_in_progress_attempt() {
+    let (pool, _pg) = start_postgres().await;
+    let challenge_id = insert_challenge(&pool).await;
+    let (parent_id, child_id) = insert_parent_and_child(&pool).await;
+    let token = kid_token(child_id, parent_id).await;
+    let app = router(progress_state(pool.clone()), None);
+
+    // First open creates the attempt…
+    let (status, body) = post_json(
+        &app,
+        &format!("/challenges/{challenge_id}/attempts"),
+        &token,
+        json!({}),
+    )
+    .await;
+    assert_eq!(status, StatusCode::CREATED);
+    let attempt_id = body["attempt_id"].as_str().unwrap().to_owned();
+
+    // …the kid gets to step 5, then re-opens the mission.
+    let (status, _) = patch_json(
+        &app,
+        &format!("/attempts/{attempt_id}/step"),
+        &token,
+        json!({"step": 5}),
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK);
+
+    // Re-opening RESUMES the same attempt (200, same id, step preserved) —
+    // no duplicate step-1 rows to skew the teacher/parent reports.
+    let (status, body) = post_json(
+        &app,
+        &format!("/challenges/{challenge_id}/attempts"),
+        &token,
+        json!({}),
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK, "reuse must be 200, not 201");
+    assert_eq!(body["attempt_id"].as_str().unwrap(), attempt_id);
+    assert_eq!(body["current_step"], 5);
+
+    let count: i64 =
+        sqlx::query_scalar("SELECT COUNT(*) FROM challenge_attempts WHERE child_id = $1")
+            .bind(child_id)
+            .fetch_one(&pool)
+            .await
+            .unwrap();
+    assert_eq!(count, 1, "no duplicate attempts");
+
+    // After completion (step 8) a fresh open starts a NEW attempt (replay).
+    let (status, _) = patch_json(
+        &app,
+        &format!("/attempts/{attempt_id}/step"),
+        &token,
+        json!({"step": 8}),
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK);
+    let (status, body) = post_json(
+        &app,
+        &format!("/challenges/{challenge_id}/attempts"),
+        &token,
+        json!({}),
+    )
+    .await;
+    assert_eq!(status, StatusCode::CREATED);
+    assert_ne!(body["attempt_id"].as_str().unwrap(), attempt_id);
+}
+
+#[tokio::test]
 async fn challenge_completion_awards_solve_xp() {
     let (pool, _pg) = start_postgres().await;
     let challenge_id = insert_challenge(&pool).await;

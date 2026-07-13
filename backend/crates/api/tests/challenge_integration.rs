@@ -751,6 +751,10 @@ async fn detail_flattens_step_fields_for_the_player() {
     assert_eq!(body["sketch_prompt"], "Design it.");
     assert_eq!(body["sketch_guidance"], "Show drainage.");
     assert_eq!(
+        body["skill_instructions"], "Test surfaces.",
+        "the skill step's authored instructions flatten onto the player DTO"
+    );
+    assert_eq!(
         body["skill_lesson_id"], "7d8a2f70-0000-0000-0000-000000000001",
         "first skill_ref becomes the lesson link"
     );

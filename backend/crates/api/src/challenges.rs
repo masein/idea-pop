@@ -88,6 +88,9 @@ pub struct ChallengeResponse {
     pub nature_clues: Vec<NatureClueResponse>,
     /// First library lesson linked from the Skill step, if any.
     pub skill_lesson_id: Option<Uuid>,
+    /// The Skill step's own authored instructions text, if any (the mission
+    /// player shows this above the hints; empty authored text → null).
+    pub skill_instructions: Option<String>,
     /// Alias of related_video_ids under the name the frontend type uses.
     pub related_explore_ids: Vec<Uuid>,
     pub tools: Vec<ToolResponse>,
@@ -160,6 +163,7 @@ fn challenge_to_dto(c: Challenge, has_premium: bool) -> ChallengeResponse {
     let mut sketch_prompt = String::new();
     let mut sketch_guidance = String::new();
     let mut skill_lesson_id = None;
+    let mut skill_instructions = None;
     for step in &c.steps {
         match step {
             ChallengeStep::Brief { story, .. } => brief = story.clone(),
@@ -188,10 +192,15 @@ fn challenge_to_dto(c: Challenge, has_premium: bool) -> ChallengeResponse {
                     .collect();
             }
             ChallengeStep::Skill {
-                hints, skill_refs, ..
+                hints,
+                skill_refs,
+                instructions,
+                ..
             } => {
                 skill_hints = hints.clone();
                 skill_lesson_id = skill_refs.first().copied();
+                let trimmed = instructions.trim();
+                skill_instructions = (!trimmed.is_empty()).then(|| trimmed.to_owned());
             }
             ChallengeStep::Sketch { prompt, guidance } => {
                 sketch_prompt = prompt.clone();
@@ -240,6 +249,7 @@ fn challenge_to_dto(c: Challenge, has_premium: bool) -> ChallengeResponse {
         sketch_guidance,
         nature_clues,
         skill_lesson_id,
+        skill_instructions,
         related_explore_ids: c.related_video_ids.clone(),
         tools,
         age_tier_variants,

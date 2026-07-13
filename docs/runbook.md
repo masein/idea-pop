@@ -383,18 +383,32 @@ therefore be pulled from that registry (including postgres), described by
 The registry accepts anonymous push/pull today; if that changes, run
 `docker login docker.netixsystem.com` first.
 
-### 10.1 Build & push images (operator machine)
+### 10.1 Build & push images
 
-The server is x86_64, so build with `--platform linux/amd64` (on Apple Silicon
-this uses Rosetta/QEMU emulation — the Rust build is slow but works). If buildx
-complains about the driver, run `docker buildx create --use` once.
+**CI does this automatically**: every merge to `main` runs
+`.github/workflows/publish-images.yml`, which builds both images on a native
+amd64 runner and pushes `latest` + `sha-<short-sha>` tags to the registry
+(pushes retry — the registry occasionally 502s behind its CDN). Pin the
+`sha-…` tags via `BACKEND_IMAGE` / `FRONTEND_IMAGE` in the server `.env` for
+reproducible deploys, or ride `latest`. If the registry gains auth, set the
+repo secrets `REGISTRY_USERNAME` / `REGISTRY_PASSWORD`; a failed publish can
+be re-run from the Actions tab (`workflow_dispatch` is enabled).
+
+**Postgres mirror (one-time, operator machine)** — the base image isn't built
+by CI, and the server can't reach docker.io:
 
 ```bash
-# Mirror postgres into our registry (server can't reach docker.io)
 docker pull --platform linux/amd64 postgres:16-alpine
 docker tag postgres:16-alpine docker.netixsystem.com/postgres:16-alpine
 docker push docker.netixsystem.com/postgres:16-alpine
+```
 
+**Manual fallback** (operator machine, e.g. if Actions is down). The server is
+x86_64, so build with `--platform linux/amd64` (slow on Apple Silicon —
+Rosetta/QEMU emulation). If buildx complains about the driver, run
+`docker buildx create --use` once.
+
+```bash
 # Backend (also ships the `seed` binary)
 docker buildx build --platform linux/amd64 \
   -t docker.netixsystem.com/idea-pop-backend:latest --push ./backend
@@ -407,10 +421,6 @@ docker buildx build --platform linux/amd64 \
   --build-arg NEXT_PUBLIC_MISSION_HELPER=false \
   -t docker.netixsystem.com/idea-pop-frontend:latest --push ./frontend
 ```
-
-For reproducible deploys, additionally tag with the git sha
-(`-t …:sha-$(git rev-parse --short HEAD)`) and pin `BACKEND_IMAGE` /
-`FRONTEND_IMAGE` in the server `.env`.
 
 ### 10.2 One-time server setup
 

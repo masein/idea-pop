@@ -107,6 +107,16 @@ export default function LoginForm() {
           {t("sign_up")}
         </Link>
       </p>
+
+      <p className="mt-2 text-center font-body text-sm text-ink/60">
+        {t("student_cta")}{" "}
+        <Link
+          href="/class-login"
+          className="font-semibold text-explore underline-offset-2 hover:underline"
+        >
+          {t("student_link")}
+        </Link>
+      </p>
     </div>
   );
 }

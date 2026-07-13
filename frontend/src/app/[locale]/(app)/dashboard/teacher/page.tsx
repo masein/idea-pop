@@ -10,6 +10,7 @@ import {
   fetchClassGallery,
 } from '@/lib/api/client';
 import { AVATARS } from '@/lib/avatars';
+import ClassRoster from '@/components/teacher/ClassRoster';
 import type { components } from '@/lib/api/schema';
 
 type TeacherClass = components['schemas']['TeacherClass'];
@@ -237,41 +238,6 @@ function ClassGallery({ items }: { items: ClassGalleryItem[] }) {
   );
 }
 
-// ── My students ───────────────────────────────────────────────────────────────
-
-function MyStudents({ items }: { items: ClassGalleryItem[] }) {
-  const t = useTranslations('teacher_dashboard');
-  // Derive a roster from gallery submissions (no dedicated roster endpoint yet).
-  const seen = new Set<string>();
-  const students = items.filter((i) => {
-    if (seen.has(i.student_nickname)) return false;
-    seen.add(i.student_nickname);
-    return true;
-  });
-
-  if (students.length === 0) return null;
-
-  return (
-    <section className="flex flex-col gap-3">
-      <h2 className="font-display text-xl font-bold text-ink">{t('students_heading')}</h2>
-      <ul className="flex flex-col gap-2" role="list">
-        {students.map((s) => (
-          <li
-            key={s.id}
-            className="flex items-center gap-3 rounded-card bg-[#FBFDF0] px-4 py-3"
-          >
-            <span className="text-xl" aria-hidden="true">
-              {avatarEmoji(s.student_avatar_id)}
-            </span>
-            <span className="font-display font-bold text-ink">{s.student_nickname}</span>
-            <span className="font-body text-sm text-ink/60">{t('student_made', { title: s.project_title })}</span>
-          </li>
-        ))}
-      </ul>
-    </section>
-  );
-}
-
 // ── Info box ──────────────────────────────────────────────────────────────────
 
 function BringHomeBox() {
@@ -341,8 +307,8 @@ export default function TeacherDashboardPage() {
             challenges={challenges}
             onAssigned={handleAssigned}
           />
+          <ClassRoster />
           <ClassGallery items={gallery} />
-          <MyStudents items={gallery} />
           <BringHomeBox />
         </>
       ) : (

@@ -373,3 +373,72 @@ values count as unset, so a bare `.env.example` copy stays dark.
    (`docker compose logs backend | grep "mission helper"`), and the
    mission player renders the helper UI. To go dark again, unset the
    flags (or set them to `false`) and run the same `up -d --build`.
+
+## 10. Server deploy from the private registry
+
+The production server has **no general internet egress** — it can reach only the
+operator and our registry (`docker.netixsystem.com`). Everything it runs must
+therefore be pulled from that registry (including postgres), described by
+`docker-compose.prod.yml` + a server-side `.env` (see `.env.prod.example`).
+The registry accepts anonymous push/pull today; if that changes, run
+`docker login docker.netixsystem.com` first.
+
+### 10.1 Build & push images (operator machine)
+
+The server is x86_64, so build with `--platform linux/amd64` (on Apple Silicon
+this uses Rosetta/QEMU emulation — the Rust build is slow but works). If buildx
+complains about the driver, run `docker buildx create --use` once.
+
+```bash
+# Mirror postgres into our registry (server can't reach docker.io)
+docker pull --platform linux/amd64 postgres:16-alpine
+docker tag postgres:16-alpine docker.netixsystem.com/postgres:16-alpine
+docker push docker.netixsystem.com/postgres:16-alpine
+
+# Backend (also ships the `seed` binary)
+docker buildx build --platform linux/amd64 \
+  -t docker.netixsystem.com/idea-pop-backend:latest --push ./backend
+
+# Frontend — build args are BAKED at next build:
+#   API_URL must stay http://backend:8080 (the compose service name);
+#   NEXT_PUBLIC_MISSION_HELPER stays false on for-kids prod (§9.3).
+docker buildx build --platform linux/amd64 \
+  --build-arg API_URL=http://backend:8080 \
+  --build-arg NEXT_PUBLIC_MISSION_HELPER=false \
+  -t docker.netixsystem.com/idea-pop-frontend:latest --push ./frontend
+```
+
+For reproducible deploys, additionally tag with the git sha
+(`-t …:sha-$(git rev-parse --short HEAD)`) and pin `BACKEND_IMAGE` /
+`FRONTEND_IMAGE` in the server `.env`.
+
+### 10.2 One-time server setup
+
+```bash
+ssh root@<server> 'mkdir -p /opt/idea-pop'
+scp docker-compose.prod.yml root@<server>:/opt/idea-pop/docker-compose.yml
+
+# Generate secrets ON the server — they never touch the repo or the operator disk.
+ssh root@<server> 'cd /opt/idea-pop && umask 177 && printf "DB_PASSWORD=%s\nJWT_SECRET=%s\nWEB_PORT=80\nAPP_URL=http://<server>\n" "$(openssl rand -hex 16)" "$(openssl rand -hex 32)" > .env'
+```
+
+### 10.3 Deploy / update (every release)
+
+```bash
+ssh root@<server> 'cd /opt/idea-pop && docker compose pull && docker compose up -d'
+```
+
+### 10.4 First-boot seed + verify
+
+Migrations run automatically at backend boot (`RUN_MIGRATIONS=true`). Seed the
+reference content once (idempotent — challenges upsert by slug, §9.1):
+
+```bash
+ssh root@<server> 'cd /opt/idea-pop && docker compose exec -T backend seed'
+curl -s -o /dev/null -w '%{http_code}\n' http://<server>/en    # expect 200
+```
+
+Only the frontend port is published; postgres and the backend are reachable
+solely on the compose network (the frontend rewrites `/api/*` server-side).
+`COOKIE_SECURE` stays `false` while the app is served over plain HTTP on an
+IP; set it to `true` when TLS lands.

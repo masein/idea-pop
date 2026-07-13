@@ -65,7 +65,10 @@ use crate::{
         ToolResponse,
     },
     children::{CreateChildRequest, CreateChildResponse, UpgradeRequestResponse},
-    classes::{CreateClassRequest, CreateClassResponse, JoinClassResponse},
+    classes::{
+        ClassLoginRequest, ClassLoginResponse, ClassRosterItem, CreateClassRequest,
+        CreateClassResponse, JoinClassResponse,
+    },
     explore::{ExplorePageResponse, ExploreVideoResponse},
     help::{
         HelpMessageResponse, HelpRequest, HelpResponse, HelperEnabledResponse,
@@ -92,7 +95,10 @@ use crate::{
         AdvanceStepRequest, AdvanceStepResponse, BadgeResponse, LessonCompleteRequest,
         MedalsResponse, ProgressResponse, StartAttemptResponse, VideoViewRequest, XpAwardResponse,
     },
-    teacher::{AssignMissionRequest, ClassGalleryItemResponse, TeacherClassResponse},
+    teacher::{
+        AssignMissionRequest, ClassGalleryItemResponse, CreateStudentRequest,
+        CreateStudentResponse, ResetPinResponse, StudentRosterItem, TeacherClassResponse,
+    },
 };
 
 // ── Request-ID ────────────────────────────────────────────────────────────────
@@ -227,7 +233,9 @@ pub struct CreateHealthLogRequest {
         consents::grant_consent, consents::revoke_consent,
         consents::grant_consent_in_app, consents::revoke_consent_in_app,
         classes::create_class, classes::join_class,
+        classes::class_roster, classes::class_login,
         teacher::get_class, teacher::assign_mission, teacher::class_gallery,
+        teacher::create_student, teacher::list_students, teacher::reset_student_pin,
         explore::list_explore, explore::get_explore,
         library::list_studios, library::list_courses, library::list_quick_makes,
         library::get_course, library::get_creator,
@@ -254,6 +262,8 @@ pub struct CreateHealthLogRequest {
         UpdateDisplayModeRequest, DisplayModeResponse,
         ParentApprovalResponse, ResolveApprovalRequest, ResolveApprovalResponse,
         CreateClassRequest, CreateClassResponse, JoinClassResponse,
+        ClassRosterItem, ClassLoginRequest, ClassLoginResponse,
+        CreateStudentRequest, CreateStudentResponse, StudentRosterItem, ResetPinResponse,
         consents::ConsentToggleRequest,
         TeacherClassResponse, ClassGalleryItemResponse, AssignMissionRequest,
         ExploreVideoResponse, ExplorePageResponse,
@@ -547,10 +557,21 @@ pub fn router_with_metrics(
         // Classes
         .route("/classes", post(classes::create_class))
         .route("/classes/:code/join", post(classes::join_class))
+        // Kid PIN login for teacher-created students (public — kid isn't signed in yet)
+        .route("/classes/:code/roster", get(classes::class_roster))
+        .route("/classes/:code/login", post(classes::class_login))
         // Teacher class dashboard
         .route("/teacher/class", get(teacher::get_class))
         .route("/teacher/class/assign", post(teacher::assign_mission))
         .route("/teacher/class/gallery", get(teacher::class_gallery))
+        .route(
+            "/teacher/class/students",
+            get(teacher::list_students).post(teacher::create_student),
+        )
+        .route(
+            "/teacher/class/students/:id/reset-pin",
+            post(teacher::reset_student_pin),
+        )
         // Explore (any authenticated principal; restricted kids CAN read)
         .route("/explore", get(explore::list_explore))
         .route("/explore/:id", get(explore::get_explore))

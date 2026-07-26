@@ -240,13 +240,13 @@ function AppShellInner({
       {showUpgrade && (
         <a
           href={persona === 'parent' ? '/dashboard/parent#account' : '/profile'}
-          className="flex flex-col items-center gap-2 rounded-[1.25rem] bg-tint-lime p-3 text-center transition-shadow hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-coral"
+          className={`flex flex-col items-center gap-2 rounded-[1.25rem] p-3 text-center transition-shadow hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-coral ${tint}`}
         >
           <Image src="/kid/upgrade-girl.png" alt="" width={72} height={72} className="h-16 w-auto" aria-hidden="true" />
-          <span className="font-body text-xs font-semibold text-ink/70">
+          <span className="font-body text-sm font-semibold text-ink/80">
             {t('shell.upgrade_body')}
           </span>
-          <span className="rounded-pill bg-coral px-5 py-1.5 font-display text-sm font-bold text-white">
+          <span className="rounded-pill bg-coral px-5 py-2 font-display text-sm font-bold text-white">
             {t('shell.upgrade_cta')}
           </span>
         </a>
@@ -261,7 +261,11 @@ function AppShellInner({
   );
 
   return (
-    <div className="flex h-screen overflow-hidden bg-tint-blush font-body">
+    <div className="h-screen overflow-hidden bg-tint-blush font-body">
+      {/* Canonical desktop frame: the shell is capped at 1440px and centred, so
+          content never stretches on wide monitors (only the blush background
+          fills the overflow). Sidebar 256px + content ≈ 1150px at the cap. */}
+      <div className="mx-auto flex h-full max-w-[90rem]">
       {/* Desktop sidebar — white panel floating on the blush background */}
       <aside className="hidden w-64 shrink-0 flex-col p-3 md:flex">{sidebar}</aside>
 
@@ -324,6 +328,7 @@ function AppShellInner({
           </div>
           {children}
         </main>
+      </div>
       </div>
 
       {/* Floating penguin mascot (flips to the left in RTL) — opens the help panel */}

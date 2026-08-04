@@ -8,6 +8,28 @@
 :root {
   color-scheme: light;
 
+  /* Typography indirection. Default (marketing) = Baloo 2 / Nunito. The app
+     shell overrides these to the product fonts below. */
+  --font-display: var(--font-baloo);
+  --font-body: var(--font-nunito);
+}
+
+/* App screens (dashboard, challenges, explore, …): Cherry Bomb One display +
+   Montserrat body. Scoped to the shell so marketing keeps Baloo 2 / Nunito. */
+.app-typography {
+  --font-display: var(--font-cherry);
+  --font-body: var(--font-montserrat);
+}
+
+/* Farsi: neither Cherry Bomb One nor Montserrat carry Persian glyphs, so the
+   app uses Vazirmatn for both roles on the fa locale. */
+html[lang="fa"] .app-typography {
+  --font-display: var(--font-vazir);
+  --font-body: var(--font-vazir);
+}
+
+:root {
+
   /* Section accent colors — all meet WCAG AA 4.5:1 with white text */
   --color-explore: #1e7a44;   /* 4.83:1 with white */
   --color-library: #a85500;   /* 4.97:1 with white */

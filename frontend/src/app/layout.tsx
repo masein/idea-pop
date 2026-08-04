@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
-import { Baloo_2, Nunito } from "next/font/google";
+import { Baloo_2, Nunito, Cherry_Bomb_One, Montserrat, Vazirmatn } from "next/font/google";
 import { getLocale } from "next-intl/server";
 import "./globals.css";
 
+// Marketing fonts (landing pages keep these).
 const baloo = Baloo_2({
   subsets: ["latin"],
   variable: "--font-baloo",
@@ -11,6 +12,27 @@ const baloo = Baloo_2({
 const nunito = Nunito({
   subsets: ["latin", "latin-ext"],
   variable: "--font-nunito",
+  display: "swap",
+});
+
+// App fonts — playful display + Montserrat body (Latin/EN).
+const cherry = Cherry_Bomb_One({
+  subsets: ["latin"],
+  weight: "400",
+  variable: "--font-cherry",
+  display: "swap",
+});
+const montserrat = Montserrat({
+  subsets: ["latin"],
+  weight: ["500", "600", "700", "800"],
+  variable: "--font-montserrat",
+  display: "swap",
+});
+// Persian companion (fa locale) — carries the glyphs the app fonts lack.
+const vazir = Vazirmatn({
+  subsets: ["arabic"],
+  weight: ["400", "500", "700", "800"],
+  variable: "--font-vazir",
   display: "swap",
 });
 
@@ -28,7 +50,11 @@ export default async function RootLayout({
   const locale = await getLocale();
   const dir = locale === "fa" ? "rtl" : "ltr";
   return (
-    <html lang={locale} dir={dir} className={`${baloo.variable} ${nunito.variable}`}>
+    <html
+      lang={locale}
+      dir={dir}
+      className={`${baloo.variable} ${nunito.variable} ${cherry.variable} ${montserrat.variable} ${vazir.variable}`}
+    >
       <body className="font-body text-ink antialiased">
         <a href="#main-content" className="skip-nav">
           {locale === "fa" ? "رفتن به محتوا" : "Skip to content"}

@@ -274,7 +274,7 @@ function AppShellInner({
   );
 
   return (
-    <div className="h-screen overflow-hidden bg-tint-blush font-body">
+    <div className="app-typography h-screen overflow-hidden bg-tint-blush font-body">
       {/* Canonical desktop frame: the shell is capped at 1440px and centred, so
           content never stretches on wide monitors (only the blush background
           fills the overflow). Sidebar 256px + content ≈ 1150px at the cap. */}

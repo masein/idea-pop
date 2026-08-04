@@ -35,8 +35,11 @@ const config: Config = {
         sidebar: "var(--color-sidebar)",
       },
       fontFamily: {
-        display: ["var(--font-baloo)", "system-ui", "sans-serif"],
-        body: ["var(--font-nunito)", "system-ui", "sans-serif"],
+        // Indirection: --font-display/--font-body default to Baloo 2 / Nunito
+        // (marketing), and the app shell overrides them to Cherry Bomb One /
+        // Montserrat (and Vazirmatn for fa). See globals.css.
+        display: ["var(--font-display)", "system-ui", "sans-serif"],
+        body: ["var(--font-body)", "system-ui", "sans-serif"],
       },
       borderRadius: {
         card: "1.25rem",

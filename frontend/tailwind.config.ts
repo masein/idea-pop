@@ -14,7 +14,10 @@ const config: Config = {
     extend: {
       colors: {
         explore: "var(--color-explore)",
-        library: "var(--color-library)",
+        library: {
+          DEFAULT: "var(--color-library)",
+          deep: "var(--color-library-deep)",
+        },
         challenge: "var(--color-challenge)",
         pricing: "var(--color-pricing)",
         coral: {

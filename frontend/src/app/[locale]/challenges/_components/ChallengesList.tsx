@@ -216,6 +216,16 @@ export default function ChallengesList() {
 
 // ── Cards ──────────────────────────────────────────────────────────────────────
 
+// Per-mission cover art. Missions not listed here fall back to the shared
+// cover, so adding a new image is just a slug → path entry + the file.
+const DEFAULT_COVER = '/challenge/mission-cover.png';
+const COVER_BY_SLUG: Record<string, string> = {
+  'the-guess-who-tree': '/challenge/guess-who-tree.png',
+};
+function coverFor(slug: string | undefined): string {
+  return (slug && COVER_BY_SLUG[slug]) || DEFAULT_COVER;
+}
+
 function UnlockedChallengeCard({
   index,
   challenge,
@@ -253,7 +263,7 @@ function UnlockedChallengeCard({
       </div>
       <div className="relative h-44">
         <Image
-          src="/challenge/mission-cover.png"
+          src={coverFor(challenge.slug)}
           alt=""
           aria-hidden="true"
           fill

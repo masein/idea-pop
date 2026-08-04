@@ -103,7 +103,7 @@ export default function ChallengesList() {
           <p className="mt-2 font-display text-lg font-bold text-ink/80 md:text-xl">
             {t.rich('header_today', {
               title: featured.title,
-              hl: (chunks) => <span className="text-library">{chunks}</span>,
+              hl: (chunks) => <span className="text-library-deep">{chunks}</span>,
             })}
           </p>
         )}

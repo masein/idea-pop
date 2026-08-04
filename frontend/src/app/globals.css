@@ -41,6 +41,9 @@ html:not([lang="fa"]) .app-typography .font-display {
   /* Section accent colors — all meet WCAG AA 4.5:1 with white text */
   --color-explore: #1e7a44;   /* 4.83:1 with white */
   --color-library: #a85500;   /* 4.97:1 with white */
+  /* Deeper library shade for TEXT on pastel tints: #a85500 only hits 4.33:1 on
+     tint-blue at regular weight (display text is pinned to 400). 5.15:1 there. */
+  --color-library-deep: #964c00;
   --color-challenge: #1a6fa6; /* 5.02:1 with white */
   --color-pricing: #7c3cc9;   /* 5.79:1 with white */
   /* Sidebar accent — active nav label/icon on the white panel (4.96:1).

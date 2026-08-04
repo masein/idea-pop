@@ -148,6 +148,48 @@ function NavIcon({ id, className }: { id: NavItem['id']; className?: string }) {
   );
 }
 
+// The active nav item's indicator, matching the Figma: a white circle DOCKED
+// in a notch cut into the panel's edge. The notch is a blush lens (the page
+// background showing through the cut) with the coral border sweeping around
+// it; the circle floats in the notch with a thin crescent gap, crossing the
+// dashed seam into the content area. In RTL the whole thing mirrors.
+function ActiveNotch({ id }: { id: NavItem['id'] }) {
+  return (
+    <span
+      aria-hidden="true"
+      className="pointer-events-none absolute top-1/2 z-20 hidden -translate-y-1/2 md:block ltr:left-full ltr:-ml-7 rtl:right-full rtl:-mr-7 rtl:-scale-x-100"
+    >
+      <span className="relative block h-[120px] w-[120px]">
+        <svg
+          width="120"
+          height="120"
+          viewBox="0 0 120 120"
+          fill="none"
+          className="absolute inset-0 overflow-visible"
+        >
+          {/* the notch: a blush lens cut into the panel (x=40 is the panel's
+              edge; the fill overlaps to x=42 to cover the straight border) */}
+          <path
+            d="M40 16 C40 24 35 28 30.1 34 A34 34 0 0 0 30.1 86 C35 92 40 96 40 104 L42 104 L42 16 Z"
+            fill="var(--color-tint-blush)"
+          />
+          {/* coral hairline: the panel border sweeping around the notch */}
+          <path
+            d="M40 16 C40 24 35 28 30.1 34 A34 34 0 0 0 30.1 86 C35 92 40 96 40 104"
+            stroke="var(--color-coral-faint)"
+            strokeWidth="1"
+            fill="none"
+          />
+        </svg>
+        {/* the docked circle floating in the notch */}
+        <span className="absolute left-[52px] top-[60px] flex h-[60px] w-[60px] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white text-coral shadow-[0_2px_8px_rgba(0,0,0,0.14)] rtl:-scale-x-100">
+          <NavIcon id={id} className="h-6 w-6" />
+        </span>
+      </span>
+    </span>
+  );
+}
+
 // ── Sidebar ─────────────────────────────────────────────────────────────────────
 
 function AppShellInner({
@@ -226,24 +268,18 @@ function AppShellInner({
                   'flex items-center justify-between gap-3 rounded-card px-4 py-3.5 font-body text-[15px] font-bold transition-colors duration-150',
                   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1',
                   isActive
-                    ? 'text-coral ring-1 ring-coral-soft focus-visible:ring-coral'
+                    ? 'text-coral focus-visible:ring-coral'
                     : 'text-ink/70 hover:bg-tint-blush hover:text-ink focus-visible:ring-ink/20',
                 ].join(' ')}
               >
                 <span>{t(item.labelKey)}</span>
-                {/* The floating circle IS the active icon on md+ — hide the
+                {/* The scoop circle IS the active icon on md+ — hide the
                     inline one there so they don't overlap at the row edge. */}
                 <NavIcon id={item.id} className={isActive ? 'shrink-0 md:opacity-0' : 'shrink-0'} />
               </a>
-              {/* Floating section indicator — straddles the panel's edge */}
-              {isActive && (
-                <span
-                  className="pointer-events-none absolute top-1/2 z-20 hidden h-14 w-14 -translate-y-1/2 items-center justify-center rounded-full bg-white text-coral shadow-md ring-1 ring-coral-faint ltr:-right-8 rtl:-left-8 md:flex"
-                  aria-hidden="true"
-                >
-                  <NavIcon id={item.id} className="h-6 w-6" />
-                </span>
-              )}
+              {/* Active indicator: a circle cradled by a concave scoop carved
+                  into the panel's right edge (the designer's signature curve). */}
+              {isActive && <ActiveNotch id={item.id} />}
             </li>
           );
         })}

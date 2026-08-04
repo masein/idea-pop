@@ -28,6 +28,14 @@ html[lang="fa"] .app-typography {
   --font-body: var(--font-vazir);
 }
 
+/* Cherry Bomb One ships a single 400 weight (the spec keeps display at Regular),
+   so keep app display text at 400 — otherwise font-bold headings faux-bold it.
+   Two-class specificity beats the .font-bold utility without !important.
+   Vazirmatn (fa) has real weights, so let Persian headings keep their bold. */
+html:not([lang="fa"]) .app-typography .font-display {
+  font-weight: 400;
+}
+
 :root {
 
   /* Section accent colors — all meet WCAG AA 4.5:1 with white text */

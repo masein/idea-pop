@@ -5,9 +5,7 @@ import { useTranslations } from 'next-intl';
 import CaptureCard, { type CaptureData } from './CaptureCard';
 import ToolSelector from './tool/ToolSelector';
 import { createProject } from '@/lib/api/client';
-import QuestionTreePanel from '@/components/ai/QuestionTreePanel';
-import { QTREE_SLUG } from './toolSlugs';
-import { snapshotText } from '@/lib/ai/questionTreeStorage';
+import { GAME_BY_SLUG } from './gameEmbeds';
 
 type ChallengeDetail = import('@/lib/api/schema').components['schemas']['ChallengeDetail'];
 
@@ -20,9 +18,10 @@ interface StepSketchProps {
 
 export default function StepSketch({ challenge, ageMode, onNext, onBack }: StepSketchProps) {
   const t = useTranslations('mission');
-  const tq = useTranslations('qtree');
+  const game = GAME_BY_SLUG[challenge.slug];
+  // The hook must run unconditionally; the namespace is only read when a game exists.
+  const tg = useTranslations(game?.i18nNs ?? 'qtree');
   const [submitting, setSubmitting] = useState(false);
-  const isQtree = challenge.slug === QTREE_SLUG;
 
   async function handleSubmit(data: CaptureData) {
     setSubmitting(true);
@@ -44,20 +43,17 @@ export default function StepSketch({ challenge, ageMode, onNext, onBack }: StepS
     }
   }
 
-  /** Guess-who mission: the "sketch" is the tree itself — save its text
+  /** Game missions: the "sketch" is the game state itself — save its text
    *  snapshot as the project (feeds the celebrate/Ideas-Wall flow) instead of
    *  a photo. Never blocks progression. */
-  async function handleQtreeContinue() {
+  async function handleGameContinue() {
+    if (!game) return;
     setSubmitting(true);
-    const snapshot = snapshotText({
-      question: (q) => tq(`q_${q}`),
-      animal: (id) => tq(`animal_${id}`),
-      bestLine: (count) => tq('best_line', { count }),
-    });
+    const snapshot = game.buildSnapshot(tg);
     try {
       const project = await createProject({
-        title: tq('project_title'),
-        what_i_made: snapshot ?? tq('project_untried'),
+        title: tg('project_title'),
+        what_i_made: snapshot ?? tg('project_untried'),
         what_i_used: '',
         what_was_hard: '',
         what_id_improve: '',
@@ -86,8 +82,8 @@ export default function StepSketch({ challenge, ageMode, onNext, onBack }: StepS
         <p className="font-body text-sm text-ink/50 mt-1">
           {challenge.sketch_prompt?.trim() || t('sketch_prompt_fallback')}
         </p>
-        {/* The paper-and-photo instruction contradicts the on-screen game. */}
-        {!isQtree && (
+        {/* The paper-and-photo instruction contradicts the on-screen games. */}
+        {!game && (
           <p
             data-testid="sketch-instruction"
             className="mt-2 rounded-card bg-tint-blue px-3 py-2 font-body text-sm text-ink/80"
@@ -114,18 +110,18 @@ export default function StepSketch({ challenge, ageMode, onNext, onBack }: StepS
         />
       )}
 
-      {isQtree ? (
+      {game ? (
         <>
-          {/* The plan IS the tree's top question — no photo capture here. */}
-          <QuestionTreePanel defaultOpen />
+          {/* The plan IS the game state — no photo capture here. */}
+          <game.Panel defaultOpen />
           <button
             type="button"
-            data-testid="qtree-sketch-continue"
-            onClick={() => void handleQtreeContinue()}
+            data-testid={`${game.testIdPrefix}-sketch-continue`}
+            onClick={() => void handleGameContinue()}
             disabled={submitting}
             className="bg-challenge text-white font-display text-lg px-6 py-3 rounded-card w-full disabled:opacity-40"
           >
-            {submitting ? t('saving') : tq('sketch_continue')}
+            {submitting ? t('saving') : tg('sketch_continue')}
           </button>
         </>
       ) : (

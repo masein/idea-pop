@@ -5,11 +5,10 @@ import { useTranslations } from 'next-intl';
 import CaptureCard, { type CaptureData } from './CaptureCard';
 import ClassifierPanel from '@/components/ai/ClassifierPanel';
 import AnimationPanel from '@/components/ai/AnimationPanel';
-import QuestionTreePanel from '@/components/ai/QuestionTreePanel';
 import MissionHints from './MissionHints';
 import MissionHelper from './MissionHelper';
-import { ANIMATION_SLUGS, CLASSIFIER_SLUGS, QTREE_SLUG } from './toolSlugs';
-import { snapshotText } from '@/lib/ai/questionTreeStorage';
+import { ANIMATION_SLUGS, CLASSIFIER_SLUGS } from './toolSlugs';
+import { GAME_BY_SLUG } from './gameEmbeds';
 
 // Dark-launch flag for the scoped AI helper (server enforces the real gates).
 const HELPER_ON = process.env.NEXT_PUBLIC_MISSION_HELPER === 'true';
@@ -37,8 +36,9 @@ export default function StepBuild({
   onBack,
 }: StepBuildProps) {
   const t = useTranslations('mission');
-  const tq = useTranslations('qtree');
-  const isQtree = challenge.slug === QTREE_SLUG;
+  const game = GAME_BY_SLUG[challenge.slug];
+  // The hook must run unconditionally; the namespace is only read when a game exists.
+  const tg = useTranslations(game?.i18nNs ?? 'qtree');
   const [checked, setChecked] = useState<Set<number>>(new Set());
   const [testResult, setTestResult] = useState<TestResult>(null);
   // Brainstorm-with-Popi CTA opens this step's helper and scrolls to it.
@@ -78,19 +78,16 @@ export default function StepBuild({
     }
   }
 
-  /** Guess-who mission: "Mission complete" saves the tree's text snapshot as
-   *  the build project (no photo) — same never-block shape as handleSubmit. */
-  async function handleQtreeComplete() {
+  /** Game missions: "Mission complete" saves the game's text snapshot as the
+   *  build project (no photo) — same never-block shape as handleSubmit. */
+  async function handleGameComplete() {
+    if (!game) return;
     setSubmitting(true);
-    const snapshot = snapshotText({
-      question: (q) => tq(`q_${q}`),
-      animal: (id) => tq(`animal_${id}`),
-      bestLine: (count) => tq('best_line', { count }),
-    });
+    const snapshot = game.buildSnapshot(tg);
     try {
       await createProject({
-        title: tq('project_title'),
-        what_i_made: snapshot ?? tq('project_untried'),
+        title: tg('project_title'),
+        what_i_made: snapshot ?? tg('project_untried'),
         what_i_used: '',
         what_was_hard: '',
         what_id_improve: '',
@@ -143,10 +140,10 @@ export default function StepBuild({
         </div>
       )}
 
-      {/* On-device Question Tree game for the guess-who mission */}
-      {isQtree && (
+      {/* On-device game embeds (question tree, reward maze, …) */}
+      {game && (
         <div className="mb-4">
-          <QuestionTreePanel defaultOpen />
+          <game.Panel defaultOpen />
         </div>
       )}
 
@@ -196,14 +193,14 @@ export default function StepBuild({
         )}
       </div>
 
-      {/* Capture card — the guess-who mission shares its TREE, not a photo:
-          completing saves the tree's text snapshot as the project instead. */}
-      {isQtree ? (
+      {/* Capture card — game missions share their GAME STATE, not a photo:
+          completing saves the game's text snapshot as the project instead. */}
+      {game ? (
         <button
           type="button"
-          data-testid="qtree-mission-complete"
+          data-testid={`${game.testIdPrefix}-mission-complete`}
           disabled={testResult === null || submitting}
-          onClick={() => void handleQtreeComplete()}
+          onClick={() => void handleGameComplete()}
           className="bg-challenge text-white font-display text-lg px-6 py-3 rounded-card w-full disabled:opacity-40"
         >
           {submitting ? t('saving') : t('build_submit')}

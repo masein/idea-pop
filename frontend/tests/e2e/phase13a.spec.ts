@@ -322,6 +322,17 @@ test.describe('axe — app pages', () => {
     await expect(page.getByTestId('animator-privacy-note')).toBeVisible();
   });
 
+  test('library tool card opens the Question Tree', async ({ page }) => {
+    await setCookie(page, 'ideapop_persona', 'kid');
+    page.route('**/api/library/**', (r) => r.fulfill({ json: [] }));
+    await page.goto('/en/library');
+    await page.getByTestId('tool-card-qtree').click();
+    await page.waitForURL('**/studio/question-tree');
+    // No idle gate: the game is pure React and renders immediately.
+    await expect(page.getByTestId('question-tree')).toBeVisible();
+    await expect(page.getByTestId('qtree-privacy-note')).toBeVisible();
+  });
+
   test('challenges list page passes axe', async ({ page }) => {
     await setCookie(page, 'ideapop_persona', 'kid');
     page.route('**/api/challenges', (r) =>
@@ -492,6 +503,37 @@ test.describe('axe — app pages', () => {
       .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
       .analyze();
     expect(open.violations).toEqual([]);
+  });
+
+  test('studio question-tree page passes axe (build + play modes)', async ({ page }) => {
+    await setCookie(page, 'ideapop_persona', 'kid');
+    // Fully on-device: no API mocks needed and no idle gate — the game
+    // renders immediately.
+    await page.goto('/en/studio/question-tree');
+    await expect(page.getByTestId('question-tree')).toBeVisible();
+    await expect(page.getByTestId('qtree-privacy-note')).toBeVisible();
+    // Build mode with one split open (stars + branch counts on screen).
+    await page.getByTestId('qtree-split-root').click();
+    await page.getByTestId('qtree-pick-water').click();
+    await expect(page.getByTestId('qtree-stars-root')).toBeVisible();
+    await page.waitForTimeout(300); // settle transition-colors before sampling
+    const build = await new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
+      .analyze();
+    expect(build.violations).toEqual([]);
+    // Play mode (question + yes/no buttons).
+    await page.getByTestId('qtree-mode-play').click();
+    await expect(page.getByTestId('qtree-play-question')).toBeVisible();
+    // Let the tab's transition-colors settle — axe samples mid-transition
+    // blends otherwise and reports phantom contrast values.
+    await page.waitForTimeout(300);
+    const play = await new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
+      .analyze();
+    expect(play.violations).toEqual([]);
+    // Leave a clean slate for other tests on this origin.
+    await page.getByTestId('qtree-mode-build').click();
+    await page.getByTestId('qtree-reset').click();
   });
 
   test('studio classify page passes axe', async ({ page }) => {

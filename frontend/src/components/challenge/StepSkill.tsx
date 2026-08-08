@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import MissionHints from './MissionHints';
 import MissionHelper from './MissionHelper';
+import QuestionTreePanel from '@/components/ai/QuestionTreePanel';
+import { QTREE_SLUG } from './toolSlugs';
 
 // Dark-launch flag for the scoped AI helper (server enforces the real gates).
 const HELPER_ON = process.env.NEXT_PUBLIC_MISSION_HELPER === 'true';
@@ -74,6 +76,9 @@ export default function StepSkill({
           </p>
         </div>
       ) : null}
+
+      {/* The guess-who mission's on-device game — visible right on the step */}
+      {challenge.slug === QTREE_SLUG && <QuestionTreePanel defaultOpen />}
 
       <MissionHints hints={challenge.skill_hints ?? []} />
 

@@ -5,18 +5,15 @@ import { useTranslations } from 'next-intl';
 import CaptureCard, { type CaptureData } from './CaptureCard';
 import ClassifierPanel from '@/components/ai/ClassifierPanel';
 import AnimationPanel from '@/components/ai/AnimationPanel';
+import QuestionTreePanel from '@/components/ai/QuestionTreePanel';
 import MissionHints from './MissionHints';
 import MissionHelper from './MissionHelper';
+import { ANIMATION_SLUGS, CLASSIFIER_SLUGS, QTREE_SLUG } from './toolSlugs';
+import { snapshotText } from '@/lib/ai/questionTreeStorage';
 
 // Dark-launch flag for the scoped AI helper (server enforces the real gates).
 const HELPER_ON = process.env.NEXT_PUBLIC_MISSION_HELPER === 'true';
 import { createProject } from '@/lib/api/client';
-
-// Missions whose Build & test step embeds the on-device Machine Trainer.
-// Keyed off the slug to avoid a backend/schema change; a cleaner long-term
-// option is an `embedded_tool` field on the BuildAndTest step (future PR).
-const CLASSIFIER_SLUGS = new Set(['teach-the-machine-to-see', 'spot-the-fake']);
-const ANIMATION_SLUGS = new Set(['bring-it-to-life']);
 
 type ChallengeDetail = import('@/lib/api/schema').components['schemas']['ChallengeDetail'];
 
@@ -40,6 +37,8 @@ export default function StepBuild({
   onBack,
 }: StepBuildProps) {
   const t = useTranslations('mission');
+  const tq = useTranslations('qtree');
+  const isQtree = challenge.slug === QTREE_SLUG;
   const [checked, setChecked] = useState<Set<number>>(new Set());
   const [testResult, setTestResult] = useState<TestResult>(null);
   // Brainstorm-with-Popi CTA opens this step's helper and scrolls to it.
@@ -68,6 +67,33 @@ export default function StepBuild({
         what_i_used: data.what_i_used,
         what_was_hard: data.what_was_hard ?? '',
         what_id_improve: data.what_id_improve ?? '',
+        challenge_id: challenge.id,
+        step_type: 'build',
+      });
+    } catch {
+      // never block progression
+    } finally {
+      setSubmitting(false);
+      onNext();
+    }
+  }
+
+  /** Guess-who mission: "Mission complete" saves the tree's text snapshot as
+   *  the build project (no photo) — same never-block shape as handleSubmit. */
+  async function handleQtreeComplete() {
+    setSubmitting(true);
+    const snapshot = snapshotText({
+      question: (q) => tq(`q_${q}`),
+      animal: (id) => tq(`animal_${id}`),
+      bestLine: (count) => tq('best_line', { count }),
+    });
+    try {
+      await createProject({
+        title: tq('project_title'),
+        what_i_made: snapshot ?? tq('project_untried'),
+        what_i_used: '',
+        what_was_hard: '',
+        what_id_improve: '',
         challenge_id: challenge.id,
         step_type: 'build',
       });
@@ -117,6 +143,13 @@ export default function StepBuild({
         </div>
       )}
 
+      {/* On-device Question Tree game for the guess-who mission */}
+      {isQtree && (
+        <div className="mb-4">
+          <QuestionTreePanel defaultOpen />
+        </div>
+      )}
+
       <div ref={helperRef} className="mb-4 flex flex-col gap-4">
         <MissionHints hints={challenge.build_hints ?? []} />
         {HELPER_ON && (
@@ -163,19 +196,32 @@ export default function StepBuild({
         )}
       </div>
 
-      {/* Capture card */}
-      <CaptureCard
-        showExtendedFields={true}
-        photoPrompt={t('build_photo_prompt')}
-        submitLabel={t('build_submit')}
-        ageMode={ageMode}
-        onSubmit={handleSubmit}
-        submitting={submitting}
-        onBrainstorm={() => {
-          setHelperSignal((s) => s + 1);
-          helperRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }}
-      />
+      {/* Capture card — the guess-who mission shares its TREE, not a photo:
+          completing saves the tree's text snapshot as the project instead. */}
+      {isQtree ? (
+        <button
+          type="button"
+          data-testid="qtree-mission-complete"
+          disabled={testResult === null || submitting}
+          onClick={() => void handleQtreeComplete()}
+          className="bg-challenge text-white font-display text-lg px-6 py-3 rounded-card w-full disabled:opacity-40"
+        >
+          {submitting ? t('saving') : t('build_submit')}
+        </button>
+      ) : (
+        <CaptureCard
+          showExtendedFields={true}
+          photoPrompt={t('build_photo_prompt')}
+          submitLabel={t('build_submit')}
+          ageMode={ageMode}
+          onSubmit={handleSubmit}
+          submitting={submitting}
+          onBrainstorm={() => {
+            setHelperSignal((s) => s + 1);
+            helperRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }}
+        />
+      )}
 
       <button
         type="button"

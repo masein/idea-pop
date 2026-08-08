@@ -4,6 +4,7 @@ import { useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import CaptureCard, { type CaptureData } from './CaptureCard';
 import ClassifierPanel from '@/components/ai/ClassifierPanel';
+import AnimationPanel from '@/components/ai/AnimationPanel';
 import MissionHints from './MissionHints';
 import MissionHelper from './MissionHelper';
 
@@ -15,6 +16,7 @@ import { createProject } from '@/lib/api/client';
 // Keyed off the slug to avoid a backend/schema change; a cleaner long-term
 // option is an `embedded_tool` field on the BuildAndTest step (future PR).
 const CLASSIFIER_SLUGS = new Set(['teach-the-machine-to-see', 'spot-the-fake']);
+const ANIMATION_SLUGS = new Set(['bring-it-to-life']);
 
 type ChallengeDetail = import('@/lib/api/schema').components['schemas']['ChallengeDetail'];
 
@@ -105,6 +107,13 @@ export default function StepBuild({
       {CLASSIFIER_SLUGS.has(challenge.slug) && (
         <div className="mb-4">
           <ClassifierPanel defaultOpen />
+        </div>
+      )}
+
+      {/* On-device Animation Studio for the animation mission */}
+      {ANIMATION_SLUGS.has(challenge.slug) && (
+        <div className="mb-4">
+          <AnimationPanel defaultOpen />
         </div>
       )}
 

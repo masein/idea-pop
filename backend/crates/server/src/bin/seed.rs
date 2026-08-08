@@ -616,6 +616,35 @@ async fn seed_challenges(pool: &PgPool) -> anyhow::Result<()> {
 ]"#,
             false, // free — class-joined kids have no family subscription
         ),
+        (
+            "bring-it-to-life",
+            "Bring It to Life!",
+            1,
+            7,
+            // steps JSON
+            r#"[
+  {"step":"brief","title":"The Doodle That Wouldn't Move","story":"Meet Doodle, a little sketch who dreams of dancing — but stuck on the page, it can't move a muscle! Here's the secret grown-up movies don't tell you: cartoons and films don't really move either. They're just LOTS of still pictures, shown so fast that your brain blends them into motion. Your mission: bring something to life — a bouncing ball, a walking blob, a blooming flower — one frame at a time.","image_url":null},
+  {"step":"your_idea","prompt":"How would YOU make a drawing look like it's moving? Do you already have an idea?","fork_to_step":6},
+  {"step":"nature_clues","intro":"Your eyes and brain are amazing motion machines. Let's see how living things make — and see — movement.","clues":[{"text":"When a horse gallops, all four hooves leave the ground at once — too fast for anyone to see, until people lined up photos frame by frame and finally caught it.","image_url":null,"habitat":"desert"},{"text":"Your eyes hold onto each picture for a split second after it's gone. Flash pictures fast enough and your brain smooths them into one moving scene — that's why films feel alive.","image_url":null,"habitat":"jungle"},{"text":"A flock of starlings swirls like one giant creature. Each bird shifts a heartbeat after its neighbour, and all those tiny changes add up to a flowing, rippling shape.","image_url":null,"habitat":"sky"},{"text":"A cuttlefish sends bands of colour rippling across its skin by switching tiny dots on and off in sequence — a living animation played right on its body.","image_url":null,"habitat":"ocean"}]},
+  {"step":"design_secret","secret":"Animation is an ILLUSION. It's just a row of still pictures — called frames — each changed a tiny bit, played fast. The more frames you use, and the SMALLER the change between them, the smoother the motion looks. Big jumps look jerky; tiny steps look alive. That is the whole trick, and it has a name: frames per second.","reveal_hint":"Think about a flipbook: what happens if you draw only 3 pages for a jump versus 30 pages?"},
+  {"step":"skill","instructions":"Learn the animator's toolkit. A KEYFRAME is a big pose (ball at the top, ball on the ground). IN-BETWEENS are the small steps that connect the keyframes. TIMING is how fast you flip through them. UNPLUGGED: make a flipbook — draw a bouncing ball on the corner of 10-15 sticky notes, moving it a little on each page, then flip. PLUGGED (optional): open the Animation Studio below, add frames (draw one or snap a photo), and press play to watch them come alive.","skill_refs":[],"hints":["Start with just two keyframes — where your thing STARTS and where it ENDS. Then fill in the middle.","Move your object only a LITTLE between frames. Small changes make smooth motion."]},
+  {"step":"sketch","prompt":"Pick ONE simple thing to animate, then plan your frames before you make them.","guidance":"Storyboard it: What is moving? Where does it start and where does it end? Roughly how many frames will you need — and where will the motion need extra frames to look smooth? A simple move with enough frames beats a fancy idea with too few."},
+  {"step":"build_and_test","instructions":"UNPLUGGED: flip your flipbook and watch it move. PLUGGED (optional): in the Animation Studio, add your frames in order and press play. Either way, watch it back and fix the jerky parts.","test_criteria":["Play it back: does it read as smooth motion, or does it jump? Count how many frames you used.","Find the jerkiest moment and add one or two MORE frames right there, with smaller changes. Play again — is it smoother?","Try changing the speed (frames per second). Which speed makes your motion look best?"],"hints":["If a move looks jumpy, you usually need more frames in that spot — not faster playback.","Keep the paper or camera still so that only your object moves between frames."]},
+  {"step":"celebrate_and_share","celebration_text":"You just brought something to life — you're an animator now! You discovered that motion is really just still pictures plus tiny changes, played fast.","share_prompt":"Share your animation (or a photo of your flipbook) AND tell us: how many frames did it take, and where did you have to add more to make it smooth?"}
+]"#,
+            // tools JSON
+            r#"[
+  {"kind":"mind_map","age_mode":"young"},
+  {"kind":"scamper","age_mode":"older"}
+]"#,
+            // age_tier_variants JSON
+            r#"[
+  {"age_tier":"8-10","title_override":null,"summary":"Animate one simple thing (a bouncing ball or a growing flower). Focus on making lots of frames with tiny changes, then flipping through them."},
+  {"age_tier":"10-12","title_override":null,"summary":"Plan keyframes and in-betweens, count your frames, and fix jerky spots by adding frames. Try two playback speeds and pick the best."},
+  {"age_tier":"12-18","title_override":"Frame-by-Frame Animation","summary":"Storyboard a short action, reason about frames-per-second and easing (slow-in / slow-out), and compare how frame count changes the feel of the motion."}
+]"#,
+            false, // free — class-joined kids have no family subscription
+        ),
     ];
 
     for (slug, title, season, week, steps_json, tools_json, variants_json, is_premium) in challenges

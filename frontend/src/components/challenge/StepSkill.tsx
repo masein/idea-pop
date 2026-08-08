@@ -4,8 +4,7 @@ import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import MissionHints from './MissionHints';
 import MissionHelper from './MissionHelper';
-import QuestionTreePanel from '@/components/ai/QuestionTreePanel';
-import { QTREE_SLUG } from './toolSlugs';
+import { GAME_BY_SLUG } from './gameEmbeds';
 
 // Dark-launch flag for the scoped AI helper (server enforces the real gates).
 const HELPER_ON = process.env.NEXT_PUBLIC_MISSION_HELPER === 'true';
@@ -27,6 +26,7 @@ export default function StepSkill({
 }: StepSkillProps) {
   const t = useTranslations('mission');
   const [toastVisible, setToastVisible] = useState(false);
+  const game = GAME_BY_SLUG[challenge.slug];
 
   const handleOpenLesson = () => {
     setToastVisible(true);
@@ -78,7 +78,7 @@ export default function StepSkill({
       ) : null}
 
       {/* The guess-who mission's on-device game — visible right on the step */}
-      {challenge.slug === QTREE_SLUG && <QuestionTreePanel defaultOpen />}
+      {game && <game.Panel defaultOpen />}
 
       <MissionHints hints={challenge.skill_hints ?? []} />
 

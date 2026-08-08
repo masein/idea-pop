@@ -333,6 +333,17 @@ test.describe('axe — app pages', () => {
     await expect(page.getByTestId('qtree-privacy-note')).toBeVisible();
   });
 
+  test('library tool card opens the Reward Maze', async ({ page }) => {
+    await setCookie(page, 'ideapop_persona', 'kid');
+    page.route('**/api/library/**', (r) => r.fulfill({ json: [] }));
+    await page.goto('/en/library');
+    await page.getByTestId('tool-card-maze').click();
+    await page.waitForURL('**/studio/reward-maze');
+    // No idle gate: the game is pure React and renders immediately.
+    await expect(page.getByTestId('reward-maze')).toBeVisible();
+    await expect(page.getByTestId('maze-privacy-note')).toBeVisible();
+  });
+
   test('challenges list page passes axe', async ({ page }) => {
     await setCookie(page, 'ideapop_persona', 'kid');
     page.route('**/api/challenges', (r) =>
@@ -534,6 +545,36 @@ test.describe('axe — app pages', () => {
     // Leave a clean slate for other tests on this origin.
     await page.getByTestId('qtree-mode-build').click();
     await page.getByTestId('qtree-reset').click();
+  });
+
+  test('studio reward-maze page passes axe (edit + after a try)', async ({ page }) => {
+    await setCookie(page, 'ideapop_persona', 'kid');
+    // Fully on-device: no API mocks needed and no idle gate.
+    await page.goto('/en/studio/reward-maze');
+    await expect(page.getByTestId('reward-maze')).toBeVisible();
+    await expect(page.getByTestId('maze-privacy-note')).toBeVisible();
+    // Edit state: place a wall + a trap, tweak a reward.
+    await page.getByTestId('maze-tool-wall').click();
+    await page.getByTestId('maze-cell-7').click();
+    await page.getByTestId('maze-tool-trap').click();
+    await page.getByTestId('maze-cell-13').click();
+    await page.getByTestId('maze-reward-trap').fill('-8');
+    await page.waitForTimeout(300); // settle transition-colors before sampling
+    const edit = await new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
+      .analyze();
+    expect(edit.violations).toEqual([]);
+    // Run one try: the readout appears immediately; the button re-enables
+    // when the path animation finishes (a first try can wander ~100 cells).
+    await page.getByTestId('maze-run').click();
+    await expect(page.getByTestId('maze-history')).toBeVisible();
+    await expect(page.getByTestId('maze-run')).toBeEnabled({ timeout: 20000 });
+    const trained = await new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
+      .analyze();
+    expect(trained.violations).toEqual([]);
+    // Leave a clean slate for other tests on this origin.
+    await page.getByTestId('maze-start-over').click();
   });
 
   test('studio classify page passes axe', async ({ page }) => {

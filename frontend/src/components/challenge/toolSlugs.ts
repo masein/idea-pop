@@ -5,6 +5,7 @@
  */
 export const CLASSIFIER_SLUGS = new Set(['teach-the-machine-to-see', 'spot-the-fake']);
 export const ANIMATION_SLUGS = new Set(['bring-it-to-life']);
-/** The Question Tree game replaces the photo/capture flow on THREE steps
- *  (skill, sketch/plan, build & test) for this mission. */
+/** These games replace the photo/capture flow on THREE steps (skill,
+ *  sketch/plan, build & test) for their missions — see gameEmbeds.ts. */
 export const QTREE_SLUG = 'the-guess-who-tree';
+export const MAZE_SLUG = 'train-your-pet-algorithm';

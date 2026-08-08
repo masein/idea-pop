@@ -279,6 +279,23 @@ export default function LibraryPage() {
                 <span>{t('question_tree_tagline')}</span>
               </span>
             </button>
+            {/* Reward Maze — the fourth on-device tool, same anatomy. */}
+            <button
+              type="button"
+              data-testid="tool-card-maze"
+              onClick={() => router.push('/studio/reward-maze')}
+              aria-label={t('reward_maze_aria')}
+              className="flex min-h-[6.5rem] flex-col justify-center gap-1 rounded-[1.25rem] px-5 py-4 text-left text-white shadow-sm transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+              style={{ backgroundColor: PURPLE, ['--tw-ring-color' as string]: PURPLE }}
+            >
+              <span className="font-display text-xl font-bold leading-tight">
+                {t('reward_maze')}
+              </span>
+              <span className="flex items-center gap-1.5 font-body text-sm font-semibold text-white">
+                <span aria-hidden="true">🐭</span>
+                <span>{t('reward_maze_tagline')}</span>
+              </span>
+            </button>
           </div>
           <Image
             src="/kid/pointing-girl.png"

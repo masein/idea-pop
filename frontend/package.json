@@ -18,6 +18,7 @@
     "@hookform/resolvers": "^5.4.0",
     "@tensorflow-models/knn-classifier": "^1.2.6",
     "@tensorflow/tfjs": "^4.22.0",
+    "gifenc": "^1.0.3",
     "next": "^14.2.35",
     "next-intl": "^3.26.5",
     "openapi-fetch": "^0.13.5",

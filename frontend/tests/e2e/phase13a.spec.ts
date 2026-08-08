@@ -312,6 +312,16 @@ test.describe('axe — app pages', () => {
     await expect(page.getByTestId('classifier-privacy-note')).toBeVisible();
   });
 
+  test('library tool card opens the Animation Studio', async ({ page }) => {
+    await setCookie(page, 'ideapop_persona', 'kid');
+    page.route('**/api/library/**', (r) => r.fulfill({ json: [] }));
+    await page.goto('/en/library');
+    await page.getByTestId('tool-card-animation').click();
+    await page.waitForURL('**/studio/animate');
+    await expect(page.getByTestId('animator-start')).toBeVisible();
+    await expect(page.getByTestId('animator-privacy-note')).toBeVisible();
+  });
+
   test('challenges list page passes axe', async ({ page }) => {
     await setCookie(page, 'ideapop_persona', 'kid');
     page.route('**/api/challenges', (r) =>
@@ -461,6 +471,27 @@ test.describe('axe — app pages', () => {
     await expect(page.getByTestId('step-celebrate')).toBeVisible();
 
     expect(errors, `client-side exceptions: ${errors.join(' | ')}`).toEqual([]);
+  });
+
+  test('studio animate page passes axe (idle + open states)', async ({ page }) => {
+    await setCookie(page, 'ideapop_persona', 'kid');
+    // Fully on-device: no API mocks needed, and the GIF encoder only loads at
+    // export time, so this stays fast.
+    await page.goto('/en/studio/animate');
+    await expect(page.getByTestId('animator-start')).toBeVisible();
+    await expect(page.getByTestId('animator-privacy-note')).toBeVisible();
+    const idle = await new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
+      .analyze();
+    expect(idle.violations).toEqual([]);
+    // Open the studio (draw mode, empty filmstrip) and re-check.
+    await page.getByTestId('animator-start').click();
+    await expect(page.getByTestId('animator-canvas')).toBeVisible();
+    await expect(page.getByTestId('animator-count')).toBeVisible();
+    const open = await new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
+      .analyze();
+    expect(open.violations).toEqual([]);
   });
 
   test('studio classify page passes axe', async ({ page }) => {

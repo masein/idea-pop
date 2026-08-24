@@ -34,9 +34,9 @@ const LIME = "#CDEB5A";
 const DEEP = "#2E5F4B";
 
 const btnLime =
-  "inline-flex items-center justify-center rounded-pill font-display font-bold px-8 py-3 text-lg text-[#1F4D33] transition-all duration-150 hover:brightness-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1F4D33] focus-visible:ring-offset-2 select-none shadow-sm";
+  "inline-flex items-center justify-center rounded-pill font-display font-bold px-8 py-3 text-[clamp(0.9375rem,0.79rem+0.68vw,1.125rem)] text-[#1F4D33] transition-all duration-150 hover:brightness-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1F4D33] focus-visible:ring-offset-2 select-none shadow-sm";
 const btnWhite =
-  "inline-flex items-center justify-center rounded-pill font-display font-bold px-8 py-3 text-lg bg-white text-[#1F4D33] border border-[#1F4D33]/25 transition-all duration-150 hover:bg-[#F4FADD] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1F4D33] focus-visible:ring-offset-2 select-none shadow-sm";
+  "inline-flex items-center justify-center rounded-pill font-display font-bold px-8 py-3 text-[clamp(0.9375rem,0.79rem+0.68vw,1.125rem)] bg-white text-[#1F4D33] border border-[#1F4D33]/25 transition-all duration-150 hover:bg-[#F4FADD] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1F4D33] focus-visible:ring-offset-2 select-none shadow-sm";
 const btnOutlineGreen =
   "inline-flex items-center justify-center rounded-pill font-display font-bold px-8 py-2.5 text-base bg-white text-[#2E5F4B] border-2 border-[#2E5F4B]/70 transition-all duration-150 hover:bg-[#2E5F4B] hover:text-white active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2E5F4B] focus-visible:ring-offset-2 select-none";
 
@@ -58,31 +58,41 @@ export async function generateMetadata({ params: { locale } }: Props) {
 }
 
 /* Hero scene layers: [image, alt-less decorative] positioned in % of the
-   2880x1648 workshop canvas. Tuned to match the Figma composition. */
+   2880x1648 workshop canvas. Tuned to match the Figma composition.
+
+   Per the responsive spec, character WIDTHS are clamped px (not pure %):
+   between 768px (where the scene appears) and the 1440px design width they
+   track the viewport exactly like the old percentages, but they stop growing
+   past 1440 so characters keep the design's proportions on big monitors.
+   Positions stay percentages of the canvas. */
+const fluidWidth = (pct: number) =>
+  `clamp(${Math.round(pct * 7.68)}px, ${pct}vw, ${Math.round(pct * 14.4)}px)`;
+
 const heroLayers: Array<{
   src: typeof heroKid1;
   left?: string;
   right?: string;
   bottom?: string;
   top?: string;
-  width: string;
+  /** width as a percentage of the 1440px design canvas */
+  width: number;
   z?: number;
 }> = [
-  { src: heroWorm, left: "2.5%", bottom: "19%", width: "5%" },
-  { src: heroTurtle, left: "8.5%", bottom: "0.5%", width: "10%" },
-  { src: heroKid1, left: "9.5%", bottom: "5%", width: "13.5%", z: 2 },
-  { src: heroKid2, left: "21.5%", bottom: "9%", width: "12%", z: 2 },
-  { src: heroMechBird, left: "26.5%", bottom: "2.5%", width: "12%" },
-  { src: heroKid3, left: "34%", bottom: "7%", width: "13%", z: 2 },
-  { src: heroRopeBox, left: "37%", bottom: "0.5%", width: "10.5%" },
-  { src: heroBear, left: "43.5%", bottom: "4.5%", width: "10.5%", z: 3 },
-  { src: heroDeer, left: "47%", bottom: "19%", width: "10.5%" },
-  { src: heroCrab, left: "56%", bottom: "14%", width: "6%", z: 2 },
-  { src: heroPainting, left: "56.5%", bottom: "0.5%", width: "17%" },
-  { src: heroKid4, left: "64.5%", bottom: "6%", width: "13.5%", z: 2 },
-  { src: heroDino, left: "74.5%", bottom: "3%", width: "8.5%" },
-  { src: heroKid5, left: "84%", bottom: "3.5%", width: "12.5%", z: 2 },
-  { src: heroParrot, left: "70.5%", top: "12%", width: "12%" },
+  { src: heroWorm, left: "2.5%", bottom: "19%", width: 5 },
+  { src: heroTurtle, left: "8.5%", bottom: "0.5%", width: 10 },
+  { src: heroKid1, left: "9.5%", bottom: "5%", width: 13.5, z: 2 },
+  { src: heroKid2, left: "21.5%", bottom: "9%", width: 12, z: 2 },
+  { src: heroMechBird, left: "26.5%", bottom: "2.5%", width: 12 },
+  { src: heroKid3, left: "34%", bottom: "7%", width: 13, z: 2 },
+  { src: heroRopeBox, left: "37%", bottom: "0.5%", width: 10.5 },
+  { src: heroBear, left: "43.5%", bottom: "4.5%", width: 10.5, z: 3 },
+  { src: heroDeer, left: "47%", bottom: "19%", width: 10.5 },
+  { src: heroCrab, left: "56%", bottom: "14%", width: 6, z: 2 },
+  { src: heroPainting, left: "56.5%", bottom: "0.5%", width: 17 },
+  { src: heroKid4, left: "64.5%", bottom: "6%", width: 13.5, z: 2 },
+  { src: heroDino, left: "74.5%", bottom: "3%", width: 8.5 },
+  { src: heroKid5, left: "84%", bottom: "3.5%", width: 12.5, z: 2 },
+  { src: heroParrot, left: "70.5%", top: "12%", width: 12 },
 ];
 
 export default async function LandingPage({ params: { locale } }: Props) {
@@ -175,7 +185,7 @@ export default async function LandingPage({ params: { locale } }: Props) {
                   right: l.right,
                   bottom: l.bottom,
                   top: l.top,
-                  width: l.width,
+                  width: fluidWidth(l.width),
                   zIndex: l.z ?? 1,
                 }}
                 sizes="20vw"
@@ -183,23 +193,24 @@ export default async function LandingPage({ params: { locale } }: Props) {
             ))}
           </div>
 
-          {/* hero copy */}
+          {/* hero copy — fluid type per the designer's responsive spec
+              (clamp() from a 375px mobile floor to the 1440px design size) */}
           <div
-            className="absolute inset-x-0 top-[16%] md:top-[13%] z-10 px-4 text-center"
+            className="absolute inset-x-0 top-[16%] md:top-[13%] z-10 px-[clamp(1rem,-1rem+8vw,6rem)] text-center"
             dir={locale === "fa" ? "rtl" : "ltr"}
           >
-            <h1 className="font-display font-bold leading-tight text-4xl md:text-5xl lg:text-6xl">
+            <h1 className="font-display font-bold leading-tight text-[clamp(2rem,1.16rem+4.2vw,4rem)]">
               <span className="text-[#3FA33E]">{t("hero.headline_1")}</span>{" "}
               <span className="text-[#1E5B2E]">{t("hero.headline_2")}</span>
             </h1>
-            <p className="font-display font-bold text-2xl md:text-3xl mt-2">
+            <p className="font-display font-bold text-[clamp(1.375rem,0.87rem+2.5vw,2.5rem)] mt-[clamp(0.5rem,0.3rem+1vw,1.25rem)]">
               <span className="text-[#256B37]">{t("hero.sub_1")}</span>{" "}
               <span className="text-library">{t("hero.sub_2")}</span>
             </p>
-            <p className="font-body font-semibold text-[#2F4A38] text-sm md:text-base max-w-xl mx-auto mt-3">
+            <p className="font-body font-semibold text-[#2F4A38] text-[clamp(0.9375rem,0.79rem+0.68vw,1.125rem)] max-w-xl mx-auto mt-3">
               {t("hero.body")}
             </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-5">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-[clamp(1.5rem,1rem+2vw,2.5rem)]">
               <Link
                 href="/exploring"
                 className={btnLime}
@@ -211,7 +222,7 @@ export default async function LandingPage({ params: { locale } }: Props) {
                 {t("hero.cta_challenge")}
               </Link>
             </div>
-            <p className="font-body font-bold text-xs md:text-sm text-[#233D2C] mt-3">
+            <p className="font-body font-bold text-[clamp(0.6875rem,0.6rem+0.36vw,0.8125rem)] text-[#233D2C] mt-3">
               {t("hero.trust")}
             </p>
           </div>

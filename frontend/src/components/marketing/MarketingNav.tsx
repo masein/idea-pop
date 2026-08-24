@@ -7,7 +7,7 @@ import { Link } from "@/i18n/routing";
 import logoBadge from "../../../public/landing/idea-pop-logo.png";
 
 const pillLink =
-  "flex flex-col items-center gap-0.5 rounded-xl px-3 py-1 text-xs font-body font-bold text-ink/80 transition-colors hover:text-ink hover:bg-ink/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-explore";
+  "flex flex-col items-center gap-0.5 rounded-xl px-3 py-1 text-[clamp(0.75rem,0.66rem+0.4vw,0.875rem)] font-body font-bold text-ink/80 transition-colors hover:text-ink hover:bg-ink/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-explore";
 
 const ctaBase =
   "inline-flex items-center justify-center rounded-pill bg-[#CDEB5A] px-6 py-2.5 text-base font-display font-bold text-[#1F4D33] shadow-sm transition-all hover:brightness-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1F4D33] focus-visible:ring-offset-2";
@@ -80,7 +80,7 @@ export default function MarketingNav() {
 
         {/* Floating pill (desktop) */}
         <ul
-          className="hidden items-center gap-1 rounded-pill bg-white px-4 py-1.5 shadow-md md:flex"
+          className="hidden items-center gap-1 rounded-pill bg-white px-[clamp(1rem,0.8rem+1vw,1.75rem)] py-[clamp(0.5rem,0.4rem+0.5vw,0.75rem)] shadow-md md:flex"
           role="list"
         >
           {navLinks.map(({ label, href, icon }) => (

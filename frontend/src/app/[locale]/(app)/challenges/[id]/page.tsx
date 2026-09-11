@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams } from 'next/navigation';
+import { Link } from '@/i18n/routing';
 import { useTranslations } from 'next-intl';
 import { useAgeMode } from '@/lib/hooks/useAgeMode';
 import { useXpToast } from '@/lib/hooks/useXpToast';
@@ -151,9 +152,9 @@ export default function ChallengePage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-tint-blue gap-4 p-8">
         <p className="font-body text-ink/70">{fetchError ? t('load_error') : t('not_found')}</p>
-        <a href="/challenges" className="text-challenge font-body text-sm underline">
+        <Link href="/challenges" className="text-challenge font-body text-sm underline">
           {t('back_to_challenges')}
-        </a>
+        </Link>
       </div>
     );
   }

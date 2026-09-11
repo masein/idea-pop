@@ -24,9 +24,10 @@ function cellClass(v: string) {
 type Row = { feature: string; free: string; plus: string; family: string };
 type Faq = { q: string; a: string };
 
-type Props = { params: { locale: string } };
+type Props = { params: Promise<{ locale: string }> };
 
-export default async function PricingPage({ params: { locale } }: Props) {
+export default async function PricingPage({ params }: Props) {
+  const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "pricing" });
   const tm = await getTranslations({ locale, namespace: "marketing.pricing_teaser" });
 

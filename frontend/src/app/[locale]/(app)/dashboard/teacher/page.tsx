@@ -51,13 +51,13 @@ function DashboardHeader({ classData }: { classData: TeacherClass }) {
         <span className="rounded-pill bg-white px-4 py-2 font-body text-sm font-semibold text-ink shadow-sm">
           {classData.name}
         </span>
-        <a
+        <Link
           href="/onboarding/teacher"
           className="rounded-pill px-5 py-2 font-display text-sm font-bold text-white shadow-sm transition-all hover:brightness-110 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
           style={{ backgroundColor: DEEP }}
         >
           {t('add_class')}
-        </a>
+        </Link>
       </div>
     </div>
   );
@@ -251,9 +251,9 @@ function BringHomeBox() {
       </p>
       <p className="mt-1 font-body text-sm text-ink/70">
         {t('licensing_label')}{' '}
-        <a href="/for-teachers" className="font-bold text-[#2E5F4B] underline-offset-2 hover:underline">
+        <Link href="/for-teachers" className="font-bold text-[#2E5F4B] underline-offset-2 hover:underline">
           {t('licensing_cta')}
-        </a>
+        </Link>
       </p>
     </div>
   );

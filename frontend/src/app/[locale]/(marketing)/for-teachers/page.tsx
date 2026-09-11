@@ -16,9 +16,10 @@ import scientistGirl from "../../../../../public/landing/start-free-girl.png";
 const LIME = "#CDEB5A";
 const DEEP = "#2E5F4B";
 
-type Props = { params: { locale: string } };
+type Props = { params: Promise<{ locale: string }> };
 
-export async function generateMetadata({ params: { locale } }: Props) {
+export async function generateMetadata({ params }: Props) {
+  const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "for_teachers" });
   return {
     title: `${t("hero_heading")} — Idea Pop`,
@@ -29,7 +30,8 @@ export async function generateMetadata({ params: { locale } }: Props) {
 const btnLime =
   "inline-flex items-center justify-center rounded-pill font-display font-bold px-8 py-3 text-lg text-[#1F4D33] transition-all duration-150 hover:brightness-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1F4D33] focus-visible:ring-offset-2 select-none shadow-sm";
 
-export default async function ForTeachersPage({ params: { locale } }: Props) {
+export default async function ForTeachersPage({ params }: Props) {
+  const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "for_teachers" });
   const safeItems = t.raw("safe_items") as string[];
 

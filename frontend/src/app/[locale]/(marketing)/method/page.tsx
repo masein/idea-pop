@@ -5,7 +5,7 @@ const btnPrimaryLg =
   "inline-flex items-center justify-center rounded-pill font-body px-8 py-3.5 text-lg bg-explore text-white font-semibold transition-all duration-150 hover:brightness-110 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-explore focus-visible:ring-offset-2 select-none";
 
 type Props = {
-  params: { locale: string };
+  params: Promise<{ locale: string }>;
 };
 
 export async function generateMetadata() {
@@ -27,7 +27,8 @@ const powerEmojis: Record<string, string> = {
 
 const whatYouSeeIcons = ["📧", "🎬", "🧑‍🏫", "🏗️", "⭐"];
 
-export default async function MethodPage({ params: { locale } }: Props) {
+export default async function MethodPage({ params }: Props) {
+  const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "method" });
 
   const powers = t.raw("creativity.powers") as string[];

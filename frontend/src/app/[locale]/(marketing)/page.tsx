@@ -41,10 +41,11 @@ const btnOutlineGreen =
   "inline-flex items-center justify-center rounded-pill font-display font-bold px-8 py-2.5 text-base bg-white text-[#2E5F4B] border-2 border-[#2E5F4B]/70 transition-all duration-150 hover:bg-[#2E5F4B] hover:text-white active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2E5F4B] focus-visible:ring-offset-2 select-none";
 
 type Props = {
-  params: { locale: string };
+  params: Promise<{ locale: string }>;
 };
 
-export async function generateMetadata({ params: { locale } }: Props) {
+export async function generateMetadata({ params }: Props) {
+  const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "marketing.hero" });
   return {
     title: "Idea Pop — Ask nature. Build with your hands.",
@@ -95,7 +96,8 @@ const heroLayers: Array<{
   { src: heroParrot, left: "70.5%", top: "12%", width: 12 },
 ];
 
-export default async function LandingPage({ params: { locale } }: Props) {
+export default async function LandingPage({ params }: Props) {
+  const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "marketing" });
 
   const faqItems = t.raw("faq.items") as Array<{ q: string; a: string }>;

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { use, useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/routing';
 import { fetchCourse, fetchCreator } from '@/lib/api/client';
@@ -58,8 +58,13 @@ interface PageParams {
   id: string;
 }
 
-export default function CourseDetailPage({ params }: { params: PageParams }) {
-  const { id } = params;
+export default function CourseDetailPage({
+  params,
+}: {
+  params: Promise<PageParams>;
+}) {
+  // Client component: params is a promise in Next 15, unwrapped with use().
+  const { id } = use(params);
   const t = useTranslations('library');
   const tExplore = useTranslations('explore');
   const xpToast = useXpToast();

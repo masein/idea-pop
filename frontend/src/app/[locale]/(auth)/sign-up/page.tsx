@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useRouter } from "@/i18n/routing";
+import { Link, useRouter } from "@/i18n/routing";
 import { setPersona, type Persona } from "@/lib/auth/persona";
 
 const CHIP = "#2A2A2A";
@@ -105,12 +105,12 @@ export default function PersonaSelectPage() {
 
       <p className="mt-8 text-center font-body text-sm text-ink/70">
         {t("already")}{" "}
-        <a
+        <Link
           href="/login"
           className="font-bold text-[#1E5B2E] underline-offset-2 hover:underline"
         >
           {t("log_in")}
-        </a>
+        </Link>
       </p>
     </div>
   );

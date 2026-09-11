@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
+import { Link } from '@/i18n/routing';
 import KidProjectCard from './KidProjectCard';
 import AudiencePicker from '@/components/challenge/AudiencePicker';
 
@@ -67,14 +68,14 @@ export default function KidProjectsGrid({ projects, onVisibilityChanged }: KidPr
         <h2 className="font-display text-lg font-bold text-ink">{t('projects_heading')}</h2>
 
         {list.length === 0 ? (
-          <a
+          <Link
             href="/challenges"
             data-testid="projects-empty"
             className="flex aspect-[4/3] max-w-xs flex-col items-center justify-center gap-2 rounded-card border-2 border-dashed border-explore/50 text-ink/50 transition-colors hover:border-explore hover:text-explore focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-explore"
           >
             <span className="text-3xl text-explore" aria-hidden="true">+</span>
             <span className="font-body text-sm">{t('new_project')}</span>
-          </a>
+          </Link>
         ) : (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {list.map((project) => (

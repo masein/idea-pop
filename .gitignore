@@ -32,3 +32,6 @@ frontend/test-results/
 
 # Local docker-compose overrides (machine-specific ports/secrets)
 docker-compose.override.yml
+
+# Lighthouse CI run output
+frontend/.lighthouseci/

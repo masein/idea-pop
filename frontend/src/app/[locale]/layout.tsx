@@ -5,7 +5,7 @@ import { routing } from "@/i18n/routing";
 
 interface Props {
   children: React.ReactNode;
-  params: { locale: string };
+  params: Promise<{ locale: string }>;
 }
 
 export function generateStaticParams() {
@@ -13,7 +13,7 @@ export function generateStaticParams() {
 }
 
 export default async function LocaleLayout({ children, params }: Props) {
-  const { locale } = params;
+  const { locale } = await params;
 
   if (!routing.locales.includes(locale as "en" | "fa")) {
     notFound();

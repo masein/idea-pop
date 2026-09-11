@@ -1,6 +1,14 @@
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import createNextIntlPlugin from "next-intl/plugin";
 
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
+
+// Next 15 infers the workspace root from the nearest lockfiles. With a
+// package-lock.json in the repo root as well as here it picks the repo root,
+// which nests the standalone build under frontend/ and breaks the Dockerfile's
+// `node server.js`. Pin it so the output is the same wherever it is built.
+const projectRoot = path.dirname(fileURLToPath(import.meta.url));
 
 // Where /api/* requests are proxied (server-side). The backend serves its
 // routes WITHOUT the /api prefix; the frontend always calls same-origin
@@ -12,6 +20,7 @@ const API_URL = process.env.API_URL ?? "http://localhost:8080";
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: "standalone",
+  outputFileTracingRoot: projectRoot,
   reactStrictMode: true,
 
   async rewrites() {

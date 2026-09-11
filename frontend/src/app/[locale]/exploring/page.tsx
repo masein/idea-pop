@@ -50,9 +50,10 @@ const VERTEBRATES: Category[] = [
   { key: "mammals", avatar: mammalAvatar, icon: mammalIcon },
 ];
 
-type Props = { params: { locale: string } };
+type Props = { params: Promise<{ locale: string }> };
 
-export async function generateMetadata({ params: { locale } }: Props) {
+export async function generateMetadata({ params }: Props) {
+  const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "exploring" });
   return {
     title: `${t("title")} — Idea Pop`,
@@ -115,7 +116,8 @@ function CategoryCard({ name, cat }: { name: string; cat: Category }) {
   );
 }
 
-export default async function ExploringPage({ params: { locale } }: Props) {
+export default async function ExploringPage({ params }: Props) {
+  const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "exploring" });
 
   const grid = (cats: Category[]) => (

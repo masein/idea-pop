@@ -4,22 +4,9 @@ import { Link } from "@/i18n/routing";
 import PricingPlans from "./_components/PricingPlans";
 import AskIdeaPop from "./_components/AskIdeaPop";
 
-import heroBg from "../../../../public/landing/hero-bg.jpg";
-import heroKid1 from "../../../../public/landing/hero-kid-1.png";
-import heroKid2 from "../../../../public/landing/hero-kid-2.png";
-import heroKid3 from "../../../../public/landing/hero-kid-3.png";
-import heroKid4 from "../../../../public/landing/hero-kid-4.png";
-import heroKid5 from "../../../../public/landing/hero-kid-5.png";
-import heroBear from "../../../../public/landing/hero-bear.png";
-import heroDeer from "../../../../public/landing/hero-deer.png";
-import heroCrab from "../../../../public/landing/hero-crab.png";
-import heroTurtle from "../../../../public/landing/hero-turtle.png";
-import heroWorm from "../../../../public/landing/hero-worm.png";
-import heroDino from "../../../../public/landing/hero-dinasour.png";
-import heroParrot from "../../../../public/landing/hero-parrot.png";
-import heroMechBird from "../../../../public/landing/hero-mechanical-bird.png";
-import heroRopeBox from "../../../../public/landing/hero-rope-box.png";
-import heroPainting from "../../../../public/landing/hero-painting.png";
+// The designer's own composited workshop scene (2884×1648) — characters and
+// props are baked in, replacing the old bg + 15 runtime-positioned layers.
+import heroScene from "../../../../public/landing/hero-scene.webp";
 import paintingGirl from "../../../../public/landing/hero-painting-girl.jpg";
 import thinkingToolsAvatar from "../../../../public/landing/thinking-tools-avatar.png";
 import realMakesAvatar from "../../../../public/landing/real-makes-avatar.png";
@@ -33,10 +20,13 @@ import startFreeGirl from "../../../../public/landing/start-free-girl.png";
 const LIME = "#CDEB5A";
 const DEEP = "#2E5F4B";
 
+/* Spec: buttons are Montserrat ExtraBold #18785A. On the LIME button that
+   colour only hits 4.04:1 (fails AA at the mobile 15px size), so lime keeps
+   the darker #1F4D33; the white button takes the spec colour (5.4:1). */
 const btnLime =
-  "inline-flex items-center justify-center rounded-pill font-display font-bold px-8 py-3 text-[clamp(0.9375rem,0.79rem+0.68vw,1.125rem)] text-[#1F4D33] transition-all duration-150 hover:brightness-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1F4D33] focus-visible:ring-offset-2 select-none shadow-sm";
+  "inline-flex items-center justify-center rounded-pill [font-family:var(--font-montserrat)] font-extrabold px-8 py-3 text-[clamp(0.9375rem,0.79rem+0.68vw,1.125rem)] text-[#1F4D33] transition-all duration-150 hover:brightness-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1F4D33] focus-visible:ring-offset-2 select-none shadow-sm";
 const btnWhite =
-  "inline-flex items-center justify-center rounded-pill font-display font-bold px-8 py-3 text-[clamp(0.9375rem,0.79rem+0.68vw,1.125rem)] bg-white text-[#1F4D33] border border-[#1F4D33]/25 transition-all duration-150 hover:bg-[#F4FADD] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1F4D33] focus-visible:ring-offset-2 select-none shadow-sm";
+  "inline-flex items-center justify-center rounded-pill [font-family:var(--font-montserrat)] font-extrabold px-8 py-3 text-[clamp(0.9375rem,0.79rem+0.68vw,1.125rem)] bg-white text-[#18785A] border border-[#18785A]/25 transition-all duration-150 hover:bg-[#F4FADD] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#18785A] focus-visible:ring-offset-2 select-none shadow-sm";
 const btnOutlineGreen =
   "inline-flex items-center justify-center rounded-pill font-display font-bold px-8 py-2.5 text-base bg-white text-[#2E5F4B] border-2 border-[#2E5F4B]/70 transition-all duration-150 hover:bg-[#2E5F4B] hover:text-white active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2E5F4B] focus-visible:ring-offset-2 select-none";
 
@@ -58,43 +48,6 @@ export async function generateMetadata({ params }: Props) {
   };
 }
 
-/* Hero scene layers: [image, alt-less decorative] positioned in % of the
-   2880x1648 workshop canvas. Tuned to match the Figma composition.
-
-   Per the responsive spec, character WIDTHS are clamped px (not pure %):
-   between 768px (where the scene appears) and the 1440px design width they
-   track the viewport exactly like the old percentages, but they stop growing
-   past 1440 so characters keep the design's proportions on big monitors.
-   Positions stay percentages of the canvas. */
-const fluidWidth = (pct: number) =>
-  `clamp(${Math.round(pct * 7.68)}px, ${pct}vw, ${Math.round(pct * 14.4)}px)`;
-
-const heroLayers: Array<{
-  src: typeof heroKid1;
-  left?: string;
-  right?: string;
-  bottom?: string;
-  top?: string;
-  /** width as a percentage of the 1440px design canvas */
-  width: number;
-  z?: number;
-}> = [
-  { src: heroWorm, left: "2.5%", bottom: "19%", width: 5 },
-  { src: heroTurtle, left: "8.5%", bottom: "0.5%", width: 10 },
-  { src: heroKid1, left: "9.5%", bottom: "5%", width: 13.5, z: 2 },
-  { src: heroKid2, left: "21.5%", bottom: "9%", width: 12, z: 2 },
-  { src: heroMechBird, left: "26.5%", bottom: "2.5%", width: 12 },
-  { src: heroKid3, left: "34%", bottom: "7%", width: 13, z: 2 },
-  { src: heroRopeBox, left: "37%", bottom: "0.5%", width: 10.5 },
-  { src: heroBear, left: "43.5%", bottom: "4.5%", width: 10.5, z: 3 },
-  { src: heroDeer, left: "47%", bottom: "19%", width: 10.5 },
-  { src: heroCrab, left: "56%", bottom: "14%", width: 6, z: 2 },
-  { src: heroPainting, left: "56.5%", bottom: "0.5%", width: 17 },
-  { src: heroKid4, left: "64.5%", bottom: "6%", width: 13.5, z: 2 },
-  { src: heroDino, left: "74.5%", bottom: "3%", width: 8.5 },
-  { src: heroKid5, left: "84%", bottom: "3.5%", width: 12.5, z: 2 },
-  { src: heroParrot, left: "70.5%", top: "12%", width: 12 },
-];
 
 export default async function LandingPage({ params }: Props) {
   const { locale } = await params;
@@ -162,10 +115,16 @@ export default async function LandingPage({ params }: Props) {
     <div className="bg-[#F3FFC2]">
       {/* 1. Hero — composited workshop scene */}
       <section aria-label="hero" className="relative" dir="ltr">
-        <div className="relative w-full overflow-hidden min-h-[540px] md:min-h-0 md:aspect-[2880/1648]">
+        {/* The scene's own aspect would make the canvas only ~439px tall at
+            768 — shorter than the phone canvas, and too short for the copy —
+            so it keeps a floor until the aspect ratio overtakes it (~955px). */}
+        <div className="relative w-full overflow-hidden min-h-[540px] md:min-h-[34rem] md:aspect-[2884/1648]">
+          {/* One composited image; next/image serves responsive sizes from it.
+              Stored as WebP at the designer's full 2884×1648: the source PNG
+              was 5.3MB and took over a minute to run through the image
+              optimiser at w=2048, stalling the page load on retina screens. */}
           <Image
-                unoptimized
-            src={heroBg}
+            src={heroScene}
             alt=""
             fill
             priority
@@ -173,43 +132,25 @@ export default async function LandingPage({ params }: Props) {
             sizes="100vw"
           />
 
-          {/* scene layers (decorative) */}
-          <div aria-hidden="true" className="hidden md:block">
-            {heroLayers.map((l, i) => (
-              <Image
-                unoptimized
-                key={i}
-                src={l.src}
-                alt=""
-                className="absolute h-auto select-none pointer-events-none"
-                style={{
-                  left: l.left,
-                  right: l.right,
-                  bottom: l.bottom,
-                  top: l.top,
-                  width: fluidWidth(l.width),
-                  zIndex: l.z ?? 1,
-                }}
-                sizes="20vw"
-              />
-            ))}
-          </div>
-
           {/* hero copy — fluid type per the designer's responsive spec
-              (clamp() from a 375px mobile floor to the 1440px design size) */}
+              (clamp() from a 375px mobile floor to the 1440px design size).
+              The % keeps the copy composed with the artwork on tall canvases;
+              the px floor keeps it clear of the nav on short ones, where the
+              scene is only ~514px tall but the nav still needs ~152px. */}
           <div
-            className="absolute inset-x-0 top-[16%] md:top-[13%] z-10 px-[clamp(1rem,-1rem+8vw,6rem)] text-center"
+            className="absolute inset-x-0 top-[max(17.5%,7.9rem)] md:top-[max(17%,clamp(9.85rem,8.74rem+2.23vw,10.75rem))] z-10 px-[clamp(1rem,-1rem+8vw,6rem)] text-center"
             dir={locale === "fa" ? "rtl" : "ltr"}
           >
-            <h1 className="font-display font-bold leading-tight text-[clamp(2rem,1.16rem+4.2vw,4rem)]">
-              <span className="text-[#3FA33E]">{t("hero.headline_1")}</span>{" "}
-              <span className="text-[#1E5B2E]">{t("hero.headline_2")}</span>
+            {/* Cherry Bomb One ships a single 400 weight — the spec's Regular. */}
+            <h1 className="[font-family:var(--font-cherry)] font-normal leading-tight text-[clamp(2rem,1.16rem+4.2vw,4rem)]">
+              <span className="text-[#194D3D]">{t("hero.headline_1")}</span>{" "}
+              <span className="text-[#18785A]">{t("hero.headline_2")}</span>
             </h1>
-            <p className="font-display font-bold text-[clamp(1.375rem,0.87rem+2.5vw,2.5rem)] mt-[clamp(0.5rem,0.3rem+1vw,1.25rem)]">
-              <span className="text-[#256B37]">{t("hero.sub_1")}</span>{" "}
-              <span className="text-library">{t("hero.sub_2")}</span>
+            <p className="[font-family:var(--font-cherry)] font-normal text-[clamp(1.375rem,0.87rem+2.5vw,2.5rem)] mt-[clamp(0.5rem,0.3rem+1vw,1.25rem)]">
+              <span className="text-[#194D3D]">{t("hero.sub_1")}</span>{" "}
+              <span className="text-[#F2994A]">{t("hero.sub_2")}</span>
             </p>
-            <p className="font-body font-semibold text-[#2F4A38] text-[clamp(0.9375rem,0.79rem+0.68vw,1.125rem)] max-w-xl mx-auto mt-3">
+            <p className="[font-family:var(--font-adlam)] font-normal text-[#4F4F4F] text-[clamp(0.9375rem,0.79rem+0.68vw,1.125rem)] max-w-xl mx-auto mt-3">
               {t("hero.body")}
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-[clamp(1.5rem,1rem+2vw,2.5rem)]">
@@ -224,7 +165,9 @@ export default async function LandingPage({ params }: Props) {
                 {t("hero.cta_challenge")}
               </Link>
             </div>
-            <p className="font-body font-bold text-[clamp(0.6875rem,0.6rem+0.36vw,0.8125rem)] text-[#233D2C] mt-3">
+            {/* On phones the composited scene sits right behind this line —
+                a translucent pill keeps it readable over the characters. */}
+            <p className="[font-family:var(--font-adlam)] font-normal text-[clamp(0.6875rem,0.6rem+0.36vw,0.8125rem)] text-[#4F4F4F] mt-3 max-md:mx-auto max-md:w-fit max-md:rounded-pill max-md:bg-white/75 max-md:px-3 max-md:py-1 max-md:backdrop-blur-[2px]">
               {t("hero.trust")}
             </p>
           </div>

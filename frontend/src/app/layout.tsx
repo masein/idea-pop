@@ -1,5 +1,12 @@
 import type { Metadata } from "next";
-import { Baloo_2, Nunito, Cherry_Bomb_One, Montserrat, Vazirmatn } from "next/font/google";
+import {
+  ADLaM_Display,
+  Baloo_2,
+  Cherry_Bomb_One,
+  Montserrat,
+  Nunito,
+  Vazirmatn,
+} from "next/font/google";
 import { getLocale } from "next-intl/server";
 import "./globals.css";
 
@@ -12,6 +19,13 @@ const baloo = Baloo_2({
 const nunito = Nunito({
   subsets: ["latin", "latin-ext"],
   variable: "--font-nunito",
+  display: "swap",
+});
+// Marketing body/nav per the hero responsive spec (single 400 weight).
+const adlam = ADLaM_Display({
+  subsets: ["latin"],
+  weight: "400",
+  variable: "--font-adlam",
   display: "swap",
 });
 
@@ -53,7 +67,7 @@ export default async function RootLayout({
     <html
       lang={locale}
       dir={dir}
-      className={`${baloo.variable} ${nunito.variable} ${cherry.variable} ${montserrat.variable} ${vazir.variable}`}
+      className={`${baloo.variable} ${nunito.variable} ${adlam.variable} ${cherry.variable} ${montserrat.variable} ${vazir.variable}`}
     >
       <body className="font-body text-ink antialiased">
         <a href="#main-content" className="skip-nav">

@@ -7,13 +7,15 @@ const intlMiddleware = createMiddleware(routing);
 // Every in-app route requires a session. A logged-out visitor is redirected to
 // sign-up rather than being shown the (fake) logged-in kid shell. Marketing
 // routes (/, /method, /pricing, /for-teachers, /sign-up, /login) stay public.
+// /challenges is public too: logged-out visitors get the sample mission they are
+// promised on the home page, and are asked to sign up only when they save or
+// share an idea. Signed-in kids still get the in-app missions list there.
 const PROTECTED_PREFIXES = [
   "/dashboard",
   "/onboarding",
   "/profile",
   "/explore",
   "/library",
-  "/challenges",
   "/studio",
 ];
 

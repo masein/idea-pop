@@ -7,20 +7,19 @@ import { Link } from "@/i18n/routing";
 import logoBadge from "../../../public/landing/idea-pop-logo.png";
 
 /* Spec: nav links ADLaM Display #18785A (5.4:1 on the white pill); the Start
-   free CTA is Montserrat ExtraBold at the fluid button size — it keeps the
-   darker #1F4D33 because the spec's #18785A only hits 4.04:1 on lime.
-   Every size in the bar is the spec value × 1.05: the designer wanted the
-   whole nav a touch larger than the hero spec table's baseline. */
+   free CTA is Montserrat ExtraBold #18785A too — the designer's call, though
+   it's ~4.2:1 on the #D1EF5A lime. */
 const pillLink =
-  "flex flex-col items-center gap-1 rounded-xl px-3 py-1 text-[clamp(0.919rem,0.83rem+0.53vw,1.05rem)] [font-family:var(--font-adlam)] font-normal text-[#18785A] transition-colors hover:text-[#194D3D] hover:bg-ink/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-explore";
+  "flex flex-col items-center gap-1 rounded-xl px-2 py-0.5 text-[clamp(0.75rem,0.68rem+0.4vw,0.875rem)] [font-family:var(--font-adlam)] font-normal text-[#18785A] transition-colors hover:text-[#194D3D] hover:bg-ink/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-explore";
 
+// The 1px stroke is an inset shadow (Figma "inside"), so it doesn't change the button's size.
 const ctaBase =
-  "inline-flex items-center justify-center whitespace-nowrap rounded-pill bg-[#CDEB5A] px-[2.1rem] py-[0.7875rem] text-[clamp(0.984rem,0.756rem+0.95vw,1.3125rem)] [font-family:var(--font-montserrat)] font-extrabold text-[#1F4D33] shadow-sm transition-all hover:brightness-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1F4D33] focus-visible:ring-offset-2";
+  "inline-flex items-center justify-center whitespace-nowrap rounded-pill bg-[#D1EF5A] px-[1.89rem] py-[0.709rem] text-[clamp(0.886rem,0.68rem+0.855vw,1.181rem)] [font-family:var(--font-montserrat)] font-extrabold text-[#18785A] shadow-[inset_0_0_0_1px_#194D3D,0_4px_4px_rgba(0,0,0,0.25)] transition-all hover:brightness-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1F4D33] focus-visible:ring-offset-2";
 
 function NavIcon({ d }: { d: string }) {
   return (
     <svg
-      className="h-[1.575rem] w-[1.575rem]"
+      className="h-[1.2rem] w-[1.2rem]"
       fill="none"
       viewBox="0 0 24 24"
       stroke="currentColor"
@@ -69,14 +68,15 @@ export default function MarketingNav() {
           narrow tablet the wider side keeps its content and the pill drifts a
           few px rather than the row overflowing. */}
       <nav
-        className="mx-auto flex max-w-6xl items-center gap-3 px-4 pb-4 pt-[clamp(1.5rem,0.97rem+2.25vw,3rem)]"
+        className="mx-auto flex max-w-6xl items-center gap-3 px-4 pb-4 pt-[clamp(1.5rem,0.97rem+2.25vw,3rem)] md:pt-3"
         aria-label="Main navigation"
       >
         <div className="flex flex-1 justify-start">
+          {/* md: -top centres the logo on the CTA; the PNG's ~14px transparent margin keeps the circle itself on-screen. */}
           <Link
             href="/"
             aria-label="Idea Pop home"
-            className="shrink-0 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-explore"
+            className="shrink-0 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-explore md:relative md:-top-[1.115rem]"
           >
             <Image
               unoptimized
@@ -90,9 +90,12 @@ export default function MarketingNav() {
           </Link>
         </div>
 
-        {/* Floating pill (desktop) */}
+        {/* Floating pill (desktop) — positioned directly against the header
+            (which is itself the nearest positioned ancestor, being
+            absolute), so it's dead-centered on the viewport regardless of
+            the logo/CTA width imbalance, and sits near the top of the hero. */}
         <ul
-          className="hidden items-center gap-1 rounded-pill bg-white px-[clamp(1.05rem,0.84rem+1.05vw,1.8375rem)] py-[clamp(0.525rem,0.42rem+0.53vw,0.7875rem)] shadow-md md:flex"
+          className="hidden items-center gap-1 rounded-pill bg-white px-[clamp(0.75rem,0.6rem+0.75vw,1.25rem)] py-[clamp(0.35rem,0.28rem+0.35vw,0.5rem)] shadow-[inset_0_0_0_1px_#D1EF5A,0_4px_4px_rgba(0,0,0,0.25)] md:flex md:absolute md:left-1/2 md:top-3 md:-translate-x-1/2"
           role="list"
         >
           {navLinks.map(({ label, href, icon }) => (
@@ -105,8 +108,8 @@ export default function MarketingNav() {
           ))}
         </ul>
 
-        {/* Right side: CTA on desktop, hamburger on mobile. */}
-        <div className="flex flex-1 items-center justify-end">
+        {/* Right side: CTA on desktop, hamburger on mobile. md: the nav's pt-3 and this mt centre the CTA on the capsule (top-3). */}
+        <div className="flex flex-1 items-center justify-end md:mt-[0.41rem] md:self-start">
           <div className="hidden md:block">
             <Link href="/sign-up" className={ctaBase}>
               {t("start_free")}
@@ -174,7 +177,7 @@ export default function MarketingNav() {
             <li className="pt-1">
               <Link
                 href="/sign-up"
-                className="block w-full rounded-pill bg-[#CDEB5A] px-[2.1rem] py-[0.7875rem] text-center text-[clamp(0.984rem,0.756rem+0.95vw,1.3125rem)] [font-family:var(--font-montserrat)] font-extrabold text-[#1F4D33] transition-all hover:brightness-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1F4D33] focus-visible:ring-offset-2"
+                className="block w-full rounded-pill bg-[#D1EF5A] px-[2.1rem] py-[0.7875rem] text-center text-[clamp(0.984rem,0.756rem+0.95vw,1.3125rem)] [font-family:var(--font-montserrat)] font-extrabold text-[#18785A] shadow-[inset_0_0_0_1px_#194D3D,0_4px_4px_rgba(0,0,0,0.25)] transition-all hover:brightness-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1F4D33] focus-visible:ring-offset-2"
                 onClick={() => setMenuOpen(false)}
               >
                 {t("start_free")}

@@ -40,14 +40,19 @@
   "marketing": {
     "hero": {
       "headline_1": "Ask nature,",
+      "headline_1_pre": "Ask ",
+      "headline_1_word": "nature",
+      "headline_1_post": ",",
       "headline_2": "How?",
       "sub_1": "Build with your",
       "sub_2": "hands",
-      "body": "Your child solves one real problem every week — with design thinking, nature's secrets and home materials. Ages 8+",
+      "body_1_pre": "Your child solves one ",
+      "body_1_word": "real problem",
+      "body_1_post": " every week —",
+      "body_2": "with design thinking, nature's secrets and home materials. Ages 8+",
       "subhead": "Your child solves one real problem every week — with design thinking, nature's secrets and home materials. Ages 8+",
       "cta_explore": "Start Exploring",
-      "cta_challenge": "Start a simple challenge",
-      "trust": "✓ No ads ✓ Private by default ✓ Cancel anytime ✓ COPPA-friendly"
+      "cta_challenge": "Start a simple challenge"
     },
     "year": {
       "heading": "What a year of Idea Pop looks like",
@@ -58,7 +63,7 @@
       "card3_title": "Portfolio + certificate",
       "card3_sub": "proof of creative growth",
       "steps_label": "mission steps:",
-      "steps": "1 Brief · 2 Watch? · 3 Idea · 4 Secret · 5 Re-ask · 6 My idea · 7 Build & test · 8 Celebrate"
+      "steps": "1 Brief · 2 Watch · 3 Idea · 4 Secret · 5 re ask · 6 My idea · 7 Build & test · 8 Celebrate"
     },
     "cycle": {
       "heading": "How it works — the creative cycle",
@@ -83,22 +88,33 @@
       "spine_4": "Make Ideas Tangible",
       "spine_5": "Test to Learn",
       "spine_6": "Share the Story",
-      "spine_credit": "IDEO design thinking process",
+      "spine_credit": "Inspired by IDEO's design thinking process",
       "path_heading": "The 3-year path",
-      "path_line1": "Year 1 · Toolbox 🧰 → Year 2 · Studio mastery 🎓 → Year 3 · Real impact 🌍",
-      "path_line2": "🤠 Explorer → 🛠️ Maker → 💡 Inventor → 🚀 Innovator → 🥇 Master → 🧑‍🏫 Mentor",
+      "path_year_1": "Year 1",
+      "path_year_1_title": "Toolbox",
+      "path_year_2": "Year 2",
+      "path_year_2_title": "Studio mastery",
+      "path_year_3": "Year 3",
+      "path_year_3_title": "Real impact",
+      "path_rank_1": "Explorer",
+      "path_rank_2": "Maker",
+      "path_rank_3": "Inventor",
+      "path_rank_4": "Innovator",
+      "path_rank_5": "Master",
+      "path_rank_6": "Mentor",
       "cta": "See the method"
     },
     "try_now": {
       "heading": "Try one mission right now",
-      "body": "Help Max cross the river — 60 seconds",
-      "cta": "Start the challenge"
+      "body": "Max has to get to school every day, but a wide river is in the way.",
+      "body2": "Help him find a way across — 60 seconds, no account needed.",
+      "cta": "Start the mission"
     },
     "kids_made": {
       "heading": "Made by kids this month"
     },
     "experts": {
-      "heading": "Real experts. making lessons.",
+      "heading": "Real experts make the lessons",
       "e1_name": "Ms. Ronasi",
       "e1_role": "illustrator",
       "e2_name": "Dr. Kian",
@@ -107,7 +123,8 @@
       "e3_role": "CEO of Netix system",
       "e4_name": "Eng. Lina",
       "e4_role": "maker",
-      "note": "Every lesson is reviewed by our education team before it goes live · 🤖 AI-assisted films are labeled"
+      "note1": "Our education team reviews every lesson before it goes live.",
+      "note2": "Films made with AI help are labeled."
     },
     "pricing_teaser": {
       "heading": "Start free. Upgrade when your kids enjoy it.",

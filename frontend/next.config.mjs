@@ -28,6 +28,8 @@ const nextConfig = {
   },
 
   images: {
+    // Default widths + 2560, so the ~2190px-wide hero doesn't jump from the 2048px copy to 3840px.
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 2560, 3840],
     remotePatterns: [
       // Local MinIO (dev)
       { protocol: "http", hostname: "localhost", port: "9000" },

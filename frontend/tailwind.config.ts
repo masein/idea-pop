@@ -40,7 +40,7 @@ const config: Config = {
       fontFamily: {
         // Indirection: --font-display/--font-body default to Baloo 2 / Nunito
         // (marketing), and the app shell overrides them to Cherry Bomb One /
-        // Montserrat (and Vazirmatn for fa). See globals.css.
+        // Montserrat (and Playpen Sans Arabic for fa). See globals.css.
         display: ["var(--font-display)", "system-ui", "sans-serif"],
         body: ["var(--font-body)", "system-ui", "sans-serif"],
       },

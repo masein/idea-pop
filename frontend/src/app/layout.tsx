@@ -5,7 +5,7 @@ import {
   Cherry_Bomb_One,
   Montserrat,
   Nunito,
-  Vazirmatn,
+  Playpen_Sans_Arabic,
 } from "next/font/google";
 import { getLocale } from "next-intl/server";
 import "./globals.css";
@@ -42,12 +42,14 @@ const montserrat = Montserrat({
   variable: "--font-montserrat",
   display: "swap",
 });
-// Persian companion (fa locale) — carries the glyphs the app fonts lack.
-const vazir = Vazirmatn({
+// Persian (fa locale): Playpen Sans Arabic, the designer's choice. None of the Latin fonts above carry Persian glyphs.
+// A variable font (weights 100–800), so every weight the pages use comes from one file.
+const persian = Playpen_Sans_Arabic({
   subsets: ["arabic"],
-  weight: ["400", "500", "700", "800"],
-  variable: "--font-vazir",
+  variable: "--font-persian",
   display: "swap",
+  // next/font has no metrics for this family to build a size-matched fallback (it warns at build time otherwise)
+  adjustFontFallback: false,
 });
 
 export const metadata: Metadata = {
@@ -67,7 +69,7 @@ export default async function RootLayout({
     <html
       lang={locale}
       dir={dir}
-      className={`${baloo.variable} ${nunito.variable} ${adlam.variable} ${cherry.variable} ${montserrat.variable} ${vazir.variable}`}
+      className={`${baloo.variable} ${nunito.variable} ${adlam.variable} ${cherry.variable} ${montserrat.variable} ${persian.variable}`}
     >
       <body className="font-body text-ink antialiased">
         <a href="#main-content" className="skip-nav">

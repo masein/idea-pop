@@ -6,10 +6,15 @@ import ParentLetterForm from "./ParentLetterForm";
 import logoBadge from "../../../public/landing/idea-pop-logo.png";
 import logoText from "../../../public/landing/idea-pop-text.svg";
 
+// Figma: column headings Montserrat Bold 15 in #D1EF5A, links in #F3FFC2; links follow the quiet-link hover
+// (2px underline and a small lift that does not move the list).
 const colHeading =
-  "mb-3 text-xs font-bold uppercase tracking-widest text-[#CDEB5A]";
+  "mb-1 [font-family:var(--font-montserrat)] text-[15px] font-bold uppercase text-[#D1EF5A]";
 const colLink =
-  "text-sm text-white/75 hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#CDEB5A] rounded";
+  "inline-block origin-left rtl:origin-right [font-family:var(--font-montserrat)] text-[15px] font-semibold text-[#F3FFC2] transition-all duration-150 hover:text-white hover:underline hover:decoration-2 hover:underline-offset-4 hover:scale-[1.08] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D1EF5A] rounded";
+// The small print: Figma sets 9.5px, raised to 12px so the Privacy and Terms links stay readable.
+const smallPrint =
+  "[font-family:var(--font-montserrat)] text-[12px] font-bold text-[#F3FFC2]";
 
 export default async function Footer() {
   const t = await getTranslations("footer");
@@ -61,10 +66,10 @@ export default async function Footer() {
 
   return (
     <footer
-      className="bg-[#2E5F4B] text-white"
+      className="bg-[#2E574D] text-white"
       data-testid="site-footer"
     >
-      <div className="mx-auto max-w-6xl px-4 py-12">
+      <div className="mx-auto max-w-[1340px] px-4 pt-[76px] pb-12">
         {/* Top row: logo + newsletter */}
         <div className="flex flex-col gap-8 md:flex-row md:items-start md:justify-between">
           <div className="flex items-center gap-3">
@@ -74,7 +79,7 @@ export default async function Footer() {
               alt=""
               width={111}
               height={111}
-              className="h-14 w-14"
+              className="h-20 w-20"
               aria-hidden="true"
             />
             <div>
@@ -84,29 +89,29 @@ export default async function Footer() {
                 alt="Idea Pop"
                 width={156}
                 height={41}
-                className="h-8 w-auto"
+                className="h-10 w-auto"
               />
-              <p className="mt-1 font-display text-xs font-bold text-[#CDEB5A]">
+              <p className="mt-1 [font-family:var(--font-cherry)] text-[14px] text-[#D1EF5A]">
                 {t("tagline")}
               </p>
             </div>
           </div>
 
-          <div className="max-w-sm">
-            <p className="mb-2 text-sm font-bold text-white">
+          <div className="w-full max-w-[440px]">
+            <p className="mb-2 [font-family:var(--font-montserrat)] text-[12px] font-bold text-[#D7F26A]">
               {t("newsletter_heading")}
             </p>
             <ParentLetterForm />
-            <p className="mt-2 text-xs text-white/75">{t("newsletter_note")}</p>
+            <p className="mt-2 [font-family:var(--font-montserrat)] text-[12px] font-medium text-[#F3FFC2]">{t("newsletter_note")}</p>
           </div>
         </div>
 
         {/* Link columns */}
-        <div className="mt-10 grid grid-cols-2 gap-8 border-t border-white/15 pt-8 lg:grid-cols-4">
+        <div className="mt-10 grid grid-cols-2 gap-8 border-t-[0.5px] border-[#F3FFC2] pt-8 lg:grid-cols-4">
           {columns.map((col) => (
             <div key={col.heading}>
               <h3 className={colHeading}>{col.heading}</h3>
-              <ul className="space-y-2" role="list">
+              <ul className="space-y-1" role="list">
                 {col.links.map(({ label, href }, i) => (
                   <li key={`${href}-${i}`}>
                     {/* prefetch off: several targets are app routes that need
@@ -130,7 +135,7 @@ export default async function Footer() {
           {trustBadges.map((badge) => (
             <span
               key={badge}
-              className="rounded-pill bg-white/10 px-4 py-2 text-center text-xs font-semibold text-white/90"
+              className="flex min-h-[34px] items-center justify-center rounded-pill bg-[#2F4E45] px-4 text-center [font-family:var(--font-montserrat)] text-[12px] font-bold text-[#D7F26A]"
             >
               {badge}
             </span>
@@ -138,20 +143,20 @@ export default async function Footer() {
         </div>
 
         {/* Bottom bar */}
-        <div className="mt-10 flex flex-col items-center justify-between gap-4 border-t border-white/15 pt-6 sm:flex-row">
+        <div className="mt-10 flex flex-col items-center justify-between gap-4 border-t-[0.5px] border-[#F3FFC2] pt-6 sm:flex-row">
           <div className="flex flex-wrap items-center gap-3">
-            <p className="text-xs text-white/75">
+            <p className={smallPrint}>
               {t("legal", { year: String(year) })}
             </p>
-            <Link href="/legal/privacy" className="text-xs text-white/75 hover:text-white transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#CDEB5A]">
+            <Link href="/legal/privacy" className={`${smallPrint} rounded hover:text-white hover:underline hover:decoration-2 hover:underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D1EF5A]`}>
               {t("links2.privacy")}
             </Link>
-            <Link href="/legal/terms" className="text-xs text-white/75 hover:text-white transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#CDEB5A]">
+            <Link href="/legal/terms" className={`${smallPrint} rounded hover:text-white hover:underline hover:decoration-2 hover:underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D1EF5A]`}>
               {t("links.terms")}
             </Link>
             <LocaleSwitcher />
           </div>
-          <p className="text-xs text-white/75">{t("madewith")}</p>
+          <p className={smallPrint}>{t("madewith")}</p>
         </div>
       </div>
     </footer>

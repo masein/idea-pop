@@ -8,7 +8,8 @@
     "pricing": "Pricing",
     "for_teachers": "For Teachers",
     "sign_up": "Sign up",
-    "start_free": "Start free"
+    "start_free": "Start free",
+    "language": "Language"
   },
   "home": {
     "tagline": "Ask nature. Build with your hands.",
@@ -19,7 +20,7 @@
   },
   "mascot": {
     "ask_me": "Ask Me",
-    "greeting": "Hi, I'm Idea Pop!"
+    "greeting": "Hi, I'm Idea PopI"
   },
   "themes": {
     "label": "Themes",
@@ -46,11 +47,11 @@
       "headline_2": "How?",
       "sub_1": "Build with your",
       "sub_2": "hands",
-      "body_1_pre": "Your child solves one ",
+      "body_1_pre": "Every week, your child solves one ",
       "body_1_word": "real problem",
-      "body_1_post": " every week —",
-      "body_2": "with design thinking, nature's secrets and home materials. Ages 8+",
-      "subhead": "Your child solves one real problem every week — with design thinking, nature's secrets and home materials. Ages 8+",
+      "body_1_post": ".",
+      "body_2": "They learn from nature and build with things from home. Ages 8+",
+      "subhead": "Every week, your child solves one real problem. They learn from nature and build with things from home. Ages 8+",
       "cta_explore": "Start Exploring",
       "cta_challenge": "Start a simple challenge"
     },
@@ -165,28 +166,28 @@
       "items": [
         {
           "q": "What age is it for?",
-          "a": "8+, with age-tuned modes up to teens"
+          "a": "Ages 8 and up, with modes that grow with your child into the teens."
         },
         {
-          "q": "How much time per week?",
-          "a": "one 5-min film + one mission (~45 min)"
+          "q": "Is it safe for my children?",
+          "a": "Yes. Profiles are private, and photos show the project, not faces."
         },
         {
           "q": "Do we need special materials?",
-          "a": "no, just home stuff"
+          "a": "No, everything is made from things you have at home."
         },
         {
-          "q": "More than one child?",
-          "a": "Family plan, 4 profiles"
+          "q": "Can more than one child use it?",
+          "a": "Yes, the Family plan covers up to 4 children."
         },
         {
-          "q": "I'm a teacher — is it free?",
-          "a": "yes, classes are free"
+          "q": "I'm a teacher. Is it free?",
+          "a": "Yes, classes are free for teachers."
         }
       ]
     },
     "ask": {
-      "heading": "Hi, I'm Idea Pop!",
+      "heading": "Hi, I'm Idea PopI",
       "sub": "Do you have any question?!",
       "placeholder": "Ask me anything you like...",
       "input_label": "Your question for Idea Pop",
@@ -460,7 +461,7 @@
   },
   "footer": {
     "product": "Product",
-    "safety": "Safety",
+    "safety": "Parents & safety",
     "stay_close": "Stay close",
     "links": {
       "method": "The Method",
@@ -485,7 +486,7 @@
     "locale_en": "EN",
     "locale_fa": "فا",
     "tagline": "Ask nature, How? Build, with your hands",
-    "newsletter_heading": "Monthly ideas for curious families 📮",
+    "newsletter_heading": "Monthly ideas for curious families",
     "newsletter_note": "adults only · one email a month · unsubscribe anytime",
     "method_col": "The Method",
     "company": "Company",

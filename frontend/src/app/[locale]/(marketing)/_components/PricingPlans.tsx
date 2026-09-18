@@ -44,8 +44,9 @@ export default function PricingPlans({ labels }: { labels: PricingLabels }) {
 
   return (
     <div data-testid="landing-pricing">
-      {/* Billing period toggle */}
-      <div className="flex justify-center mb-10">
+      {/* Billing period toggle. Motion (landing motion.css): the switch grows in, Plus pops out in the middle, then Free and
+          Family grow in on either side. */}
+      <div className="flex justify-center mb-10" data-reveal="grow">
         <div
           className="inline-flex items-center rounded-pill bg-[#EEFFA9] border border-[#18785A] p-1"
           role="group"
@@ -76,7 +77,7 @@ export default function PricingPlans({ labels }: { labels: PricingLabels }) {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto items-start">
         {/* Free */}
-        <div className="rounded-card bg-white border-[3px] border-[#18785A] p-6 flex flex-col">
+        <div className="rounded-card bg-white border-[3px] border-[#18785A] p-6 flex flex-col" data-reveal="grow" style={{ "--motion-delay": "300ms" } as React.CSSProperties}>
           <p className="font-display font-bold text-xl text-ink mb-4">
             {labels.freeName}{" "}
             <span className="font-display">{labels.freePrice}</span>
@@ -91,14 +92,14 @@ export default function PricingPlans({ labels }: { labels: PricingLabels }) {
           </ul>
           <Link
             href="/sign-up"
-            className="inline-flex items-center justify-center rounded-pill font-body font-bold px-6 py-2.5 text-sm border-2 border-[#2E5F4B]/60 text-[#2E5F4B] bg-white transition-all hover:bg-[#F4FADD] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2E5F4B] focus-visible:ring-offset-2 shadow-[0_4px_4px_rgba(0,0,0,0.25)]"
+            className="inline-flex items-center justify-center rounded-pill [font-family:var(--font-montserrat)] font-extrabold px-6 py-3 text-[16px] border border-[#18785A] text-[#146047] bg-white transition-all duration-150 hover:bg-[#F4FADD] hover:border-2 hover:scale-[1.11] active:scale-[0.97] active:bg-[#E3EFC4] active:text-[#0F4C39] active:border-2 active:border-[#0F4C39] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#18785A] focus-visible:ring-offset-2 shadow-[0_4px_4px_rgba(0,0,0,0.25)]"
           >
             {labels.ctaFree}
           </Link>
         </div>
 
         {/* Plus */}
-        <div className="relative rounded-card bg-white border-[3px] border-[#CDEB5A] shadow-lg p-6 flex flex-col">
+        <div className="relative rounded-card bg-white border-[3px] border-[#CDEB5A] shadow-lg p-6 flex flex-col" data-reveal="pop">
           <span className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-pill bg-[#D1EF5A] px-4 py-[6px] [font-family:var(--font-montserrat)] text-[13px] font-bold text-[#146047] whitespace-nowrap">
             {labels.badgePopular}
           </span>
@@ -122,14 +123,14 @@ export default function PricingPlans({ labels }: { labels: PricingLabels }) {
           </ul>
           <Link
             href="/sign-up"
-            className="inline-flex items-center justify-center rounded-pill font-body font-bold px-6 py-2.5 text-sm bg-[#CDEB5A] text-[#1F4D33] transition-all hover:brightness-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1F4D33] focus-visible:ring-offset-2 shadow-[0_4px_4px_rgba(0,0,0,0.25)]"
+            className="inline-flex items-center justify-center rounded-pill [font-family:var(--font-montserrat)] font-extrabold px-6 py-3 text-[16px] bg-[#D1EF5A] text-[#1F4D33] transition-all duration-150 hover:brightness-105 hover:scale-[1.11] hover:shadow-[inset_0_0_0_2px_#18785A,0_4px_4px_rgba(0,0,0,0.25)] active:scale-[0.97] active:bg-[#B8D24F] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1F4D33] focus-visible:ring-offset-2 shadow-[inset_0_0_0_1px_#18785A,0_4px_4px_rgba(0,0,0,0.25)]"
           >
             {labels.ctaPlus}
           </Link>
         </div>
 
         {/* Family */}
-        <div className="relative rounded-card bg-white border-[3px] border-[#18785A] p-6 flex flex-col">
+        <div className="relative rounded-card bg-white border-[3px] border-[#18785A] p-6 flex flex-col" data-reveal="grow" style={{ "--motion-delay": "300ms" } as React.CSSProperties}>
           <span className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-pill bg-white border border-[#18785A] px-4 py-[6px] [font-family:var(--font-montserrat)] text-[13px] font-bold text-[#18785A] whitespace-nowrap">
             {labels.badgeValue}
           </span>
@@ -153,7 +154,7 @@ export default function PricingPlans({ labels }: { labels: PricingLabels }) {
           </ul>
           <Link
             href="/sign-up"
-            className="inline-flex items-center justify-center rounded-pill font-body font-bold px-6 py-2.5 text-sm bg-[#2E5F4B] text-white transition-all hover:brightness-110 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2E5F4B] focus-visible:ring-offset-2 shadow-[0_4px_4px_rgba(0,0,0,0.25)]"
+            className="inline-flex items-center justify-center rounded-pill [font-family:var(--font-montserrat)] font-extrabold px-6 py-3 text-[16px] border border-[#18785A] text-[#146047] bg-white transition-all duration-150 hover:bg-[#F4FADD] hover:border-2 hover:scale-[1.11] active:scale-[0.97] active:bg-[#E3EFC4] active:text-[#0F4C39] active:border-2 active:border-[#0F4C39] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#18785A] focus-visible:ring-offset-2 shadow-[0_4px_4px_rgba(0,0,0,0.25)]"
           >
             {labels.ctaFamily}
           </Link>

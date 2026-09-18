@@ -1,0 +1,253 @@
+/* Landing page motion, modelled on the arpeggio.framer.website template the designer picked:
+   - on load, the hero scene zooms out from 1.2× while the copy rises in on a spring, one line after another;
+   - below the hero, every block grows out from its own centre: rows open from the middle item outward, panels open
+     out of a rounded shape in their middle, pictures zoom out as they come in.
+   Everything is CSS except the "first time on screen" trigger (ScrollReveal.tsx). Scroll-linked effects need
+   scroll-driven animations; browsers without them simply show the page still. prefers-reduced-motion turns all
+   of it off. Only opacity and the individual translate/scale properties move, so Tailwind's transform utilities
+   (and the button kit's hover scale) keep working underneath. */
+
+:root {
+  /* Arpeggio's text spring (stiffness 121, damping 27, mass 0.3): no overshoot. The curves are shapes only; each
+     animation below sets its own duration. */
+  --ease-rise: linear(0, 0.126, 0.276, 0.4, 0.504, 0.589, 0.66, 0.719, 0.767, 0.807, 0.84, 0.868, 0.891, 0.909, 0.925,
+    0.938, 0.949, 0.958, 0.965, 0.971, 0.976, 0.98, 0.983, 0.986, 0.989, 0.991, 0.992, 0.994, 0.995, 0.996, 1);
+  /* A bouncy spring for things that pop (damping ratio 0.55, ~12% overshoot). */
+  --ease-pop: linear(0, 0.043, 0.151, 0.296, 0.456, 0.614, 0.757, 0.879, 0.975, 1.045, 1.092, 1.117, 1.126, 1.122,
+    1.109, 1.092, 1.071, 1.051, 1.033, 1.017, 1.005, 0.995, 0.989, 0.986, 0.984, 0.984, 0.986, 0.988, 0.991, 0.993,
+    0.996, 0.998, 0.999, 1);
+  /* Arpeggio's hero image tween. */
+  --ease-zoom: cubic-bezier(0.5, 0.26, 0.31, 1.01);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* ── Load: the top bar and the hero ─────────────────────────────────────────── */
+  /* The top bar lives in the shared marketing layout, so it only drops in where the landing hero is on the page.
+     It moves as a whole: a translate on the inner nav would make it the pill's containing block mid-animation. */
+  body:has([data-scroll-timeline="hero"]) [data-testid="marketing-nav"] {
+    animation: motion-intro-bar 1600ms var(--ease-rise) both;
+  }
+  @keyframes motion-intro-bar {
+    from {
+      opacity: 0.001;
+      translate: 0 -48px;
+    }
+  }
+  /* The hero scene comes in first: it fades in while zooming out from 1.2×. */
+  [data-intro="scene"] {
+    transform-origin: 50% 100%;
+    animation: motion-intro-scene 2500ms var(--ease-zoom) 100ms both;
+  }
+  /* Then the kids, animals and tools, one after another from the sides of the scene toward its centre (delays set in
+     HeroScene.tsx): kids and animals pop up, tools drop in. Distances are shares of each picture's own size. */
+  [data-intro="layer-pop"] {
+    animation: motion-layer-pop 1500ms var(--ease-pop) var(--motion-delay, 0ms) both;
+  }
+  [data-intro="layer-drop"] {
+    animation: motion-layer-drop 1500ms var(--ease-pop) var(--motion-delay, 0ms) both;
+  }
+  [data-intro="rise"] {
+    animation: motion-intro-rise 1700ms var(--ease-rise) var(--motion-delay, 0ms) both;
+  }
+  [data-intro="pop"] {
+    animation: motion-intro-pop 1500ms var(--ease-pop) var(--motion-delay, 0ms) both;
+  }
+  [data-intro="drop"] {
+    animation: motion-intro-drop 1500ms var(--ease-pop) var(--motion-delay, 0ms) both;
+  }
+
+  @keyframes motion-intro-scene {
+    from {
+      opacity: 0.001;
+      scale: 1.2;
+    }
+    25% {
+      opacity: 1;
+    }
+  }
+  @keyframes motion-layer-pop {
+    from {
+      opacity: 0.001;
+      scale: 0.3;
+      translate: 0 12%;
+    }
+    35% {
+      opacity: 1;
+    }
+  }
+  @keyframes motion-layer-drop {
+    from {
+      opacity: 0.001;
+      translate: 0 -70%;
+      rotate: -8deg;
+    }
+    35% {
+      opacity: 1;
+    }
+  }
+  /* 0.001 rather than 0: the element still counts for Largest Contentful Paint while it fades in. */
+  @keyframes motion-intro-rise {
+    from {
+      opacity: 0.001;
+      translate: 0 60px;
+    }
+  }
+  @keyframes motion-intro-pop {
+    from {
+      opacity: 0.001;
+      scale: 0.4;
+      translate: 0 40px;
+    }
+    40% {
+      opacity: 1;
+    }
+  }
+  @keyframes motion-intro-drop {
+    from {
+      opacity: 0.001;
+      translate: 0 -60px;
+      rotate: -12deg;
+    }
+    40% {
+      opacity: 1;
+    }
+  }
+
+  /* ── First time on screen (ScrollReveal.tsx sets data-reveal-state) ──────────── */
+  /* grow: the block grows out from its own centre on the no-overshoot spring. */
+  [data-reveal-state] {
+    transition-property: opacity, scale;
+    transition-duration: 800ms, 1700ms;
+    transition-timing-function: ease-out, var(--ease-rise);
+    transition-delay: var(--motion-delay, 0ms);
+  }
+  [data-reveal-state="hidden"] {
+    opacity: 0.001;
+    scale: 0.6;
+  }
+  /* pop: starts smaller and bounces just past full size. */
+  [data-reveal="pop"][data-reveal-state] {
+    transition-duration: 700ms, 1500ms;
+    transition-timing-function: ease-out, var(--ease-pop);
+  }
+  [data-reveal="pop"][data-reveal-state="hidden"] {
+    scale: 0.3;
+  }
+  /* squash: grows from its centre with a jelly squash and stretch, like the template's morph. */
+  [data-reveal="squash"][data-reveal-state="hidden"] {
+    scale: 0.3;
+  }
+  [data-reveal="squash"][data-reveal-state="shown"] {
+    animation: motion-squash 1300ms ease-out var(--motion-delay, 0ms) both;
+  }
+  @keyframes motion-squash {
+    0% {
+      opacity: 0.001;
+      scale: 0.3 0.3;
+    }
+    35% {
+      opacity: 1;
+      scale: 1.3 0.75;
+    }
+    55% {
+      scale: 0.88 1.12;
+    }
+    75% {
+      scale: 1.05 0.96;
+    }
+    100% {
+      opacity: 1;
+      scale: 1 1;
+    }
+  }
+
+  /* ── Scroll-linked (scrubbed with the scrollbar) ─────────────────────────────── */
+  @supports (animation-timeline: view()) {
+    /* The hero leaves like the template's: the scene sinks into a rounded card and the copy drifts up and fades. */
+    [data-scroll-timeline="hero"] {
+      view-timeline: --hero block;
+    }
+    [data-scroll="hero-scene"] {
+      animation: motion-hero-scene linear both;
+      animation-timeline: --hero;
+      animation-range: exit 0% exit 100%;
+    }
+    [data-scroll="hero-copy"] {
+      animation: motion-hero-copy linear both;
+      animation-timeline: --hero;
+      animation-range: exit 0% exit 60%;
+    }
+    @keyframes motion-hero-scene {
+      to {
+        scale: 0.9;
+        border-radius: 56px;
+      }
+    }
+    @keyframes motion-hero-copy {
+      to {
+        opacity: 0;
+        translate: 0 -90px;
+      }
+    }
+
+    /* Pictures zoom out from 1.25× as they scroll in. Their frame clips the overflow, and an overflow:hidden box is a
+       scroll container of its own, so the zoom follows the frame's view timeline rather than the picture's (whose
+       nearest scroller would be that frame, which never scrolls). */
+    [data-zoom-frame] {
+      view-timeline: --zoom-frame block;
+    }
+    [data-scroll="zoom-out"] {
+      animation: motion-zoom-out linear both;
+      animation-timeline: --zoom-frame;
+      animation-range: entry 0% cover 50%;
+    }
+    @keyframes motion-zoom-out {
+      from {
+        scale: 1.25;
+      }
+    }
+
+    /* Blocks grow out of their own centres as they scroll up. In a row, --wave (0 in the middle, 1, 2 outward) makes
+       the middle ones finish first, so the row opens from its centre. The range is a distance on screen (the block's
+       top rising 34–46% of the window from the bottom edge), not a share of the block's own height, so tall blocks
+       are done before they reach the middle of the screen too. */
+    [data-scroll="scale-in"] {
+      animation: motion-scale-in linear both;
+      animation-timeline: view();
+      animation-range: cover 0px cover calc(34vh + var(--wave, 0) * 6vh);
+    }
+    @keyframes motion-scale-in {
+      from {
+        opacity: 0.001;
+        scale: 0.4;
+      }
+    }
+
+    /* A panel opens out of a rounded shape in its middle to its full size, like the template's growing dot. It is fully
+       open once its top has risen 70% of the window, whatever the panel's height. */
+    [data-scroll="expand"] {
+      animation: motion-expand linear both;
+      animation-timeline: view();
+      animation-range: cover 0px cover 70vh;
+    }
+    @keyframes motion-expand {
+      from {
+        clip-path: inset(16% 30% 16% 30% round 999px);
+      }
+      to {
+        clip-path: inset(0 0 0 0 round var(--expand-radius, 0px) var(--expand-radius, 0px) 0 0);
+      }
+    }
+  }
+}
+
+/* Printing shows everything where it belongs. */
+@media print {
+  [data-reveal-state] {
+    opacity: 1 !important;
+    translate: none !important;
+    scale: none !important;
+    rotate: none !important;
+    animation: none !important;
+  }
+}

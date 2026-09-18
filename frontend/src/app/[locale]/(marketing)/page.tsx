@@ -83,6 +83,9 @@ export default async function LandingPage({ params }: Props) {
 
   const faqItems = t.raw("faq.items") as Array<{ q: string; a: string }>;
 
+  // The two notes under the experts: the designer set the Persian ones 8px larger than the English.
+  const expertNoteSize = locale === "fa" ? "text-[23px] md:text-[28px]" : "text-[15px] md:text-[20px]";
+
   const yearCards = [
     {
       img: thinkingToolsAvatar,
@@ -172,15 +175,16 @@ export default async function LandingPage({ params }: Props) {
         {/* Desktop: 85% of viewport height per design, but never shorter than max(770px, 350px + 20.6vw).
             The copy sits at a fixed px position while the bottom-anchored scene scales with the box, so on short
             windows the kids' and animals' faces rose behind the description; from this height every face stays
-            below the text (short windows scroll to the kids' feet instead). Mobile keeps a px floor tall enough
-            for the stacked copy over the scene. */}
+            below the text (short windows scroll to the kids' feet instead). Phones: at least 540px, and taller when the
+            copy needs it (see the copy below). */}
         <div className="relative w-full overflow-hidden min-h-[540px] md:h-[85vh] md:min-h-[max(770px,calc(350px_+_20.6vw))]">
           {/* Motion: the scene comes in first (fades in while zooming out), then the kids and animals appear one after
               another from the sides toward the centre; the whole scene sinks into a rounded card as the hero scrolls
               away (the characters ride along inside the same box). */}
           <div data-scroll="hero-scene" className="absolute inset-0 overflow-hidden">
             {/* Phones only. object-bottom anchors the cover crop so any trim comes off the top, never the feet; sizes is
-                the drawn width (540px × 1.43), quality 90 because the default 75 visibly softened faces and hair.
+                the drawn width at the 540px floor (540px × 1.43; the taller Persian hero, up to ~610px, still gets the
+                same files at phone pixel densities), quality 90 because the default 75 visibly softened faces and hair.
                 Chrome fetches images even inside display:none, so each phone <picture> swaps in BLANK_GIF from md up
                 to keep tablets and desktops from downloading them. */}
             <picture>
@@ -189,9 +193,10 @@ export default async function LandingPage({ params }: Props) {
               <img {...heroMobileProps} alt="" className="object-cover object-bottom md:hidden" data-intro="scene" />
             </picture>
 
-            {/* Phones only. The scene is drawn 772×540 around the box centre at every phone width, so the parrot's
-                offset from 50% keeps it over the same spot. Motion: after the scene, from the side to the centre: the
-                girl pops up, the parrot swoops down, then the bear pops up. */}
+            {/* Phones only. The scene is drawn at the box's height (772×540 at the floor) around the box centre, so the
+                parrot's offset from 50% keeps it over the same spot; the girl and the bear stand a fixed distance above
+                the bottom. Motion: after the scene, from the side to the centre: the girl pops up, the parrot swoops
+                down, then the bear pops up. */}
             <div aria-hidden="true" className="pointer-events-none absolute inset-0 md:hidden">
               <picture>
                 <source media="(min-width: 768px)" srcSet={BLANK_GIF} />
@@ -215,12 +220,12 @@ export default async function LandingPage({ params }: Props) {
 
           {/* hero copy — fluid type per the designer's responsive spec
               (clamp() from a 375px mobile floor to the 1440px design size).
-              The % keeps the copy composed with the artwork on tall canvases;
-              the px floor keeps it clear of the nav on short ones, where the
-              scene is only ~514px tall but the nav still needs ~152px.
-              Desktop uses a fixed 6rem instead: ~20px under the nav capsule, which is fixed at top-3. */}
+              Phones: in the flow, 7rem down (clear of the nav), keeping 158px under the buttons for the girl and the bear.
+              English at 375px ends exactly at the 540px floor; a longer text (Persian) makes the hero taller instead of
+              pushing the buttons over the girl's face.
+              Desktop: a fixed 6rem from the top, ~20px under the nav capsule, which is fixed at top-3. */}
           <div
-            className="absolute inset-x-0 top-[max(17.5%,7rem)] md:top-[6rem] z-10 px-[clamp(1rem,-1rem+8vw,6rem)] text-center"
+            className="relative z-10 pt-28 pb-[158px] md:absolute md:inset-x-0 md:top-[6rem] md:py-0 px-[clamp(1rem,-1rem+8vw,6rem)] text-center"
             dir={locale === "fa" ? "rtl" : "ltr"}
             data-scroll="hero-copy"
           >
@@ -326,12 +331,14 @@ export default async function LandingPage({ params }: Props) {
           {/* Cards 260×204, radius 30, #CFEC5A with the default drop shadow; 200px circles rise 137px above each card
               (63px overlap). One row from ~860px wide with the gap growing to the design's 114px at 1440; below that
               the cards wrap/stack, with room for the circle above every row. Descriptions wrap at 180px, as in Figma.
+              204px is a minimum: a longer description (Persian runs to 4–5 lines) grows its card, keeping the 21px under
+              the text that English has, and cards on one row stretch to the tallest so they stay equal.
               Phones get 32px between the heading and the first circle (desktop keeps the Figma's none). */}
           <div className="flex flex-wrap justify-center gap-x-[clamp(1.5rem,calc(15.5vw_-_109px),114px)] gap-y-[161px] pt-[169px] md:pt-[137px]">
             {/* Motion: the middle card grows in first, then the outer two, and each circle pops out of its card. */}
             {cycleCards.map((card, i) => (
-              <div key={card.label} className="relative w-[260px] h-[204px] shrink-0" data-reveal="grow" style={motionDelay(fromCenter(i, cycleCards.length) * 220)}>
-                <div className="h-full rounded-[30px] bg-[#CFEC5A] px-3 pt-[87px] text-center shadow-[0_4px_4px_rgba(0,0,0,0.25)]">
+              <div key={card.label} className="relative w-[260px] min-h-[204px] shrink-0" data-reveal="grow" style={motionDelay(fromCenter(i, cycleCards.length) * 220)}>
+                <div className="h-full rounded-[30px] bg-[#CFEC5A] px-3 pt-[87px] pb-[21px] text-center shadow-[0_4px_4px_rgba(0,0,0,0.25)]">
                   <p className={`[font-family:var(--font-adlam)] font-normal text-[20px] leading-[normal] ${card.color}`}>
                     {card.label}
                   </p>
@@ -554,10 +561,10 @@ export default async function LandingPage({ params }: Props) {
               </div>
             ))}
           </div>
-          <p className="[font-family:var(--font-adlam)] font-normal text-[15px] md:text-[20px] leading-[1.48] text-[#4F4F4F] mt-6 md:mt-[23px]" data-reveal="grow">
+          <p className={`[font-family:var(--font-adlam)] font-normal ${expertNoteSize} leading-[1.48] text-[#4F4F4F] mt-6 md:mt-[23px]`} data-reveal="grow">
             {keepTogether(t("experts.note1"))}
           </p>
-          <p className="[font-family:var(--font-adlam)] font-normal text-[15px] md:text-[20px] leading-[1.48] text-[#4F4F4F] mt-0.5" data-reveal="grow" style={motionDelay(140)}>
+          <p className={`[font-family:var(--font-adlam)] font-normal ${expertNoteSize} leading-[1.48] text-[#4F4F4F] mt-0.5`} data-reveal="grow" style={motionDelay(140)}>
             {keepTogether(t("experts.note2"))}
           </p>
         </div>

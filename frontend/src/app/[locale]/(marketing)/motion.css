@@ -163,25 +163,15 @@
 
   /* ── Scroll-linked (scrubbed with the scrollbar) ─────────────────────────────── */
   @supports (animation-timeline: view()) {
-    /* The hero leaves like the template's: the scene sinks into a rounded card and the copy drifts up and fades. */
+    /* As the hero scrolls away its copy drifts up and fades. The scene itself keeps its full size (the designer's call:
+       no shrinking into a card, in any language). */
     [data-scroll-timeline="hero"] {
       view-timeline: --hero block;
-    }
-    [data-scroll="hero-scene"] {
-      animation: motion-hero-scene linear both;
-      animation-timeline: --hero;
-      animation-range: exit 0% exit 100%;
     }
     [data-scroll="hero-copy"] {
       animation: motion-hero-copy linear both;
       animation-timeline: --hero;
       animation-range: exit 0% exit 60%;
-    }
-    @keyframes motion-hero-scene {
-      to {
-        scale: 0.9;
-        border-radius: 56px;
-      }
     }
     @keyframes motion-hero-copy {
       to {

@@ -179,9 +179,8 @@ export default async function LandingPage({ params }: Props) {
             copy needs it (see the copy below). */}
         <div className="relative w-full overflow-hidden min-h-[540px] md:h-[85vh] md:min-h-[max(770px,calc(350px_+_20.6vw))]">
           {/* Motion: the scene comes in first (fades in while zooming out), then the kids and animals appear one after
-              another from the sides toward the centre; the whole scene sinks into a rounded card as the hero scrolls
-              away (the characters ride along inside the same box). */}
-          <div data-scroll="hero-scene" className="absolute inset-0 overflow-hidden">
+              another from the sides toward the centre. It keeps its full size as the hero scrolls away. */}
+          <div className="absolute inset-0 overflow-hidden">
             {/* Phones only. object-bottom anchors the cover crop so any trim comes off the top, never the feet; sizes is
                 the drawn width at the 540px floor (540px × 1.43; the taller Persian hero, up to ~610px, still gets the
                 same files at phone pixel densities), quality 90 because the default 75 visibly softened faces and hair.

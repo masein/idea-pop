@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import { getTranslations } from "next-intl/server";
 import Image, { getImageProps } from "next/image";
 import { Link } from "@/i18n/routing";
@@ -308,8 +309,14 @@ export default async function LandingPage({ params }: Props) {
           <div className="relative z-10 flex justify-center mt-[79px] -mb-[17px]">
             <p className="rounded-pill bg-[#EEFFA9] shadow-[inset_0_0_0_1px_#D1EF5A] px-5 py-[7px] text-center [font-family:var(--font-adlam)] font-normal text-[16px] leading-[normal] text-[#2E574D]" data-reveal="grow">
               <span>{t("year.steps_label")}</span>{" "}
-              {/* Each step's words stay together ("5 re ask"), so lines only break between steps. */}
-              {t("year.steps").split(" · ").map((step) => step.replace(/ /g, "\u00A0")).join(" · ")}
+              {/* The messages separate the steps with em spaces (no dots, per the designer). Each step stays whole, so
+                  "5 Re-ask" never splits at its space or hyphen and lines only break between steps. */}
+              {t("year.steps").split("\u2003").map((step, i) => (
+                <Fragment key={step}>
+                  {i > 0 && "\u2003"}
+                  <span className="whitespace-nowrap">{step}</span>
+                </Fragment>
+              ))}
             </p>
           </div>
         </div>

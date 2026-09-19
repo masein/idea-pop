@@ -63,8 +63,8 @@
       "card2_sub": "built from home materials",
       "card3_title": "Portfolio + certificate",
       "card3_sub": "proof of creative growth",
-      "steps_label": "mission steps:",
-      "steps": "1 Brief · 2 Watch · 3 Idea · 4 Secret · 5 re ask · 6 My idea · 7 Build & test · 8 Celebrate"
+      "steps_label": "Mission steps:",
+      "steps": "1 Brief 2 Watch 3 Idea 4 Secret 5 Re-ask 6 My idea 7 Build & test 8 Celebrate"
     },
     "cycle": {
       "heading": "How it works — the creative cycle",
@@ -188,7 +188,7 @@
     },
     "ask": {
       "heading": "Hi, I'm Idea PopI",
-      "sub": "Do you have any question?!",
+      "sub": "Do you have any questions?!",
       "placeholder": "Ask me anything you like...",
       "input_label": "Your question for Idea Pop",
       "send_label": "Send question",
@@ -341,7 +341,7 @@
   },
   "explore": {
     "heading": "Animal Superpowers",
-    "subheading": "Organised by superpower, not species — because that's how real engineers think.",
+    "subheading": "Organized by superpower, not species — because that's how real engineers think.",
     "categories": {
       "masters_of_disguise": "Masters of Disguise",
       "soft_engineers": "Soft Engineers",
@@ -485,7 +485,7 @@
     "legal": "© {year} Idea Pop. All rights reserved.",
     "locale_en": "EN",
     "locale_fa": "فا",
-    "tagline": "Ask nature, How? Build, with your hands",
+    "tagline": "Ask nature, How? Build with your hands",
     "newsletter_heading": "Monthly ideas for curious families",
     "newsletter_note": "adults only · one email a month · unsubscribe anytime",
     "method_col": "The Method",
@@ -1259,7 +1259,7 @@
     "upload": "Add photos",
     "onion_label": "Show the last frame faintly (helps you line things up)",
     "canvas_label": "Drawing canvas",
-    "pen_color": "Pen colour {color}",
+    "pen_color": "Pen color {color}",
     "clear_drawing": "Clear",
     "add_drawing": "Add this drawing ➕",
     "snap": "Snap a frame",
@@ -1364,7 +1364,7 @@
     "no_tries_yet": "Press “Run a try” — the first try is a wild wander. That's how learning starts!",
     "still_learning": "Still learning — run another try and watch the steps drop!",
     "best_note": "The mouse learned a path — {steps} steps to the cheese! 🎉",
-    "trap_warning": "Its favourite path ({steps} steps) walks THROUGH a trap! Make the trap cost bigger and watch it re-learn.",
+    "trap_warning": "Its favorite path ({steps} steps) walks THROUGH a trap! Make the trap cost bigger and watch it re-learn.",
     "try_line_cheese": "Try {n}: {steps} steps → cheese! 🧀",
     "try_line_timeout": "Try {n}: got lost and gave up 😴",
     "share_heading": "My maze — ready to share 📋",

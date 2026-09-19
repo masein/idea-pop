@@ -557,12 +557,10 @@ export default async function LandingPage({ params }: Props) {
                   data-reveal="squash"
                   style={motionDelay(fromCenter(i, experts.length) * 220)}
                 />
-                {/* The dot between name and role is drawn on the space between them: when the role wraps to the next
-                    line the browser drops that space, and the dot goes with it (as in the design). */}
+                {/* Name, then the role on its own line: no dot between them (the designer's call). */}
                 <p className="[font-family:var(--font-adlam)] font-normal text-[16px] md:text-[20px] leading-[1.2] text-[#4F4F4F] max-w-[200px] mt-3 md:mt-[17px]" data-reveal="grow" style={motionDelay(300 + fromCenter(i, experts.length) * 220)}>
-                  {e.name}
-                  <span className="[word-spacing:12px] bg-[radial-gradient(circle,currentColor_1.5px,transparent_2px)] bg-center bg-no-repeat">{" "}</span>
-                  {e.role}
+                  <span className="block">{e.name}</span>
+                  <span className="block">{e.role}</span>
                 </p>
               </div>
             ))}
@@ -598,7 +596,8 @@ export default async function LandingPage({ params }: Props) {
               ],
               ctaFree: t("pricing_teaser.cta_free"),
               plusName: t("pricing_teaser.plus_name"),
-              plusPrice: t("pricing_teaser.plus_price"),
+              plusPriceAnnual: t("pricing_teaser.plus_price_annual"),
+              plusPriceMonthly: t("pricing_teaser.plus_price_monthly"),
               plusBillingAnnual: t("pricing_teaser.plus_billing_annual"),
               plusBillingMonthly: t("pricing_teaser.plus_billing_monthly"),
               plusIntro: t("pricing_teaser.plus_intro"),
@@ -611,7 +610,8 @@ export default async function LandingPage({ params }: Props) {
               ctaPlus: t("pricing_teaser.cta_plus"),
               badgePopular: t("pricing_teaser.badge_popular"),
               familyName: t("pricing_teaser.family_name"),
-              familyPrice: t("pricing_teaser.family_price"),
+              familyPriceAnnual: t("pricing_teaser.family_price_annual"),
+              familyPriceMonthly: t("pricing_teaser.family_price_monthly"),
               familyBillingAnnual: t("pricing_teaser.family_billing_annual"),
               familyBillingMonthly: t("pricing_teaser.family_billing_monthly"),
               familyIntro: t("pricing_teaser.family_intro"),

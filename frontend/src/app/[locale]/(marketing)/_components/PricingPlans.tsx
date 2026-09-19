@@ -11,7 +11,9 @@ export interface PricingLabels {
   freeFeatures: string[];
   ctaFree: string;
   plusName: string;
-  plusPrice: string;
+  // The big price follows the Monthly / Annual switch, like the billing line under it (annual = the yearly bill / 12).
+  plusPriceAnnual: string;
+  plusPriceMonthly: string;
   plusBillingAnnual: string;
   plusBillingMonthly: string;
   plusIntro: string;
@@ -19,7 +21,8 @@ export interface PricingLabels {
   ctaPlus: string;
   badgePopular: string;
   familyName: string;
-  familyPrice: string;
+  familyPriceAnnual: string;
+  familyPriceMonthly: string;
   familyBillingAnnual: string;
   familyBillingMonthly: string;
   familyIntro: string;
@@ -105,7 +108,7 @@ export default function PricingPlans({ labels }: { labels: PricingLabels }) {
           </span>
           <p className="font-display font-bold text-xl text-ink">
             {labels.plusName}{" "}
-            <span className="font-display">{labels.plusPrice}</span>
+            <span className="font-display">{annual ? labels.plusPriceAnnual : labels.plusPriceMonthly}</span>
           </p>
           <p className="font-body text-xs font-semibold text-ink/50 mb-4">
             {annual ? labels.plusBillingAnnual : labels.plusBillingMonthly}
@@ -136,7 +139,7 @@ export default function PricingPlans({ labels }: { labels: PricingLabels }) {
           </span>
           <p className="font-display font-bold text-xl text-ink">
             {labels.familyName}{" "}
-            <span className="font-display">{labels.familyPrice}</span>
+            <span className="font-display">{annual ? labels.familyPriceAnnual : labels.familyPriceMonthly}</span>
           </p>
           <p className="font-body text-xs font-semibold text-ink/50 mb-4">
             {annual ? labels.familyBillingAnnual : labels.familyBillingMonthly}

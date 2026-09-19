@@ -1,4 +1,4 @@
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import Image from "next/image";
 import { Link } from "@/i18n/routing";
 import LocaleSwitcher from "./LocaleSwitcher";
@@ -18,7 +18,8 @@ const smallPrint =
 
 export default async function Footer() {
   const t = await getTranslations("footer");
-  const year = new Date().getFullYear();
+  // The year in the page's own digits (۲۰۲۶ on Persian pages), without a thousands separator.
+  const year = new Intl.NumberFormat(await getLocale(), { useGrouping: false }).format(new Date().getFullYear());
 
   const productLinks = [
     { label: t("links2.exploring"), href: "/explore" as const },
@@ -146,7 +147,7 @@ export default async function Footer() {
         <div className="mt-10 flex flex-col items-center justify-between gap-4 border-t-[0.5px] border-[#F3FFC2] pt-6 sm:flex-row">
           <div className="flex flex-wrap items-center gap-3">
             <p className={smallPrint}>
-              {t("legal", { year: String(year) })}
+              {t("legal", { year })}
             </p>
             <Link href="/legal/privacy" className={`${smallPrint} rounded hover:text-white hover:underline hover:decoration-2 hover:underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D1EF5A]`}>
               {t("links2.privacy")}

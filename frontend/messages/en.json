@@ -112,7 +112,15 @@
       "cta": "Start the mission"
     },
     "kids_made": {
-      "heading": "Made by kids this month"
+      "heading": "Made by kids this month",
+      "alts": [
+        "A wooden stand with a cardboard eyepiece",
+        "A cleaning robot built from a toy car",
+        "A paper creature with a wide, toothy mouth",
+        "Two paper cone figures",
+        "A bat with straw-and-plastic wings",
+        "A bird made from a bottle and yellow paper"
+      ]
     },
     "experts": {
       "heading": "Real experts make the lessons",

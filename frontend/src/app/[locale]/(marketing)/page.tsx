@@ -28,6 +28,16 @@ import solveAndMake from "../../../../public/landing/solve-and-make.png";
 // 1320x474 WebP, 168 KB.
 import tryMissionBg from "../../../../public/landing/try-mission-river.webp";
 import startFreeGirl from "../../../../public/landing/start-free-girl.png";
+// "Made by kids this month": the designer's photos of real makes, cropped to the tile with the make in the middle and
+// given one shared colour finish so the six read as a set. The page promises "photos show the project, not faces", so
+// the boy looking through his eyepiece (1) is blurred and the other crops leave faces and a school name out.
+import kidMake1 from "../../../../public/landing/kids/kid-make-1.webp";
+import kidMake2 from "../../../../public/landing/kids/kid-make-2.webp";
+import kidMake3 from "../../../../public/landing/kids/kid-make-3.webp";
+import kidMake4 from "../../../../public/landing/kids/kid-make-4.webp";
+import kidMake5 from "../../../../public/landing/kids/kid-make-5.webp";
+import kidMake6 from "../../../../public/landing/kids/kid-make-6.webp";
+const kidMakes = [kidMake1, kidMake2, kidMake3, kidMake4, kidMake5, kidMake6];
 
 const DEEP = "#2E5F4B";
 // 1×1 transparent GIF: a <picture> source that makes desktop skip the phone-only hero images entirely.
@@ -83,6 +93,7 @@ export default async function LandingPage({ params }: Props) {
   const { props: heroBearProps } = getImageProps({ src: heroMobileBear, alt: "", sizes: "98px", quality: 90, loading: "eager" });
 
   const faqItems = t.raw("faq.items") as Array<{ q: string; a: string }>;
+  const kidMakeAlts = t.raw("kids_made.alts") as string[];
 
   // The two notes under the experts: the designer set the Persian ones 8px larger than the English.
   const expertNoteSize = locale === "fa" ? "text-[23px] md:text-[28px]" : "text-[15px] md:text-[20px]";
@@ -183,8 +194,8 @@ export default async function LandingPage({ params }: Props) {
               another from the sides toward the centre. It keeps its full size as the hero scrolls away. */}
           <div className="absolute inset-0 overflow-hidden">
             {/* Phones only. object-bottom anchors the cover crop so any trim comes off the top, never the feet; sizes is
-                the drawn width at the 540px floor (540px × 1.43; the taller Persian hero, up to ~610px, still gets the
-                same files at phone pixel densities), quality 90 because the default 75 visibly softened faces and hair.
+                the drawn width at the 540px floor (540px × 1.43; the hero grows to ~650px with the Persian text and still
+                gets the same files at phone pixel densities), quality 90 because the default 75 visibly softened faces and hair.
                 Chrome fetches images even inside display:none, so each phone <picture> swaps in BLANK_GIF from md up
                 to keep tablets and desktops from downloading them. */}
             <picture>
@@ -220,12 +231,12 @@ export default async function LandingPage({ params }: Props) {
 
           {/* hero copy — fluid type per the designer's responsive spec
               (clamp() from a 375px mobile floor to the 1440px design size).
-              Phones: in the flow, 7rem down (clear of the nav), keeping 158px under the buttons for the girl and the bear.
-              English at 375px ends exactly at the 540px floor; a longer text (Persian) makes the hero taller instead of
-              pushing the buttons over the girl's face.
+              Phones: in the flow, 7rem down (clear of the nav), keeping 200px under the buttons for the girl and the bear,
+              so the second button never touches the girl (English is ~580px tall at 375px); a longer text (Persian)
+              makes the hero taller rather than pushing the buttons onto her.
               Desktop: a fixed 6rem from the top, ~20px under the nav capsule, which is fixed at top-3. */}
           <div
-            className="relative z-10 pt-28 pb-[158px] md:absolute md:inset-x-0 md:top-[6rem] md:py-0 px-[clamp(1rem,-1rem+8vw,6rem)] text-center"
+            className="relative z-10 pt-28 pb-[200px] md:absolute md:inset-x-0 md:top-[6rem] md:py-0 px-[clamp(1rem,-1rem+8vw,6rem)] text-center"
             dir={locale === "fa" ? "rtl" : "ltr"}
             data-scroll="hero-copy"
           >
@@ -527,14 +538,15 @@ export default async function LandingPage({ params }: Props) {
           </h2>
           {/* Motion: the tiles pop out of their centres, the middle pair first. */}
           <div className="grid grid-cols-3 md:grid-cols-6 gap-3 md:gap-5">
-            {Array.from({ length: 6 }).map((_, i) => (
+            {kidMakes.map((src, i) => (
               <div
-                key={i}
-                className="aspect-[200/178] rounded-card bg-[#F3EDE4]"
-                aria-hidden="true"
+                key={src.src}
+                className="relative aspect-[200/178] overflow-hidden rounded-card bg-[#F3EDE4]"
                 data-reveal="pop"
-                style={motionDelay(fromCenter(i, 6) * 160)}
-              />
+                style={motionDelay(fromCenter(i, kidMakes.length) * 160)}
+              >
+                <Image src={src} alt={kidMakeAlts[i]} fill sizes="(min-width: 768px) 200px, 33vw" className="object-cover" />
+              </div>
             ))}
           </div>
         </div>

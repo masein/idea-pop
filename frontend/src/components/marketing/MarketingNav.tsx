@@ -17,10 +17,10 @@ const ctaBase =
   "inline-flex items-center justify-center whitespace-nowrap rounded-pill bg-[#D1EF5A] px-[1.89rem] py-[0.709rem] text-[clamp(0.886rem,0.68rem+0.855vw,1.181rem)] [font-family:var(--font-montserrat)] font-extrabold text-[#1F4D33] shadow-[inset_0_0_0_1px_#18785A,0_4px_4px_rgba(0,0,0,0.25)] transition-all duration-150 hover:brightness-105 hover:scale-[1.11] hover:shadow-[inset_0_0_0_2px_#18785A,0_4px_4px_rgba(0,0,0,0.25)] active:scale-[0.97] active:bg-[#B8D24F] active:shadow-[inset_0_0_0_2px_#18785A,0_2px_2px_rgba(0,0,0,0.25)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1F4D33] focus-visible:ring-offset-2";
 
 // The designer's nav icons (Figma export: 22×21, 2px round strokes). The language globe is drawn to match them.
-function NavIcon({ paths }: { paths: readonly string[] }) {
+function NavIcon({ paths, className = "" }: { paths: readonly string[]; className?: string }) {
   return (
     <svg
-      className="h-[1.2rem] w-[1.257rem]"
+      className={`h-[1.2rem] w-[1.257rem] ${className}`}
       fill="none"
       viewBox="0 0 22 21"
       stroke="currentColor"
@@ -105,6 +105,33 @@ export default function MarketingNav() {
     startTransition(() => router.replace(pathname, { locale: next }));
   }
 
+  /* "You are here": the pill takes a notch under the current page's item and that item's icon drops into a circle
+     sitting in it (the designer's frame). The notch is a mask on the pill, so the circle has to live outside the pill
+     — a mask clips its element's children too. Measured because the items have different widths. */
+  const pillRef = useRef<HTMLUListElement>(null);
+  const activeItemRef = useRef<HTMLLIElement>(null);
+  const [notch, setNotch] = useState<{ x: number; width: number; height: number } | null>(null);
+
+  useEffect(() => {
+    const pill = pillRef.current;
+    const item = activeItemRef.current;
+    if (!pill || !item) {
+      setNotch(null);
+      return;
+    }
+    const measure = () => {
+      const p = pill.getBoundingClientRect();
+      const i = item.getBoundingClientRect();
+      if (p.width === 0) return; // the pill is hidden on phones
+      setNotch({ x: i.left + i.width / 2 - p.left, width: p.width, height: p.height });
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(pill);
+    observer.observe(item);
+    return () => observer.disconnect();
+  }, [pathname, locale]);
+
   const navLinks = [
     { label: t("method"), href: "/method" as const, icon: icons.method },
     { label: t("pricing"), href: "/pricing" as const, icon: icons.pricing },
@@ -115,6 +142,14 @@ export default function MarketingNav() {
     },
     { label: t("sign_up"), href: "/sign-up" as const, icon: icons.signup },
   ];
+
+  // next-intl hands back the path without the locale, so "/method" matches on both languages.
+  const isCurrent = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
+  const current = navLinks.find((link) => isCurrent(link.href));
+  const NOTCH = { radius: 27, gap: 5, drop: 13 }; // circle radius, its gap to the pill, how far it hangs below
+  const notchCut = notch
+    ? `radial-gradient(circle ${NOTCH.radius + NOTCH.gap}px at ${notch.x}px ${notch.height + NOTCH.drop}px, transparent ${NOTCH.radius + NOTCH.gap - 1}px, #000 ${NOTCH.radius + NOTCH.gap}px)`
+    : undefined;
 
   return (
     <header className="absolute top-0 z-50 w-full" data-testid="marketing-nav">
@@ -151,17 +186,23 @@ export default function MarketingNav() {
             absolute), so it's dead-centered on the viewport regardless of
             the logo/CTA width imbalance, and sits near the top of the hero. */}
         <ul
+          ref={pillRef}
           className="hidden w-max items-center gap-1 rounded-pill bg-white px-[clamp(0.75rem,0.6rem+0.75vw,1.25rem)] py-[clamp(0.35rem,0.28rem+0.35vw,0.5rem)] shadow-[inset_0_0_0_1px_#D1EF5A,0_4px_4px_rgba(0,0,0,0.25)] md:flex md:absolute md:left-1/2 md:top-3 md:-translate-x-1/2"
           role="list"
+          style={notchCut ? { WebkitMaskImage: notchCut, maskImage: notchCut } : undefined}
         >
-          {navLinks.map(({ label, href, icon }) => (
-            <li key={href}>
-              <Link href={href} className={pillLink}>
-                <span>{label}</span>
-                <NavIcon paths={icon} />
-              </Link>
-            </li>
-          ))}
+          {navLinks.map(({ label, href, icon }) => {
+            const active = isCurrent(href);
+            return (
+              <li key={href} ref={active ? activeItemRef : undefined}>
+                <Link href={href} className={pillLink} aria-current={active ? "page" : undefined}>
+                  <span>{label}</span>
+                  {/* On the current page the icon shows in the circle below instead; the space it left keeps the pill's size. */}
+                  <NavIcon paths={icon} className={active && notch ? "invisible" : ""} />
+                </Link>
+              </li>
+            );
+          })}
           {/* Language: a setting rather than a page, so it sits after a thin divider and opens a two-line menu. */}
           <li aria-hidden="true" className="mx-1 w-px self-stretch bg-[#D1EF5A]" />
           <li ref={langRef} className="relative">
@@ -199,6 +240,20 @@ export default function MarketingNav() {
             )}
           </li>
         </ul>
+
+        {/* The circle that sits in the notch, carrying the current page's icon. It repeats what the pill already
+            says, so it's hidden from screen readers — aria-current on the link is the real marker. */}
+        {current && notch && (
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute left-1/2 top-3 hidden h-[54px] w-[54px] items-center justify-center rounded-full bg-white text-[#146047] shadow-[inset_0_0_0_1px_#D1EF5A,0_6px_10px_rgba(0,0,0,0.10)] md:flex"
+            style={{
+              transform: `translate(calc(-50% + ${notch.x - notch.width / 2}px), ${notch.height + NOTCH.drop - NOTCH.radius}px)`,
+            }}
+          >
+            <NavIcon paths={current.icon} />
+          </span>
+        )}
 
         {/* Right side: CTA on desktop, hamburger on mobile. md: the nav's pt-3 and this mt centre the CTA on the capsule (top-3). */}
         <div className="flex flex-1 items-center justify-end md:mt-[0.41rem] md:self-start">

@@ -5,6 +5,7 @@ import { Link } from "@/i18n/routing";
 import PricingPlans from "./_components/PricingPlans";
 import AskIdeaPop from "./_components/AskIdeaPop";
 import ScrollReveal from "./_components/ScrollReveal";
+import { btnGlass, btnLime, fromCenter, keepTogether, motionDelay } from "./_components/ui";
 // Tablet and desktop hero: the designer's workshop scene built from layers, so every kid and animal can animate in.
 import HeroScene from "./_components/HeroScene";
 import "./motion.css";
@@ -42,26 +43,6 @@ const kidMakes = [kidMake1, kidMake2, kidMake3, kidMake4, kidMake5, kidMake6];
 const DEEP = "#2E5F4B";
 // 1×1 transparent GIF: a <picture> source that makes desktop skip the phone-only hero images entirely.
 const BLANK_GIF = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
-
-// Headings never end on a lone word on narrow screens: the last two words are joined with a no-break space,
-// and the brand name never splits either.
-const keepTogether = (text: string) => text.replace(/Idea Pop/g, "Idea\u00A0Pop").replace(/\s+(\S+)\s*$/, "\u00A0$1");
-
-/* Motion (motion.css): data-intro plays on load, data-reveal the first time a block scrolls into view, data-scroll moves
-   with the scrollbar. motionDelay staggers an entrance; fromCenter orders a row from its middle outward (0 for the
-   centre item or pair, then 1, 2 …), so rows open from the centre. */
-const motionDelay = (ms: number) => ({ "--motion-delay": `${ms}ms` }) as React.CSSProperties;
-const fromCenter = (i: number, count: number) => Math.floor(Math.abs(i - (count - 1) / 2));
-
-/* The button kit: primary is the lime fill with #1F4D33 text (7.3:1 — #18785A only reached 4.2:1, which fails at
-   the 15px phone size), secondary is the see-through fill. Both rest on a 1px inset stroke, thicken to 2px and scale
-   to 1.11 on hover (the label then reads 20px without the box moving anything), and darken when pressed. */
-const btnLime =
-  "inline-flex items-center justify-center rounded-pill [font-family:var(--font-montserrat)] font-extrabold px-8 md:px-[53px] py-3 text-[clamp(0.9375rem,0.79rem+0.68vw,1.125rem)] bg-[#D1EF5A] text-[#1F4D33] transition-all duration-150 hover:brightness-105 hover:scale-[1.11] hover:shadow-[inset_0_0_0_2px_#18785A,0_4px_4px_rgba(0,0,0,0.25)] active:scale-[0.97] active:bg-[#B8D24F] active:shadow-[inset_0_0_0_2px_#18785A,0_2px_2px_rgba(0,0,0,0.25)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1F4D33] focus-visible:ring-offset-2 select-none shadow-[inset_0_0_0_1px_#18785A,0_4px_4px_rgba(0,0,0,0.25)]";
-// Glass button: the fill is 46% white so what's behind shows through (the hero scene);
-// the stroke is an inset shadow like the lime button's.
-const btnGlass =
-  "inline-flex items-center justify-center rounded-pill [font-family:var(--font-montserrat)] font-extrabold px-8 md:px-[53px] py-3 text-[clamp(0.9375rem,0.79rem+0.68vw,1.125rem)] bg-white/[.46] text-[#146047] transition-all duration-150 hover:bg-[#F4FADD] hover:scale-[1.11] hover:shadow-[inset_0_0_0_2px_#18785A,0_4px_4px_rgba(0,0,0,0.25)] active:scale-[0.97] active:bg-[#E3EFC4] active:text-[#0F4C39] active:shadow-[inset_0_0_0_2px_#0F4C39,0_2px_2px_rgba(0,0,0,0.25)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#18785A] focus-visible:ring-offset-2 select-none shadow-[inset_0_0_0_1px_#18785A,0_4px_4px_rgba(0,0,0,0.25)]";
 
 type Props = {
   params: Promise<{ locale: string }>;

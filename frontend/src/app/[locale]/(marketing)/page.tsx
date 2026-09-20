@@ -121,7 +121,8 @@ export default async function LandingPage({ params }: Props) {
       img: seeTheWorld,
       label: t("cycle.see_label"),
       desc: t("cycle.see_desc"),
-      color: "text-[#2E7D32]",
+      // The Figma green and blue, a shade darker so the labels reach 4.5:1 on the lime card (3.9 and 4.3 before).
+      color: "text-[#296E2C]",
     },
     {
       img: learnCircle,
@@ -133,19 +134,20 @@ export default async function LandingPage({ params }: Props) {
       img: solveAndMake,
       label: t("cycle.solve_label"),
       desc: t("cycle.solve_desc"),
-      color: "text-[#1565C0]",
+      color: "text-[#1460B7]",
     },
   ];
 
   /* The designer's tile colours (from the Figma design-thinking graphic). Plain blocks for now — the designer will add
-     their own images. White labels on the yellow, coral and green tiles are below AA contrast. */
+     their own design. White labels are unreadable on the coral, yellow and green tiles (2.8, 1.4 and 1.8:1), so those
+     three carry a dark label instead (5.1, 9.9 and 7.8:1); the colours stay as the designer set them. */
   const spineTiles = [
-    { label: t("curriculum.spine_1"), bg: "bg-[#497AF0]" },
-    { label: t("curriculum.spine_2"), bg: "bg-[#FF6C67]" },
-    { label: t("curriculum.spine_3"), bg: "bg-[#FDD543]" },
-    { label: t("curriculum.spine_4"), bg: "bg-[#934CC1]" },
-    { label: t("curriculum.spine_5"), bg: "bg-[#008C9D]" },
-    { label: t("curriculum.spine_6"), bg: "bg-[#55D889]" },
+    { label: t("curriculum.spine_1"), bg: "bg-[#497AF0]", text: "text-white" },
+    { label: t("curriculum.spine_2"), bg: "bg-[#FF6C67]", text: "text-[#16302A]" },
+    { label: t("curriculum.spine_3"), bg: "bg-[#FDD543]", text: "text-[#16302A]" },
+    { label: t("curriculum.spine_4"), bg: "bg-[#934CC1]", text: "text-white" },
+    { label: t("curriculum.spine_5"), bg: "bg-[#008C9D]", text: "text-white" },
+    { label: t("curriculum.spine_6"), bg: "bg-[#55D889]", text: "text-[#16302A]" },
   ];
 
   // The 3-year path: three year cards, then the ranks in order. The icons are decorative (hidden from screen readers).
@@ -290,7 +292,8 @@ export default async function LandingPage({ params }: Props) {
           {/* Figma cards: 281×325, radius 20, #EEFFA9 fill, 1px inside #D1EF5A stroke (an inset shadow, so it adds no size)
               plus the default drop shadow. One row from ~923px wide, the gap growing to the design's 130px at 1440;
               narrower screens wrap and phones stack. Each bust is 232px tall and rises 60px above its card, so
-              wrapped rows get a 92px gap. Gray 1 / Gray 3 are Figma's default #333333 / #828282. */}
+              wrapped rows get a 92px gap. Gray 1 is Figma's default #333333; the subtitle takes Gray 3 (#828282) a
+              shade darker, at #707070, so 15px text reaches 4.5:1 on the card (3.6:1 before). */}
           <div className="flex flex-wrap justify-center gap-x-[clamp(1.5rem,calc(20.5vw_-_165px),8.125rem)] gap-y-[92px]">
             {/* Motion: the middle card grows in first, then the outer two, and each bust pops out of its card. */}
             {yearCards.map((card, i) => (
@@ -299,7 +302,7 @@ export default async function LandingPage({ params }: Props) {
                   <p className="[font-family:var(--font-adlam)] font-normal text-[24px] leading-[normal] text-[#333333]">
                     {card.title}
                   </p>
-                  <p className="[font-family:var(--font-adlam)] font-normal text-[15px] leading-[normal] text-[#828282] mt-2">
+                  <p className="[font-family:var(--font-adlam)] font-normal text-[15px] leading-[normal] text-[#707070] mt-2">
                     {card.sub}
                   </p>
                 </div>
@@ -434,7 +437,7 @@ export default async function LandingPage({ params }: Props) {
           <div className="grid grid-cols-3 md:grid-cols-6 gap-2 md:gap-[13px] max-w-[1037px] mx-auto mt-7 md:mt-[108px]">
             {spineTiles.map((tile, i) => (
               <div key={tile.label} className={`${tile.bg} aspect-[162/279] flex items-end justify-center px-1.5 pb-[13%]`} data-scroll="scale-in" style={{ "--wave": fromCenter(i, spineTiles.length) } as React.CSSProperties}>
-                <span className="[font-family:var(--font-montserrat)] font-bold text-white text-[clamp(0.8125rem,0.55rem+1vw,1.25rem)] leading-[1.2]">
+                <span className={`[font-family:var(--font-montserrat)] font-bold ${tile.text} text-[clamp(0.8125rem,0.55rem+1vw,1.25rem)] leading-[1.2]`}>
                   {tile.label}
                 </span>
               </div>

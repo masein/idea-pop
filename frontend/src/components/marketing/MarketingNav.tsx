@@ -106,8 +106,8 @@ export default function MarketingNav() {
   }
 
   /* "You are here": the pill takes a notch under the current page's item and that item's icon drops into a circle
-     sitting in it (the designer's frame). The notch is a mask on the pill, so the circle has to live outside the pill
-     — a mask clips its element's children too. Measured because the items have different widths. */
+     sitting in it (the designer's frame). The notch is a mask, and a mask clips its element's children — so it sits
+     on the pill's white skin alone, and the circle is a sibling of the pill. Measured: the items differ in width. */
   const pillRef = useRef<HTMLUListElement>(null);
   const activeItemRef = useRef<HTMLLIElement>(null);
   const [notch, setNotch] = useState<{ x: number; width: number; height: number } | null>(null);
@@ -187,10 +187,16 @@ export default function MarketingNav() {
             the logo/CTA width imbalance, and sits near the top of the hero. */}
         <ul
           ref={pillRef}
-          className="hidden w-max items-center gap-1 rounded-pill bg-white px-[clamp(0.75rem,0.6rem+0.75vw,1.25rem)] py-[clamp(0.35rem,0.28rem+0.35vw,0.5rem)] shadow-[inset_0_0_0_1px_#D1EF5A,0_4px_4px_rgba(0,0,0,0.25)] md:flex md:absolute md:left-1/2 md:top-3 md:-translate-x-1/2"
+          className="relative hidden w-max items-center gap-1 rounded-pill px-[clamp(0.75rem,0.6rem+0.75vw,1.25rem)] py-[clamp(0.35rem,0.28rem+0.35vw,0.5rem)] md:flex md:absolute md:left-1/2 md:top-3 md:-translate-x-1/2"
           role="list"
-          style={notchCut ? { WebkitMaskImage: notchCut, maskImage: notchCut } : undefined}
         >
+          {/* The pill's white skin, on its own layer behind the links. The notch is a mask and a mask clips the
+              element's children, so masking the <ul> itself would erase the language menu whenever it opened. */}
+          <li
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 -z-10 rounded-pill bg-white shadow-[inset_0_0_0_1px_#D1EF5A,0_4px_4px_rgba(0,0,0,0.25)]"
+            style={notchCut ? { WebkitMaskImage: notchCut, maskImage: notchCut } : undefined}
+          />
           {navLinks.map(({ label, href, icon }) => {
             const active = isCurrent(href);
             return (

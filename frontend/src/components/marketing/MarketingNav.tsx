@@ -12,6 +12,13 @@ import logoBadge from "../../../public/landing/idea-pop-logo.png";
 const pillLink =
   "flex flex-col items-center gap-1 whitespace-nowrap rounded-xl px-1.5 lg:px-2 py-0.5 text-[clamp(0.75rem,0.1rem+1.35vw,0.875rem)] [font-family:var(--font-adlam)] font-normal text-[#146047] transition-all duration-150 hover:text-[#0F4C39] hover:bg-ink/5 hover:scale-[1.08] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-explore";
 
+/* The page you are on is where you already are, so its label ignores the pointer, and it is set heavier and in the
+   darker green: the circle is not the only thing saying which page this is. */
+const pillLinkCurrent = pillLink
+  .replace(/ hover:\S+/g, "")
+  .replace("font-normal", "font-bold")
+  .replace("text-[#146047]", "text-[#0F4C39]");
+
 // The 1px stroke is an inset shadow (Figma "inside"), so it doesn't change the button's size.
 const ctaBase =
   "inline-flex items-center justify-center whitespace-nowrap rounded-pill bg-[#D1EF5A] px-[1.89rem] py-[0.709rem] text-[clamp(0.886rem,0.68rem+0.855vw,1.181rem)] [font-family:var(--font-montserrat)] font-extrabold text-[#1F4D33] shadow-[inset_0_0_0_1px_#18785A,0_4px_4px_rgba(0,0,0,0.25)] transition-all duration-150 hover:brightness-105 hover:scale-[1.11] hover:shadow-[inset_0_0_0_2px_#18785A,0_4px_4px_rgba(0,0,0,0.25)] active:scale-[0.97] active:bg-[#B8D24F] active:shadow-[inset_0_0_0_2px_#18785A,0_2px_2px_rgba(0,0,0,0.25)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1F4D33] focus-visible:ring-offset-2";
@@ -34,6 +41,71 @@ function NavIcon({ paths, className = "" }: { paths: readonly string[]; classNam
       ))}
     </svg>
   );
+}
+
+/* The pill's outline, read off the designer's frame: a rounded rectangle whose bottom edge sweeps into the notch.
+   The sweep is an arc tangent to both the straight edge and the notch circle — her S-curve. Where an item sits too
+   close to a rounded end for that arc to fit, the notch and the end simply meet. Every measurement is a fraction of
+   the pill's height, so it holds at any width: circle 0.92, the gap around it 0.044, how far its centre sits below
+   the edge 0.061, and the sweep 0.567. */
+const NOTCH = { diameter: 0.92, gap: 0.044, drop: 0.061, fillet: 0.567, ms: 420, swap: 140, fade: 120 };
+
+function pillOutline(w: number, h: number, cx: number) {
+  const r = h / 2;
+  const cut = h * (NOTCH.diameter / 2 + NOTCH.gap); // the hole: the circle plus its gap
+  const drop = h * NOTCH.drop;
+  const want = h * NOTCH.fillet;
+  const n = (v: number) => Math.round(v * 100) / 100;
+
+  // The largest sweep that fits in the straight edge left on this side, if any.
+  const side = (dir: 1 | -1) => {
+    const room = dir > 0 ? w - r - cx : cx - r;
+    const fits = room > 0 ? (room * room - cut * cut + drop * drop) / (2 * (cut - drop)) : 0;
+    if (fits > 0) {
+      const f = Math.min(want, fits);
+      const a = Math.sqrt((cut + f) ** 2 - (f + drop) ** 2); // where the sweep leaves the straight edge
+      const tx = (f * a) / (cut + f); // and where it meets the notch
+      const ty = (f * (f + drop)) / (cut + f);
+      return { fillet: f, tangent: cx + dir * a, meet: { x: cx + dir * (a - tx), y: h - f + ty } };
+    }
+    // No straight edge left: where the notch crosses the rounded end.
+    const end = { x: dir > 0 ? w - r : r, y: h - r };
+    const dx = cx - end.x;
+    const dy = h + drop - end.y;
+    const d = Math.hypot(dx, dy);
+    const along = (d * d + r * r - cut * cut) / (2 * d);
+    const off = Math.sqrt(Math.max(0, r * r - along * along));
+    const mx = end.x + (along * dx) / d;
+    const my = end.y + (along * dy) / d;
+    const a = { x: mx - (off * dy) / d, y: my + (off * dx) / d };
+    const b = { x: mx + (off * dy) / d, y: my - (off * dx) / d };
+    return { fillet: 0, tangent: 0, meet: dir > 0 ? (a.x > b.x ? a : b) : a.x < b.x ? a : b };
+  };
+
+  const right = side(1);
+  const left = side(-1);
+  const p = [`M ${n(r)} 0`, `H ${n(w - r)}`, `A ${n(r)} ${n(r)} 0 0 1 ${n(w)} ${n(r)}`, `V ${n(h - r)}`];
+  if (right.fillet > 0) {
+    p.push(
+      `A ${n(r)} ${n(r)} 0 0 1 ${n(w - r)} ${n(h)}`,
+      `H ${n(right.tangent)}`,
+      `A ${n(right.fillet)} ${n(right.fillet)} 0 0 1 ${n(right.meet.x)} ${n(right.meet.y)}`,
+    );
+  } else {
+    p.push(`A ${n(r)} ${n(r)} 0 0 1 ${n(right.meet.x)} ${n(right.meet.y)}`);
+  }
+  p.push(`A ${n(cut)} ${n(cut)} 0 0 0 ${n(left.meet.x)} ${n(left.meet.y)}`);
+  if (left.fillet > 0) {
+    p.push(
+      `A ${n(left.fillet)} ${n(left.fillet)} 0 0 1 ${n(left.tangent)} ${n(h)}`,
+      `H ${n(r)}`,
+      `A ${n(r)} ${n(r)} 0 0 1 0 ${n(h - r)}`,
+    );
+  } else {
+    p.push(`A ${n(r)} ${n(r)} 0 0 1 0 ${n(h - r)}`);
+  }
+  p.push(`V ${n(r)}`, `A ${n(r)} ${n(r)} 0 0 1 ${n(r)} 0`, "Z");
+  return p.join(" ");
 }
 
 const icons = {
@@ -132,6 +204,16 @@ export default function MarketingNav() {
     return () => observer.disconnect();
   }, [pathname, locale]);
 
+  /* The circle travels from the old item to the new one. For a beat after the click it is empty — the leaving page's
+     icon is back in its own slot by then — and it then takes the new page's icon and carries it the rest of the way. */
+  const [swapping, setSwapping] = useState(false);
+  // Read once, on the client: it has to be known during render, before any effect has run.
+  const [reduced] = useState(() => typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  const settledRef = useRef<string | undefined>(undefined); // the page the circle is settled on
+  const pathRef = useRef<SVGPathElement>(null);
+  const dotRef = useRef<HTMLSpanElement>(null);
+  const drawnRef = useRef<number | null>(null); // where the notch is drawn right now, mid-travel included
+
   const navLinks = [
     { label: t("method"), href: "/method" as const, icon: icons.method },
     { label: t("pricing"), href: "/pricing" as const, icon: icons.pricing },
@@ -146,10 +228,66 @@ export default function MarketingNav() {
   // next-intl hands back the path without the locale, so "/method" matches on both languages.
   const isCurrent = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
   const current = navLinks.find((link) => isCurrent(link.href));
-  const NOTCH = { radius: 27, gap: 5, drop: 13 }; // circle radius, its gap to the pill, how far it hangs below
-  const notchCut = notch
-    ? `radial-gradient(circle ${NOTCH.radius + NOTCH.gap}px at ${notch.x}px ${notch.height + NOTCH.drop}px, transparent ${NOTCH.radius + NOTCH.gap - 1}px, #000 ${NOTCH.radius + NOTCH.gap}px)`
-    : undefined;
+
+  const currentHref = current?.href;
+  /* The circle is settled on one page at a time. The moment the route changes, that no longer matches — and this is
+     read during render, not after an effect, or the new icon would show at full strength for one frame before the
+     old one had faded. While they differ the circle still carries the leaving page's icon, fading out. */
+  const leavingIcon =
+    !reduced && settledRef.current !== undefined && settledRef.current !== currentHref
+      ? navLinks.find((link) => link.href === settledRef.current)?.icon
+      : undefined;
+  const fading = leavingIcon !== undefined || swapping;
+
+  useEffect(() => {
+    const from = settledRef.current;
+    if (from === currentHref) return;
+    if (from === undefined || !currentHref || reduced) {
+      settledRef.current = currentHref; // the first page seen, or a reader who asked for less motion: nothing fades
+      return;
+    }
+    setSwapping(true);
+    const timer = setTimeout(() => {
+      settledRef.current = currentHref;
+      setSwapping(false);
+    }, NOTCH.swap);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentHref]);
+
+  /* The notch and the circle travel together. A CSS transition cannot carry an SVG path, so both are moved frame by
+     frame from where the notch is drawn now to where it belongs. The first paint, and a reader who asked for less
+     motion, jump straight there. */
+  useEffect(() => {
+    if (!notch) {
+      drawnRef.current = null;
+      return;
+    }
+    const { x: to, width: w, height: h } = notch;
+    const size = NOTCH.diameter * h;
+    const paint = (x: number) => {
+      drawnRef.current = x;
+      pathRef.current?.setAttribute("d", pillOutline(w, h, x));
+      if (dotRef.current) {
+        dotRef.current.style.transform = `translate(calc(-50% + ${x - w / 2}px), ${h + NOTCH.drop * h - size / 2}px)`;
+      }
+    };
+    const from = drawnRef.current;
+    if (from === null || Math.abs(to - from) < 0.5 || reduced) {
+      paint(to);
+      return;
+    }
+    let frame = 0;
+    const started = performance.now();
+    const step = (now: number) => {
+      const t = Math.min(1, (now - started) / NOTCH.ms);
+      const eased = t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2; // the same shape as the CSS curve elsewhere
+      paint(from + (to - from) * eased);
+      if (t < 1) frame = requestAnimationFrame(step);
+    };
+    frame = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(frame);
+  }, [notch]);
 
   return (
     <header className="absolute top-0 z-50 w-full" data-testid="marketing-nav">
@@ -187,24 +325,45 @@ export default function MarketingNav() {
             the logo/CTA width imbalance, and sits near the top of the hero. */}
         <ul
           ref={pillRef}
-          className="relative hidden w-max items-center gap-1 rounded-pill px-[clamp(0.75rem,0.6rem+0.75vw,1.25rem)] py-[clamp(0.35rem,0.28rem+0.35vw,0.5rem)] md:flex md:absolute md:left-1/2 md:top-3 md:-translate-x-1/2"
+          className="relative hidden w-max items-center gap-1 rounded-pill px-[clamp(1.5rem,0.35rem+2.4vw,2.5rem)] py-[clamp(0.35rem,0.28rem+0.35vw,0.5rem)] md:flex md:absolute md:left-1/2 md:top-3 md:-translate-x-1/2"
           role="list"
         >
-          {/* The pill's white skin, on its own layer behind the links. The notch is a mask and a mask clips the
-              element's children, so masking the <ul> itself would erase the language menu whenever it opened. */}
-          <li
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-0 -z-10 rounded-pill bg-white shadow-[inset_0_0_0_1px_#D1EF5A,0_4px_4px_rgba(0,0,0,0.25)]"
-            style={notchCut ? { WebkitMaskImage: notchCut, maskImage: notchCut } : undefined}
-          />
+          {/* The pill's white skin, on its own layer behind the links: an outline, so the stroke can follow the notch
+              the way the designer drew it. Before the notch has been measured — and on a page with no current item —
+              it is a plain rounded box, which is also what the server renders. */}
+          <li aria-hidden="true" data-nav-notch className="pointer-events-none absolute inset-0 -z-10">
+            {notch ? (
+              <svg
+                width={notch.width}
+                height={notch.height}
+                viewBox={`0 0 ${notch.width} ${notch.height}`}
+                className="block overflow-visible [filter:drop-shadow(0_4px_4px_rgba(0,0,0,0.25))]"
+              >
+                <path
+                  ref={pathRef}
+                  d={pillOutline(notch.width, notch.height, drawnRef.current ?? notch.x)}
+                  fill="#fff"
+                  stroke="#D1EF5A"
+                  strokeWidth={1}
+                />
+              </svg>
+            ) : (
+              <span className="block h-full w-full rounded-pill bg-white shadow-[inset_0_0_0_1px_#D1EF5A,0_4px_4px_rgba(0,0,0,0.25)]" />
+            )}
+          </li>
           {navLinks.map(({ label, href, icon }) => {
             const active = isCurrent(href);
             return (
               <li key={href} ref={active ? activeItemRef : undefined}>
-                <Link href={href} className={pillLink} aria-current={active ? "page" : undefined}>
+                <Link
+                  href={href}
+                  className={active ? pillLinkCurrent : pillLink}
+                  aria-current={active ? "page" : undefined}
+                >
                   <span>{label}</span>
-                  {/* On the current page the icon shows in the circle below instead; the space it left keeps the pill's size. */}
-                  <NavIcon paths={icon} className={active && notch ? "invisible" : ""} />
+                  {/* On the current page the icon shows in the circle below instead; the space it left keeps the pill's size.
+                      For the beat while the circle is empty, every slot shows its own icon again. */}
+                  <NavIcon paths={icon} className={active && notch && !fading ? "invisible" : ""} />
                 </Link>
               </li>
             );
@@ -252,12 +411,21 @@ export default function MarketingNav() {
         {current && notch && (
           <span
             aria-hidden="true"
-            className="pointer-events-none absolute left-1/2 top-3 hidden h-[54px] w-[54px] items-center justify-center rounded-full bg-white text-[#146047] shadow-[inset_0_0_0_1px_#D1EF5A,0_6px_10px_rgba(0,0,0,0.10)] md:flex"
+            ref={dotRef}
+            className="pointer-events-none absolute left-1/2 top-3 hidden items-center justify-center rounded-full bg-white text-[#146047] shadow-[inset_0_0_0_1px_#D1EF5A,0_6px_10px_rgba(0,0,0,0.10)] md:flex"
+            data-nav-dot
             style={{
-              transform: `translate(calc(-50% + ${notch.x - notch.width / 2}px), ${notch.height + NOTCH.drop - NOTCH.radius}px)`,
+              width: NOTCH.diameter * notch.height,
+              height: NOTCH.diameter * notch.height,
+              transform: `translate(calc(-50% + ${(drawnRef.current ?? notch.x) - notch.width / 2}px), ${notch.height + NOTCH.drop * notch.height - (NOTCH.diameter * notch.height) / 2}px)`,
             }}
           >
-            <NavIcon paths={current.icon} />
+            {/* The leaving page's icon fades out, then the new one fades in — the circle is never empty-looking for
+                longer than the fade, and no icon slides across the pill. */}
+            <NavIcon
+              paths={leavingIcon ?? current.icon}
+              className={`transition-opacity duration-[120ms] ${fading ? "opacity-0" : "opacity-100"}`}
+            />
           </span>
         )}
 

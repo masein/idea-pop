@@ -8,7 +8,8 @@
     "pricing": "Pricing",
     "for_teachers": "For Teachers",
     "sign_up": "Sign up",
-    "start_free": "Start free"
+    "start_free": "Start free",
+    "language": "Language"
   },
   "home": {
     "tagline": "Ask nature. Build with your hands.",
@@ -19,7 +20,7 @@
   },
   "mascot": {
     "ask_me": "Ask Me",
-    "greeting": "Hi, I'm Idea Pop!"
+    "greeting": "Hi, I'm Idea PopI"
   },
   "themes": {
     "label": "Themes",
@@ -40,74 +41,99 @@
   "marketing": {
     "hero": {
       "headline_1": "Ask nature,",
+      "headline_1_pre": "Ask ",
+      "headline_1_word": "nature",
+      "headline_1_post": ",",
       "headline_2": "How?",
       "sub_1": "Build with your",
       "sub_2": "hands",
-      "body": "Your child solves one real problem every week — with design thinking, nature's secrets and home materials. Ages 8+",
-      "subhead": "Your child solves one real problem every week — with design thinking, nature's secrets and home materials. Ages 8+",
+      "body_1_pre": "Every week, your child solves one ",
+      "body_1_word": "real problem",
+      "body_1_post": ".",
+      "body_2": "They learn from nature and build with things from home. Ages 8+",
+      "subhead": "Every week, your child solves one real problem. They learn from nature and build with things from home. Ages 8+",
       "cta_explore": "Start Exploring",
-      "cta_challenge": "Start a simple challenge",
-      "trust": "✓ No ads ✓ Private by default ✓ Cancel anytime ✓ COPPA-friendly"
+      "cta_challenge": "Start a simple challenge"
     },
     "year": {
       "heading": "What a year of Idea Pop looks like",
       "card1_title": "12 thinking tools",
-      "card1_sub": "5 WhQ · SCAMPER · Mind Map…",
+      "card1_sub": "6 creativity questions, SCAMPER, Mind Map…",
       "card2_title": "~40 real makes",
       "card2_sub": "built from home materials",
       "card3_title": "Portfolio + certificate",
       "card3_sub": "proof of creative growth",
-      "steps_label": "mission steps:",
-      "steps": "1 Brief · 2 Watch? · 3 Idea · 4 Secret · 5 Re-ask · 6 My idea · 7 Build & test · 8 Celebrate"
+      "steps_label": "Mission steps:",
+      "steps": "1 Brief 2 Watch 3 Idea 4 Secret 5 Re-ask 6 My idea 7 Build & test 8 Celebrate"
     },
     "cycle": {
       "heading": "How it works — the creative cycle",
-      "see_label": "1 · SEE the world",
+      "see_label": "1 SEE the world",
       "see_desc": "Short nature films spark a “how does it work?!”",
-      "learn_label": "2 · LEARN",
+      "learn_label": "2 LEARN",
       "learn_desc": "Real experts teach the skill in short lessons",
-      "solve_label": "3 · SOLVE & MAKE",
+      "solve_label": "3 SOLVE & MAKE",
       "solve_desc": "An 8-step mission that ends in a real build"
     },
     "paint": {
       "heading": "Do you like animals? We can paint them together",
-      "cta": "Watch Now"
+      "cta": "Start painting"
     },
     "curriculum": {
       "heading": "A curriculum, not random videos",
       "sub": "Every mission follows the design-thinking spine:",
-      "note": "Tools are taught once, practiced for weeks, then owned for life — your child finishes the year with a real creative toolbox.",
+      "note": "Tools are taught, practiced for weeks, then owned for life — your child finishes the year with a real creative toolbox.",
       "spine_1": "Frame a Question",
       "spine_2": "Gather Inspiration",
       "spine_3": "Generate Ideas",
       "spine_4": "Make Ideas Tangible",
       "spine_5": "Test to Learn",
       "spine_6": "Share the Story",
-      "spine_credit": "IDEO design thinking process",
+      "spine_credit": "Inspired by IDEO's design thinking process",
       "path_heading": "The 3-year path",
-      "path_line1": "Year 1 · Toolbox 🧰 → Year 2 · Studio mastery 🎓 → Year 3 · Real impact 🌍",
-      "path_line2": "🤠 Explorer → 🛠️ Maker → 💡 Inventor → 🚀 Innovator → 🥇 Master → 🧑‍🏫 Mentor",
+      "path_year_1": "Year 1",
+      "path_year_1_title": "Toolbox",
+      "path_year_2": "Year 2",
+      "path_year_2_title": "Studio mastery",
+      "path_year_3": "Year 3",
+      "path_year_3_title": "Real impact",
+      "path_rank_1": "Explorer",
+      "path_rank_2": "Maker",
+      "path_rank_3": "Inventor",
+      "path_rank_4": "Innovator",
+      "path_rank_5": "Master",
+      "path_rank_6": "Mentor",
       "cta": "See the method"
     },
     "try_now": {
       "heading": "Try one mission right now",
-      "body": "Help Max cross the river — 60 seconds",
-      "cta": "Start the challenge"
+      "body": "Max has to get to school every day, but a wide river is in the way.",
+      "body2": "Help him find a way across — 10 minutes, no account needed.",
+      "cta": "Start the mission"
     },
     "kids_made": {
-      "heading": "Made by kids this month"
+      "heading": "Made by kids this month",
+      "alts": [
+        "A wooden stand with a cardboard eyepiece",
+        "A cleaning robot built from a toy car",
+        "A paper creature with a wide, toothy mouth",
+        "Two paper cone figures",
+        "A bat with straw-and-plastic wings",
+        "A bird made from a bottle and yellow paper"
+      ]
     },
     "experts": {
-      "heading": "Real experts. making lessons.",
+      "heading": "Real experts make the lessons",
       "e1_name": "Ms. Ronasi",
       "e1_role": "illustrator",
       "e2_name": "Dr. Kian",
       "e2_role": "science",
       "e3_name": "Mr. Modaresi",
-      "e3_role": "CEO of Netix system",
+      "e3_role": "CEO of Netix System",
       "e4_name": "Eng. Lina",
       "e4_role": "maker",
-      "note": "Every lesson is reviewed by our education team before it goes live · 🤖 AI-assisted films are labeled"
+      "note1": "Our education team reviews every lesson before it goes live.",
+      "note2": "Films made with AI help are labeled."
     },
     "pricing_teaser": {
       "heading": "Start free. Upgrade when your kids enjoy it.",
@@ -122,18 +148,20 @@
       "free_f5": "class join via code",
       "cta_free": "Start free",
       "plus_name": "Plus",
-      "plus_price": "$9.99/mo",
-      "plus_billing_annual": "billed annually $59.90 · or $9.99 monthly",
-      "plus_billing_monthly": "billed monthly $9.99 · cancel anytime",
+      "plus_price_annual": "$4.99/mo",
+      "plus_price_monthly": "$9.99/mo",
+      "plus_billing_annual": "billed annually $59.90, or $9.99 monthly",
+      "plus_billing_monthly": "billed monthly $9.99, cancel anytime",
       "plus_intro": "everything in Free, plus:",
       "plus_f1": "unlimited missions + makes",
-      "plus_f2": "full courses · full AI helper",
+      "plus_f2": "full courses, full AI helper",
       "plus_f3": "gallery sharing (with consent)",
       "plus_f4": "weekly report + certificates",
       "cta_plus": "Try 7 days free",
       "badge_popular": "MOST POPULAR",
       "family_name": "Family plan",
-      "family_price": "$7.99/mo",
+      "family_price_annual": "$7.99/mo",
+      "family_price_monthly": "$12.99/mo",
       "family_billing_annual": "billed annually $95.90",
       "family_billing_monthly": "billed monthly $12.99",
       "family_intro": "everything in Plus, for:",
@@ -148,29 +176,29 @@
       "items": [
         {
           "q": "What age is it for?",
-          "a": "8+, with age-tuned modes up to teens"
+          "a": "Ages 8 and up, with modes that grow with your child into the teens."
         },
         {
-          "q": "How much time per week?",
-          "a": "one 5-min film + one mission (~45 min)"
+          "q": "Is it safe for my children?",
+          "a": "Yes. Profiles are private, and photos show the project, not faces."
         },
         {
           "q": "Do we need special materials?",
-          "a": "no, just home stuff"
+          "a": "No, everything is made from things you have at home."
         },
         {
-          "q": "More than one child?",
-          "a": "Family plan, 4 profiles"
+          "q": "Can more than one child use it?",
+          "a": "Yes, the Family plan covers up to 4 children."
         },
         {
-          "q": "I'm a teacher — is it free?",
-          "a": "yes, classes are free"
+          "q": "I'm a teacher. Is it free?",
+          "a": "Yes, classes are free for teachers."
         }
       ]
     },
     "ask": {
-      "heading": "Hi, I'm Idea Pop!",
-      "sub": "Do you have any question?!",
+      "heading": "Hi, I'm Idea PopI",
+      "sub": "Do you have any questions?!",
       "placeholder": "Ask me anything you like...",
       "input_label": "Your question for Idea Pop",
       "send_label": "Send question",
@@ -289,7 +317,7 @@
         "family": "full"
       },
       {
-        "feature": "Gallery sharing · weekly report",
+        "feature": "Gallery sharing, weekly report",
         "free": "—",
         "plus": "✓",
         "family": "✓"
@@ -323,7 +351,7 @@
   },
   "explore": {
     "heading": "Animal Superpowers",
-    "subheading": "Organised by superpower, not species — because that's how real engineers think.",
+    "subheading": "Organized by superpower, not species — because that's how real engineers think.",
     "categories": {
       "masters_of_disguise": "Masters of Disguise",
       "soft_engineers": "Soft Engineers",
@@ -443,7 +471,7 @@
   },
   "footer": {
     "product": "Product",
-    "safety": "Safety",
+    "safety": "Parents & safety",
     "stay_close": "Stay close",
     "links": {
       "method": "The Method",
@@ -467,9 +495,9 @@
     "legal": "© {year} Idea Pop. All rights reserved.",
     "locale_en": "EN",
     "locale_fa": "فا",
-    "tagline": "Ask nature, How? Build, with your hands",
-    "newsletter_heading": "Monthly ideas for curious families 📮",
-    "newsletter_note": "adults only · one email a month · unsubscribe anytime",
+    "tagline": "Ask nature, How? Build with your hands",
+    "newsletter_heading": "Monthly ideas for curious families",
+    "newsletter_note": "adults only, one email a month, unsubscribe anytime",
     "method_col": "The Method",
     "company": "Company",
     "trust_human": "Human-reviewed public sharing",
@@ -478,13 +506,13 @@
       "exploring": "Exploring",
       "library_studios": "Library & studios",
       "challenges": "Challenges",
-      "pricing_gifts": "Pricing & gift cards 🎁",
+      "pricing_gifts": "Pricing & gift cards 🎁",
       "how_works": "How Idea Pop works",
       "path3": "The 3-year path",
       "tools12": "12 creativity tools",
       "sample_challenge": "Sample challenge (free)",
-      "teachers_free": "For teachers — free 🏫",
-      "safety_promise": "Our safety promise 🔒",
+      "teachers_free": "For teachers — free 🏫",
+      "safety_promise": "Our safety promise 🔒",
       "privacy": "Privacy",
       "parent_dashboard": "Parent dashboard",
       "weekly_report": "Weekly report",
@@ -1241,7 +1269,7 @@
     "upload": "Add photos",
     "onion_label": "Show the last frame faintly (helps you line things up)",
     "canvas_label": "Drawing canvas",
-    "pen_color": "Pen colour {color}",
+    "pen_color": "Pen color {color}",
     "clear_drawing": "Clear",
     "add_drawing": "Add this drawing ➕",
     "snap": "Snap a frame",
@@ -1346,7 +1374,7 @@
     "no_tries_yet": "Press “Run a try” — the first try is a wild wander. That's how learning starts!",
     "still_learning": "Still learning — run another try and watch the steps drop!",
     "best_note": "The mouse learned a path — {steps} steps to the cheese! 🎉",
-    "trap_warning": "Its favourite path ({steps} steps) walks THROUGH a trap! Make the trap cost bigger and watch it re-learn.",
+    "trap_warning": "Its favorite path ({steps} steps) walks THROUGH a trap! Make the trap cost bigger and watch it re-learn.",
     "try_line_cheese": "Try {n}: {steps} steps → cheese! 🧀",
     "try_line_timeout": "Try {n}: got lost and gave up 😴",
     "share_heading": "My maze — ready to share 📋",

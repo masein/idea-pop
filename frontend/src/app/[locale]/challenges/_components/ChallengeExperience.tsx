@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useRouter } from "@/i18n/routing";
 import Reveal from "./Reveal";
 
-import riverScene from "../../../../../public/landing/try-mission-bg.jpg";
+import riverScene from "../../../../../public/landing/try-mission-river.webp";
 import thinkingBoy from "../../../../../public/landing/thinking-tools-avatar.png";
 import robot from "../../../../../public/landing/robot.png";
 import scientistGirl from "../../../../../public/landing/start-free-girl.png";

@@ -15,4 +15,4 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 export const AskMe: Story = { args: { label: 'Ask Me' } };
-export const MarketingLabel: Story = { args: { label: "Hi, I'm Idea Pop!" } };
+export const MarketingLabel: Story = { args: { label: "Hi, I'm Idea PopI" } };

@@ -17,7 +17,7 @@ export default function ParentLetterForm() {
   if (submitted) {
     return (
       <p
-        className="text-sm font-semibold text-[#CDEB5A]"
+        className="[font-family:var(--font-montserrat)] text-sm font-bold text-[#D7F26A]"
         role="status"
         aria-live="polite"
       >
@@ -43,11 +43,11 @@ export default function ParentLetterForm() {
           onChange={(e) => setEmail(e.target.value)}
           placeholder={t("newsletter_placeholder")}
           required
-          className="flex-1 rounded-pill border border-white/20 bg-white px-4 py-2 text-sm text-ink placeholder:text-ink/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#CDEB5A]"
+          className="h-11 min-w-0 flex-1 rounded-pill bg-white px-4 [font-family:var(--font-montserrat)] text-[16px] font-medium text-[#1F2D33] placeholder:text-[#8B95A1] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D1EF5A]"
         />
         <button
           type="submit"
-          className="rounded-pill bg-[#CDEB5A] px-5 py-2 text-sm font-bold text-[#1F4D33] transition-all hover:brightness-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#CDEB5A] focus-visible:ring-offset-2 focus-visible:ring-offset-[#2E5F4B]"
+          className="h-11 shrink-0 rounded-pill bg-[#D1EF5A] px-6 [font-family:var(--font-montserrat)] text-[16px] font-extrabold text-[#1F4D33] shadow-[inset_0_0_0_1px_#18785A,0_4px_4px_rgba(0,0,0,0.25)] transition-all duration-150 hover:brightness-105 hover:scale-[1.11] hover:shadow-[inset_0_0_0_2px_#18785A,0_4px_4px_rgba(0,0,0,0.25)] active:scale-[0.97] active:bg-[#B8D24F] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D1EF5A] focus-visible:ring-offset-2 focus-visible:ring-offset-[#2E574D]"
         >
           {t("newsletter_cta")}
         </button>

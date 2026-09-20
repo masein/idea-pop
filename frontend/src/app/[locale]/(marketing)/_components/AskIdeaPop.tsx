@@ -30,26 +30,30 @@ export default function AskIdeaPop({
 
   return (
     <section aria-label="ask idea pop" className="py-12 md:py-16">
-      <div className="max-w-5xl mx-auto px-4 grid grid-cols-1 md:grid-cols-[220px_1fr] items-start gap-8">
+      <div className="max-w-[1200px] mx-auto px-4 grid grid-cols-1 md:grid-cols-[300px_1fr] items-start gap-6 md:gap-x-3 md:gap-y-0">
+        {/* Motion (landing motion.css): PopI pops out, then the greeting and the box grow in. */}
         <div className="flex justify-center">
           <Image
                 unoptimized
             src={robot}
             alt=""
             aria-hidden="true"
-            className="w-40 md:w-52 h-auto"
-            sizes="(min-width: 768px) 13rem, 10rem"
+            className="w-[200px] md:w-[300px] md:-ms-[100px] h-auto"
+            sizes="(min-width: 768px) 300px, 200px"
+            data-reveal="pop"
           />
         </div>
         <div>
-          <h2 className="font-display text-3xl md:text-4xl font-bold text-[#1E5B2E]">
+          <h2 className="[font-family:var(--font-cherry)] font-normal text-[clamp(1.875rem,1.435rem+1.878vw,3rem)] leading-[normal] text-[#363535] md:-ms-[100px]" data-reveal="grow" style={{ "--motion-delay": "220ms" } as React.CSSProperties}>
             {heading}
           </h2>
-          <p className="font-display text-xl md:text-2xl font-bold text-[#2E5F4B] mt-1 mb-5">
+          <p className="[font-family:var(--font-cherry)] font-normal text-[clamp(1.375rem,1rem+1.4vw,2.25rem)] leading-[normal] text-[#363535] mt-0.5 mb-[18px] md:-ms-[100px]" data-reveal="grow" style={{ "--motion-delay": "350ms" } as React.CSSProperties}>
             {sub}
           </p>
           <form
-            className="relative"
+            data-reveal="grow"
+            style={{ "--motion-delay": "490ms" } as React.CSSProperties}
+            className="relative md:-ms-[200px] md:w-[calc(100%+200px)]"
             onSubmit={(e) => {
               e.preventDefault();
               router.push("/sign-up");
@@ -58,8 +62,8 @@ export default function AskIdeaPop({
             <textarea
               aria-label={inputLabel}
               placeholder={placeholder}
-              rows={5}
-              className="w-full rounded-[1.75rem] bg-[#EDF6C5] border border-[#2E5F4B]/20 px-6 py-5 font-body text-base text-ink placeholder:text-ink/50 resize-none focus:outline-none focus:ring-2 focus:ring-[#2E5F4B]"
+              rows={4}
+              className="w-full h-[140px] md:h-[136px] rounded-[20px] bg-[#EEFFA9] border-2 border-[#D1EF5A] px-6 py-5 font-body text-[20px] md:text-[24px] text-[#363535] placeholder:text-[#363535]/60 resize-none focus:outline-none focus:ring-2 focus:ring-[#2E5F4B]"
             />
             <div className="absolute bottom-4 end-4 flex items-center gap-2">
               <button
@@ -85,7 +89,7 @@ export default function AskIdeaPop({
               <button
                 type="submit"
                 aria-label={sendLabel}
-                className="w-11 h-11 rounded-full bg-[#CDEB5A] flex items-center justify-center text-[#1F4D33] shadow-sm hover:brightness-105 active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1F4D33]"
+                className="w-11 h-11 rounded-full bg-[#D1EF5A] flex items-center justify-center text-[#1F4D33] shadow-[inset_0_0_0_1px_#18785A,0_4px_4px_rgba(0,0,0,0.25)] transition-all duration-150 hover:brightness-105 hover:scale-[1.11] hover:shadow-[inset_0_0_0_2px_#18785A,0_4px_4px_rgba(0,0,0,0.25)] active:scale-[0.97] active:bg-[#B8D24F] active:shadow-[inset_0_0_0_2px_#18785A,0_2px_2px_rgba(0,0,0,0.25)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1F4D33] focus-visible:ring-offset-2"
               >
                 <svg
                   className="w-5 h-5"

@@ -198,6 +198,10 @@ function mockReviewerAPIs(page: import('@playwright/test').Page) {
 
 test.describe('axe — marketing pages', () => {
   test('homepage passes axe', async ({ page }) => {
+    // The landing page fades each block in as it scrolls into view, so at load the blocks below the fold are still
+    // transparent and axe reads their text as no-contrast. Reduced motion shows the page at rest, which is what the
+    // contrast rules are about (the reveal itself has its own prefers-reduced-motion test).
+    await page.emulateMedia({ reducedMotion: 'reduce' });
     await page.goto('/en');
     await page.waitForLoadState('networkidle');
     const results = await new AxeBuilder({ page })
@@ -1008,6 +1012,8 @@ test.describe('locale switch and RTL', () => {
   });
 
   test('FA marketing page renders without axe violations', async ({ page }) => {
+    // Reduced motion for the same reason as the English homepage check: axe reads the page at rest.
+    await page.emulateMedia({ reducedMotion: 'reduce' });
     await page.goto('/fa');
     await page.waitForLoadState('networkidle');
     const results = await new AxeBuilder({ page })

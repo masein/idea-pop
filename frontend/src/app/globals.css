@@ -22,16 +22,16 @@
 }
 
 /* Farsi: neither Cherry Bomb One nor Montserrat carry Persian glyphs, so the
-   app uses Vazirmatn for both roles on the fa locale. */
+   app uses Playpen Sans Arabic for both roles on the fa locale. */
 html[lang="fa"] .app-typography {
-  --font-display: var(--font-vazir);
-  --font-body: var(--font-vazir);
+  --font-display: var(--font-persian);
+  --font-body: var(--font-persian);
 }
 
 /* Cherry Bomb One ships a single 400 weight (the spec keeps display at Regular),
    so keep app display text at 400 — otherwise font-bold headings faux-bold it.
    Two-class specificity beats the .font-bold utility without !important.
-   Vazirmatn (fa) has real weights, so let Persian headings keep their bold. */
+   Playpen Sans Arabic (fa) has real weights, so let Persian headings keep their bold. */
 html:not([lang="fa"]) .app-typography .font-display {
   font-weight: 400;
 }
@@ -152,4 +152,27 @@ html {
   top: 1rem;
   outline: 2px solid var(--color-explore);
   outline-offset: 2px;
+}
+
+/* Persian text anywhere, on Persian pages and in Persian snippets on English ones (the language menu's «فارسی»),
+   is set in Playpen Sans Arabic. The marketing pages name their Latin fonts per element (Cherry Bomb One, ADLaM
+   Display, Montserrat), none of which have Persian glyphs, so Persian used to fall back to a system font.
+   :lang() matches every element in Persian; kept last in this file so it wins over the utilities and the class rules
+   above at equal specificity. An element marked lang="en" inside a Persian page keeps its own font. */
+:lang(fa) {
+  font-family: var(--font-persian), system-ui, sans-serif;
+}
+/* The Latin display faces are heavy at their single 400 weight; give their Persian stand-in the matching weight so
+   headings stay bold: Cherry Bomb One headings at 700, ADLaM Display text at 500. */
+:lang(fa)[class*="var(--font-cherry)"] {
+  font-weight: 700;
+}
+:lang(fa)[class*="var(--font-adlam)"] {
+  font-weight: 500;
+}
+/* Emoji keep the system colour-emoji font, Persian pages included: Playpen Sans Arabic carries a few emoji of its own,
+   and mixing the two split joined emoji such as the teacher (🧑‍🏫) into two pictures. */
+.font-emoji,
+:lang(fa) .font-emoji {
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
 }

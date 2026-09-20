@@ -43,7 +43,7 @@ export default function LocaleSwitcher({ variant = "dark" }: LocaleSwitcherProps
         onClick={() => switchLocale(next)}
         disabled={isPending}
         aria-pressed={locale === next}
-        className={`rounded-pill px-3 py-1 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-challenge ${
+        className={`rounded-pill ${variant === "light" ? "px-3 py-1" : "min-h-[40px] px-4"} transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-challenge ${
           locale === next ? activeClass : inactiveClass
         }`}
       >
@@ -54,7 +54,7 @@ export default function LocaleSwitcher({ variant = "dark" }: LocaleSwitcherProps
 
   return (
     <div
-      className={`flex items-center gap-1 rounded-pill border p-0.5 text-sm font-semibold ${groupClass}`}
+      className={`flex items-center gap-1 rounded-pill border p-0.5 [font-family:var(--font-montserrat),var(--font-persian)] text-sm font-semibold ${groupClass}`}
       role="group"
       aria-label={t("language")}
     >

@@ -30,8 +30,9 @@ packages/api-types, .github/workflows, docs/.
 - Project photos are "project, not face". AI-generated content is flagged `ai_generated` and labeled in the UI.
 
 ## Design tokens (see docs/design-tokens.md, wired in frontend/tailwind.config.ts)
-- Fonts: APP screens (inside AppShell) use Cherry Bomb One (display) + Montserrat (body), with Vazirmatn
-  for the fa locale (Cherry Bomb One/Montserrat lack Persian glyphs). MARKETING/landing keeps Baloo 2 (display)
+- Fonts: APP screens (inside AppShell) use Cherry Bomb One (display) + Montserrat (body), with Playpen Sans Arabic
+  for the fa locale (Cherry Bomb One/Montserrat lack Persian glyphs; globals.css sets every `:lang(fa)` element in it,
+  marketing pages included). MARKETING/landing keeps Baloo 2 (display)
   + Nunito (body). Scoped via `--font-display`/`--font-body` (globals.css `.app-typography`). Min body ~14px; larger for kids.
 - Section colors (chameleon nav): Explore green, Library #F2994A, Challenge #2D9CDB, Pricing purple.
 - Pastel page tints: #F3FFC2 lime, #FBF7D5 cream, #C0F0FF blue, #F1D8FB lavender, #F9DED7 blush.

@@ -216,10 +216,24 @@
     },
     "why": {
       "heading": "Why we built it",
-      "card1_title": "Endless passive watching 🙂",
-      "card1_sub": "hours of screen time, nothing to show",
-      "card2_title": "School feels far from real life 🏫",
-      "card2_sub": "knowledge without making",
+      "cards": [
+        {
+          "title": "“I’m not creative” 🎨",
+          "sub": "creativity treated as a talent, not a skill"
+        },
+        {
+          "title": "Stuck means stop 🧱",
+          "sub": "no method when the first idea fails"
+        },
+        {
+          "title": "Nature is for watching, not asking 🌿",
+          "sub": "the best engineer on earth goes unread"
+        },
+        {
+          "title": "Parents can’t see the learning 📩",
+          "sub": "“what did you do today?” “nothing”"
+        }
+      ],
       "line": "Kids are wildly creative — they just need a method."
     },
     "cycle": {
@@ -250,9 +264,9 @@
     },
     "what_you_see": {
       "heading": "What you'll actually see",
-      "report_title": "YOUR WEEKLY REPORT 📩",
-      "report_body": "Miwo watched 4 films finished 2 lessons built 1 sled 🛷 earned the 5-Whys tool ❓",
-      "report_quote": "“Ask her how she found the real problem!”",
+      "report_title": "Your weekly report 📩",
+      "report_body": "Miwo watched 4 films, finished 2 lessons, built 1 sled 🛷 and earned the 5 Whys tool.",
+      "report_quote": "Ask her: “How did you find the real problem?”",
       "report_note": "a real conversation starter, every Friday",
       "portfolio_title": "🛠️ a portfolio of ~40 real makes",
       "portfolio_sub": "photos + reflections, downloadable, theirs forever",

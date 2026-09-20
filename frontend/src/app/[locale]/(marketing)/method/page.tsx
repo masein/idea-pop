@@ -35,6 +35,7 @@ export default async function MethodPage({ params }: Props) {
   const fa = locale === "fa";
 
   const steps = t.raw("cycle.steps") as string[];
+  const whyCards = t.raw("why.cards") as { title: string; sub: string }[];
 
   // The three cycle cards, in the designer's colours; each icon sits on its own card colour so it blends in.
   const cycleCards = [
@@ -69,25 +70,22 @@ export default async function MethodPage({ params }: Props) {
         </div>
       </section>
 
-      {/* 2. Why we built it: the two problems, then the promise */}
+      {/* 2. Why we built it: the problems the method answers, then the promise */}
       <section aria-label="why we built idea pop" className="py-8 md:py-12">
         <div className="max-w-[1180px] mx-auto px-4 text-center">
           <h2 className={`${heading} text-[clamp(1.625rem,1.3rem+1.4vw,2.25rem)] mb-6 md:mb-8`} data-reveal="grow">
             {keepTogether(t("why.heading"))}
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-            {[
-              { title: t("why.card1_title"), sub: t("why.card1_sub") },
-              { title: t("why.card2_title"), sub: t("why.card2_sub") },
-            ].map((card, i) => (
+            {whyCards.map((card, i) => (
               <div
                 key={card.title}
                 className="rounded-[24px] bg-[#EEFFA9] shadow-[inset_0_0_0_1px_#D1EF5A] px-6 py-6 md:py-7 text-start"
                 data-reveal="grow"
-                style={motionDelay(i * 160)}
+                style={motionDelay(i * 120)}
               >
                 <p className={`[font-family:var(--font-adlam)] font-normal text-[#194D3D] text-[clamp(1.125rem,0.95rem+0.8vw,1.5rem)] leading-[1.3]`}>
-                  {card.title}
+                  {keepTogether(card.title)}
                 </p>
                 <p className={`${body} text-[clamp(0.9375rem,0.85rem+0.4vw,1.125rem)] mt-2`}>{card.sub}</p>
               </div>
@@ -96,7 +94,7 @@ export default async function MethodPage({ params }: Props) {
           <p
             className="[font-family:var(--font-adlam)] font-normal text-[#18785A] text-[clamp(1rem,0.9rem+0.5vw,1.25rem)] mt-6 md:mt-7"
             data-reveal="grow"
-            style={motionDelay(320)}
+            style={motionDelay(whyCards.length * 120)}
           >
             {keepTogether(t("why.line"))}
           </p>
@@ -198,7 +196,7 @@ export default async function MethodPage({ params }: Props) {
               <p className="[font-family:var(--font-cherry)] font-normal text-[#18785A] text-[clamp(1rem,0.9rem+0.5vw,1.25rem)]">
                 {t("what_you_see.report_title")}
               </p>
-              <p className={`${body} text-[clamp(0.875rem,0.82rem+0.3vw,1rem)] leading-[1.6] mt-4`}>{t("what_you_see.report_body")}</p>
+              <p className={`${body} text-[clamp(0.875rem,0.82rem+0.3vw,1rem)] leading-[1.6] mt-4`}>{keepTogether(t("what_you_see.report_body"))}</p>
               <p className={`${body} text-[#1F3D34] text-[clamp(0.9375rem,0.87rem+0.35vw,1.0625rem)] mt-4`}>{t("what_you_see.report_quote")}</p>
               <p className={`${body} text-[#707070] text-[clamp(0.6875rem,0.65rem+0.2vw,0.8125rem)] mt-auto pt-6`}>{t("what_you_see.report_note")}</p>
             </div>

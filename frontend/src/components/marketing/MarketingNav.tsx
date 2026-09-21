@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition, type MouseEvent as ReactMouseEvent } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import Image from "next/image";
 import { Link, usePathname, useRouter } from "@/i18n/routing";
@@ -12,19 +12,35 @@ import logoBadge from "../../../public/landing/idea-pop-logo.png";
 const pillLink =
   "flex flex-col items-center gap-1 whitespace-nowrap rounded-xl px-1.5 lg:px-2 py-0.5 text-[clamp(0.75rem,0.1rem+1.35vw,0.875rem)] [font-family:var(--font-adlam)] font-normal text-[#146047] transition-all duration-150 hover:text-[#0F4C39] hover:bg-ink/5 hover:scale-[1.08] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-explore";
 
+/* The page you are on is where you already are, so its label ignores the pointer, and it is set heavier and in the
+   darker green: the circle is not the only thing saying which page this is. */
+const pillLinkCurrent = pillLink
+  .replace(/ hover:\S+/g, "")
+  .replace("font-normal", "font-bold")
+  .replace("text-[#146047]", "text-[#0F4C39]");
+
 // The 1px stroke is an inset shadow (Figma "inside"), so it doesn't change the button's size.
 const ctaBase =
   "inline-flex items-center justify-center whitespace-nowrap rounded-pill bg-[#D1EF5A] px-[1.89rem] py-[0.709rem] text-[clamp(0.886rem,0.68rem+0.855vw,1.181rem)] [font-family:var(--font-montserrat)] font-extrabold text-[#1F4D33] shadow-[inset_0_0_0_1px_#18785A,0_4px_4px_rgba(0,0,0,0.25)] transition-all duration-150 hover:brightness-105 hover:scale-[1.11] hover:shadow-[inset_0_0_0_2px_#18785A,0_4px_4px_rgba(0,0,0,0.25)] active:scale-[0.97] active:bg-[#B8D24F] active:shadow-[inset_0_0_0_2px_#18785A,0_2px_2px_rgba(0,0,0,0.25)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1F4D33] focus-visible:ring-offset-2";
 
 // The designer's nav icons (Figma export: 22×21, 2px round strokes). The language globe is drawn to match them.
-function NavIcon({ paths }: { paths: readonly string[] }) {
+// They are drawn up to the canvas edge, so overflow-visible keeps the outer half of each edge stroke from being clipped.
+function NavIcon({
+  paths,
+  className = "",
+  strokeWidth = 2,
+}: {
+  paths: readonly string[];
+  className?: string;
+  strokeWidth?: number;
+}) {
   return (
     <svg
-      className="h-[1.2rem] w-[1.257rem]"
+      className={`h-[1.2rem] w-[1.257rem] overflow-visible ${className}`}
       fill="none"
       viewBox="0 0 22 21"
       stroke="currentColor"
-      strokeWidth={2}
+      strokeWidth={strokeWidth}
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden="true"
@@ -34,6 +50,121 @@ function NavIcon({ paths }: { paths: readonly string[] }) {
       ))}
     </svg>
   );
+}
+
+/* The pill's outline, read off the designer's frame: a rounded rectangle whose bottom edge sweeps into the notch.
+   The sweep is an arc tangent to both the straight edge and the notch circle — her S-curve. Where an item sits too
+   close to a rounded end for that arc to fit, the notch and the end simply meet. Every measurement is a fraction of
+   the pill's height, so it holds at any width: circle 0.92, the gap around it 0.044, how far its centre sits below
+   the edge 0.061, and the sweep 0.567. */
+/* ms is the circle's travel. out is how long the leaving icon takes to fade; in is the shortest the new one takes —
+   it fades in until the circle lands, so when the travel is longer, so is the fade. */
+const NOTCH = { diameter: 0.92, gap: 0.044, drop: 0.061, fillet: 0.567, ms: 420, out: 180, in: 240 };
+
+function pillOutline(w: number, h: number, cx: number) {
+  const r = h / 2;
+  const cut = h * (NOTCH.diameter / 2 + NOTCH.gap); // the hole: the circle plus its gap
+  const drop = h * NOTCH.drop;
+  const want = h * NOTCH.fillet;
+  const n = (v: number) => Math.round(v * 100) / 100;
+
+  // The largest sweep that fits in the straight edge left on this side, if any.
+  const side = (dir: 1 | -1) => {
+    const room = dir > 0 ? w - r - cx : cx - r;
+    const fits = room > 0 ? (room * room - cut * cut + drop * drop) / (2 * (cut - drop)) : 0;
+    if (fits > 0) {
+      const f = Math.min(want, fits);
+      const a = Math.sqrt((cut + f) ** 2 - (f + drop) ** 2); // where the sweep leaves the straight edge
+      const tx = (f * a) / (cut + f); // and where it meets the notch
+      const ty = (f * (f + drop)) / (cut + f);
+      return { fillet: f, tangent: cx + dir * a, meet: { x: cx + dir * (a - tx), y: h - f + ty } };
+    }
+    // No straight edge left: where the notch crosses the rounded end.
+    const end = { x: dir > 0 ? w - r : r, y: h - r };
+    const dx = cx - end.x;
+    const dy = h + drop - end.y;
+    const d = Math.hypot(dx, dy);
+    const along = (d * d + r * r - cut * cut) / (2 * d);
+    const off = Math.sqrt(Math.max(0, r * r - along * along));
+    const mx = end.x + (along * dx) / d;
+    const my = end.y + (along * dy) / d;
+    const a = { x: mx - (off * dy) / d, y: my + (off * dx) / d };
+    const b = { x: mx + (off * dy) / d, y: my - (off * dx) / d };
+    return { fillet: 0, tangent: 0, meet: dir > 0 ? (a.x > b.x ? a : b) : a.x < b.x ? a : b };
+  };
+
+  const right = side(1);
+  const left = side(-1);
+  const p = [`M ${n(r)} 0`, `H ${n(w - r)}`, `A ${n(r)} ${n(r)} 0 0 1 ${n(w)} ${n(r)}`, `V ${n(h - r)}`];
+  if (right.fillet > 0) {
+    p.push(
+      `A ${n(r)} ${n(r)} 0 0 1 ${n(w - r)} ${n(h)}`,
+      `H ${n(right.tangent)}`,
+      `A ${n(right.fillet)} ${n(right.fillet)} 0 0 1 ${n(right.meet.x)} ${n(right.meet.y)}`,
+    );
+  } else {
+    p.push(`A ${n(r)} ${n(r)} 0 0 1 ${n(right.meet.x)} ${n(right.meet.y)}`);
+  }
+  p.push(`A ${n(cut)} ${n(cut)} 0 0 0 ${n(left.meet.x)} ${n(left.meet.y)}`);
+  if (left.fillet > 0) {
+    p.push(
+      `A ${n(left.fillet)} ${n(left.fillet)} 0 0 1 ${n(left.tangent)} ${n(h)}`,
+      `H ${n(r)}`,
+      `A ${n(r)} ${n(r)} 0 0 1 0 ${n(h - r)}`,
+    );
+  } else {
+    p.push(`A ${n(r)} ${n(r)} 0 0 1 0 ${n(h - r)}`);
+  }
+  p.push(`V ${n(r)}`, `A ${n(r)} ${n(r)} 0 0 1 ${n(r)} 0`, "Z");
+  return p.join(" ");
+}
+
+/* The icon's fades run on the browser's animation engine rather than in the travel's frame loop: that loop is
+   starved of frames while a new page is being built, and a fade inside it stalled halfway, then snapped. */
+const FADE_EASE = "cubic-bezier(.37,0,.63,1)"; // eases out of full and into nothing: no ledge at either end
+type Fade = { el: HTMLElement | null; start: number | null; swapAt: number | null; anim: Animation | null };
+
+function fadeOut(f: Fade) {
+  if (!f.el || f.start !== null) return;
+  f.start = performance.now();
+  f.swapAt = null;
+  if (typeof f.el.animate !== "function") {
+    f.el.style.opacity = "0"; // no Web Animations here: the icon simply switches
+    return;
+  }
+  const from = Number(getComputedStyle(f.el).opacity); // a fade-in cut short leaves it part-way
+  f.anim?.cancel();
+  f.el.style.opacity = String(from);
+  f.anim = f.el.animate([{ opacity: from }, { opacity: 0 }], { duration: NOTCH.out, easing: FADE_EASE, fill: "forwards" });
+}
+
+function fadeIn(f: Fade, duration: number) {
+  const el = f.el;
+  if (!el) return;
+  if (typeof el.animate !== "function") {
+    fadeReset(f);
+    return;
+  }
+  f.anim?.cancel();
+  el.style.opacity = "0";
+  const anim = el.animate([{ opacity: 0 }, { opacity: 1 }], { duration, easing: FADE_EASE, fill: "forwards" });
+  anim.onfinish = () => {
+    el.style.opacity = "1";
+    anim.cancel();
+    if (f.anim !== anim) return;
+    f.anim = null;
+    f.start = null;
+    f.swapAt = null;
+  };
+  f.anim = anim;
+}
+
+function fadeReset(f: Fade) {
+  f.anim?.cancel();
+  f.anim = null;
+  f.start = null;
+  f.swapAt = null;
+  if (f.el) f.el.style.opacity = "1";
 }
 
 const icons = {
@@ -105,6 +236,46 @@ export default function MarketingNav() {
     startTransition(() => router.replace(pathname, { locale: next }));
   }
 
+  /* "You are here": the pill takes a notch under the current page's item and that item's icon drops into a circle
+     sitting in it (the designer's frame). The notch is a mask, and a mask clips its element's children — so it sits
+     on the pill's white skin alone, and the circle is a sibling of the pill. Measured: the items differ in width. */
+  const pillRef = useRef<HTMLUListElement>(null);
+  const activeItemRef = useRef<HTMLLIElement>(null);
+  const [notch, setNotch] = useState<{ x: number; width: number; height: number } | null>(null);
+
+  useEffect(() => {
+    const pill = pillRef.current;
+    const item = activeItemRef.current;
+    if (!pill || !item) {
+      setNotch(null);
+      return;
+    }
+    const measure = () => {
+      const p = pill.getBoundingClientRect();
+      const i = item.getBoundingClientRect();
+      if (p.width === 0) return; // the pill is hidden on phones
+      setNotch({ x: i.left + i.width / 2 - p.left, width: p.width, height: p.height });
+    };
+    measure();
+    if (typeof ResizeObserver === "undefined") return; // measured once; nothing to watch with
+    const observer = new ResizeObserver(measure);
+    observer.observe(pill);
+    observer.observe(item);
+    return () => observer.disconnect();
+  }, [pathname, locale]);
+
+  /* The circle travels from the old item to the new one carrying the leaving page's icon as it fades; the icon
+     changes while it cannot be seen, and the new one fades in over the rest of the trip. */
+  // Read once, on the client: it has to be known during render, before any effect has run.
+  const [reduced] = useState(
+    () => typeof window !== "undefined" && typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+  );
+  const [shownHref, setShownHref] = useState<string | undefined>(undefined); // whose icon the circle is showing
+  const pathRef = useRef<SVGPathElement>(null);
+  const dotRef = useRef<HTMLSpanElement>(null);
+  const drawnRef = useRef<number | null>(null); // where the notch is drawn right now, mid-travel included
+  const fadeRef = useRef<Fade>({ el: null, start: null, swapAt: null, anim: null }); // the circle's icon and its fade
+
   const navLinks = [
     { label: t("method"), href: "/method" as const, icon: icons.method },
     { label: t("pricing"), href: "/pricing" as const, icon: icons.pricing },
@@ -115,6 +286,96 @@ export default function MarketingNav() {
     },
     { label: t("sign_up"), href: "/sign-up" as const, icon: icons.signup },
   ];
+
+  // next-intl hands back the path without the locale, so "/method" matches on both languages.
+  const isCurrent = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
+  const current = navLinks.find((link) => isCurrent(link.href));
+
+  const currentHref = current?.href;
+  /* Until the travel loop has swapped it, the circle keeps showing the page it was on. That is decided here, during
+     render, or the new page's icon would flash at full strength for a frame before the old one had faded. */
+  const leavingIcon =
+    !reduced && shownHref !== undefined && shownHref !== currentHref
+      ? navLinks.find((link) => link.href === shownHref)?.icon
+      : undefined;
+  const fading = leavingIcon !== undefined;
+  const swapRef = useRef({ shown: shownHref, current: currentHref }); // what the running loop reads, always current
+  swapRef.current = { shown: shownHref, current: currentHref };
+
+  /* The notch and the circle travel in a frame loop — a CSS transition cannot carry an SVG path. The loop also
+     decides the one moment the icon changes: once it has faded out and the new page is here. The fades themselves
+     run on the browser's animation engine (see fadeOut), and the new icon fades in until the circle lands, on a
+     curve like the travel's, so the two arrive together. The first paint, and a reader who asked for less motion,
+     jump straight to the end. */
+  useEffect(() => {
+    const fade = fadeRef.current;
+    if (!notch) {
+      drawnRef.current = null;
+      fadeReset(fade);
+      setShownHref(undefined); // no circle; the next one starts fresh, showing its own page's icon
+      return;
+    }
+    const { x: to, width: w, height: h } = notch;
+    const size = NOTCH.diameter * h;
+    const paint = (x: number) => {
+      drawnRef.current = x;
+      pathRef.current?.setAttribute("d", pillOutline(w, h, x));
+      if (dotRef.current) {
+        dotRef.current.style.transform = `translate(calc(-50% + ${x - w / 2}px), ${h + NOTCH.drop * h - size / 2}px)`;
+      }
+    };
+    const from = drawnRef.current;
+    const { shown, current: target } = swapRef.current;
+    if (from === null || reduced) {
+      paint(to);
+      fadeReset(fade);
+      if (shown !== target) setShownHref(target);
+      return;
+    }
+    // A new page and no click to start its fade (the back button, say): it starts now, with the travel.
+    if (shown !== undefined && shown !== target) fadeOut(fade); // does nothing if a click already started it
+    if (Math.abs(to - from) < 0.5 && fade.start === null) {
+      paint(to);
+      return;
+    }
+    let frame = 0;
+    const started = performance.now();
+    const step = (now: number) => {
+      const t = Math.min(1, (now - started) / NOTCH.ms);
+      paint(from + (to - from) * (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2));
+      const waiting = fade.start !== null && fade.swapAt === null;
+      if (waiting && now - (fade.start ?? now) >= NOTCH.out && swapRef.current.shown !== swapRef.current.current) {
+        fade.swapAt = now;
+        setShownHref(swapRef.current.current); // the icon changes while it cannot be seen
+        fadeIn(fade, Math.max(NOTCH.in, started + NOTCH.ms - now));
+      }
+      if (t < 1 || (fade.start !== null && fade.swapAt === null)) frame = requestAnimationFrame(step);
+    };
+    frame = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(frame);
+  }, [notch, reduced]);
+
+  /* A click fades the circle's icon out at once, rather than after the new page has rendered — there was ~200ms of
+     nothing happening. The travel loop above changes the icon once the page arrives. */
+  const beginLeave = (e: ReactMouseEvent, href: (typeof navLinks)[number]["href"]) => {
+    // A new tab, or a reader who asked for less motion: the link does its own thing and nothing fades.
+    if (reduced || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    const fade = fadeRef.current;
+    if (fade.start !== null) return;
+    /* The navigation waits two frames (~30ms) so the fade is already running on the animation engine when the new
+       page starts rendering; if the render starts first it can hold the fade's opening frames back. */
+    e.preventDefault();
+    fadeOut(fade);
+    requestAnimationFrame(() => requestAnimationFrame(() => router.push(href)));
+    const start = fade.start;
+    // If the page never changes (the navigation failed), bring the icon back rather than leave the circle empty.
+    window.setTimeout(() => {
+      if (fade.start === start && fade.swapAt === null && swapRef.current.shown === swapRef.current.current) {
+        fade.start = null;
+        fadeIn(fade, NOTCH.in);
+      }
+    }, 5000);
+  };
 
   return (
     <header className="absolute top-0 z-50 w-full" data-testid="marketing-nav">
@@ -151,17 +412,60 @@ export default function MarketingNav() {
             absolute), so it's dead-centered on the viewport regardless of
             the logo/CTA width imbalance, and sits near the top of the hero. */}
         <ul
-          className="hidden w-max items-center gap-1 rounded-pill bg-white px-[clamp(0.75rem,0.6rem+0.75vw,1.25rem)] py-[clamp(0.35rem,0.28rem+0.35vw,0.5rem)] shadow-[inset_0_0_0_1px_#D1EF5A,0_4px_4px_rgba(0,0,0,0.25)] md:flex md:absolute md:left-1/2 md:top-3 md:-translate-x-1/2"
+          ref={pillRef}
+          className="relative hidden w-max items-center gap-1 rounded-pill px-[clamp(1.5rem,0.35rem+2.4vw,2.5rem)] py-[clamp(0.35rem,0.28rem+0.35vw,0.5rem)] md:flex md:absolute md:left-1/2 md:top-3 md:-translate-x-1/2"
           role="list"
         >
-          {navLinks.map(({ label, href, icon }) => (
-            <li key={href}>
-              <Link href={href} className={pillLink}>
-                <span>{label}</span>
-                <NavIcon paths={icon} />
-              </Link>
-            </li>
-          ))}
+          {/* The pill's white skin, on its own layer behind the links: an outline, so the stroke can follow the notch
+              the way the designer drew it. Before the notch has been measured — and on a page with no current item —
+              it is a plain rounded box, which is also what the server renders. */}
+          <li aria-hidden="true" data-nav-notch className="pointer-events-none absolute inset-0 -z-10">
+            {notch ? (
+              <svg
+                width={notch.width}
+                height={notch.height}
+                viewBox={`0 0 ${notch.width} ${notch.height}`}
+                className="block overflow-visible [filter:drop-shadow(0_4px_4px_rgba(0,0,0,0.25))]"
+              >
+                <path
+                  ref={pathRef}
+                  d={pillOutline(notch.width, notch.height, drawnRef.current ?? notch.x)}
+                  fill="#fff"
+                  stroke="#D1EF5A"
+                  strokeWidth={1}
+                />
+              </svg>
+            ) : (
+              <span className="block h-full w-full rounded-pill bg-white shadow-[inset_0_0_0_1px_#D1EF5A,0_4px_4px_rgba(0,0,0,0.25)]" />
+            )}
+          </li>
+          {navLinks.map(({ label, href, icon }) => {
+            const active = isCurrent(href);
+            return (
+              <li key={href} ref={active ? activeItemRef : undefined}>
+                <Link
+                  href={href}
+                  className={active ? pillLinkCurrent : pillLink}
+                  aria-current={active ? "page" : undefined}
+                  onClick={active ? undefined : (e) => beginLeave(e, href)}
+                >
+                  <span>{label}</span>
+                  {/* On the current page the icon shows in the circle below instead; the space it left keeps the pill's size.
+                      While the circle is mid-swap every slot shows its own icon. The page you leave gets its icon back
+                      slowly (600ms, gentle at both ends) instead of in a single frame; hiding stays quick, so the icon
+                      the circle takes does not linger here as a double. */}
+                  <NavIcon
+                    paths={icon}
+                    className={`transition-opacity motion-reduce:transition-none ${
+                      active && notch && !fading
+                        ? "opacity-0 duration-150"
+                        : "opacity-100 duration-[600ms] ease-[cubic-bezier(.37,0,.63,1)]"
+                    }`}
+                  />
+                </Link>
+              </li>
+            );
+          })}
           {/* Language: a setting rather than a page, so it sits after a thin divider and opens a two-line menu. */}
           <li aria-hidden="true" className="mx-1 w-px self-stretch bg-[#D1EF5A]" />
           <li ref={langRef} className="relative">
@@ -199,6 +503,33 @@ export default function MarketingNav() {
             )}
           </li>
         </ul>
+
+        {/* The circle that sits in the notch, carrying the current page's icon. It repeats what the pill already
+            says, so it's hidden from screen readers — aria-current on the link is the real marker. */}
+        {current && notch && (
+          <span
+            aria-hidden="true"
+            ref={dotRef}
+            className="pointer-events-none absolute left-1/2 top-3 hidden items-center justify-center rounded-full bg-white text-[#0F4C39] shadow-[inset_0_0_0_1px_#D1EF5A,0_6px_10px_rgba(0,0,0,0.10)] md:flex"
+            data-nav-dot
+            style={{
+              width: NOTCH.diameter * notch.height,
+              height: NOTCH.diameter * notch.height,
+              transform: `translate(calc(-50% + ${(drawnRef.current ?? notch.x) - notch.width / 2}px), ${notch.height + NOTCH.drop * notch.height - (NOTCH.diameter * notch.height) / 2}px)`,
+            }}
+          >
+            {/* Its opacity belongs to the fades (fadeOut / fadeIn); nothing here sets it, so a re-render in the middle
+                of a fade cannot undo it. */}
+            <span
+              ref={(el) => {
+                fadeRef.current.el = el;
+              }}
+            >
+              {/* Bold like the current page's label: a heavier stroke, in the same darker green. */}
+              <NavIcon paths={leavingIcon ?? current.icon} strokeWidth={2.6} />
+            </span>
+          </span>
+        )}
 
         {/* Right side: CTA on desktop, hamburger on mobile. md: the nav's pt-3 and this mt centre the CTA on the capsule (top-3). */}
         <div className="flex flex-1 items-center justify-end md:mt-[0.41rem] md:self-start">

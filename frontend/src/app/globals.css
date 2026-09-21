@@ -176,3 +176,9 @@ html {
 :lang(fa) .font-emoji {
   font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
 }
+
+/* The nav's current page is set heavier; in Persian that is the 700 weight, which the ADLaM rule above would
+   otherwise pull back to 500. */
+:lang(fa) [aria-current="page"][class*="var(--font-adlam)"] {
+  font-weight: 700;
+}

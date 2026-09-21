@@ -212,40 +212,71 @@
   "method": {
     "hero": {
       "heading": "The Idea Pop Method",
-      "subhead": "A structured creative curriculum built on biomimicry and maker education."
+      "image_alt": "A workshop classroom: a teacher sketching, kids building a bionic bird and models from nature, with boards on design thinking and bionics. The sign reads: Ask nature. Build with your hands. A real creative curriculum — not another stream of videos."
     },
     "why": {
       "heading": "Why we built it",
-      "body": "Screen time is here to stay. We built Idea Pop so kids use it to solve, build, and think — not just consume. Every minute on Idea Pop ends with something made."
+      "cards": [
+        {
+          "title": "“I’m not creative” 🎨",
+          "sub": "creativity treated as a talent, not a skill"
+        },
+        {
+          "title": "Stuck means stop 🧱",
+          "sub": "no method when the first idea fails"
+        },
+        {
+          "title": "Nature is for watching, not asking 🌿",
+          "sub": "the best engineer on earth goes unread"
+        },
+        {
+          "title": "Parents can’t see the learning 📩",
+          "sub": "“what did you do today?” “nothing”"
+        }
+      ],
+      "line": "Kids are wildly creative — they just need a method."
     },
     "cycle": {
       "heading": "One cycle, every week",
-      "body": "SEE a nature clip → LEARN from an expert → SOLVE with home materials. Same rhythm, new topic, every week."
+      "see_title": "SEE — wonder sparks",
+      "see_sub": "5-min nature films",
+      "learn_title": "LEARN — skills grow",
+      "learn_sub": "expert mini-lessons",
+      "solve_title": "SOLVE — hands build",
+      "solve_sub": "8-step real mission",
+      "anatomy_label": "mission anatomy:",
+      "steps": [
+        "1 Brief",
+        "2 Your idea?",
+        "3 Nature clues",
+        "4 Design secret",
+        "5 Skill",
+        "6 Sketch",
+        "7 Build & test",
+        "8 Celebrate & share"
+      ],
+      "caption": "same 8 steps every week — new adventure every time"
     },
-    "creativity": {
-      "heading": "Essential creativity",
-      "powers": [
-        "Observation",
-        "Questioning",
-        "Connecting",
-        "Making",
-        "Sharing",
-        "Reflecting"
-      ]
+    "innovation": {
+      "heading": "Mastering Innovation through Project-Based Learning",
+      "body": "This application teaches children and teenagers to navigate real-world challenges by integrating structured creativity tools into hands-on, nature-inspired projects. By applying frameworks like SCAMPER and the Six Thinking Hats within a gamified 3D environment, the platform transforms abstract problem-solving into practical, lifelong innovation skills.",
+      "image_alt": "Essential creativity: SCAMPER, mind mapping, six thinking hats, random word association, 5 whys, brainwriting and reverse brainstorming around a shared idea."
     },
     "what_you_see": {
       "heading": "What you'll actually see",
-      "items": [
-        "A weekly mission email with what to gather at home",
-        "A 3–5 min nature clip your child watches first",
-        "An expert walkthrough in the Library",
-        "A build challenge with photo submission",
-        "XP, badges, and a growing Ideas Wall portfolio"
-      ]
+      "report_title": "Your weekly report 📩",
+      "report_body": "Miwo watched 4 films, finished 2 lessons, built 1 sled 🛷 and learned the 5 Whys tool.",
+      "report_quote": "Ask her: “How did you find the real problem?”",
+      "report_note": "a real conversation starter, every Friday",
+      "portfolio_title": "🛠️ a portfolio of ~40 real makes",
+      "portfolio_sub": "photos + reflections, downloadable, theirs forever",
+      "certificate_title": "📜 a year certificate + toolbox",
+      "certificate_sub": "12 thinking tools they'll name and use"
     },
     "this_week": {
-      "heading": "See it works — this week",
-      "cta": "Start this week's mission"
+      "heading": "See how it works — this week.",
+      "cta_free": "Start free",
+      "cta_sample": "Watch a sample"
     }
   },
   "for_teachers": {

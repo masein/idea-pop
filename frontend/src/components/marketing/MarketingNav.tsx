@@ -126,17 +126,25 @@ type Fade = { el: HTMLElement | null; start: number | null; swapAt: number | nul
 
 function fadeOut(f: Fade) {
   if (!f.el || f.start !== null) return;
+  f.start = performance.now();
+  f.swapAt = null;
+  if (typeof f.el.animate !== "function") {
+    f.el.style.opacity = "0"; // no Web Animations here: the icon simply switches
+    return;
+  }
   const from = Number(getComputedStyle(f.el).opacity); // a fade-in cut short leaves it part-way
   f.anim?.cancel();
   f.el.style.opacity = String(from);
-  f.start = performance.now();
-  f.swapAt = null;
   f.anim = f.el.animate([{ opacity: from }, { opacity: 0 }], { duration: NOTCH.out, easing: FADE_EASE, fill: "forwards" });
 }
 
 function fadeIn(f: Fade, duration: number) {
   const el = f.el;
   if (!el) return;
+  if (typeof el.animate !== "function") {
+    fadeReset(f);
+    return;
+  }
   f.anim?.cancel();
   el.style.opacity = "0";
   const anim = el.animate([{ opacity: 0 }, { opacity: 1 }], { duration, easing: FADE_EASE, fill: "forwards" });
@@ -249,6 +257,7 @@ export default function MarketingNav() {
       setNotch({ x: i.left + i.width / 2 - p.left, width: p.width, height: p.height });
     };
     measure();
+    if (typeof ResizeObserver === "undefined") return; // measured once; nothing to watch with
     const observer = new ResizeObserver(measure);
     observer.observe(pill);
     observer.observe(item);
@@ -258,7 +267,9 @@ export default function MarketingNav() {
   /* The circle travels from the old item to the new one carrying the leaving page's icon as it fades; the icon
      changes while it cannot be seen, and the new one fades in over the rest of the trip. */
   // Read once, on the client: it has to be known during render, before any effect has run.
-  const [reduced] = useState(() => typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  const [reduced] = useState(
+    () => typeof window !== "undefined" && typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+  );
   const [shownHref, setShownHref] = useState<string | undefined>(undefined); // whose icon the circle is showing
   const pathRef = useRef<SVGPathElement>(null);
   const dotRef = useRef<HTMLSpanElement>(null);

@@ -431,8 +431,17 @@ export default function MarketingNav() {
                 >
                   <span>{label}</span>
                   {/* On the current page the icon shows in the circle below instead; the space it left keeps the pill's size.
-                      For the beat while the circle is empty, every slot shows its own icon again. */}
-                  <NavIcon paths={icon} className={active && notch && !fading ? "invisible" : ""} />
+                      While the circle is mid-swap every slot shows its own icon. The page you leave gets its icon back
+                      slowly (600ms, gentle at both ends) instead of in a single frame; hiding stays quick, so the icon
+                      the circle takes does not linger here as a double. */}
+                  <NavIcon
+                    paths={icon}
+                    className={`transition-opacity motion-reduce:transition-none ${
+                      active && notch && !fading
+                        ? "opacity-0 duration-150"
+                        : "opacity-100 duration-[600ms] ease-[cubic-bezier(.37,0,.63,1)]"
+                    }`}
+                  />
                 </Link>
               </li>
             );

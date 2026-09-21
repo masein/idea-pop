@@ -48,7 +48,9 @@ function NavIcon({ paths, className = "" }: { paths: readonly string[]; classNam
    close to a rounded end for that arc to fit, the notch and the end simply meet. Every measurement is a fraction of
    the pill's height, so it holds at any width: circle 0.92, the gap around it 0.044, how far its centre sits below
    the edge 0.061, and the sweep 0.567. */
-const NOTCH = { diameter: 0.92, gap: 0.044, drop: 0.061, fillet: 0.567, ms: 420, swap: 140, fade: 120 };
+/* ms is the travel; out and in are the two halves of the icon's fade and add up to it, so the new icon finishes
+   arriving just as the circle lands. All three run on the circle's own clock, so they cannot drift apart. */
+const NOTCH = { diameter: 0.92, gap: 0.044, drop: 0.061, fillet: 0.567, ms: 420, out: 180, in: 240 };
 
 function pillOutline(w: number, h: number, cx: number) {
   const r = h / 2;
@@ -204,15 +206,16 @@ export default function MarketingNav() {
     return () => observer.disconnect();
   }, [pathname, locale]);
 
-  /* The circle travels from the old item to the new one. For a beat after the click it is empty — the leaving page's
-     icon is back in its own slot by then — and it then takes the new page's icon and carries it the rest of the way. */
-  const [swapping, setSwapping] = useState(false);
+  /* The circle travels from the old item to the new one carrying the leaving page's icon as it fades; the icon
+     changes while it cannot be seen, and the new one fades in over the rest of the trip. */
   // Read once, on the client: it has to be known during render, before any effect has run.
   const [reduced] = useState(() => typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
-  const settledRef = useRef<string | undefined>(undefined); // the page the circle is settled on
+  const [shownHref, setShownHref] = useState<string | undefined>(undefined); // whose icon the circle is showing
   const pathRef = useRef<SVGPathElement>(null);
   const dotRef = useRef<HTMLSpanElement>(null);
+  const iconRef = useRef<HTMLSpanElement>(null);
   const drawnRef = useRef<number | null>(null); // where the notch is drawn right now, mid-travel included
+  const fadeStartRef = useRef<number | null>(null); // when the icon began to fade, on the travel's clock
 
   const navLinks = [
     { label: t("method"), href: "/method" as const, icon: icons.method },
@@ -230,37 +233,26 @@ export default function MarketingNav() {
   const current = navLinks.find((link) => isCurrent(link.href));
 
   const currentHref = current?.href;
-  /* The circle is settled on one page at a time. The moment the route changes, that no longer matches — and this is
-     read during render, not after an effect, or the new icon would show at full strength for one frame before the
-     old one had faded. While they differ the circle still carries the leaving page's icon, fading out. */
+  /* Until the travel loop has swapped it, the circle keeps showing the page it was on. That is decided here, during
+     render, or the new page's icon would flash at full strength for a frame before the old one had faded. */
   const leavingIcon =
-    !reduced && settledRef.current !== undefined && settledRef.current !== currentHref
-      ? navLinks.find((link) => link.href === settledRef.current)?.icon
+    !reduced && shownHref !== undefined && shownHref !== currentHref
+      ? navLinks.find((link) => link.href === shownHref)?.icon
       : undefined;
-  const fading = leavingIcon !== undefined || swapping;
+  const fading = leavingIcon !== undefined;
+  const swapRef = useRef({ shown: shownHref, current: currentHref }); // what the running loop reads, always current
+  swapRef.current = { shown: shownHref, current: currentHref };
 
-  useEffect(() => {
-    const from = settledRef.current;
-    if (from === currentHref) return;
-    if (from === undefined || !currentHref || reduced) {
-      settledRef.current = currentHref; // the first page seen, or a reader who asked for less motion: nothing fades
-      return;
-    }
-    setSwapping(true);
-    const timer = setTimeout(() => {
-      settledRef.current = currentHref;
-      setSwapping(false);
-    }, NOTCH.swap);
-    return () => clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentHref]);
-
-  /* The notch and the circle travel together. A CSS transition cannot carry an SVG path, so both are moved frame by
-     frame from where the notch is drawn now to where it belongs. The first paint, and a reader who asked for less
-     motion, jump straight there. */
+  /* One clock moves everything: the notch, the circle and the icon inside it. The icon's fade was a CSS transition,
+     which starts the instant the route changes, while the travel waits for the new page to render — on a slow first
+     Persian visit the new icon had faded in before the circle had moved at all. Both run in this loop now, so they
+     cannot drift apart however long the page takes. A CSS transition cannot carry an SVG path either, which is why
+     the loop exists. The first paint, and a reader who asked for less motion, jump straight to the end. */
   useEffect(() => {
     if (!notch) {
       drawnRef.current = null;
+      fadeStartRef.current = null;
+      setShownHref(undefined); // no circle; the next one starts fresh, showing its own page's icon
       return;
     }
     const { x: to, width: w, height: h } = notch;
@@ -272,8 +264,21 @@ export default function MarketingNav() {
         dotRef.current.style.transform = `translate(calc(-50% + ${x - w / 2}px), ${h + NOTCH.drop * h - size / 2}px)`;
       }
     };
+    const opacity = (o: number) => {
+      if (iconRef.current) iconRef.current.style.opacity = String(o);
+    };
     const from = drawnRef.current;
-    if (from === null || Math.abs(to - from) < 0.5 || reduced) {
+    const { shown, current: target } = swapRef.current;
+    if (from === null || reduced) {
+      paint(to);
+      opacity(1);
+      fadeStartRef.current = null;
+      if (shown !== target) setShownHref(target);
+      return;
+    }
+    // A new page to show: its fade starts now, with the travel. A re-measure mid-trip keeps the fade's own start.
+    if (shown !== undefined && shown !== target && fadeStartRef.current === null) fadeStartRef.current = performance.now();
+    if (Math.abs(to - from) < 0.5 && fadeStartRef.current === null) {
       paint(to);
       return;
     }
@@ -281,13 +286,29 @@ export default function MarketingNav() {
     const started = performance.now();
     const step = (now: number) => {
       const t = Math.min(1, (now - started) / NOTCH.ms);
-      const eased = t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2; // the same shape as the CSS curve elsewhere
-      paint(from + (to - from) * eased);
-      if (t < 1) frame = requestAnimationFrame(step);
+      paint(from + (to - from) * (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2));
+      let fadeDone = true;
+      if (fadeStartRef.current !== null) {
+        const e = now - fadeStartRef.current;
+        fadeDone = false;
+        if (e < NOTCH.out) {
+          opacity((1 + Math.cos((Math.PI * e) / NOTCH.out)) / 2); // eases out of full and into nothing: no ledge
+        } else if (swapRef.current.shown !== swapRef.current.current) {
+          opacity(0);
+          setShownHref(swapRef.current.current); // the icon changes while it cannot be seen
+        } else if (e < NOTCH.out + NOTCH.in) {
+          opacity(1 - (1 - (e - NOTCH.out) / NOTCH.in) ** 3); // arrives quickly, settles softly
+        } else {
+          opacity(1);
+          fadeStartRef.current = null;
+          fadeDone = true;
+        }
+      }
+      if (t < 1 || !fadeDone) frame = requestAnimationFrame(step);
     };
     frame = requestAnimationFrame(step);
     return () => cancelAnimationFrame(frame);
-  }, [notch]);
+  }, [notch, reduced]);
 
   return (
     <header className="absolute top-0 z-50 w-full" data-testid="marketing-nav">
@@ -420,12 +441,11 @@ export default function MarketingNav() {
               transform: `translate(calc(-50% + ${(drawnRef.current ?? notch.x) - notch.width / 2}px), ${notch.height + NOTCH.drop * notch.height - (NOTCH.diameter * notch.height) / 2}px)`,
             }}
           >
-            {/* The leaving page's icon fades out, then the new one fades in — the circle is never empty-looking for
-                longer than the fade, and no icon slides across the pill. */}
-            <NavIcon
-              paths={leavingIcon ?? current.icon}
-              className={`transition-opacity duration-[120ms] ${fading ? "opacity-0" : "opacity-100"}`}
-            />
+            {/* The travel loop sets this wrapper's opacity frame by frame; nothing here does, so a re-render in the
+                middle of a fade cannot undo it. */}
+            <span ref={iconRef}>
+              <NavIcon paths={leavingIcon ?? current.icon} />
+            </span>
           </span>
         )}
 

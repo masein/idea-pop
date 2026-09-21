@@ -24,14 +24,23 @@ const ctaBase =
   "inline-flex items-center justify-center whitespace-nowrap rounded-pill bg-[#D1EF5A] px-[1.89rem] py-[0.709rem] text-[clamp(0.886rem,0.68rem+0.855vw,1.181rem)] [font-family:var(--font-montserrat)] font-extrabold text-[#1F4D33] shadow-[inset_0_0_0_1px_#18785A,0_4px_4px_rgba(0,0,0,0.25)] transition-all duration-150 hover:brightness-105 hover:scale-[1.11] hover:shadow-[inset_0_0_0_2px_#18785A,0_4px_4px_rgba(0,0,0,0.25)] active:scale-[0.97] active:bg-[#B8D24F] active:shadow-[inset_0_0_0_2px_#18785A,0_2px_2px_rgba(0,0,0,0.25)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1F4D33] focus-visible:ring-offset-2";
 
 // The designer's nav icons (Figma export: 22×21, 2px round strokes). The language globe is drawn to match them.
-function NavIcon({ paths, className = "" }: { paths: readonly string[]; className?: string }) {
+// They are drawn up to the canvas edge, so overflow-visible keeps the outer half of each edge stroke from being clipped.
+function NavIcon({
+  paths,
+  className = "",
+  strokeWidth = 2,
+}: {
+  paths: readonly string[];
+  className?: string;
+  strokeWidth?: number;
+}) {
   return (
     <svg
-      className={`h-[1.2rem] w-[1.257rem] ${className}`}
+      className={`h-[1.2rem] w-[1.257rem] overflow-visible ${className}`}
       fill="none"
       viewBox="0 0 22 21"
       stroke="currentColor"
-      strokeWidth={2}
+      strokeWidth={strokeWidth}
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden="true"
@@ -490,7 +499,7 @@ export default function MarketingNav() {
           <span
             aria-hidden="true"
             ref={dotRef}
-            className="pointer-events-none absolute left-1/2 top-3 hidden items-center justify-center rounded-full bg-white text-[#146047] shadow-[inset_0_0_0_1px_#D1EF5A,0_6px_10px_rgba(0,0,0,0.10)] md:flex"
+            className="pointer-events-none absolute left-1/2 top-3 hidden items-center justify-center rounded-full bg-white text-[#0F4C39] shadow-[inset_0_0_0_1px_#D1EF5A,0_6px_10px_rgba(0,0,0,0.10)] md:flex"
             data-nav-dot
             style={{
               width: NOTCH.diameter * notch.height,
@@ -505,7 +514,8 @@ export default function MarketingNav() {
                 fadeRef.current.el = el;
               }}
             >
-              <NavIcon paths={leavingIcon ?? current.icon} />
+              {/* Bold like the current page's label: a heavier stroke, in the same darker green. */}
+              <NavIcon paths={leavingIcon ?? current.icon} strokeWidth={2.6} />
             </span>
           </span>
         )}

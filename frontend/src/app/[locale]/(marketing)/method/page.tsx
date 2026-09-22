@@ -1,9 +1,9 @@
 import { Fragment } from "react";
 import { getTranslations } from "next-intl/server";
 import Image from "next/image";
-import { Link } from "@/i18n/routing";
 import ScrollReveal from "../_components/ScrollReveal";
-import { btnGlassOnDark, btnLime, keepTogether, motionDelay } from "../_components/ui";
+import ClosingBand from "../_components/ClosingBand";
+import { keepTogether, motionDelay } from "../_components/ui";
 import "../motion.css";
 
 // The designer's frame pictures. The workshop scene and the creativity map carry their words inside them, so each
@@ -15,7 +15,6 @@ import creativityFa from "../../../../../public/method/creativity-fa.webp";
 import iconSee from "../../../../../public/method/icon-see.webp";
 import iconLearn from "../../../../../public/method/icon-learn.webp";
 import iconSolve from "../../../../../public/method/icon-solve.webp";
-import startFreeGirl from "../../../../../public/landing/start-free-girl.png";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -218,40 +217,12 @@ export default async function MethodPage({ params }: Props) {
       </section>
 
       {/* 6. See it works — this week: the landing page's closing band, with the sample link beside it */}
-      <section
-        aria-label="start this week"
-        className="px-3 md:px-6 pb-0 mt-4 md:mt-8 bg-[linear-gradient(to_bottom,transparent_calc(100%_-_40px),#2E574D_calc(100%_-_40px))] md:bg-[linear-gradient(to_bottom,transparent_calc(100%_-_105px),#2E574D_calc(100%_-_105px))]"
-      >
-        <div className="max-w-[1336px] mx-auto rounded-[40px] md:rounded-[112px] bg-[#18785A] px-6 md:px-14 pt-10 md:pt-0 relative overflow-visible" data-scroll="scale-in">
-          <div className="grid grid-cols-1 md:grid-cols-2 items-center gap-6">
-            <div className="py-6 md:py-16 text-center md:text-start">
-              <h2 className="[font-family:var(--font-cherry)] font-normal text-[clamp(1.625rem,1.15rem+2vw,2.5rem)] leading-[1.35] text-[#EEFFA9] mb-8" data-reveal="grow">
-                {keepTogether(t("this_week.heading"))}
-              </h2>
-              <div className="flex flex-col sm:flex-row items-center md:items-start justify-center md:justify-start gap-4 sm:gap-8">
-                <Link href="/sign-up" className={btnLime} data-reveal="pop" style={motionDelay(220)}>
-                  {t("this_week.cta_free")}
-                </Link>
-                <Link href="/challenges" prefetch={false} className={btnGlassOnDark} data-reveal="pop" style={motionDelay(320)}>
-                  {t("this_week.cta_sample")}
-                </Link>
-              </div>
-            </div>
-            <div className="relative flex justify-center md:justify-end">
-              <Image
-                unoptimized
-                src={startFreeGirl}
-                alt=""
-                aria-hidden="true"
-                className="w-64 md:w-[450px] h-auto md:-mt-[136px] drop-shadow-xl"
-                sizes="(min-width: 768px) 450px, 16rem"
-                data-reveal="pop"
-                style={motionDelay(420)}
-              />
-            </div>
-          </div>
-        </div>
-      </section>
+      <ClosingBand
+        label="start this week"
+        heading={keepTogether(t("this_week.heading"))}
+        primary={{ href: "/sign-up", text: t("this_week.cta_free") }}
+        secondary={{ href: "/challenges", text: t("this_week.cta_sample") }}
+      />
     </div>
   );
 }

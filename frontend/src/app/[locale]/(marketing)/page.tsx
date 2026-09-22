@@ -38,6 +38,19 @@ import kidMake3 from "../../../../public/landing/kids/kid-make-3.webp";
 import kidMake4 from "../../../../public/landing/kids/kid-make-4.webp";
 import kidMake5 from "../../../../public/landing/kids/kid-make-5.webp";
 import kidMake6 from "../../../../public/landing/kids/kid-make-6.webp";
+// The design-thinking tiles: the designer's six object pictures with their studio backgrounds cut away, one per step
+// (the bulb and the scissors turned upright), at twice the size they are shown.
+import dtFrame from "../../../../public/landing/design-thinking/frame.png";
+import dtCamera from "../../../../public/landing/design-thinking/camera.png";
+import dtBulb from "../../../../public/landing/design-thinking/bulb.png";
+import dtScissors from "../../../../public/landing/design-thinking/scissors.png";
+import dtClipboard from "../../../../public/landing/design-thinking/clipboard.png";
+import dtMicrophone from "../../../../public/landing/design-thinking/microphone.png";
+// "Real experts": the designer's 3D teachers, head and shoulders cut from her sheet with its grey panels removed.
+import expertScience from "../../../../public/landing/experts/science.png";
+import expertHistory from "../../../../public/landing/experts/history.png";
+import expertArt from "../../../../public/landing/experts/art.png";
+import expertMath from "../../../../public/landing/experts/math.png";
 const kidMakes = [kidMake1, kidMake2, kidMake3, kidMake4, kidMake5, kidMake6];
 
 const DEEP = "#2E5F4B";
@@ -119,16 +132,16 @@ export default async function LandingPage({ params }: Props) {
     },
   ];
 
-  /* The designer's tile colours (from the Figma design-thinking graphic). Plain blocks for now — the designer will add
-     their own design. White labels are unreadable on the coral, yellow and green tiles (2.8, 1.4 and 1.8:1), so those
-     three carry a dark label instead (5.1, 9.9 and 7.8:1); the colours stay as the designer set them. */
+  /* The design-thinking tiles, each with the designer's picture for its step. Colours: each tile keeps the colour family
+     of the Figma graphic (blue, coral, yellow, purple, teal, green) as a soft pastel like The Method's cycle cards, so
+     the row sits calmly on the lime page; one dark label on all six reads at over 9:1 on every tile. */
   const spineTiles = [
-    { label: t("curriculum.spine_1"), bg: "bg-[#497AF0]", text: "text-white" },
-    { label: t("curriculum.spine_2"), bg: "bg-[#FF6C67]", text: "text-[#16302A]" },
-    { label: t("curriculum.spine_3"), bg: "bg-[#FDD543]", text: "text-[#16302A]" },
-    { label: t("curriculum.spine_4"), bg: "bg-[#934CC1]", text: "text-white" },
-    { label: t("curriculum.spine_5"), bg: "bg-[#008C9D]", text: "text-white" },
-    { label: t("curriculum.spine_6"), bg: "bg-[#55D889]", text: "text-[#16302A]" },
+    { label: t("curriculum.spine_1"), bg: "bg-[#CAD6E6]", img: dtFrame },
+    { label: t("curriculum.spine_2"), bg: "bg-[#F1CAC5]", img: dtCamera },
+    { label: t("curriculum.spine_3"), bg: "bg-[#F5E6B8]", img: dtBulb },
+    { label: t("curriculum.spine_4"), bg: "bg-[#DECDE9]", img: dtScissors },
+    { label: t("curriculum.spine_5"), bg: "bg-[#C7E2E6]", img: dtClipboard },
+    { label: t("curriculum.spine_6"), bg: "bg-[#D7E9D5]", img: dtMicrophone },
   ];
 
   // The 3-year path: three year cards, then the ranks in order. The icons are decorative (hidden from screen readers).
@@ -152,11 +165,12 @@ export default async function LandingPage({ params }: Props) {
     </svg>
   );
 
+  // The designer's four 3D teachers, head and shoulders on the circles' pastels, in the order of her sheet.
   const experts = [
-    { name: t("experts.e1_name"), role: t("experts.e1_role"), bg: "bg-[#F7E3DC]" },
-    { name: t("experts.e2_name"), role: t("experts.e2_role"), bg: "bg-[#E2E7FA]" },
-    { name: t("experts.e3_name"), role: t("experts.e3_role"), bg: "bg-[#DFE9E0]" },
-    { name: t("experts.e4_name"), role: t("experts.e4_role"), bg: "bg-[#E9DEF5]" },
+    { name: t("experts.e1_name"), role: t("experts.e1_role"), bg: "bg-[#F7E3DC]", img: expertScience },
+    { name: t("experts.e2_name"), role: t("experts.e2_role"), bg: "bg-[#E2E7FA]", img: expertHistory },
+    { name: t("experts.e3_name"), role: t("experts.e3_role"), bg: "bg-[#DFE9E0]", img: expertArt },
+    { name: t("experts.e4_name"), role: t("experts.e4_role"), bg: "bg-[#E9DEF5]", img: expertMath },
   ];
 
   return (
@@ -412,13 +426,21 @@ export default async function LandingPage({ params }: Props) {
             {t("curriculum.note")}
           </p>
 
-          {/* Plain colour tiles at the Figma graphic's size (162×279 with 13px gaps — a 1037px row at 1440), top left
-              free for the designer's own images, label at the bottom. 108px under the paragraph on desktop; 3 columns on phones. */}
+          {/* Tiles at the Figma graphic's size (162×279 with 13px gaps — a 1037px row at 1440): the step's picture in the
+              upper half (84% wide, 52% tall, with a soft shadow), the label at the bottom. 108px under the paragraph on
+              desktop; 3 columns on phones. The pictures are decoration: the label names the step. */}
           {/* Motion: the tiles grow out of their centres as you scroll, the middle pair first and the outer pair last. */}
           <div className="grid grid-cols-3 md:grid-cols-6 gap-2 md:gap-[13px] max-w-[1037px] mx-auto mt-7 md:mt-[108px]">
             {spineTiles.map((tile, i) => (
-              <div key={tile.label} className={`${tile.bg} aspect-[162/279] flex items-end justify-center px-1.5 pb-[13%]`} data-scroll="scale-in" style={{ "--wave": fromCenter(i, spineTiles.length) } as React.CSSProperties}>
-                <span className={`[font-family:var(--font-montserrat)] font-bold ${tile.text} text-[clamp(0.8125rem,0.55rem+1vw,1.25rem)] leading-[1.2]`}>
+              <div key={tile.label} className={`${tile.bg} relative aspect-[162/279] flex items-end justify-center px-1.5 pb-[13%]`} data-scroll="scale-in" style={{ "--wave": fromCenter(i, spineTiles.length) } as React.CSSProperties}>
+                <Image
+                  unoptimized
+                  src={tile.img}
+                  alt=""
+                  aria-hidden="true"
+                  className="absolute left-1/2 top-[9%] -translate-x-1/2 w-[84%] h-[52%] object-contain [object-position:50%_60%] drop-shadow-[0_6px_6px_rgba(0,0,0,0.18)]"
+                />
+                <span className="[font-family:var(--font-montserrat)] font-bold text-[#16302A] text-[clamp(0.8125rem,0.55rem+1vw,1.25rem)] leading-[1.2]">
                   {tile.label}
                 </span>
               </div>
@@ -547,12 +569,15 @@ export default async function LandingPage({ params }: Props) {
           <div className="grid grid-cols-2 md:grid-cols-[repeat(4,minmax(0,210px))] justify-center gap-x-4 gap-y-6 md:gap-0 max-w-[480px] md:max-w-none mx-auto">
             {experts.map((e, i) => (
               <div key={e.name} className="flex flex-col items-center">
+                {/* The avatar is decoration: the name and role under it say who it is. */}
                 <div
-                  className={`size-[88px] md:size-[104px] rounded-full ${e.bg}`}
+                  className={`size-[88px] md:size-[104px] rounded-full overflow-hidden ${e.bg}`}
                   aria-hidden="true"
                   data-reveal="squash"
                   style={motionDelay(fromCenter(i, experts.length) * 220)}
-                />
+                >
+                  <Image unoptimized src={e.img} alt="" className="size-full object-cover" />
+                </div>
                 {/* Name, then the role on its own line: no dot between them (the designer's call). */}
                 <p className="[font-family:var(--font-adlam)] font-normal text-[16px] md:text-[20px] leading-[1.2] text-[#4F4F4F] max-w-[200px] mt-3 md:mt-[17px]" data-reveal="grow" style={motionDelay(300 + fromCenter(i, experts.length) * 220)}>
                   <span className="block">{e.name}</span>

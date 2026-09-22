@@ -221,6 +221,8 @@ test.describe('axe — marketing pages', () => {
   });
 
   test('pricing page passes axe', async ({ page }) => {
+    // Like the homepage, the pricing page fades its blocks in as they scroll into view; reduced motion shows it at rest.
+    await page.emulateMedia({ reducedMotion: 'reduce' });
     await page.goto('/en/pricing');
     await page.waitForLoadState('networkidle');
     const results = await new AxeBuilder({ page })

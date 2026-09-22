@@ -1,8 +1,9 @@
 import { getTranslations } from "next-intl/server";
-import Image from "next/image";
-import { Link } from "@/i18n/routing";
 import PricingPlans from "../_components/PricingPlans";
-import scientistGirl from "../../../../../public/landing/start-free-girl.png";
+import ClosingBand from "../_components/ClosingBand";
+import ScrollReveal from "../_components/ScrollReveal";
+import { keepTogether, motionDelay } from "../_components/ui";
+import "../motion.css";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -11,14 +12,17 @@ export const metadata: Metadata = {
     "Start free, upgrade when your family loves it. Simple, honest pricing for Idea Pop.",
 };
 
-const DEEP = "#2E5F4B";
+/* The landing page's system throughout: the heading in Cherry Bomb One, everything else in ADLaM Display (the page had
+   been on the old Baloo 2 / Nunito pair), and the landing's own plan cards and closing band. In Persian both faces
+   become Playpen Sans Arabic through the :lang(fa) rules in globals.css. */
+const body = "[font-family:var(--font-adlam)] font-normal";
 
-/** Table cells: green for included/unlimited, red for excluded, ink otherwise. */
+/** Table cells: the landing's accessible green for included or unlimited, its red for excluded, grey otherwise. */
 const GREEN = new Set(["all", "full", "✓", "همه", "کامل"]);
 function cellClass(v: string) {
-  if (v === "—") return "text-[#C0392B]";
-  if (GREEN.has(v) || v.startsWith("∞")) return "text-[#2E7D32]";
-  return "text-ink";
+  if (v === "—") return "text-[#B3271E]";
+  if (GREEN.has(v) || v.startsWith("∞")) return "text-[#296E2C]";
+  return "text-[#4F4F4F]";
 }
 
 type Row = { feature: string; free: string; plus: string; family: string };
@@ -33,14 +37,22 @@ export default async function PricingPage({ params }: Props) {
 
   const rows = t.raw("rows") as Row[];
   const faq = t.raw("faq") as Faq[];
+  const cell = `${body} px-4 py-3 text-center text-[clamp(0.8125rem,0.76rem+0.25vw,0.9375rem)]`;
 
   return (
-    <div className="bg-[#F3FFC2]">
-      {/* 1. Hero + plans */}
-      <section aria-label="Pricing plans" className="px-4 pt-28 pb-16">
+    // overflow-x-clip for the same reason as the landing page: nothing that pops or slides may scroll the page sideways.
+    <div className="bg-[#F3FFC2] overflow-x-clip">
+      <ScrollReveal />
+
+      {/* 1. The heading — the landing's pricing heading, same words and size — over the landing's own plan cards.
+             It sits clear of the nav's circle, which hangs below the pill. */}
+      <section aria-label="Pricing plans" className="px-4 pt-[clamp(8.5rem,6rem+5vw,11rem)] pb-12 md:pb-16">
         <div className="mx-auto max-w-6xl">
-          <h1 className="mb-10 text-center font-display text-4xl font-bold text-ink md:text-5xl">
-            {t("heading")}
+          <h1
+            className="[font-family:var(--font-cherry)] font-normal text-[clamp(1.75rem,1.4rem+1.5vw,2.5rem)] leading-[1.15] md:leading-[40px] text-[#4F4F4F] text-center mb-5 md:mb-[17px]"
+            data-reveal="grow"
+          >
+            {keepTogether(t("heading"))}
           </h1>
           <PricingPlans
             labels={{
@@ -89,25 +101,28 @@ export default async function PricingPage({ params }: Props) {
       </section>
 
       {/* 2. Compare everything */}
-      <section aria-label="Compare plans" className="px-4 py-12">
+      <section aria-label="Compare plans" className="px-4 py-8 md:py-12">
         <div className="mx-auto max-w-4xl">
-          <h2 className="mb-8 text-center font-display text-2xl font-bold text-ink md:text-3xl">
-            {t("compare_heading")}
+          <h2
+            className={`${body} text-[clamp(1.375rem,1.2rem+0.8vw,1.75rem)] leading-[1.25] text-[#4F4F4F] text-center mb-6 md:mb-8`}
+            data-reveal="grow"
+          >
+            {keepTogether(t("compare_heading"))}
           </h2>
-          <div className="overflow-x-auto rounded-card">
-            <table className="w-full border-collapse text-left">
+          <div className="overflow-x-auto rounded-[20px]" data-reveal="grow" style={motionDelay(120)}>
+            <table className="w-full border-collapse">
               <thead>
-                <tr className="bg-[#EDF6C5]">
-                  <th className="px-5 py-3 font-body text-sm font-bold text-ink">
+                <tr className="bg-[#EEFFA9]">
+                  <th scope="col" className={`${cell} px-5 text-start text-[#1F3D34]`}>
                     {t("col_feature")}
                   </th>
-                  <th className="px-4 py-3 text-center font-body text-sm font-bold text-ink">
+                  <th scope="col" className={`${cell} text-[#1F3D34]`}>
                     {t("col_free")}
                   </th>
-                  <th className="px-4 py-3 text-center font-body text-sm font-bold text-ink">
+                  <th scope="col" className={`${cell} text-[#1F3D34]`}>
                     {t("col_plus")}
                   </th>
-                  <th className="px-4 py-3 text-center font-body text-sm font-bold text-ink">
+                  <th scope="col" className={`${cell} text-[#1F3D34]`}>
                     {t("col_family")}
                   </th>
                 </tr>
@@ -115,14 +130,11 @@ export default async function PricingPage({ params }: Props) {
               <tbody>
                 {rows.map((r, i) => (
                   <tr key={r.feature} className={i % 2 === 0 ? "bg-white" : "bg-[#FBFDF0]"}>
-                    <td className="px-5 py-3 font-body text-sm font-bold text-ink">
+                    <th scope="row" className={`${cell} px-5 text-start text-[#1F3D34]`}>
                       {r.feature}
-                    </td>
+                    </th>
                     {(["free", "plus", "family"] as const).map((col) => (
-                      <td
-                        key={col}
-                        className={`px-4 py-3 text-center font-body text-sm font-bold ${cellClass(r[col])}`}
-                      >
+                      <td key={col} className={`${cell} ${cellClass(r[col])}`}>
                         {r[col]}
                       </td>
                     ))}
@@ -134,64 +146,37 @@ export default async function PricingPage({ params }: Props) {
         </div>
       </section>
 
-      {/* 3. FAQ */}
-      <section aria-label="Billing questions" className="px-4 py-8">
-        <div className="mx-auto max-w-3xl">
+      {/* 3. Billing questions: each answered on its own line, question and answer both in the page's dark text */}
+      <section aria-label="Billing questions" className="px-4 pt-2 pb-12 md:pb-16">
+        <div className="mx-auto max-w-4xl">
           <ul className="space-y-3" role="list">
-            {faq.map((item) => (
+            {faq.map((item, i) => (
               <li
                 key={item.q}
-                className="rounded-pill bg-white px-6 py-3 shadow-sm font-body text-sm md:text-base text-ink"
+                className={`${body} rounded-[14px] bg-white px-5 md:px-6 py-3.5 text-[clamp(0.9375rem,0.87rem+0.35vw,1.0625rem)] leading-[1.45] text-[#4F4F4F] shadow-[0_2px_6px_rgba(0,0,0,0.05)]`}
+                data-reveal="grow"
+                style={motionDelay(i * 90)}
               >
-                <span className="font-bold">{item.q}</span>
-                <span className="text-ink/80"> — {item.a}</span>
+                <span className="text-[#1F3D34]">{item.q}</span> — {item.a}
               </li>
             ))}
           </ul>
         </div>
       </section>
 
-      {/* 4. CTA band */}
-      <section aria-label="Every plan starts free" className="px-3 pb-0 pt-8 md:px-6 md:pb-6">
-        <div
-          className="relative mx-auto max-w-6xl overflow-hidden rounded-t-[2.5rem] px-6 md:rounded-[2.5rem] md:px-14"
-          style={{ backgroundColor: DEEP }}
-        >
-          <div className="grid grid-cols-1 items-center gap-6 md:grid-cols-2">
-            <div className="py-10 text-center md:py-16 md:text-start">
-              <h2 className="mb-8 font-display text-3xl font-bold leading-snug text-[#EDF6C5] md:text-4xl">
-                {t("cta_1")}
-                <br />
-                {t("cta_2")}
-              </h2>
-              <div className="flex flex-col items-center gap-3 sm:flex-row md:justify-start">
-                <Link
-                  href="/sign-up"
-                  className="inline-flex items-center justify-center rounded-pill bg-[#CDEB5A] px-8 py-3 font-display text-lg font-bold text-[#1F4D33] shadow-sm transition-all hover:brightness-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#CDEB5A] focus-visible:ring-offset-2 focus-visible:ring-offset-[#2E5F4B]"
-                >
-                  {t("cta_start")}
-                </Link>
-                <Link
-                  href="/challenges"
-                  prefetch={false}
-                  className="inline-flex items-center justify-center rounded-pill border-2 border-[#CDEB5A] px-8 py-3 font-display text-lg font-bold text-[#CDEB5A] transition-all hover:bg-[#CDEB5A] hover:text-[#1F4D33] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#CDEB5A] focus-visible:ring-offset-2 focus-visible:ring-offset-[#2E5F4B]"
-                >
-                  {t("cta_watch")}
-                </Link>
-              </div>
-            </div>
-            <div className="relative flex justify-center md:justify-end">
-              <Image
-                src={scientistGirl}
-                alt=""
-                aria-hidden="true"
-                className="h-64 w-auto object-contain drop-shadow-xl md:-mt-10 md:h-96"
-                sizes="(min-width: 768px) 24rem, 16rem"
-              />
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* 4. The landing page's closing band, with the sample link beside it — the same band as The Method */}
+      <ClosingBand
+        label="Every plan starts free"
+        heading={
+          <>
+            {t("cta_1")}
+            <br />
+            {t("cta_2")}
+          </>
+        }
+        primary={{ href: "/sign-up", text: t("cta_start") }}
+        secondary={{ href: "/challenges", text: t("cta_watch") }}
+      />
     </div>
   );
 }

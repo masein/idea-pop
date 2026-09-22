@@ -2,7 +2,7 @@ import { getTranslations } from "next-intl/server";
 import PricingPlans from "../_components/PricingPlans";
 import ClosingBand from "../_components/ClosingBand";
 import ScrollReveal from "../_components/ScrollReveal";
-import { keepTogether, motionDelay } from "../_components/ui";
+import { keepTogether, motionDelay, pageTop } from "../_components/ui";
 import "../motion.css";
 import type { Metadata } from "next";
 
@@ -46,7 +46,7 @@ export default async function PricingPage({ params }: Props) {
 
       {/* 1. The heading — the landing's pricing heading, same words and size — over the landing's own plan cards.
              It sits clear of the nav's circle, which hangs below the pill. */}
-      <section aria-label="Pricing plans" className="px-4 pt-[clamp(8.5rem,6rem+5vw,11rem)] pb-12 md:pb-16">
+      <section aria-label="Pricing plans" className={`px-4 ${pageTop} pb-12 md:pb-16`}>
         <div className="mx-auto max-w-6xl">
           <h1
             className="[font-family:var(--font-cherry)] font-normal text-[clamp(1.75rem,1.4rem+1.5vw,2.5rem)] leading-[1.15] md:leading-[40px] text-[#4F4F4F] text-center mb-5 md:mb-[17px]"

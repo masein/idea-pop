@@ -3,7 +3,7 @@ import { getTranslations } from "next-intl/server";
 import Image from "next/image";
 import ScrollReveal from "../_components/ScrollReveal";
 import ClosingBand from "../_components/ClosingBand";
-import { keepTogether, motionDelay } from "../_components/ui";
+import { keepTogether, motionDelay, pagePhoto, pageTop } from "../_components/ui";
 import "../motion.css";
 
 // The designer's frame pictures. The workshop scene and the creativity map carry their words inside them, so each
@@ -52,16 +52,18 @@ export default async function MethodPage({ params }: Props) {
       <ScrollReveal />
 
       {/* 1. Hero: the page title over the designer's workshop scene */}
-      <section aria-label="method hero" className="pt-28 md:pt-32 pb-8 md:pb-12">
+      <section aria-label="method hero" className={`${pageTop} pb-8 md:pb-12`}>
         <div className="max-w-[1180px] mx-auto px-4">
-          <h1 className={`${heading} text-[clamp(2rem,1.45rem+2.2vw,3.125rem)] text-center mb-6 md:mb-9`} data-reveal="grow">
+          {/* One line tall from tablet up, so its letters start on the same line as the smaller headings of Pricing and
+              For Teachers */}
+          <h1 className={`${heading} text-[clamp(2rem,1.45rem+2.2vw,3.125rem)] md:leading-none text-center mb-6 md:mb-10`} data-reveal="grow">
             {keepTogether(t("hero.heading"))}
           </h1>
           <Image
             src={fa ? workshopFa : workshopEn}
             alt={t("hero.image_alt")}
             priority
-            className="w-full h-auto rounded-[20px] md:rounded-[28px] shadow-[0_6px_18px_rgba(0,0,0,0.18)]"
+            className={`w-full h-auto ${pagePhoto}`}
             sizes="(min-width: 1180px) 1100px, 92vw"
             data-reveal="grow"
             style={motionDelay(150)}

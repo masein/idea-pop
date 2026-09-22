@@ -311,8 +311,7 @@
     "pdf_placeholder": "school email...",
     "pdf_button": "Send",
     "pdf_success": "Sent! Check your inbox for the sample plan.",
-    "cta_1": "Your class could be making",
-    "cta_2": "by Monday.",
+    "cta_heading": "Your class could be making\nby Monday.",
     "cta_button": "Create your class free"
   },
   "pricing": {

@@ -6,8 +6,8 @@ import startFreeGirl from "../../../../../public/landing/start-free-girl.png";
 
 type Href = ComponentProps<typeof Link>["href"];
 
-/* The landing page's closing green band, with a second link beside its button: one component so The Method and
-   Pricing cannot drift apart. The girl stands on the band's top edge, and the footer's dark green starts behind the
+/* The landing page's closing green band, optionally with a second link beside its button: one component so The Method,
+   Pricing and For Teachers cannot drift apart. The girl stands on the band's top edge, and the footer's dark green starts behind the
    band's lower part so the two read as one piece. Motion needs the page's ScrollReveal and motion.css. */
 export default function ClosingBand({
   label,
@@ -18,7 +18,7 @@ export default function ClosingBand({
   label: string;
   heading: ReactNode;
   primary: { href: Href; text: string };
-  secondary: { href: Href; text: string };
+  secondary?: { href: Href; text: string };
 }) {
   return (
     <section
@@ -35,9 +35,11 @@ export default function ClosingBand({
               <Link href={primary.href} className={btnLime} data-reveal="pop" style={motionDelay(220)}>
                 {primary.text}
               </Link>
-              <Link href={secondary.href} prefetch={false} className={btnGlassOnDark} data-reveal="pop" style={motionDelay(320)}>
-                {secondary.text}
-              </Link>
+              {secondary && (
+                <Link href={secondary.href} prefetch={false} className={btnGlassOnDark} data-reveal="pop" style={motionDelay(320)}>
+                  {secondary.text}
+                </Link>
+              )}
             </div>
           </div>
           <div className="relative flex justify-center md:justify-end">

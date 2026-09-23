@@ -52,11 +52,12 @@ export default function SamplePlanForm({
       <input
         id="sample-plan-email"
         type="email"
+        autoComplete="email"
         required
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         placeholder={placeholder}
-        className="h-11 min-w-0 flex-1 rounded-pill bg-white px-5 [font-family:var(--font-montserrat)] text-[16px] font-medium text-[#1F2D33] placeholder:text-[#8B95A1] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#18785A]"
+        className="h-11 min-w-0 flex-1 rounded-pill bg-white px-5 [font-family:var(--font-montserrat)] text-[16px] font-medium text-[#1F2D33] placeholder:text-[#6B7280] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#18785A]"
       />
       <button
         type="submit"

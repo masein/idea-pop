@@ -2,6 +2,7 @@ import { getTranslations } from "next-intl/server";
 import PricingPlans from "../_components/PricingPlans";
 import ClosingBand from "../_components/ClosingBand";
 import ScrollReveal from "../_components/ScrollReveal";
+import FaqList from "../_components/FaqList";
 import { keepTogether, motionDelay, pageTop } from "../_components/ui";
 import "../motion.css";
 import type { Metadata } from "next";
@@ -37,7 +38,7 @@ export default async function PricingPage({ params }: Props) {
 
   const rows = t.raw("rows") as Row[];
   const faq = t.raw("faq") as Faq[];
-  const cell = `${body} px-4 py-3 text-center text-[clamp(0.8125rem,0.76rem+0.25vw,0.9375rem)]`;
+  const cell = `${body} px-4 py-3 text-center text-[clamp(0.875rem,0.8rem+0.25vw,0.9375rem)]`;
 
   return (
     // overflow-x-clip for the same reason as the landing page: nothing that pops or slides may scroll the page sideways.
@@ -104,7 +105,7 @@ export default async function PricingPage({ params }: Props) {
       <section aria-label="Compare plans" className="px-4 py-8 md:py-12">
         <div className="mx-auto max-w-4xl">
           <h2
-            className={`${body} text-[clamp(1.375rem,1.2rem+0.8vw,1.75rem)] leading-[1.25] text-[#4F4F4F] text-center mb-6 md:mb-8`}
+            className={`[font-family:var(--font-cherry)] font-normal text-[clamp(1.625rem,1.3rem+1.4vw,2.25rem)] leading-[1.15] text-[#4F4F4F] text-center mb-6 md:mb-8`}
             data-reveal="grow"
           >
             {keepTogether(t("compare_heading"))}
@@ -133,11 +134,24 @@ export default async function PricingPage({ params }: Props) {
                     <th scope="row" className={`${cell} px-5 text-start text-[#1F3D34]`}>
                       {r.feature}
                     </th>
-                    {(["free", "plus", "family"] as const).map((col) => (
-                      <td key={col} className={`${cell} ${cellClass(r[col])}`}>
-                        {r[col]}
-                      </td>
-                    ))}
+                    {(["free", "plus", "family"] as const).map((col) => {
+                      // A screen reader reads "—" as nothing and "✓" as "check mark", so those two cells carry the
+                      // word as well; the table looks the same.
+                      const value = r[col];
+                      const spoken = value === "✓" ? t("included") : value === "—" ? t("not_included") : null;
+                      return (
+                        <td key={col} className={`${cell} ${cellClass(value)}`}>
+                          {spoken ? (
+                            <>
+                              <span aria-hidden="true">{value}</span>
+                              <span className="sr-only">{spoken}</span>
+                            </>
+                          ) : (
+                            value
+                          )}
+                        </td>
+                      );
+                    })}
                   </tr>
                 ))}
               </tbody>
@@ -146,21 +160,10 @@ export default async function PricingPage({ params }: Props) {
         </div>
       </section>
 
-      {/* 3. Billing questions: each answered on its own line, question and answer both in the page's dark text */}
+      {/* 3. Billing questions: the marketing pages' one FAQ design, each question and its answer on one row */}
       <section aria-label="Billing questions" className="px-4 pt-2 pb-12 md:pb-16">
         <div className="mx-auto max-w-4xl">
-          <ul className="space-y-3" role="list">
-            {faq.map((item, i) => (
-              <li
-                key={item.q}
-                className={`${body} rounded-[14px] bg-white px-5 md:px-6 py-3.5 text-[clamp(0.9375rem,0.87rem+0.35vw,1.0625rem)] leading-[1.45] text-[#4F4F4F] shadow-[0_2px_6px_rgba(0,0,0,0.05)]`}
-                data-reveal="grow"
-                style={motionDelay(i * 90)}
-              >
-                <span className="text-[#1F3D34]">{item.q}</span> — {item.a}
-              </li>
-            ))}
-          </ul>
+          <FaqList items={faq} />
         </div>
       </section>
 

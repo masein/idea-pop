@@ -52,7 +52,7 @@
       "body_1_post": ".",
       "body_2": "They learn from nature and build with things from home. Ages 8+",
       "subhead": "Every week, your child solves one real problem. They learn from nature and build with things from home. Ages 8+",
-      "cta_explore": "Start Exploring",
+      "cta_explore": "Start exploring",
       "cta_challenge": "Start a simple challenge"
     },
     "year": {
@@ -125,13 +125,13 @@
     "experts": {
       "heading": "Real experts make the lessons",
       "e1_name": "Ms. Mary Khan",
-      "e1_role": "Science Teacher",
+      "e1_role": "Scientist",
       "e2_name": "Mr. Liam O'Connell",
-      "e2_role": "History Teacher",
+      "e2_role": "Historian",
       "e3_name": "Miss Jordan Lee",
-      "e3_role": "Art Teacher",
+      "e3_role": "Artist",
       "e4_name": "Ms. Sofia Hernandez",
-      "e4_role": "Math Teacher",
+      "e4_role": "Mathematician",
       "note1": "Our education team reviews every lesson before it goes live.",
       "note2": "Films made with AI help are labeled."
     },
@@ -206,7 +206,7 @@
     },
     "cta_band": {
       "heading": "Your kid's first invention could be this week.",
-      "cta": "Start for free"
+      "cta": "Start free"
     }
   },
   "method": {
@@ -259,7 +259,7 @@
     },
     "innovation": {
       "heading": "Mastering Innovation through Project-Based Learning",
-      "body": "This application teaches children and teenagers to navigate real-world challenges by integrating structured creativity tools into hands-on, nature-inspired projects. By applying frameworks like SCAMPER and the Six Thinking Hats within a gamified 3D environment, the platform transforms abstract problem-solving into practical, lifelong innovation skills.",
+      "body": "Every week your child takes on one real problem. They see how nature solves it, learn a creativity tool to think it through, and build their own answer at home. Tools like SCAMPER and the Six Thinking Hats become habits they keep for life.",
       "image_alt": "Essential creativity: SCAMPER, mind mapping, six thinking hats, random word association, 5 whys, brainwriting and reverse brainstorming around a shared idea."
     },
     "what_you_see": {
@@ -321,6 +321,8 @@
     "col_free": "Free",
     "col_plus": "Plus",
     "col_family": "Family",
+    "included": "Included",
+    "not_included": "Not included",
     "rows": [
       {
         "feature": "Nature films (Exploring)",

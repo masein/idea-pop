@@ -63,13 +63,13 @@ export default function AskIdeaPop({
               aria-label={inputLabel}
               placeholder={placeholder}
               rows={4}
-              className="w-full h-[140px] md:h-[136px] rounded-[20px] bg-[#EEFFA9] border-2 border-[#D1EF5A] px-6 py-5 font-body text-[20px] md:text-[24px] text-[#363535] placeholder:text-[#363535]/60 resize-none focus:outline-none focus:ring-2 focus:ring-[#2E5F4B]"
+              className="w-full h-[140px] md:h-[136px] rounded-[20px] bg-[#EEFFA9] border-2 border-[#D1EF5A] px-6 py-5 [font-family:var(--font-adlam)] font-normal text-[20px] md:text-[24px] text-[#363535] placeholder:text-[#363535]/60 resize-none focus:outline-none focus:ring-2 focus:ring-[#2E5F4B]"
             />
             <div className="absolute bottom-4 end-4 flex items-center gap-2">
               <button
                 type="button"
                 aria-label={micLabel}
-                className="w-10 h-10 rounded-full flex items-center justify-center text-[#2E5F4B] hover:bg-[#2E5F4B]/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2E5F4B]"
+                className="w-11 h-11 rounded-full flex items-center justify-center text-[#2E5F4B] hover:bg-[#2E5F4B]/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2E5F4B]"
               >
                 <svg
                   className="w-5 h-5"

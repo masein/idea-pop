@@ -4,7 +4,7 @@ import { Link } from "@/i18n/routing";
 import SamplePlanForm from "./_components/SamplePlanForm";
 import ClosingBand from "../_components/ClosingBand";
 import ScrollReveal from "../_components/ScrollReveal";
-import { btnLime, fromCenter, keepTogether, motionDelay, pagePhoto, pageTop } from "../_components/ui";
+import { btnLime, cardShape, cardShapeLime, fromCenter, keepTogether, motionDelay, pagePhoto, pageTop } from "../_components/ui";
 import "../motion.css";
 
 import classroom from "../../../../../public/for-teachers/classroom.jpg";
@@ -29,13 +29,17 @@ export async function generateMetadata({ params }: Props) {
 
 /* The designer's For Teachers frame on the landing page's system: Cherry Bomb One headings in #4F4F4F, ADLaM Display
    text, the landing's lime button, its footer-style email field and its closing band. Sizes are the frame's at 1440
-   (heading 40, section headings 32, card titles 20, card and list text 16, the hero line 24) and scale down on phones.
+   (heading 40, section headings 36, card titles 20, card and list text 16, the hero line 24) and scale down on phones.
    In Persian every face becomes Playpen Sans Arabic through the :lang(fa) rules in globals.css. */
 const heading = "[font-family:var(--font-cherry)] font-normal text-[#4F4F4F] leading-[1.15]";
-const h2Size = "text-[clamp(1.5rem,1.3125rem+0.764vw,2rem)]";
+const h2Size = "text-[clamp(1.625rem,1.3rem+1.4vw,2.25rem)]";
 const body = "[font-family:var(--font-adlam)] font-normal";
 const cardTitle = `${body} text-[20px] leading-[24px] text-[#333333]`;
 const cardSub = `${body} text-[16px] leading-[20px] text-[#4F4F4F]`;
+
+// The sample-plan form sends nothing yet, so its section stays hidden until it can (the designer's call on
+// 2026-09-22, with a reminder). Without it the closing band sits on the page's lime, as on The Method and Pricing.
+const SAMPLE_PLAN_READY = false;
 
 type Card = { img: StaticImageData; pos: string; title: string; sub: string };
 
@@ -105,7 +109,7 @@ export default async function ForTeachersPage({ params }: Props) {
             {steps.map((s, i) => (
               <li
                 key={s.title}
-                className="relative h-[207px] rounded-[20px] bg-[#F3FFC2] px-3 pt-[86px] text-center"
+                className={`relative h-[207px] ${cardShapeLime} bg-[#F3FFC2] px-3 pt-[86px] text-center`}
                 data-reveal="grow"
                 style={motionDelay(fromCenter(i, steps.length) * 200)}
               >
@@ -136,7 +140,7 @@ export default async function ForTeachersPage({ params }: Props) {
             {gets.map((g, i) => (
               <li
                 key={g.title}
-                className="relative h-[158px] rounded-[20px] bg-white px-3 pt-[73px] text-center"
+                className={`relative h-[158px] ${cardShape} bg-white px-3 pt-[73px] text-center`}
                 data-reveal="grow"
                 style={motionDelay(fromCenter(i, gets.length) * 200)}
               >
@@ -163,7 +167,7 @@ export default async function ForTeachersPage({ params }: Props) {
           <h2 className={`${heading} ${h2Size} text-center`} data-reveal="grow">
             {keepTogether(t("safe_heading"))}
           </h2>
-          <ul className={`${body} text-[16px] leading-[20px] text-[#333333] mt-[20px] space-y-[13px]`} role="list">
+          <ul className={`${body} text-[16px] leading-[20px] text-[#333333] mt-[20px] space-y-[13px] w-fit mx-auto`} role="list">
             {safeItems.map((item, i) => (
               <li key={item} className="flex gap-2" data-reveal="grow" style={motionDelay(i * 90)}>
                 <span aria-hidden="true">✓</span>
@@ -175,23 +179,26 @@ export default async function ForTeachersPage({ params }: Props) {
       </section>
 
       {/* 5. The sample plan on mint, which carries on behind the top of the closing band. The form starts under the
-             heading's first letter, as in the frame. */}
-      <div className="bg-[#E4F8ED]">
-        <section aria-label="download a sample plan" className="px-4 pt-[44px] pb-[64px] md:pb-[99px]">
-          <div className="w-fit max-w-full mx-auto">
-            <h2 className={`${heading} ${h2Size} text-center`} data-reveal="grow">
-              <span aria-hidden="true" className="font-emoji">📥</span> {keepTogether(t("pdf_heading"))}
-            </h2>
-            <div className="mt-[25px] max-w-[650px]" data-reveal="grow" style={motionDelay(150)}>
-              <SamplePlanForm
-                label={t("pdf_label")}
-                placeholder={t("pdf_placeholder")}
-                button={t("pdf_button")}
-                success={t("pdf_success")}
-              />
+             heading's first letter, as in the frame. While it is hidden, lime room above the band lets the girl rise
+             into the page's own colour rather than over the white section. */}
+      <div className={SAMPLE_PLAN_READY ? "bg-[#E4F8ED]" : "pt-8 md:pt-[112px]"}>
+        {SAMPLE_PLAN_READY && (
+          <section aria-label="download a sample plan" className="px-4 pt-[44px] pb-[64px] md:pb-[99px]">
+            <div className="w-fit max-w-full mx-auto">
+              <h2 className={`${heading} ${h2Size} text-center`} data-reveal="grow">
+                <span aria-hidden="true" className="font-emoji">📥</span> {keepTogether(t("pdf_heading"))}
+              </h2>
+              <div className="mt-[25px] max-w-[650px]" data-reveal="grow" style={motionDelay(150)}>
+                <SamplePlanForm
+                  label={t("pdf_label")}
+                  placeholder={t("pdf_placeholder")}
+                  button={t("pdf_button")}
+                  success={t("pdf_success")}
+                />
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
+        )}
 
         {/* 6. The landing page's closing band. Each language sets its own lines in the message: English breaks after
                "making", Persian is one sentence that only wraps where the column is too narrow for it. */}

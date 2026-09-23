@@ -3,7 +3,7 @@ import { getTranslations } from "next-intl/server";
 import Image from "next/image";
 import ScrollReveal from "../_components/ScrollReveal";
 import ClosingBand from "../_components/ClosingBand";
-import { keepTogether, motionDelay, pagePhoto, pageTop } from "../_components/ui";
+import { cardShape, cardShapeLime, keepTogether, motionDelay, pagePhoto, pageTop } from "../_components/ui";
 import "../motion.css";
 
 // The designer's frame pictures. The workshop scene and the creativity map carry their words inside them, so each
@@ -54,9 +54,8 @@ export default async function MethodPage({ params }: Props) {
       {/* 1. Hero: the page title over the designer's workshop scene */}
       <section aria-label="method hero" className={`${pageTop} pb-8 md:pb-12`}>
         <div className="max-w-[1180px] mx-auto px-4">
-          {/* One line tall from tablet up, so its letters start on the same line as the smaller headings of Pricing and
-              For Teachers */}
-          <h1 className={`${heading} text-[clamp(2rem,1.45rem+2.2vw,3.125rem)] md:leading-none text-center mb-6 md:mb-10`} data-reveal="grow">
+          {/* The page title is 40px like Pricing's and For Teachers', on the shared heading line. */}
+          <h1 className={`${heading} text-[clamp(1.75rem,1.4rem+1.5vw,2.5rem)] md:leading-[40px] text-center mb-6 md:mb-10`} data-reveal="grow">
             {keepTogether(t("hero.heading"))}
           </h1>
           <Image
@@ -81,7 +80,7 @@ export default async function MethodPage({ params }: Props) {
             {whyCards.map((card, i) => (
               <div
                 key={card.title}
-                className="rounded-[24px] bg-[#EEFFA9] shadow-[inset_0_0_0_1px_#D1EF5A] px-6 py-6 md:py-7 text-start"
+                className={`${cardShapeLime} bg-[#EEFFA9] px-6 py-6 md:py-7 text-start`}
                 data-reveal="grow"
                 style={motionDelay(i * 120)}
               >
@@ -122,7 +121,7 @@ export default async function MethodPage({ params }: Props) {
                     </div>
                   )}
                   <div
-                    className={`flex-1 rounded-[26px] ${card.bg} px-5 py-4 md:py-5 text-center shadow-[0_6px_14px_rgba(0,0,0,0.10)]`}
+                    className={`flex-1 ${cardShape} ${card.bg} px-5 py-4 md:py-5 text-center`}
                     data-reveal="pop"
                     style={motionDelay(i * 150)}
                   >
@@ -137,7 +136,7 @@ export default async function MethodPage({ params }: Props) {
             </div>
             {/* The eight steps of every mission, on one pill */}
             <p
-              className={`${body} rounded-pill bg-[#EAECD3] px-4 md:px-7 py-2.5 md:py-3 mt-4 md:mt-5 text-center text-[clamp(0.8125rem,0.74rem+0.35vw,1.0625rem)] leading-[1.5]`}
+              className={`${body} rounded-pill bg-[#EAECD3] px-4 md:px-7 py-2.5 md:py-3 mt-4 md:mt-5 text-center text-[clamp(0.875rem,0.78rem+0.35vw,1.0625rem)] leading-[1.5]`}
               data-reveal="grow"
               style={motionDelay(200)}
             >
@@ -156,7 +155,7 @@ export default async function MethodPage({ params }: Props) {
                 );
               })}
             </p>
-            <p className={`${body} text-[#707070] text-center text-[clamp(0.8125rem,0.76rem+0.3vw,1rem)] mt-3`} data-reveal="grow" style={motionDelay(280)}>
+            <p className={`${body} text-[#707070] text-center text-[clamp(0.875rem,0.8rem+0.3vw,1rem)] mt-3`} data-reveal="grow" style={motionDelay(280)}>
               {keepTogether(t("cycle.caption"))}
             </p>
           </div>
@@ -166,7 +165,7 @@ export default async function MethodPage({ params }: Props) {
       {/* 4. Mastering innovation: the paragraph and the designer's creativity map */}
       <section aria-label="mastering innovation" className="py-8 md:py-12">
         <div className="max-w-[1180px] mx-auto px-4">
-          <h2 className={`${heading} text-[clamp(1.375rem,1.1rem+1.3vw,2rem)] text-start`} data-reveal="grow">
+          <h2 className={`${heading} text-[clamp(1.625rem,1.3rem+1.4vw,2.25rem)] text-start`} data-reveal="grow">
             {t("innovation.heading")}
           </h2>
           <p className={`${body} text-[clamp(0.9375rem,0.87rem+0.35vw,1.125rem)] leading-[1.6] mt-2 md:mt-3`} data-reveal="grow" style={motionDelay(140)}>
@@ -191,7 +190,7 @@ export default async function MethodPage({ params }: Props) {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 items-start">
             <div
-              className="rounded-[24px] bg-[#EEFFA9] shadow-[inset_0_0_0_2px_#18785A] px-6 py-6 text-center h-full flex flex-col"
+              className="rounded-[20px] bg-[#EEFFA9] shadow-[inset_0_0_0_2px_#18785A,0_4px_4px_rgba(0,0,0,0.25)] px-6 py-6 text-center h-full flex flex-col"
               data-reveal="grow"
             >
               <p className="[font-family:var(--font-cherry)] font-normal text-[#18785A] text-[clamp(1rem,0.9rem+0.5vw,1.25rem)]">
@@ -199,14 +198,14 @@ export default async function MethodPage({ params }: Props) {
               </p>
               <p className={`${body} text-[clamp(0.875rem,0.82rem+0.3vw,1rem)] leading-[1.6] mt-4`}>{keepTogether(t("what_you_see.report_body"))}</p>
               <p className={`${body} text-[#1F3D34] text-[clamp(0.9375rem,0.87rem+0.35vw,1.0625rem)] mt-4`}>{t("what_you_see.report_quote")}</p>
-              <p className={`${body} text-[#707070] text-[clamp(0.6875rem,0.65rem+0.2vw,0.8125rem)] mt-auto pt-6`}>{t("what_you_see.report_note")}</p>
+              <p className={`${body} text-[#707070] text-[clamp(0.875rem,0.84rem+0.15vw,0.9375rem)] mt-auto pt-6`}>{t("what_you_see.report_note")}</p>
             </div>
             <div className="grid gap-4 md:gap-6">
               {[
                 { title: t("what_you_see.portfolio_title"), sub: t("what_you_see.portfolio_sub") },
                 { title: t("what_you_see.certificate_title"), sub: t("what_you_see.certificate_sub") },
               ].map((card, i) => (
-                <div key={card.title} className="rounded-[24px] bg-white px-6 py-5 text-center shadow-[0_4px_10px_rgba(0,0,0,0.08)]" data-reveal="grow" style={motionDelay(160 + i * 160)}>
+                <div key={card.title} className={`${cardShape} bg-white px-6 py-5 text-center`} data-reveal="grow" style={motionDelay(160 + i * 160)}>
                   <p className="[font-family:var(--font-cherry)] font-normal text-[#296E2C] text-[clamp(0.9375rem,0.87rem+0.4vw,1.1875rem)] leading-[1.3]">
                     {card.title}
                   </p>

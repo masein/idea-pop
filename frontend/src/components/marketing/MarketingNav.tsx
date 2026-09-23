@@ -541,7 +541,7 @@ export default function MarketingNav() {
 
           {/* Mobile hamburger */}
           <button
-            className="rounded-pill bg-white p-[0.656rem] text-ink/70 shadow-md hover:bg-ink/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-explore md:hidden"
+            className="rounded-pill bg-white p-[0.719rem] text-ink/70 shadow-md hover:bg-ink/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-explore md:hidden"
             aria-label={menuOpen ? "Close menu" : "Open menu"}
             aria-expanded={menuOpen}
             aria-controls="mobile-menu"

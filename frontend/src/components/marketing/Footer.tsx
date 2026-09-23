@@ -6,15 +6,20 @@ import ParentLetterForm from "./ParentLetterForm";
 import logoBadge from "../../../public/landing/idea-pop-logo.png";
 import logoText from "../../../public/landing/idea-pop-text.svg";
 
+// Hidden until they are real, the designer's call on 2026-09-22 (she asked to be reminded): the legal pages
+// (/legal/*, which do not exist yet) and the newsletter form (which does not send anything yet).
+const LEGAL_PAGES_READY = false;
+const NEWSLETTER_READY = false;
+
 // Figma: column headings Montserrat Bold 15 in #D1EF5A, links in #F3FFC2; links follow the quiet-link hover
-// (2px underline and a small lift that does not move the list).
+// (2px underline and a small lift that does not move the list). On phones each link is a 44px tap target.
 const colHeading =
   "mb-1 [font-family:var(--font-montserrat)] text-[15px] font-bold uppercase text-[#D1EF5A]";
 const colLink =
-  "inline-block origin-left rtl:origin-right [font-family:var(--font-montserrat)] text-[15px] font-semibold text-[#F3FFC2] transition-all duration-150 hover:text-white hover:underline hover:decoration-2 hover:underline-offset-4 hover:scale-[1.08] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D1EF5A] rounded";
-// The small print: Figma sets 9.5px, raised to 12px so the Privacy and Terms links stay readable.
+  "inline-flex items-center min-h-[44px] md:min-h-0 origin-left rtl:origin-right [font-family:var(--font-montserrat)] text-[15px] font-semibold text-[#F3FFC2] transition-all duration-150 hover:text-white hover:underline hover:decoration-2 hover:underline-offset-4 hover:scale-[1.08] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D1EF5A] rounded";
+// The small print: Figma sets 9.5px, raised to 14px, the smallest text size on the site.
 const smallPrint =
-  "[font-family:var(--font-montserrat)] text-[12px] font-bold text-[#F3FFC2]";
+  "[font-family:var(--font-montserrat)] text-[14px] font-bold text-[#F3FFC2]";
 
 export default async function Footer() {
   const t = await getTranslations("footer");
@@ -42,7 +47,7 @@ export default async function Footer() {
     { label: t("links2.parent_dashboard"), href: "/sign-up" as const },
     { label: t("links2.weekly_report"), href: "/sign-up" as const },
     { label: t("links2.contact"), href: "/legal/report" as const },
-  ];
+  ].filter((link) => LEGAL_PAGES_READY || !link.href.startsWith("/legal/"));
 
   const companyLinks = [
     { label: t("links2.about"), href: "/method" as const },
@@ -98,13 +103,15 @@ export default async function Footer() {
             </div>
           </div>
 
-          <div className="w-full max-w-[440px]">
-            <p className="mb-2 [font-family:var(--font-montserrat)] text-[12px] font-bold text-[#D7F26A]">
-              {t("newsletter_heading")}
-            </p>
-            <ParentLetterForm />
-            <p className="mt-2 [font-family:var(--font-montserrat)] text-[12px] font-medium text-[#F3FFC2]">{t("newsletter_note")}</p>
-          </div>
+          {NEWSLETTER_READY && (
+            <div className="w-full max-w-[440px]">
+              <p className="mb-2 [font-family:var(--font-montserrat)] text-[14px] font-bold text-[#D7F26A]">
+                {t("newsletter_heading")}
+              </p>
+              <ParentLetterForm />
+              <p className="mt-2 [font-family:var(--font-montserrat)] text-[14px] font-medium text-[#F3FFC2]">{t("newsletter_note")}</p>
+            </div>
+          )}
         </div>
 
         {/* Link columns */}
@@ -136,7 +143,7 @@ export default async function Footer() {
           {trustBadges.map((badge) => (
             <span
               key={badge}
-              className="flex min-h-[34px] items-center justify-center rounded-pill bg-[#2F4E45] px-4 text-center [font-family:var(--font-montserrat)] text-[12px] font-bold text-[#D7F26A]"
+              className="flex min-h-[34px] items-center justify-center rounded-pill bg-[#2F4E45] px-4 text-center [font-family:var(--font-montserrat)] text-[14px] font-bold text-[#D7F26A]"
             >
               {badge}
             </span>
@@ -149,12 +156,16 @@ export default async function Footer() {
             <p className={smallPrint}>
               {t("legal", { year })}
             </p>
-            <Link href="/legal/privacy" className={`${smallPrint} rounded hover:text-white hover:underline hover:decoration-2 hover:underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D1EF5A]`}>
-              {t("links2.privacy")}
-            </Link>
-            <Link href="/legal/terms" className={`${smallPrint} rounded hover:text-white hover:underline hover:decoration-2 hover:underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D1EF5A]`}>
-              {t("links.terms")}
-            </Link>
+            {LEGAL_PAGES_READY && (
+              <>
+                <Link href="/legal/privacy" className={`${smallPrint} rounded hover:text-white hover:underline hover:decoration-2 hover:underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D1EF5A]`}>
+                  {t("links2.privacy")}
+                </Link>
+                <Link href="/legal/terms" className={`${smallPrint} rounded hover:text-white hover:underline hover:decoration-2 hover:underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D1EF5A]`}>
+                  {t("links.terms")}
+                </Link>
+              </>
+            )}
             <LocaleSwitcher />
           </div>
           <p className={smallPrint}>{t("madewith")}</p>

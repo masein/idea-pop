@@ -39,11 +39,12 @@ export default function ParentLetterForm() {
         <input
           id="newsletter-email"
           type="email"
+          autoComplete="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder={t("newsletter_placeholder")}
           required
-          className="h-11 min-w-0 flex-1 rounded-pill bg-white px-4 [font-family:var(--font-montserrat)] text-[16px] font-medium text-[#1F2D33] placeholder:text-[#8B95A1] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D1EF5A]"
+          className="h-11 min-w-0 flex-1 rounded-pill bg-white px-4 [font-family:var(--font-montserrat)] text-[16px] font-medium text-[#1F2D33] placeholder:text-[#6B7280] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D1EF5A]"
         />
         <button
           type="submit"

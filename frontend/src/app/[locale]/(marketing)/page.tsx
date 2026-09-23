@@ -5,7 +5,8 @@ import { Link } from "@/i18n/routing";
 import PricingPlans from "./_components/PricingPlans";
 import AskIdeaPop from "./_components/AskIdeaPop";
 import ScrollReveal from "./_components/ScrollReveal";
-import { btnGlass, btnLime, fromCenter, keepTogether, motionDelay } from "./_components/ui";
+import { btnGlass, btnLime, cardShape, cardShapeLime, fromCenter, keepTogether, motionDelay } from "./_components/ui";
+import FaqList from "./_components/FaqList";
 // Tablet and desktop hero: the designer's workshop scene built from layers, so every kid and animal can animate in.
 import HeroScene from "./_components/HeroScene";
 import "./motion.css";
@@ -38,6 +39,19 @@ import kidMake3 from "../../../../public/landing/kids/kid-make-3.webp";
 import kidMake4 from "../../../../public/landing/kids/kid-make-4.webp";
 import kidMake5 from "../../../../public/landing/kids/kid-make-5.webp";
 import kidMake6 from "../../../../public/landing/kids/kid-make-6.webp";
+// The design-thinking tiles: the designer's six object pictures with their studio backgrounds cut away, one per step
+// (the bulb and the scissors turned upright), at twice the size they are shown.
+import dtFrame from "../../../../public/landing/design-thinking/frame.png";
+import dtCamera from "../../../../public/landing/design-thinking/camera.png";
+import dtBulb from "../../../../public/landing/design-thinking/bulb.png";
+import dtScissors from "../../../../public/landing/design-thinking/scissors.png";
+import dtClipboard from "../../../../public/landing/design-thinking/clipboard.png";
+import dtMicrophone from "../../../../public/landing/design-thinking/microphone.png";
+// "Real experts": the designer's 3D teachers, head and shoulders cut from her sheet with its grey panels removed.
+import expertScience from "../../../../public/landing/experts/science.png";
+import expertHistory from "../../../../public/landing/experts/history.png";
+import expertArt from "../../../../public/landing/experts/art.png";
+import expertMath from "../../../../public/landing/experts/math.png";
 const kidMakes = [kidMake1, kidMake2, kidMake3, kidMake4, kidMake5, kidMake6];
 
 const DEEP = "#2E5F4B";
@@ -119,16 +133,16 @@ export default async function LandingPage({ params }: Props) {
     },
   ];
 
-  /* The designer's tile colours (from the Figma design-thinking graphic). Plain blocks for now — the designer will add
-     their own design. White labels are unreadable on the coral, yellow and green tiles (2.8, 1.4 and 1.8:1), so those
-     three carry a dark label instead (5.1, 9.9 and 7.8:1); the colours stay as the designer set them. */
+  /* The design-thinking tiles, each with the designer's picture for its step. Colours: each tile keeps the colour family
+     of the Figma graphic (blue, coral, yellow, purple, teal, green) as a soft pastel like The Method's cycle cards, so
+     the row sits calmly on the lime page; one dark label on all six reads at over 9:1 on every tile. */
   const spineTiles = [
-    { label: t("curriculum.spine_1"), bg: "bg-[#497AF0]", text: "text-white" },
-    { label: t("curriculum.spine_2"), bg: "bg-[#FF6C67]", text: "text-[#16302A]" },
-    { label: t("curriculum.spine_3"), bg: "bg-[#FDD543]", text: "text-[#16302A]" },
-    { label: t("curriculum.spine_4"), bg: "bg-[#934CC1]", text: "text-white" },
-    { label: t("curriculum.spine_5"), bg: "bg-[#008C9D]", text: "text-white" },
-    { label: t("curriculum.spine_6"), bg: "bg-[#55D889]", text: "text-[#16302A]" },
+    { label: t("curriculum.spine_1"), bg: "bg-[#CAD6E6]", img: dtFrame },
+    { label: t("curriculum.spine_2"), bg: "bg-[#F1CAC5]", img: dtCamera },
+    { label: t("curriculum.spine_3"), bg: "bg-[#F5E6B8]", img: dtBulb },
+    { label: t("curriculum.spine_4"), bg: "bg-[#DECDE9]", img: dtScissors },
+    { label: t("curriculum.spine_5"), bg: "bg-[#C7E2E6]", img: dtClipboard },
+    { label: t("curriculum.spine_6"), bg: "bg-[#D7E9D5]", img: dtMicrophone },
   ];
 
   // The 3-year path: three year cards, then the ranks in order. The icons are decorative (hidden from screen readers).
@@ -152,11 +166,12 @@ export default async function LandingPage({ params }: Props) {
     </svg>
   );
 
+  // The designer's four 3D teachers, head and shoulders on the circles' pastels, in the order of her sheet.
   const experts = [
-    { name: t("experts.e1_name"), role: t("experts.e1_role"), bg: "bg-[#F7E3DC]" },
-    { name: t("experts.e2_name"), role: t("experts.e2_role"), bg: "bg-[#E2E7FA]" },
-    { name: t("experts.e3_name"), role: t("experts.e3_role"), bg: "bg-[#DFE9E0]" },
-    { name: t("experts.e4_name"), role: t("experts.e4_role"), bg: "bg-[#E9DEF5]" },
+    { name: t("experts.e1_name"), role: t("experts.e1_role"), bg: "bg-[#F7E3DC]", img: expertScience },
+    { name: t("experts.e2_name"), role: t("experts.e2_role"), bg: "bg-[#E2E7FA]", img: expertHistory },
+    { name: t("experts.e3_name"), role: t("experts.e3_role"), bg: "bg-[#DFE9E0]", img: expertArt },
+    { name: t("experts.e4_name"), role: t("experts.e4_role"), bg: "bg-[#E9DEF5]", img: expertMath },
   ];
 
   return (
@@ -267,7 +282,7 @@ export default async function LandingPage({ params }: Props) {
       {/* 2. What a year looks like */}
       <section aria-label="what a year looks like" className="pt-8 md:pt-10">
         <div className="max-w-6xl mx-auto px-4">
-          <h2 className="[font-family:var(--font-cherry)] font-normal text-[clamp(1.875rem,1.435rem+1.878vw,3.125rem)] leading-[normal] md:leading-none text-[#4F4F4F] text-center mb-[76px]" data-reveal="grow">
+          <h2 className="[font-family:var(--font-cherry)] font-normal text-[clamp(1.875rem,1.435rem+1.878vw,3rem)] leading-[normal] text-[#4F4F4F] text-center mb-[76px]" data-reveal="grow">
             {keepTogether(t("year.heading"))}
           </h2>
           {/* Figma cards: 281×325, radius 20, #EEFFA9 fill, 1px inside #D1EF5A stroke (an inset shadow, so it adds no size)
@@ -279,7 +294,7 @@ export default async function LandingPage({ params }: Props) {
             {/* Motion: the middle card grows in first, then the outer two, and each bust pops out of its card. */}
             {yearCards.map((card, i) => (
               <div key={card.title} className="relative w-[281px] h-[325px] shrink-0" data-reveal="grow" style={motionDelay(fromCenter(i, yearCards.length) * 220)}>
-                <div className="h-full rounded-[20px] bg-[#EEFFA9] px-1.5 pt-[183px] text-center shadow-[inset_0_0_0_1px_#D1EF5A,0_4px_4px_rgba(0,0,0,0.25)]">
+                <div className={`h-full ${cardShapeLime} bg-[#EEFFA9] px-1.5 pt-[183px] text-center`}>
                   <p className="[font-family:var(--font-adlam)] font-normal text-[24px] leading-[normal] text-[#333333]">
                     {card.title}
                   </p>
@@ -339,7 +354,7 @@ export default async function LandingPage({ params }: Props) {
             {/* Motion: the middle card grows in first, then the outer two, and each circle pops out of its card. */}
             {cycleCards.map((card, i) => (
               <div key={card.label} className="relative w-[260px] min-h-[204px] shrink-0" data-reveal="grow" style={motionDelay(fromCenter(i, cycleCards.length) * 220)}>
-                <div className="h-full rounded-[30px] bg-[#CFEC5A] px-3 pt-[87px] pb-[21px] text-center shadow-[0_4px_4px_rgba(0,0,0,0.25)]">
+                <div className={`h-full ${cardShape} bg-[#CFEC5A] px-3 pt-[87px] pb-[21px] text-center`}>
                   <p className={`[font-family:var(--font-adlam)] font-normal text-[20px] leading-[normal] ${card.color}`}>
                     {card.label}
                   </p>
@@ -412,20 +427,28 @@ export default async function LandingPage({ params }: Props) {
             {t("curriculum.note")}
           </p>
 
-          {/* Plain colour tiles at the Figma graphic's size (162×279 with 13px gaps — a 1037px row at 1440), top left
-              free for the designer's own images, label at the bottom. 108px under the paragraph on desktop; 3 columns on phones. */}
+          {/* Tiles at the Figma graphic's size (162×279 with 13px gaps — a 1037px row at 1440): the step's picture in the
+              upper half (84% wide, 52% tall, with a soft shadow), the label at the bottom. 108px under the paragraph on
+              desktop; 3 columns on phones. The pictures are decoration: the label names the step. */}
           {/* Motion: the tiles grow out of their centres as you scroll, the middle pair first and the outer pair last. */}
           <div className="grid grid-cols-3 md:grid-cols-6 gap-2 md:gap-[13px] max-w-[1037px] mx-auto mt-7 md:mt-[108px]">
             {spineTiles.map((tile, i) => (
-              <div key={tile.label} className={`${tile.bg} aspect-[162/279] flex items-end justify-center px-1.5 pb-[13%]`} data-scroll="scale-in" style={{ "--wave": fromCenter(i, spineTiles.length) } as React.CSSProperties}>
-                <span className={`[font-family:var(--font-montserrat)] font-bold ${tile.text} text-[clamp(0.8125rem,0.55rem+1vw,1.25rem)] leading-[1.2]`}>
+              <div key={tile.label} className={`${tile.bg} relative aspect-[162/279] flex items-end justify-center px-1.5 pb-[13%]`} data-scroll="scale-in" style={{ "--wave": fromCenter(i, spineTiles.length) } as React.CSSProperties}>
+                <Image
+                  unoptimized
+                  src={tile.img}
+                  alt=""
+                  aria-hidden="true"
+                  className="absolute left-1/2 top-[9%] -translate-x-1/2 w-[84%] h-[52%] object-contain [object-position:50%_60%] drop-shadow-[0_6px_6px_rgba(0,0,0,0.18)]"
+                />
+                <span className="[font-family:var(--font-montserrat)] font-bold text-[#16302A] text-[clamp(0.875rem,0.6rem+1vw,1.25rem)] leading-[1.2]">
                   {tile.label}
                 </span>
               </div>
             ))}
           </div>
           {/* Plain-text credit only — no IDEO artwork or logo. */}
-          <p className="[font-family:var(--font-adlam)] font-normal text-[13px] text-[#4F4F4F] text-start max-w-[1037px] mx-auto mt-3 md:mt-4">
+          <p className="[font-family:var(--font-adlam)] font-normal text-[14px] text-[#4F4F4F] text-start max-w-[1037px] mx-auto mt-3 md:mt-4">
             {t("curriculum.spine_credit")}
           </p>
 
@@ -438,12 +461,12 @@ export default async function LandingPage({ params }: Props) {
           <ol className="flex justify-center gap-x-6 md:gap-x-12 lg:gap-x-16 max-w-[880px] mx-auto">
             {pathYears.map((year, i) => (
               <li key={year.label} className="relative flex flex-1 min-w-0 max-w-[250px]" data-reveal="grow" style={motionDelay(fromCenter(i, pathYears.length) * 220)}>
-                <div className="flex flex-1 flex-col lg:flex-row items-center gap-1.5 lg:gap-3.5 rounded-2xl md:rounded-[20px] bg-[#EEFFA9] px-1.5 py-3 md:px-2.5 md:py-3.5 lg:px-[18px] text-center lg:text-start shadow-[inset_0_0_0_1px_#D1EF5A,0_4px_4px_rgba(0,0,0,0.08)]">
+                <div className="flex flex-1 flex-col lg:flex-row items-center gap-1.5 lg:gap-3.5 rounded-[20px] bg-[#EEFFA9] px-1.5 py-3 md:px-2.5 md:py-3.5 lg:px-[18px] text-center lg:text-start shadow-[inset_0_0_0_1px_#D1EF5A,0_4px_4px_rgba(0,0,0,0.25)]">
                   <span aria-hidden="true" className="font-emoji shrink-0 text-[28px] md:text-[32px] lg:text-[34px] leading-none">
                     {year.icon}
                   </span>
                   <span className="flex min-w-0 flex-col items-center lg:items-start [font-family:var(--font-adlam)] font-normal leading-[normal]">
-                    <span className="text-[13px] md:text-[15px] text-[#18785A]">{year.label}</span>
+                    <span className="text-[14px] md:text-[15px] text-[#18785A]">{year.label}</span>
                     <span className="text-[15px] md:text-[18px] lg:text-[20px] text-[#4F4F4F]">{year.title}</span>
                   </span>
                 </div>
@@ -517,7 +540,7 @@ export default async function LandingPage({ params }: Props) {
       <section aria-label="made by kids" className="pt-8 pb-7 md:pt-[35px] md:pb-[49px]">
         {/* Figma: six 200×178 tiles with 20px gaps (a 1300px row at 1440), 33px under the heading; 3 columns on phones. */}
         <div className="max-w-[1332px] mx-auto px-4">
-          <h2 className="[font-family:var(--font-cherry)] font-normal text-[clamp(1.75rem,1.4rem+1.5vw,2.5rem)] leading-[1.15] md:leading-[40px] text-[#4F4F4F] text-center mb-6 md:mb-[33px]" data-reveal="grow">
+          <h2 className="[font-family:var(--font-cherry)] font-normal text-[clamp(1.875rem,1.435rem+1.878vw,3rem)] leading-[normal] text-[#4F4F4F] text-center mb-6 md:mb-[33px]" data-reveal="grow">
             {keepTogether(t("kids_made.heading"))}
           </h2>
           {/* Motion: the tiles pop out of their centres, the middle pair first. */}
@@ -540,19 +563,22 @@ export default async function LandingPage({ params }: Props) {
       <section aria-label="experts" className="pt-7 md:pt-12">
         {/* Figma: 104px circles 210px apart, each name and role one ADLaM Display 20 text in a 200px box; 2 columns on phones. */}
         <div className="max-w-6xl mx-auto px-4 text-center">
-          <h2 className="[font-family:var(--font-cherry)] font-normal text-[clamp(1.75rem,1.4rem+1.5vw,2.5rem)] leading-[1.15] md:leading-[40px] text-[#4F4F4F] mb-5 md:mb-[17px]" data-reveal="grow">
+          <h2 className="[font-family:var(--font-cherry)] font-normal text-[clamp(1.875rem,1.435rem+1.878vw,3rem)] leading-[normal] text-[#4F4F4F] mb-5 md:mb-[17px]" data-reveal="grow">
             {keepTogether(t("experts.heading"))}
           </h2>
           {/* Motion: each circle grows out with a jelly squash and stretch and its name grows in under it, the middle two first. */}
           <div className="grid grid-cols-2 md:grid-cols-[repeat(4,minmax(0,210px))] justify-center gap-x-4 gap-y-6 md:gap-0 max-w-[480px] md:max-w-none mx-auto">
             {experts.map((e, i) => (
               <div key={e.name} className="flex flex-col items-center">
+                {/* The avatar is decoration: the name and role under it say who it is. */}
                 <div
-                  className={`size-[88px] md:size-[104px] rounded-full ${e.bg}`}
+                  className={`size-[88px] md:size-[104px] rounded-full overflow-hidden ${e.bg}`}
                   aria-hidden="true"
                   data-reveal="squash"
                   style={motionDelay(fromCenter(i, experts.length) * 220)}
-                />
+                >
+                  <Image unoptimized src={e.img} alt="" className="size-full object-cover" />
+                </div>
                 {/* Name, then the role on its own line: no dot between them (the designer's call). */}
                 <p className="[font-family:var(--font-adlam)] font-normal text-[16px] md:text-[20px] leading-[1.2] text-[#4F4F4F] max-w-[200px] mt-3 md:mt-[17px]" data-reveal="grow" style={motionDelay(300 + fromCenter(i, experts.length) * 220)}>
                   <span className="block">{e.name}</span>
@@ -574,7 +600,7 @@ export default async function LandingPage({ params }: Props) {
       <section aria-label="pricing" className="pt-12 pb-16 md:pt-[70px] md:pb-20">
         {/* Figma: the heading only (the plan cards are unchanged) — 70px under the experts note, 17px above the plan switch. */}
         <div className="max-w-6xl mx-auto px-4">
-          <h2 className="[font-family:var(--font-cherry)] font-normal text-[clamp(1.75rem,1.4rem+1.5vw,2.5rem)] leading-[1.15] md:leading-[40px] text-[#4F4F4F] text-center mb-5 md:mb-[17px]" data-reveal="grow">
+          <h2 className="[font-family:var(--font-cherry)] font-normal text-[clamp(1.875rem,1.435rem+1.878vw,3rem)] leading-[normal] text-[#4F4F4F] text-center mb-5 md:mb-[17px]" data-reveal="grow">
             {keepTogether(t("pricing_teaser.heading"))}
           </h2>
           <PricingPlans
@@ -623,25 +649,13 @@ export default async function LandingPage({ params }: Props) {
         </div>
       </section>
 
-      {/* 10. FAQ */}
+      {/* 10. FAQ: the heading in the landing's heading face, the rows in the marketing pages' one FAQ design */}
       <section aria-label="questions parents ask" className="py-8 md:py-12">
         <div className="max-w-3xl mx-auto px-4">
-          <h2 className="font-display text-2xl md:text-3xl font-bold text-ink text-center mb-8" data-reveal="grow">
+          <h2 className="[font-family:var(--font-cherry)] font-normal text-[clamp(1.875rem,1.435rem+1.878vw,3rem)] leading-[normal] text-[#4F4F4F] text-center mb-6 md:mb-8" data-reveal="grow">
             {keepTogether(t("faq.heading"))}
           </h2>
-          <ul className="space-y-3" role="list">
-            {faqItems.map((item, i) => (
-              <li
-                key={item.q}
-                className="rounded-pill bg-white px-6 py-3 shadow-sm font-body text-sm md:text-base text-ink"
-                data-reveal="grow"
-                style={motionDelay(i * 130)}
-              >
-                <span className="font-bold">{item.q}</span>
-                <span className="text-ink/80"> {item.a}</span>
-              </li>
-            ))}
-          </ul>
+          <FaqList items={faqItems} />
         </div>
       </section>
 

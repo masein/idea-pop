@@ -12,6 +12,18 @@ export const keepTogether = (text: string) =>
 export const motionDelay = (ms: number) => ({ "--motion-delay": `${ms}ms` }) as React.CSSProperties;
 export const fromCenter = (i: number, count: number) => Math.floor(Math.abs(i - (count - 1) / 2));
 
+/* Where a page's heading starts: clear of the nav's circle, which hangs below the pill, and one line shared by the
+   pages that open on a heading (The Method, Pricing, For Teachers) so their headings sit at the same height. */
+export const pageTop = "pt-[clamp(8.5rem,6rem+5vw,11rem)]";
+
+// The big photo under a page's heading (The Method, For Teachers): rounded corners and a soft shadow.
+/* One card style for the marketing pages, from the landing's "What a year looks like" cards: 20px corners and the
+   Figma default drop shadow; a lime card also carries a 1px #D1EF5A edge (an inset shadow, so it adds no size). */
+export const cardShape = "rounded-[20px] shadow-[0_4px_4px_rgba(0,0,0,0.25)]";
+export const cardShapeLime = "rounded-[20px] shadow-[inset_0_0_0_1px_#D1EF5A,0_4px_4px_rgba(0,0,0,0.25)]";
+
+export const pagePhoto = "rounded-[20px] md:rounded-[28px] shadow-[0_6px_18px_rgba(0,0,0,0.18)]";
+
 /* The button kit: primary is the lime fill with #1F4D33 text (7.3:1 — #18785A only reached 4.2:1, which fails at
    the 15px phone size), secondary is the see-through fill. Both rest on a 1px inset stroke, thicken to 2px and scale
    to 1.11 on hover (the label then reads 20px without the box moving anything), and darken when pressed. */

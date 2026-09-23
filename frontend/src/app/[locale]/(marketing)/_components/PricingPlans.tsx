@@ -43,7 +43,7 @@ export default function PricingPlans({ labels }: { labels: PricingLabels }) {
   const [annual, setAnnual] = useState(true);
 
   const toggleBase =
-    "rounded-pill px-5 py-1.5 [font-family:var(--font-montserrat)] text-[16px] font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2E5F4B] focus-visible:ring-offset-2";
+    "rounded-pill px-5 py-2.5 [font-family:var(--font-montserrat)] text-[16px] font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2E5F4B] focus-visible:ring-offset-2";
 
   return (
     <div data-testid="landing-pricing">
@@ -103,14 +103,14 @@ export default function PricingPlans({ labels }: { labels: PricingLabels }) {
 
         {/* Plus */}
         <div className="relative rounded-card bg-white border-[3px] border-[#CDEB5A] shadow-lg p-6 flex flex-col" data-reveal="pop">
-          <span className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-pill bg-[#D1EF5A] px-4 py-[6px] [font-family:var(--font-montserrat)] text-[13px] font-bold text-[#146047] whitespace-nowrap">
+          <span className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-pill bg-[#D1EF5A] px-4 py-[6px] [font-family:var(--font-montserrat)] text-[14px] font-bold text-[#146047] whitespace-nowrap">
             {labels.badgePopular}
           </span>
           <p className="font-display font-bold text-xl text-ink">
             {labels.plusName}{" "}
             <span className="font-display">{annual ? labels.plusPriceAnnual : labels.plusPriceMonthly}</span>
           </p>
-          <p className="font-body text-xs font-semibold text-ink/50 mb-4">
+          <p className="font-body text-sm font-semibold text-ink/50 mb-4">
             {annual ? labels.plusBillingAnnual : labels.plusBillingMonthly}
           </p>
           <p className="font-body text-sm font-bold text-ink mb-2">
@@ -134,14 +134,14 @@ export default function PricingPlans({ labels }: { labels: PricingLabels }) {
 
         {/* Family */}
         <div className="relative rounded-card bg-white border-[3px] border-[#18785A] p-6 flex flex-col" data-reveal="grow" style={{ "--motion-delay": "300ms" } as React.CSSProperties}>
-          <span className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-pill bg-white border border-[#18785A] px-4 py-[6px] [font-family:var(--font-montserrat)] text-[13px] font-bold text-[#18785A] whitespace-nowrap">
+          <span className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-pill bg-white border border-[#18785A] px-4 py-[6px] [font-family:var(--font-montserrat)] text-[14px] font-bold text-[#18785A] whitespace-nowrap">
             {labels.badgeValue}
           </span>
           <p className="font-display font-bold text-xl text-ink">
             {labels.familyName}{" "}
             <span className="font-display">{annual ? labels.familyPriceAnnual : labels.familyPriceMonthly}</span>
           </p>
-          <p className="font-body text-xs font-semibold text-ink/50 mb-4">
+          <p className="font-body text-sm font-semibold text-ink/50 mb-4">
             {annual ? labels.familyBillingAnnual : labels.familyBillingMonthly}
           </p>
           <p className="font-body text-sm font-bold text-ink mb-2">

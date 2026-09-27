@@ -39,6 +39,15 @@ test.describe('Marketing landing page', () => {
     await expect(nav.getByRole('link', { name: /pricing/i })).toBeVisible();
   });
 
+  test('the nav offers Sign up and Log in side by side', async ({ page }) => {
+    await page.goto('/en');
+    const nav = page.getByTestId('marketing-nav');
+    await expect(nav.getByRole('link', { name: 'Sign up', exact: true })).toBeVisible();
+    const logIn = nav.getByRole('link', { name: 'Log in', exact: true });
+    await expect(logIn).toBeVisible();
+    await expect(logIn).toHaveAttribute('href', //en/login$/);
+  });
+
   test('footer shows trust badges', async ({ page }) => {
     await page.goto('/en');
     const footer = page.getByTestId('site-footer');

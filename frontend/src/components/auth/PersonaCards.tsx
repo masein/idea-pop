@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Image, { type StaticImageData } from "next/image";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/routing";
@@ -41,6 +42,18 @@ const TEXT_END = "inset-y-0 end-0 w-[70%] pe-[30px] ps-0 pt-[34px] text-end item
 export default function PersonaCards({ onChosen }: { onChosen?: () => void }) {
   const t = useTranslations("auth.persona_select");
   const router = useRouter();
+  /* A touch screen has no pointer, so nothing can be hovered: a first tap picks a card out -- it swaps to its second
+     character, shows Start and keeps a lime edge -- and a second tap on it starts. Where there is a pointer, the card
+     goes on the first press as before. Read after mounting, since the server cannot know which kind of screen it is. */
+  const [pointer, setPointer] = useState(true);
+  const [picked, setPicked] = useState<Persona | null>(null);
+  useEffect(() => {
+    const mq = window.matchMedia("(hover: hover) and (pointer: fine)");
+    const read = () => setPointer(mq.matches);
+    read();
+    mq.addEventListener("change", read);
+    return () => mq.removeEventListener("change", read);
+  }, []);
 
   function choose(persona: Persona) {
     setPersona(persona);
@@ -49,6 +62,11 @@ export default function PersonaCards({ onChosen }: { onChosen?: () => void }) {
     else if (persona === "parent") router.push("/sign-up/parent");
     else if (persona === "teacher") router.push("/sign-up/teacher");
     else router.push("/");
+  }
+
+  function press(persona: Persona) {
+    if (pointer || picked === persona) choose(persona);
+    else setPicked(persona);
   }
 
   const cards: Card[] = [
@@ -101,30 +119,33 @@ export default function PersonaCards({ onChosen }: { onChosen?: () => void }) {
         <button
           key={c.key}
           type="button"
-          onClick={() => choose(c.key)}
+          onClick={() => press(c.key)}
           data-persona={c.key}
-          className="group relative h-[158px] w-full max-w-[321px] rounded-[20px] bg-[#4F4F4F] text-start transition-transform duration-150 hover:scale-[1.02] active:scale-[0.99] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#18785A] focus-visible:ring-offset-2 focus-visible:ring-offset-[#F3FFC2] motion-reduce:transition-none"
+          data-picked={picked === c.key}
+          aria-pressed={pointer ? undefined : picked === c.key}
+          className="group relative h-[158px] w-full max-w-[321px] rounded-[20px] bg-[#4F4F4F] text-start transition-all duration-150 hover:scale-[1.02] active:scale-[0.99] data-[picked=true]:scale-[1.02] data-[picked=true]:shadow-[inset_0_0_0_3px_#D1EF5A,0_6px_14px_rgba(0,0,0,0.25)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#18785A] focus-visible:ring-offset-2 focus-visible:ring-offset-[#F3FFC2] motion-reduce:transition-none"
         >
           <Image
             unoptimized
             src={c.restImg}
             alt=""
             aria-hidden="true"
-            className={`pointer-events-none absolute bottom-0 w-auto ${swap} group-hover:opacity-0 group-focus-visible:opacity-0 group-active:opacity-0 ${c.restImgClass}`}
+            className={`pointer-events-none absolute bottom-0 w-auto ${swap} group-hover:opacity-0 group-focus-visible:opacity-0 group-active:opacity-0 group-data-[picked=true]:opacity-0 ${c.restImgClass}`}
           />
           <Image
             unoptimized
             src={c.overImg}
             alt=""
             aria-hidden="true"
-            className={`pointer-events-none absolute bottom-0 w-auto opacity-0 ${swap} group-hover:opacity-100 group-focus-visible:opacity-100 group-active:opacity-100 ${c.overImgClass}`}
+            className={`pointer-events-none absolute bottom-0 w-auto opacity-0 ${swap} group-hover:opacity-100 group-focus-visible:opacity-100 group-active:opacity-100 group-data-[picked=true]:opacity-100 ${c.overImgClass}`}
           />
-          <span className={`absolute flex flex-col ${swap} group-hover:opacity-0 group-focus-visible:opacity-0 group-active:opacity-0 ${c.restTextClass}`}>
+          <span className={`absolute flex flex-col ${swap} group-hover:opacity-0 group-focus-visible:opacity-0 group-active:opacity-0 group-data-[picked=true]:opacity-0 ${c.restTextClass}`}>
             <span className={heading}>{c.label}</span>
             <span className={`[font-family:var(--font-adlam)] font-normal text-[15px] leading-[1.35] text-[#F3FFC2] mt-1 text-balance ${c.lineClass}`}>{c.sub}</span>
           </span>
-          {/* The same heading with the Start button: decoration, since pressing the card is what starts it. */}
-          <span aria-hidden="true" className={`absolute flex flex-col opacity-0 ${swap} group-hover:opacity-100 group-focus-visible:opacity-100 group-active:opacity-100 ${c.overTextClass}`}>
+          {/* The same heading with the Start button. On a computer it is decoration, since pointing at a card and
+              pressing it are the same gesture; on a touch screen it is what the second tap is aimed at. */}
+          <span aria-hidden="true" className={`absolute flex flex-col opacity-0 ${swap} group-hover:opacity-100 group-focus-visible:opacity-100 group-active:opacity-100 group-data-[picked=true]:opacity-100 ${c.overTextClass}`}>
             <span className={heading}>{c.label}</span>
             <span className="mt-6 inline-flex items-center justify-center rounded-pill bg-[#D1EF5A] px-6 py-2 [font-family:var(--font-montserrat)] text-[15px] font-extrabold text-[#1F4D33] shadow-[inset_0_0_0_1px_#18785A,0_4px_4px_rgba(0,0,0,0.25)]">
               {t("start")}

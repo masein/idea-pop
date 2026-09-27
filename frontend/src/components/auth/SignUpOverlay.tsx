@@ -132,7 +132,11 @@ export function SignUpPanel({ onClose, closeLabel, onChosen }: { onClose?: () =>
       <PersonaCards onChosen={onChosen} />
       <p className="mt-8 text-center [font-family:var(--font-adlam)] font-normal text-[15px] text-[#4F4F4F]">
         {t("already")}{" "}
-        <Link href="/login" className="font-bold text-[#194D3D] underline underline-offset-2 hover:text-[#0F4C39]">
+        {/* A finger needs more than the height of the word, so the link carries a 44px box around it. */}
+        <Link
+          href="/login"
+          className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-md px-2 align-middle font-bold text-[#194D3D] underline underline-offset-2 hover:text-[#0F4C39] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#18785A]"
+        >
           {t("log_in")}
         </Link>
       </p>

@@ -583,6 +583,8 @@
       "no_account": "Don't have an account?",
       "sign_up": "Sign up",
       "student_cta": "Are you a student with a class code?",
+    "class_code_hint": "Your teacher gave you a class code?",
+    "class_code_button": "Log in with a class code",
       "student_link": "Sign in here",
       "error_invalid": "Wrong email or password. Please try again.",
       "error_generic": "Something went wrong. Please try again.",

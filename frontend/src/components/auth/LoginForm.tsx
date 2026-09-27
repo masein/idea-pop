@@ -11,7 +11,8 @@ import { dashboardHref, reconcilePersona } from "@/lib/auth/persona";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 
-export default function LoginForm() {
+/* onDone is the overlay's: it closes itself as the app moves on. */
+export default function LoginForm({ onDone }: { onDone?: () => void } = {}) {
   const t = useTranslations("auth.login");
   const ta = useTranslations("auth");
   const router = useRouter();
@@ -33,6 +34,7 @@ export default function LoginForm() {
       // cookie (a parent logging in on a kid-onboarded browser must land on
       // the parent dashboard, not in the kid UI).
       const persona = reconcilePersona(role);
+      onDone?.();
       router.push(dashboardHref(persona));
     } catch (err) {
       const message = err instanceof Error ? err.message : "";
@@ -108,15 +110,18 @@ export default function LoginForm() {
         </Link>
       </p>
 
-      <p className="mt-2 text-center font-body text-sm text-ink/60">
-        {t("student_cta")}{" "}
+      {/* The other way in, for a student with a code from their teacher: a way of its own rather than a line of
+          small print under the one for grown-ups. */}
+      <div className="mt-7 border-t border-ink/10 pt-6">
+        <p className="text-center font-body text-sm text-ink/70">{t("class_code_hint")}</p>
         <Link
           href="/class-login"
-          className="font-semibold text-explore underline-offset-2 hover:underline"
+          data-testid="class-code-link"
+          className="mt-3 flex min-h-[48px] w-full items-center justify-center rounded-pill bg-white px-5 font-display text-base font-bold text-[#1F4D33] shadow-[inset_0_0_0_2px_#D1EF5A] transition-colors hover:bg-[#F4FADD] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#18785A] focus-visible:ring-offset-2"
         >
-          {t("student_link")}
+          {t("class_code_button")}
         </Link>
-      </p>
+      </div>
     </div>
   );
 }

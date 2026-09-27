@@ -7,35 +7,46 @@ import { Link, usePathname } from "@/i18n/routing";
 import type { Persona } from "@/lib/auth/persona";
 import PersonaCards from "./PersonaCards";
 import RegisterForm from "./RegisterForm";
+import LoginForm from "./LoginForm";
+import ClassLogin from "./ClassLogin";
 import KidOnboarding from "@/components/onboarding/KidOnboarding";
 
-/* "Tell us who you are" as an overlay: every link to /sign-up anywhere on the site opens it in place instead of
-   loading a page, so a visitor never loses where they were. The /sign-up page still exists and shows the same panel,
-   for a direct visit, a new tab (ctrl-click) or a browser without JavaScript.
+/* The way in and out of an account, as an overlay: a link to the persona step, to logging in, or to signing in with
+   a class code opens in place instead of loading a page, so a visitor never loses where they were, and every step
+   that follows shows in the same panel. Each of those pages still exists and shows the same thing, for a direct
+   visit, a new tab (ctrl-click) or a browser without JavaScript.
    It behaves like a dialog: Escape and the backdrop close it, focus moves in and cycles inside it, the page behind
    cannot scroll, and focus returns to whatever opened it. */
+
+/* The pages this overlay stands in for, and the view each one opens. A link to any of them is answered here. */
+const ENTRIES = { "/sign-up": "persona", "/login": "login", "/class-login": "class" } as const;
+type View = Persona | keyof typeof ENTRIES extends never ? never : "persona" | "login" | "class" | Persona;
+
 export default function SignUpOverlay() {
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
-  /* Which way through sign-up the visitor took. Null is the choice of who they are; anything else is that path's
-     own steps, shown in this same panel so the page behind never changes. */
-  const [flow, setFlow] = useState<Persona | null>(null);
+  /* Which step is showing. "persona" is the choice of who you are, "login" and "class" the two ways back in, and a
+     persona is that path's own steps -- all in this one panel, so the page behind never changes. */
+  const [view, setView] = useState<View>("persona");
   const panelRef = useRef<HTMLDivElement>(null);
   const openerRef = useRef<HTMLElement | null>(null);
   const t = useTranslations("auth.persona_select");
+  const tLogin = useTranslations("auth.login");
+  const tClass = useTranslations("class_login");
   const pathname = usePathname();
 
   useEffect(() => setMounted(true), []);
 
   const close = useCallback(() => {
     setOpen(false);
-    setFlow(null);
+    setView("persona");
     const opener = openerRef.current;
     openerRef.current = null;
     if (opener?.isConnected) opener.focus();
   }, []);
 
-  // Catch clicks on any link to the persona step.
+  // Catch clicks on any link to one of the pages this overlay stands in for, wherever it is -- including the links
+  // inside the panel itself, which is how logging in reaches the persona step and the class code.
   useEffect(() => {
     function onClick(e: MouseEvent) {
       if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
@@ -45,23 +56,26 @@ export default function SignUpOverlay() {
       try { url = new URL(link.href, window.location.href); } catch { return; }
       if (url.origin !== window.location.origin) return;
       const strip = (p: string) => p.replace(/^\/[a-z]{2}(?=\/|$)/, "").replace(/\/$/, "");
-      if (strip(url.pathname) !== "/sign-up") return;
-      // On the persona page itself the overlay would just repeat what is already on screen.
-      if (strip(window.location.pathname) === "/sign-up") return;
+      const target = ENTRIES[strip(url.pathname) as keyof typeof ENTRIES];
+      if (!target) return;
+      // On that page itself the overlay would just repeat what is already on screen.
+      if (strip(window.location.pathname) === strip(url.pathname)) return;
       // Caught while the click travels down, before the router's own handler runs, and stopped there so nothing
       // navigates: the overlay is the whole response to the click.
       e.preventDefault();
       e.stopPropagation();
       e.stopImmediatePropagation();
-      openerRef.current = link;
+      // A link inside the panel only changes the step, so the thing to give focus back to stays the one outside it.
+      if (!panelRef.current?.contains(link)) openerRef.current = link;
+      setView(target);
       setOpen(true);
     }
     document.addEventListener("click", onClick, true);
     return () => document.removeEventListener("click", onClick, true);
   }, []);
 
-  // The persona step has its own page; there the overlay would be a copy of what is already on screen.
-  useEffect(() => { if (pathname === "/sign-up") setOpen(false); }, [pathname]);
+  // Each of those steps has its own page; there the overlay would be a copy of what is already on screen.
+  useEffect(() => { if (pathname in ENTRIES) setOpen(false); }, [pathname]);
 
   // While it is open: Escape closes, Tab stays inside, the page behind holds still, and focus starts in the panel.
   useEffect(() => {
@@ -88,13 +102,15 @@ export default function SignUpOverlay() {
       document.removeEventListener("keydown", onKeyDown);
       cancelAnimationFrame(frame);
     };
-  }, [open, close, flow]);
+  }, [open, close, view]);
 
   if (!mounted || !open) return null;
 
-  /* The steps that follow the choice are narrower than the three cards, so the panel follows the step's own width
-     rather than holding a card in the middle of an empty field of lime. */
-  const wide = flow === null;
+  /* Only the three cards need the full width; every other step is a form, so the panel follows the step rather than
+     holding a card in the middle of an empty field of lime. */
+  const wide = view === "persona";
+  /* What a reader hears the dialog called: the heading of whichever step is showing. */
+  const label = view === "login" ? tLogin("heading") : view === "class" ? tClass("title") : view === "persona" ? undefined : t(`${view}_label`);
 
   return createPortal(
     <div
@@ -105,17 +121,19 @@ export default function SignUpOverlay() {
         ref={panelRef}
         role="dialog"
         aria-modal="true"
-        {...(wide ? { "aria-labelledby": "sign-up-overlay-heading" } : { "aria-label": t(`${flow}_label`) })}
+        {...(wide ? { "aria-labelledby": "sign-up-overlay-heading" } : { "aria-label": label })}
         data-testid="sign-up-overlay"
-        data-step={flow ?? "persona"}
+        data-step={view}
         tabIndex={-1}
         className={`relative w-full rounded-[32px] bg-[#F3FFC2] px-4 py-10 shadow-[0_18px_50px_rgba(0,0,0,0.25)] outline-none md:px-10 ${wide ? "max-w-[930px]" : "max-w-[560px]"}`}
       >
         {/* The way out is the same on every step: this cross, the backdrop, or Escape. */}
         <CloseButton onClose={close} label={t("close")} />
-        {flow === null && <SignUpPanel onPick={setFlow} />}
-        {flow === "kid" && <KidOnboarding onExit={() => setFlow(null)} onDone={close} />}
-        {(flow === "parent" || flow === "teacher") && <RegisterForm role={flow} onDone={close} />}
+        {view === "persona" && <SignUpPanel onPick={setView} />}
+        {view === "kid" && <KidOnboarding onExit={() => setView("persona")} onDone={close} />}
+        {(view === "parent" || view === "teacher") && <RegisterForm role={view} onDone={close} />}
+        {view === "login" && <LoginForm onDone={close} />}
+        {view === "class" && <ClassLogin onDone={close} />}
       </div>
     </div>,
     document.body,

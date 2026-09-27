@@ -50,6 +50,25 @@ test.describe('Marketing landing page', () => {
     await expect(overlay).toBeHidden();
   });
 
+  test('logging in opens in place, and the class code is a way of its own', async ({ page }) => {
+    await page.goto('/en');
+    const nav = page.getByTestId('marketing-nav');
+    await nav.getByRole('link', { name: 'Log in', exact: true }).click();
+    const overlay = page.getByTestId('sign-up-overlay');
+    await expect(overlay).toHaveAttribute('data-step', 'login');
+    await expect(overlay.getByTestId('login-form')).toBeVisible();
+    expect(page.url()).not.toContain('/login');
+
+    // A student with a code from their teacher has a button of their own, not a line of small print.
+    await overlay.getByTestId('class-code-link').click();
+    await expect(overlay).toHaveAttribute('data-step', 'class');
+    await expect(overlay.getByTestId('class-login')).toBeVisible();
+    expect(page.url()).not.toContain('/class-login');
+
+    await page.keyboard.press('Escape');
+    await expect(overlay).toBeHidden();
+  });
+
   test('the persona step still has its own page', async ({ page }) => {
     await page.goto('/en/sign-up');
     await expect(page.getByTestId('persona-select')).toBeVisible();

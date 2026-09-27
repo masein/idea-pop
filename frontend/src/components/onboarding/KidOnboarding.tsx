@@ -20,6 +20,10 @@ const nextBtn =
   "rounded-pill bg-[#CDEB5A] px-7 py-2.5 font-display font-bold text-[#1F4D33] shadow-sm transition-all hover:brightness-105 active:scale-95 disabled:opacity-40 disabled:pointer-events-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#CDEB5A] focus-visible:ring-offset-2 focus-visible:ring-offset-[#2A2A2A]";
 const backBtn =
   "rounded-pill bg-white px-6 py-2.5 font-display font-bold text-[#2A2A2A] shadow-sm transition-all hover:bg-white/90 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#2A2A2A]";
+/* A name, an age and a parent's email each ask one thing, so they stand at one height with their buttons on its
+   floor; the panel then holds still as the kid moves from one to the next. The tallest of the three sets it. */
+const askStep = "flex min-h-[174px] flex-col";
+
 const darkInput =
   "w-full rounded-xl border border-white/15 bg-white/10 px-4 py-3 font-body text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#CDEB5A]";
 
@@ -244,7 +248,7 @@ export default function KidOnboarding({ onExit, onDone }: { onExit?: () => void;
           )}
 
           {step === 2 && (
-            <section data-testid="step-2">
+            <section data-testid="step-2" className={askStep}>
               <p className="mb-4 text-center font-body text-sm text-white/60">
                 {t("step_nickname_sub")}
               </p>
@@ -266,7 +270,7 @@ export default function KidOnboarding({ onExit, onDone }: { onExit?: () => void;
                   {errMsg(errors.nickname.message)}
                 </p>
               )}
-              <div className="mt-6 flex justify-center gap-3">
+              <div className="mt-auto flex justify-center gap-3 pt-6">
                 <button type="button" className={backBtn} onClick={() => setStep((s) => s - 1)}>
                   {t("before")}
                 </button>
@@ -278,7 +282,7 @@ export default function KidOnboarding({ onExit, onDone }: { onExit?: () => void;
           )}
 
           {step === 3 && (
-            <section data-testid="step-3">
+            <section data-testid="step-3" className={askStep}>
               <p className="mb-4 text-center font-body text-sm text-white/60">
                 {t("step_birth_year_sub")}
               </p>
@@ -308,7 +312,7 @@ export default function KidOnboarding({ onExit, onDone }: { onExit?: () => void;
                   {apiError}
                 </div>
               )}
-              <div className="mt-6 flex justify-center gap-3">
+              <div className="mt-auto flex justify-center gap-3 pt-6">
                 <button type="button" className={backBtn} onClick={() => setStep((s) => s - 1)}>
                   {t("before")}
                 </button>
@@ -330,7 +334,7 @@ export default function KidOnboarding({ onExit, onDone }: { onExit?: () => void;
           )}
 
           {step === 4 && !isParent && (
-            <section data-testid="step-4">
+            <section data-testid="step-4" className={askStep}>
               <p className="mb-4 text-center font-body text-sm text-white/60">
                 {t("step_parent_email_sub")}
               </p>
@@ -357,7 +361,7 @@ export default function KidOnboarding({ onExit, onDone }: { onExit?: () => void;
                   {apiError}
                 </div>
               )}
-              <div className="mt-6 flex justify-center gap-3">
+              <div className="mt-auto flex justify-center gap-3 pt-6">
                 <button type="button" className={backBtn} onClick={() => setStep((s) => s - 1)}>
                   {t("before")}
                 </button>

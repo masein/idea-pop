@@ -19,13 +19,6 @@ const pillLinkCurrent = pillLink
   .replace("font-normal", "font-bold")
   .replace("text-[#146047]", "text-[#0F4C39]");
 
-/* Sign up and Log in share one slot: the slot holds the layout, each word holds its own pointer and focus states,
-   and the word for the page you are on is set heavier in the darker green, like any other current label. */
-const pairSlot = pillLink.replace(/ hover:\S+/g, "").replace(/ focus-visible:\S+/g, "");
-const pairWord =
-  "rounded-md px-1 transition-all duration-150 hover:text-[#0F4C39] hover:bg-ink/5 hover:scale-[1.08] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-explore";
-const pairWordCurrent = pairWord.replace(/ hover:\S+/g, "") + " font-bold text-[#0F4C39]";
-
 // The 1px stroke is an inset shadow (Figma "inside"), so it doesn't change the button's size.
 const ctaBase =
   "inline-flex items-center justify-center whitespace-nowrap rounded-pill bg-[#D1EF5A] px-[1.89rem] py-[0.709rem] text-[clamp(0.886rem,0.68rem+0.855vw,1.181rem)] [font-family:var(--font-montserrat)] font-extrabold text-[#1F4D33] shadow-[inset_0_0_0_1px_#18785A,0_4px_4px_rgba(0,0,0,0.25)] transition-all duration-150 hover:brightness-105 hover:scale-[1.11] hover:shadow-[inset_0_0_0_2px_#18785A,0_4px_4px_rgba(0,0,0,0.25)] active:scale-[0.97] active:bg-[#B8D24F] active:shadow-[inset_0_0_0_2px_#18785A,0_2px_2px_rgba(0,0,0,0.25)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1F4D33] focus-visible:ring-offset-2";
@@ -291,14 +284,8 @@ export default function MarketingNav() {
       href: "/for-teachers" as const,
       icon: icons.teachers,
     },
-    {
-      label: t("sign_up"),
-      href: "/sign-up" as const,
-      icon: icons.signup,
-      // the same door, the other way in
-      alsoLabel: t("log_in"),
-      alsoHref: "/login" as const,
-    },
+    // Signing up is the lime button on the right, so the capsule holds the way back in.
+    { label: t("log_in"), href: "/login" as const, icon: icons.signup },
   ];
 
   // next-intl hands back the path without the locale, so "/method" matches on both languages.
@@ -371,8 +358,7 @@ export default function MarketingNav() {
 
   /* A click fades the circle's icon out at once, rather than after the new page has rendered — there was ~200ms of
      nothing happening. The travel loop above changes the icon once the page arrives. */
-  /* Any page the router knows, not only the four with a slot of their own: Log in shares Sign up's slot. */
-  const beginLeave = (e: ReactMouseEvent, href: Parameters<typeof router.push>[0]) => {
+  const beginLeave = (e: ReactMouseEvent, href: (typeof navLinks)[number]["href"]) => {
     // A new tab, or a reader who asked for less motion: the link does its own thing and nothing fades.
     if (reduced || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
     const fade = fadeRef.current;
@@ -454,45 +440,8 @@ export default function MarketingNav() {
               <span className="block h-full w-full rounded-pill bg-white shadow-[inset_0_0_0_1px_#D1EF5A,0_4px_4px_rgba(0,0,0,0.25)]" />
             )}
           </li>
-          {navLinks.map(({ label, href, icon, alsoLabel, alsoHref }) => {
-            const active = isCurrent(href) || (alsoHref !== undefined && isCurrent(alsoHref));
-            if (alsoHref !== undefined && alsoLabel !== undefined) {
-              return (
-                <li key={href} ref={active ? activeItemRef : undefined}>
-                  <span className={pairSlot}>
-                    <span className="flex items-center gap-0.5">
-                      <Link
-                        href={href}
-                        className={isCurrent(href) ? pairWordCurrent : pairWord}
-                        aria-current={isCurrent(href) ? "page" : undefined}
-                        onClick={isCurrent(href) ? undefined : (e) => beginLeave(e, href)}
-                      >
-                        {label}
-                      </Link>
-                      <span aria-hidden="true" className="opacity-50">
-                        /
-                      </span>
-                      <Link
-                        href={alsoHref}
-                        className={isCurrent(alsoHref) ? pairWordCurrent : pairWord}
-                        aria-current={isCurrent(alsoHref) ? "page" : undefined}
-                        onClick={isCurrent(alsoHref) ? undefined : (e) => beginLeave(e, alsoHref)}
-                      >
-                        {alsoLabel}
-                      </Link>
-                    </span>
-                    <NavIcon
-                      paths={icon}
-                      className={`transition-opacity motion-reduce:transition-none ${
-                        active && notch && !fading
-                          ? "opacity-0 duration-150"
-                          : "opacity-100 duration-[600ms] ease-[cubic-bezier(.37,0,.63,1)]"
-                      }`}
-                    />
-                  </span>
-                </li>
-              );
-            }
+          {navLinks.map(({ label, href, icon }) => {
+            const active = isCurrent(href);
             return (
               <li key={href} ref={active ? activeItemRef : undefined}>
                 <Link
@@ -638,38 +587,15 @@ export default function MarketingNav() {
           className="mx-4 rounded-card bg-white px-4 pb-4 pt-2 shadow-lg md:hidden"
         >
           <ul className="space-y-1" role="list">
-            {navLinks.map(({ label, href, alsoLabel, alsoHref }) => (
+            {navLinks.map(({ label, href }) => (
               <li key={href}>
-                {alsoHref !== undefined && alsoLabel !== undefined ? (
-                  // the same pair on one row, each word its own tap target
-                  <span className="flex items-center gap-1 px-2 text-sm font-semibold text-ink/70">
-                    <Link
-                      href={href}
-                      className="inline-flex min-h-[44px] items-center rounded px-1 hover:bg-ink/5 hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-explore"
-                      onClick={() => setMenuOpen(false)}
-                    >
-                      {label}
-                    </Link>
-                    <span aria-hidden="true" className="opacity-50">
-                      /
-                    </span>
-                    <Link
-                      href={alsoHref}
-                      className="inline-flex min-h-[44px] items-center rounded px-1 hover:bg-ink/5 hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-explore"
-                      onClick={() => setMenuOpen(false)}
-                    >
-                      {alsoLabel}
-                    </Link>
-                  </span>
-                ) : (
-                  <Link
-                    href={href}
-                    className="block rounded px-3 py-2 text-sm font-semibold text-ink/70 hover:bg-ink/5 hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-explore"
-                    onClick={() => setMenuOpen(false)}
-                  >
-                    {label}
-                  </Link>
-                )}
+                <Link
+                  href={href}
+                  className="block rounded px-3 py-2 text-sm font-semibold text-ink/70 hover:bg-ink/5 hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-explore"
+                  onClick={() => setMenuOpen(false)}
+                >
+                  {label}
+                </Link>
               </li>
             ))}
             <li className="mt-1 border-t border-[#D1EF5A] px-3 pt-3">

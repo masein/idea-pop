@@ -7,13 +7,13 @@ test.describe('Marketing landing page', () => {
     await expect(page.getByRole('heading', { level: 1 })).toContainText('Ask nature');
   });
 
-  test('Start free CTA opens the persona overlay over the page', async ({ page }) => {
+  test('the sign-up button opens the persona overlay over the page', async ({ page }) => {
     await page.goto('/en');
     // The redesigned hero CTAs are "Start Exploring" / "Start a simple
-    // challenge"; the "Start free" sign-up entry point lives in the nav. It now
+    // challenge"; the sign-up entry point is the lime button in the nav. It now
     // opens the persona step over the page instead of loading /sign-up.
     const nav = page.getByTestId('marketing-nav');
-    const startLink = nav.getByRole('link', { name: /start free/i }).first();
+    const startLink = nav.getByRole('link', { name: /sign up for free/i }).first();
     await expect(startLink).toBeVisible();
     await startLink.click();
     const overlay = page.getByTestId('sign-up-overlay');
@@ -39,10 +39,10 @@ test.describe('Marketing landing page', () => {
     await expect(nav.getByRole('link', { name: /pricing/i })).toBeVisible();
   });
 
-  test('the nav offers Sign up and Log in side by side', async ({ page }) => {
+  test('the nav offers a way to sign up and a way back in', async ({ page }) => {
     await page.goto('/en');
     const nav = page.getByTestId('marketing-nav');
-    await expect(nav.getByRole('link', { name: 'Sign up', exact: true })).toBeVisible();
+    await expect(nav.getByRole('link', { name: /sign up for free/i })).toBeVisible();
     const logIn = nav.getByRole('link', { name: 'Log in', exact: true });
     await expect(logIn).toBeVisible();
     await expect(logIn).toHaveAttribute('href', //en/login$/);

@@ -90,6 +90,7 @@ export default function PersonaCards({ onChosen }: { onChosen?: () => void }) {
     },
   ];
 
+  /* Pointing at a card swaps it on a computer; on a touch screen, where there is no pointer, pressing it does. */
   const swap = "transition-opacity duration-200 motion-reduce:transition-none";
   const heading = "[font-family:var(--font-cherry)] font-normal text-[24px] leading-[1.2] text-[#F3FFC2]";
 
@@ -109,21 +110,21 @@ export default function PersonaCards({ onChosen }: { onChosen?: () => void }) {
             src={c.restImg}
             alt=""
             aria-hidden="true"
-            className={`pointer-events-none absolute bottom-0 w-auto ${swap} group-hover:opacity-0 group-focus-visible:opacity-0 ${c.restImgClass}`}
+            className={`pointer-events-none absolute bottom-0 w-auto ${swap} group-hover:opacity-0 group-focus-visible:opacity-0 group-active:opacity-0 ${c.restImgClass}`}
           />
           <Image
             unoptimized
             src={c.overImg}
             alt=""
             aria-hidden="true"
-            className={`pointer-events-none absolute bottom-0 w-auto opacity-0 ${swap} group-hover:opacity-100 group-focus-visible:opacity-100 ${c.overImgClass}`}
+            className={`pointer-events-none absolute bottom-0 w-auto opacity-0 ${swap} group-hover:opacity-100 group-focus-visible:opacity-100 group-active:opacity-100 ${c.overImgClass}`}
           />
-          <span className={`absolute flex flex-col ${swap} group-hover:opacity-0 group-focus-visible:opacity-0 ${c.restTextClass}`}>
+          <span className={`absolute flex flex-col ${swap} group-hover:opacity-0 group-focus-visible:opacity-0 group-active:opacity-0 ${c.restTextClass}`}>
             <span className={heading}>{c.label}</span>
             <span className={`[font-family:var(--font-adlam)] font-normal text-[15px] leading-[1.35] text-[#F3FFC2] mt-1 text-balance ${c.lineClass}`}>{c.sub}</span>
           </span>
           {/* The same heading with the Start button: decoration, since pressing the card is what starts it. */}
-          <span aria-hidden="true" className={`absolute flex flex-col opacity-0 ${swap} group-hover:opacity-100 group-focus-visible:opacity-100 ${c.overTextClass}`}>
+          <span aria-hidden="true" className={`absolute flex flex-col opacity-0 ${swap} group-hover:opacity-100 group-focus-visible:opacity-100 group-active:opacity-100 ${c.overTextClass}`}>
             <span className={heading}>{c.label}</span>
             <span className="mt-6 inline-flex items-center justify-center rounded-pill bg-[#D1EF5A] px-6 py-2 [font-family:var(--font-montserrat)] text-[15px] font-extrabold text-[#1F4D33] shadow-[inset_0_0_0_1px_#18785A,0_4px_4px_rgba(0,0,0,0.25)]">
               {t("start")}

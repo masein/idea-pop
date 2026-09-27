@@ -588,10 +588,11 @@ export default function MarketingNav() {
           id="mobile-menu"
           className="mx-4 rounded-card bg-white px-4 pb-4 pt-2 shadow-lg md:hidden"
         >
-          <ul className="space-y-1" role="list">
-            {/* A finger needs a row it can hit and an answer when it lands, and the menu should say which page you
-                are already on -- the capsule's circle is not here to say it. The page you are on takes the same lime
-                and green as the chosen language below, so the menu marks both the same way. */}
+          <ul className="space-y-2" role="list">
+            {/* Every row is a pill like the two language pills below it, and wears the same three states: white with
+                a lime edge at rest, the paler lime under the pointer, and the card lime with a green edge for the
+                page you are already on -- the capsule's travelling circle says that on a computer and is not here.
+                A finger gets a 44px row and the same answer a pointer gets. */}
             {navLinks.map(({ label, href }) => {
               const active = isCurrent(href);
               return (
@@ -599,10 +600,10 @@ export default function MarketingNav() {
                   <Link
                     href={href}
                     aria-current={active ? "page" : undefined}
-                    className={`flex min-h-[44px] items-center rounded-lg px-3 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-explore ${
+                    className={`flex min-h-[44px] items-center rounded-pill px-4 text-[15px] transition-all duration-150 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-explore motion-reduce:transition-none ${
                       active
                         ? "bg-[#EEFFA9] font-bold text-[#0F4C39] shadow-[inset_0_0_0_1px_#18785A]"
-                        : "font-semibold text-ink/70 hover:bg-ink/5 hover:text-ink active:bg-[#F4FADD] active:text-[#0F4C39]"
+                        : "bg-white font-semibold text-[#146047] shadow-[inset_0_0_0_1px_#D1EF5A] hover:bg-[#F4FADD] active:brightness-95"
                     }`}
                     onClick={() => setMenuOpen(false)}
                   >

@@ -4,7 +4,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/routing";
+import type { Persona } from "@/lib/auth/persona";
 import PersonaCards from "./PersonaCards";
+import RegisterForm from "./RegisterForm";
+import KidOnboarding from "@/components/onboarding/KidOnboarding";
 
 /* "Tell us who you are" as an overlay: every link to /sign-up anywhere on the site opens it in place instead of
    loading a page, so a visitor never loses where they were. The /sign-up page still exists and shows the same panel,
@@ -14,6 +17,9 @@ import PersonaCards from "./PersonaCards";
 export default function SignUpOverlay() {
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  /* Which way through sign-up the visitor took. Null is the choice of who they are; anything else is that path's
+     own steps, shown in this same panel so the page behind never changes. */
+  const [flow, setFlow] = useState<Persona | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const openerRef = useRef<HTMLElement | null>(null);
   const t = useTranslations("auth.persona_select");
@@ -23,6 +29,7 @@ export default function SignUpOverlay() {
 
   const close = useCallback(() => {
     setOpen(false);
+    setFlow(null);
     const opener = openerRef.current;
     openerRef.current = null;
     if (opener?.isConnected) opener.focus();
@@ -73,16 +80,21 @@ export default function SignUpOverlay() {
       else if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
     }
     document.addEventListener("keydown", onKeyDown);
-    // Focus moves to the panel itself, so a reader announces the dialog without a ring landing on the close button.
+    // Focus moves to the panel itself, so a reader announces the dialog -- and each step of it -- without a ring
+    // landing on the close button.
     const frame = requestAnimationFrame(() => panelRef.current?.focus());
     return () => {
       body.style.overflow = previousOverflow;
       document.removeEventListener("keydown", onKeyDown);
       cancelAnimationFrame(frame);
     };
-  }, [open, close]);
+  }, [open, close, flow]);
 
   if (!mounted || !open) return null;
+
+  /* The steps that follow the choice are narrower than the three cards, so the panel follows the step's own width
+     rather than holding a card in the middle of an empty field of lime. */
+  const wide = flow === null;
 
   return createPortal(
     <div
@@ -93,43 +105,55 @@ export default function SignUpOverlay() {
         ref={panelRef}
         role="dialog"
         aria-modal="true"
-        aria-labelledby="sign-up-overlay-heading"
+        {...(wide ? { "aria-labelledby": "sign-up-overlay-heading" } : { "aria-label": t(`${flow}_label`) })}
         data-testid="sign-up-overlay"
+        data-step={flow ?? "persona"}
         tabIndex={-1}
-        className="relative w-full max-w-[930px] rounded-[32px] bg-[#F3FFC2] px-4 py-10 shadow-[0_18px_50px_rgba(0,0,0,0.25)] outline-none md:px-10"
+        className={`relative w-full rounded-[32px] bg-[#F3FFC2] px-4 py-10 shadow-[0_18px_50px_rgba(0,0,0,0.25)] outline-none md:px-10 ${wide ? "max-w-[930px]" : "max-w-[560px]"}`}
       >
-        <SignUpPanel onClose={close} closeLabel={t("close")} />
+        {/* The way out is the same on every step: this cross, the backdrop, or Escape. */}
+        <CloseButton onClose={close} label={t("close")} />
+        {flow === null && <SignUpPanel onPick={setFlow} />}
+        {flow === "kid" && <KidOnboarding onExit={() => setFlow(null)} onDone={close} />}
+        {(flow === "parent" || flow === "teacher") && <RegisterForm role={flow} onDone={close} />}
       </div>
     </div>,
     document.body,
   );
 }
 
-/* The panel itself: the designer's heading pair, the three cards, and the way back for people who already have an
-   account. The /sign-up page renders the same thing without the backdrop. */
-export function SignUpPanel({ onClose, closeLabel, onChosen }: { onClose?: () => void; closeLabel?: string; onChosen?: () => void }) {
+/* The cross in the corner. The overlay keeps it above whichever step is showing, so cancelling is in the same place
+   from the first card to the last field. */
+function CloseButton({ onClose, label }: { onClose: () => void; label?: string }) {
+  return (
+    <button
+      type="button"
+      onClick={onClose}
+      aria-label={label}
+      className="absolute end-4 top-4 z-10 flex h-11 w-11 items-center justify-center rounded-full text-[#194D3D] transition-colors hover:bg-[#194D3D]/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#18785A] md:end-6 md:top-6"
+    >
+      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2} aria-hidden="true">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+      </svg>
+    </button>
+  );
+}
+
+/* The first step: the designer's heading pair, the three cards, and the way back for people who already have an
+   account. The /sign-up page renders the same thing without the backdrop, and there a card loads the next page
+   rather than swapping the panel's contents. */
+export function SignUpPanel({ onClose, closeLabel, onChosen, onPick }: { onClose?: () => void; closeLabel?: string; onChosen?: () => void; onPick?: (persona: Persona) => void }) {
   const t = useTranslations("auth.persona_select");
   const heading = "[font-family:var(--font-cherry)] font-normal text-[clamp(1.5rem,1.1rem+1.7vw,2.5rem)] leading-[1.28] text-[#194D3D] text-center";
 
   return (
     <>
-      {onClose && (
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label={closeLabel}
-          className="absolute end-4 top-4 flex h-11 w-11 items-center justify-center rounded-full text-[#194D3D] transition-colors hover:bg-[#194D3D]/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#18785A] md:end-6 md:top-6"
-        >
-          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2} aria-hidden="true">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-      )}
+      {onClose && <CloseButton onClose={onClose} label={closeLabel} />}
       <h1 id="sign-up-overlay-heading" className={heading}>
         {t("heading")}
       </h1>
       <p className={`${heading} mt-1 mb-9`}>{t("subhead")}</p>
-      <PersonaCards onChosen={onChosen} />
+      <PersonaCards onChosen={onChosen} onPick={onPick} />
       <p className="mt-8 text-center [font-family:var(--font-adlam)] font-normal text-[15px] text-[#4F4F4F]">
         {t("already")}{" "}
         {/* A finger needs more than the height of the word, so the link carries a 44px box around it. */}

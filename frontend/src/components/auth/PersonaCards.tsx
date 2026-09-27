@@ -39,7 +39,9 @@ type Card = {
 const TEXT_START = "inset-y-0 start-0 w-[70%] ps-[30px] pe-0 pt-[34px] items-start";
 const TEXT_END = "inset-y-0 end-0 w-[70%] pe-[30px] ps-0 pt-[34px] text-end items-end";
 
-export default function PersonaCards({ onChosen }: { onChosen?: () => void }) {
+/* onPick is the overlay's: it keeps the visitor on the page they were reading and shows the next step in
+   place, rather than loading the page that step lives on. */
+export default function PersonaCards({ onChosen, onPick }: { onChosen?: () => void; onPick?: (persona: Persona) => void }) {
   const t = useTranslations("auth.persona_select");
   const router = useRouter();
   /* A touch screen has no pointer, so nothing can be hovered: a first tap picks a card out -- it swaps to its second
@@ -57,6 +59,10 @@ export default function PersonaCards({ onChosen }: { onChosen?: () => void }) {
 
   function choose(persona: Persona) {
     setPersona(persona);
+    if (onPick) {
+      onPick(persona);
+      return;
+    }
     onChosen?.();
     if (persona === "kid") router.push("/onboarding/kid");
     else if (persona === "parent") router.push("/sign-up/parent");

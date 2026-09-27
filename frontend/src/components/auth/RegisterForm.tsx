@@ -13,9 +13,11 @@ import { Input } from "@/components/ui/Input";
 
 interface RegisterFormProps {
   role: "parent" | "teacher";
+  /* The sign-up overlay passes this so it can close itself as the app moves on. */
+  onDone?: () => void;
 }
 
-export default function RegisterForm({ role }: RegisterFormProps) {
+export default function RegisterForm({ role, onDone }: RegisterFormProps) {
   const t = useTranslations("auth.register");
   const ta = useTranslations("auth");
   const router = useRouter();
@@ -36,6 +38,7 @@ export default function RegisterForm({ role }: RegisterFormProps) {
     try {
       await register(data.email, data.password, role);
       setPersona(role);
+      onDone?.();
       router.push(dashboardHref(role));
     } catch (err) {
       const code = (err as Error & { code?: string }).code;

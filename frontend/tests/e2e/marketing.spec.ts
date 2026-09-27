@@ -25,6 +25,31 @@ test.describe('Marketing landing page', () => {
     await expect(overlay).toBeHidden();
   });
 
+  test('the steps after the choice stay in the overlay', async ({ page }) => {
+    await page.goto('/en');
+    const nav = page.getByTestId('marketing-nav');
+    await nav.getByRole('link', { name: /sign up for free/i }).first().click();
+    const overlay = page.getByTestId('sign-up-overlay');
+    await expect(overlay).toHaveAttribute('data-step', 'persona');
+
+    // A kid goes on to the four steps without leaving the page they were reading.
+    await overlay.locator('[data-persona="kid"]').click();
+    await expect(overlay).toHaveAttribute('data-step', 'kid');
+    await expect(overlay.getByTestId('kid-wizard')).toBeVisible();
+    expect(page.url()).not.toContain('/onboarding');
+
+    // The first step's "before" goes back to the choice rather than loading a page.
+    await overlay.getByTestId('step-1').getByRole('button').nth(-2).click();
+    await expect(overlay).toHaveAttribute('data-step', 'persona');
+
+    // A parent gets their form in the same panel, and the cross cancels the whole thing.
+    await overlay.locator('[data-persona="parent"]').click();
+    await expect(overlay.getByTestId('register-form')).toBeVisible();
+    expect(page.url()).not.toContain('/sign-up');
+    await overlay.getByRole('button').first().click();
+    await expect(overlay).toBeHidden();
+  });
+
   test('the persona step still has its own page', async ({ page }) => {
     await page.goto('/en/sign-up');
     await expect(page.getByTestId('persona-select')).toBeVisible();

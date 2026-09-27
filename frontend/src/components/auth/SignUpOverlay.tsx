@@ -125,7 +125,9 @@ export default function SignUpOverlay() {
         data-testid="sign-up-overlay"
         data-step={view}
         tabIndex={-1}
-        className={`relative w-full rounded-[32px] bg-[#F3FFC2] px-4 py-10 shadow-[0_18px_50px_rgba(0,0,0,0.25)] outline-none md:px-10 ${wide ? "max-w-[930px]" : "max-w-[560px]"}`}
+        /* The cross keeps one margin from the panel's corner on every step. The steps that hold a card of their own
+           start below it, so it never sits on top of one. */
+        className={`relative w-full rounded-[32px] bg-[#F3FFC2] px-4 pb-10 shadow-[0_18px_50px_rgba(0,0,0,0.25)] outline-none md:px-10 ${wide ? "max-w-[930px] pt-10" : "max-w-[560px] pt-[72px]"}`}
       >
         {/* The way out is the same on every step: this cross, the backdrop, or Escape. */}
         <CloseButton onClose={close} label={t("close")} />
@@ -148,7 +150,7 @@ function CloseButton({ onClose, label }: { onClose: () => void; label?: string }
       type="button"
       onClick={onClose}
       aria-label={label}
-      className="absolute end-4 top-4 z-10 flex h-11 w-11 items-center justify-center rounded-full text-[#194D3D] transition-colors hover:bg-[#194D3D]/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#18785A] md:end-6 md:top-6"
+      className="absolute end-4 top-4 z-10 flex h-11 w-11 items-center justify-center rounded-full text-[#194D3D] transition-colors hover:bg-[#D1EF5A] active:bg-[#B8D24F] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#18785A]"
     >
       <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2} aria-hidden="true">
         <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />

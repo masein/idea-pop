@@ -8,7 +8,7 @@ import { useRouter, Link } from "@/i18n/routing";
 import { registerSchema, type RegisterFormData } from "@/lib/schemas/auth";
 import { register } from "@/lib/api/client";
 import { setPersona, dashboardHref } from "@/lib/auth/persona";
-import { Button } from "@/components/ui/Button";
+import { btnLime } from "@/components/ui/kit";
 import { Input } from "@/components/ui/Input";
 
 interface RegisterFormProps {
@@ -101,15 +101,9 @@ export default function RegisterForm({ role, onDone }: RegisterFormProps) {
           {...field("passwordConfirm")}
         />
 
-        <Button
-          variant="primary"
-          size="lg"
-          type="submit"
-          disabled={isSubmitting}
-          className="w-full"
-        >
+        <button type="submit" disabled={isSubmitting} className={`${btnLime} w-full disabled:opacity-40 disabled:pointer-events-none`}>
           {isSubmitting ? "…" : t("submit")}
-        </Button>
+        </button>
       </form>
 
       <p className="mt-6 text-center font-body text-sm text-ink/60">

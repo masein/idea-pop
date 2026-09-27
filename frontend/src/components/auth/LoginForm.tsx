@@ -8,7 +8,7 @@ import { useRouter, Link } from "@/i18n/routing";
 import { loginSchema, type LoginFormData } from "@/lib/schemas/auth";
 import { login } from "@/lib/api/client";
 import { dashboardHref, reconcilePersona } from "@/lib/auth/persona";
-import { Button } from "@/components/ui/Button";
+import { btnLime, btnGlass } from "@/components/ui/kit";
 import { Input } from "@/components/ui/Input";
 
 /* onDone is the overlay's: it closes itself as the app moves on. */
@@ -89,15 +89,9 @@ export default function LoginForm({ onDone }: { onDone?: () => void } = {}) {
           </Link>
         </div>
 
-        <Button
-          variant="primary"
-          size="lg"
-          type="submit"
-          disabled={isSubmitting}
-          className="w-full"
-        >
+        <button type="submit" disabled={isSubmitting} className={`${btnLime} w-full disabled:opacity-40 disabled:pointer-events-none`}>
           {isSubmitting ? "…" : t("submit")}
-        </Button>
+        </button>
       </form>
 
       <p className="mt-6 text-center font-body text-sm text-ink/60">
@@ -117,7 +111,7 @@ export default function LoginForm({ onDone }: { onDone?: () => void } = {}) {
         <Link
           href="/class-login"
           data-testid="class-code-link"
-          className="mt-3 flex min-h-[48px] w-full items-center justify-center rounded-pill bg-white px-5 font-display text-base font-bold text-[#1F4D33] shadow-[inset_0_0_0_2px_#D1EF5A] transition-colors hover:bg-[#F4FADD] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#18785A] focus-visible:ring-offset-2"
+          className={`${btnGlass} mt-3 w-full`}
         >
           {t("class_code_button")}
         </Link>

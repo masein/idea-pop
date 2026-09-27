@@ -10,16 +10,17 @@ import { kidProfileSchema, type KidProfileFormData } from "@/lib/schemas/auth";
 import { AVATARS } from "@/lib/avatars";
 import { addChild, createChild, fetchMe } from "@/lib/api/client";
 import { getPersona, setPersona } from "@/lib/auth/persona";
+import { btnLime, btnGlassOnCard, tighten } from "@/components/ui/kit";
 
 const BIRTH_YEARS = Array.from({ length: 17 }, (_, i) => 2022 - i);
 
 const CARD = "#2A2A2A";
 const LIME = "#CDEB5A";
 
-const nextBtn =
-  "rounded-pill bg-[#CDEB5A] px-7 py-2.5 font-display font-bold text-[#1F4D33] shadow-sm transition-all hover:brightness-105 active:scale-95 disabled:opacity-40 disabled:pointer-events-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#CDEB5A] focus-visible:ring-offset-2 focus-visible:ring-offset-[#2A2A2A]";
-const backBtn =
-  "rounded-pill bg-white px-6 py-2.5 font-display font-bold text-[#2A2A2A] shadow-sm transition-all hover:bg-white/90 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#2A2A2A]";
+/* The kit's two buttons, tightened for the panel: lime carries the step forward, the see-through one goes back.
+   On this dark card the see-through fill goes opaque, or its green label would not read. */
+const nextBtn = `${tighten(btnLime)} disabled:opacity-40 disabled:pointer-events-none focus-visible:ring-offset-[#2A2A2A]`;
+const backBtn = `${tighten(btnGlassOnCard)} focus-visible:ring-offset-[#2A2A2A]`;
 /* A name, an age and a parent's email each ask one thing, so they stand at one height with their buttons on its
    floor; the panel then holds still as the kid moves from one to the next. The tallest of the three sets it. */
 const askStep = "flex min-h-[174px] flex-col";

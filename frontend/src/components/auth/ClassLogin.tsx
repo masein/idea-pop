@@ -6,15 +6,15 @@ import { useRouter } from '@/i18n/routing';
 import { fetchClassRoster, classLogin } from '@/lib/api/client';
 import { setPersona } from '@/lib/auth/persona';
 import { AVATARS } from '@/lib/avatars';
+import { btnLime, btnGlassOnCard, tighten } from '@/components/ui/kit';
 
 type RosterEntry = { child_id: string; nickname: string; avatar_id: string };
 type Phase = 'code' | 'pick' | 'pin';
 
 const CARD = '#2A2A2A';
-const nextBtn =
-  'rounded-pill bg-[#CDEB5A] px-7 py-2.5 font-display font-bold text-[#1F4D33] shadow-sm transition-all hover:brightness-105 active:scale-95 disabled:opacity-40 disabled:pointer-events-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#CDEB5A] focus-visible:ring-offset-2 focus-visible:ring-offset-[#2A2A2A]';
-const backBtn =
-  'rounded-pill bg-white px-6 py-2.5 font-display font-bold text-[#2A2A2A] shadow-sm transition-all hover:bg-white/90 active:scale-95';
+/* The kit's two buttons, as everywhere else in signing up and logging in. */
+const nextBtn = `${tighten(btnLime)} disabled:opacity-40 disabled:pointer-events-none focus-visible:ring-offset-[#2A2A2A]`;
+const backBtn = `${tighten(btnGlassOnCard)} focus-visible:ring-offset-[#2A2A2A]`;
 const darkInput =
   'w-full rounded-xl border border-white/15 bg-white/10 px-4 py-3 font-body text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#CDEB5A]';
 

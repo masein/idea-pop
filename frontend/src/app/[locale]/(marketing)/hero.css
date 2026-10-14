@@ -1,0 +1,135 @@
+/* The animated hero (HeroScene.tsx), per the designer's Engineering Specification: one overflow-hidden viewport and
+   one 1670×942 `world` that carries the camera transform. Every artwork layer fills the whole world canvas at (0,0);
+   the landscape photograph is fitted to the rear opening each frame and clipped to it. */
+.hero-viewport {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  /* the page lime while the pictures load (susan, 2026-10-14) */
+  background: #f3ffc2;
+  container-type: size;
+}
+/* While the layers load: the landscape as the camera's first frame shows it (the 2705×2128 logical photo centred on
+   1352.5, 1064; HeroScene.tsx sets the exact first-frame scale in --poster-k, full cover until then). */
+.hero-poster {
+  --k: var(--poster-k, max(calc(100cqw / 2705), calc(100cqh / 2128)));
+  position: absolute;
+  inset: 0;
+  background-repeat: no-repeat;
+  background-size: calc(var(--k) * 2705) calc(var(--k) * 2128);
+  background-position: calc(50cqw - var(--k) * 1352.5) calc(50cqh - var(--k) * 1064);
+}
+/* The poster waits for HeroScene.tsx to compute the exact first-frame scale, then fades in: the plain-cover guess it
+   used to show first was a different size from the camera's first frame, which read as a jump before the move. */
+.hero-poster {
+  opacity: 0;
+  transition: opacity 350ms ease-out;
+}
+.hero-viewport[data-poster] .hero-poster {
+  opacity: 1;
+}
+.hero-viewport:not([data-state="preparing"]) .hero-poster {
+  display: none;
+}
+/* Wide screens: the nav waits for the camera to settle (HeroScene.tsx fades it in); hidden until then. */
+@media (min-width: 1280px) {
+  body:has(.hero-viewport) [data-testid="marketing-nav"] {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+.hero-world {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1670px;
+  height: 942px;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+/* Nothing shows until every layer has decoded, so no partial scene flashes. */
+.hero-viewport[data-state="preparing"] .hero-world,
+.hero-viewport[data-state="fallback"] .hero-world {
+  visibility: hidden;
+}
+.hero-layer {
+  position: absolute;
+  inset: 0;
+  width: 1670px;
+  max-width: none;
+  height: 942px;
+  object-fit: fill;
+  pointer-events: none;
+}
+/* The rear-opening aperture: fixed native geometry that moves with the world; the far-plane photograph (2705×2128
+   logical, 3323×2616 pixels) is transformed inside it each frame. */
+.hero-scenery {
+  position: absolute;
+  left: 780px;
+  top: 110px;
+  z-index: 1;
+  width: 890px;
+  height: 731px;
+  overflow: hidden;
+  contain: paint;
+}
+.hero-scenery-image {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 2705px;
+  max-width: none;
+  height: 2128px;
+  object-fit: fill;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+/* The same landscape texture behind the room, on the same far-plane projection. */
+.hero-nature {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 2705px;
+  max-width: none;
+  height: 2128px;
+  object-fit: fill;
+  pointer-events: none;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+.hero-floor {
+  position: absolute;
+  z-index: 2;
+  left: 0;
+  top: 839px;
+  width: 1670px;
+  height: 103px;
+  pointer-events: none;
+  background-size: auto, 96px 46px;
+}
+/* The question paper, a little smaller and lower than delivered (susan, 2026-10-05) so the nav capsule floating over
+   the photo leaves it readable. Scaled about the paper's own centre in artwork pixels. */
+.hero-question {
+  transform-origin: 1067px 120px;
+  transform: translateY(70px) scale(0.72);
+}
+/* The bird, its sketched wings, the observation papers and the pencil marks, moved down together (susan,
+   2026-10-06) so they sit clear of the floating nav; they keep their places relative to each other. */
+.hero-sky-art {
+  transform: translateY(40px);
+}
+/* Wide screens: the copy on the wall waits for the girl (HeroScene.tsx fades it in with her). */
+@media (min-width: 1280px) {
+  [data-hero-copy] {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+/* An essential layer failed to load: the completed Master Hero, still. */
+.hero-fallback {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}

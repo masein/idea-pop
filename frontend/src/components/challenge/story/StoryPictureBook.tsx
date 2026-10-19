@@ -8,7 +8,8 @@ import { joinSegments } from '@/lib/narration';
 import { Popi, TapChoice, arrangeChoices } from './StoryBits';
 import DefineCelebration from './DefineCelebration';
 import MissionPuzzle from './MissionPuzzle';
-import type { MissionPuzzleData } from './discovery';
+import type { MissionPuzzleData, WhCharacter } from './discovery';
+import GuideCharacter from './GuideCharacter';
 import { claimDefineBonus } from '@/lib/api/client';
 import type { MissionStory } from './types';
 import { btnIcon, btnPrimary, btnSecondary } from '@/components/challenge/buttons';
@@ -35,6 +36,8 @@ interface Props {
   card?: { hero: string; place: string } | null;
   /** "Build the Mission": a map puzzle in place of the question cards (Max's challenge). */
   puzzle?: MissionPuzzleData | null;
+  /** Quizzy, who explains WH Questions before the puzzle. */
+  wh?: WhCharacter | null;
 }
 
 /** Where the right answer sits among the three options, so it isn't always in the same place. */
@@ -69,6 +72,7 @@ export default function StoryPictureBook({
   onDone,
   card = null,
   puzzle = null,
+  wh = null,
 }: Props) {
   const t = useTranslations('story');
   const voice = usePopiVoice(useLocale());
@@ -86,7 +90,7 @@ export default function StoryPictureBook({
     voice,
     pages: pages.map(pageWords),
     onTurn: setIndex,
-    finale: puzzle ? t('puzzle_popi') : define?.popi,
+    finale: puzzle ? wh?.popi ?? t('puzzle_popi') : define?.popi,
   });
   // Each picture page starts at the top of the screen, with the picture in full view.
   useEffect(() => {
@@ -294,7 +298,9 @@ export default function StoryPictureBook({
 
       {last && define && puzzle && (
         <div className="flex flex-col gap-4">
-          <Popi text={t('puzzle_popi')} grand talking={auto.phase === 'finale' && voice.speaking} />
+          {/* Popi introduces Quizzy, who explains WH Questions; then the puzzle. */}
+          <Popi text={wh?.popi ?? t('puzzle_popi')} grand talking={auto.phase === 'finale' && voice.speaking} />
+          {wh && <GuideCharacter testId="wh-character" name={wh.name} text={wh.says} image={wh.image ?? null} />}
           <MissionPuzzle
             puzzle={puzzle}
             solved={allAnswered}

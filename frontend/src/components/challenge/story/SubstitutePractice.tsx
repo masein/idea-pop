@@ -1,13 +1,13 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { Popi, StepNav, optionClass, pillCtaClass } from './StoryBits';
 import type { MissionStory } from './types';
 import type { BadgeKey, GameUpdate, MissionGame, SubstState } from './useMissionGame';
 import { EMPTY_SUBST } from './useMissionGame';
-import { createProject, getIdeaFeedback, uploadProjectPhoto } from '@/lib/api/client';
-import { btnIcon, btnPrimary, btnSecondary, btnText } from '@/components/challenge/buttons';
+import { createProject, getIdeaFeedback } from '@/lib/api/client';
+import { btnPrimary, btnSecondary, btnText } from '@/components/challenge/buttons';
 
 interface Props {
   challengeId: string;
@@ -23,7 +23,6 @@ interface Props {
   onBack: () => void;
 }
 
-const FAIR_CHECKS = ['shape', 'weight', 'coins', 'method'] as const;
 
 const fieldClass =
   'w-full min-w-0 rounded-xl border border-[#8FA3B8] bg-white px-3 py-2 font-body text-base text-ink placeholder:text-ink/40 focus:border-challenge focus:outline-none';
@@ -49,12 +48,17 @@ export default function SubstitutePractice({
   const t = useTranslations('story');
   const locale = useLocale();
   const sub = story.substitute!;
-  const s: SubstState = { ...EMPTY_SUBST, ...(game.subst ?? {}) };
+  const raw: SubstState = { ...EMPTY_SUBST, ...(game.subst ?? {}) };
+  const s: SubstState = raw.page === 3 ? { ...raw, page: 2 } : raw;
   const set = (patch: Partial<SubstState>) => update((g) => ({ subst: { ...EMPTY_SUBST, ...(g.subst ?? {}), ...patch } }));
   const top = useRef<HTMLDivElement>(null);
   const go = (page: 1 | 2 | 3) => {
     set({ page });
-    top.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    const toTop = () => {
+      window.scrollTo({ top: 0 });
+      document.querySelector('main')?.scrollTo({ top: 0 });
+    };
+    requestAnimationFrame(() => requestAnimationFrame(toTop));
   };
 
   const idea = game.savedIdea;
@@ -68,7 +72,7 @@ export default function SubstitutePractice({
   return (
     <div ref={top} data-testid="substitute-practice" className="flex scroll-mt-4 flex-col gap-5 py-4">
       <div className="flex gap-1.5 rounded-pill bg-white p-1" aria-label={t('subst_pages_aria')}>
-        {[1, 2, 3].map((n) => (
+        {[1, 2].map((n) => (
           <span
             key={n}
             aria-current={s.page === n ? 'step' : undefined}
@@ -103,38 +107,18 @@ export default function SubstitutePractice({
           example={onIdea ? null : sub.example}
           modelMaterial={sub.model_material}
           onBack={() => go(1)}
-          onNext={() => {
-            if (s.kind === null) set({ kind: !onIdea && s.withWhat.trim() === sub.example ? 'material' : null });
-            go(3);
-          }}
-        />
-      )}
-
-      {s.page === 3 && (
-        <PageThree
-          s={s}
-          set={set}
-          measure={story.lab.measure}
-          onBack={() => go(2)}
-          onSave={async (photo) => {
+          onNext={async () => {
+            // Save the starting point, the substitution and the prediction, then celebrate.
             const summary = [
               `${t('subst_saved_start')}: ${startName}`,
               `${t('subst_replace_label')} ${s.replace} ${t('subst_with_label')} ${s.withWhat}`,
               s.clarify.trim() ? `${t('subst_clarify_label')}: ${s.clarify}` : '',
               `${t('subst_predict_q')} ${s.prediction}`,
-              s.kind === 'material'
-                ? `${t('subst_fair_title')}: ${FAIR_CHECKS.filter((k) => s.checks.includes(k)).map((k) => t(`subst_check_${k}`)).join(', ')}${s.cantMatch.trim() ? `. ${t('subst_cant_match')}: ${s.cantMatch}` : ''}`
-                : s.testPlan.trim()
-                  ? `${t('subst_test_plan')}: ${s.testPlan}`
-                  : '',
-              `${t('subst_before', { name: s.replace })}: ${s.before} · ${t('subst_after', { name: s.withWhat })}: ${s.after} (${story.lab.measure})`,
-              `${t('subst_observe_q')} ${s.observe}`,
             ]
               .filter(Boolean)
               .join('\n');
-            let saved = false;
             try {
-              const project = await createProject({
+              await createProject({
                 title: t('subst_project_title'),
                 what_i_made: summary,
                 what_i_used: `${s.replace} → ${s.withWhat}`,
@@ -143,20 +127,16 @@ export default function SubstitutePractice({
                 challenge_id: challengeId,
                 step_type: 'practice',
               });
-              saved = true;
-              if (photo) await uploadProjectPhoto(project.id, photo).catch(() => {});
             } catch {
-              saved = false;
+              // never block the kid; the answers stay on the device too
             }
-            if (saved) {
-              award('tool');
-              update((g) => ({ subst: { ...EMPTY_SUBST, ...(g.subst ?? {}), saved: true }, substSaved: summary }));
-            }
-            return saved;
+            award('tool');
+            update((g) => ({ subst: { ...EMPTY_SUBST, ...(g.subst ?? {}), saved: true }, substSaved: summary }));
+            onDone();
           }}
-          onDone={onDone}
         />
       )}
+
     </div>
   );
 }
@@ -332,9 +312,10 @@ function PageTwo({
   example: string | null;
   modelMaterial: string;
   onBack: () => void;
-  onNext: () => void;
+  onNext: () => Promise<void>;
 }) {
   const t = useTranslations('story');
+  const [saving, setSaving] = useState(false);
   const [asking, setAsking] = useState(false);
   const clear = s.replace.trim().length >= 2 && s.withWhat.trim().length >= 2;
   const ready = clear && s.prediction.trim().length >= 2;
@@ -428,214 +409,20 @@ function PageTwo({
       </section>
 
       <StepNav onBack={onBack} backLabel={t('back')}>
-        <button type="button" data-testid="subst-to-3" disabled={!ready} onClick={onNext} className={pillCtaClass}>
-          {t('subst_test_btn')}
-        </button>
-      </StepNav>
-    </>
-  );
-}
-
-/* ── Page 3: test, observe and record ────────────────────────────────────── */
-
-function PageThree({
-  s,
-  set,
-  measure,
-  onBack,
-  onSave,
-  onDone,
-}: {
-  s: SubstState;
-  set: (p: Partial<SubstState>) => void;
-  measure: string;
-  onBack: () => void;
-  onSave: (photo: File | null) => Promise<boolean>;
-  onDone: () => void;
-}) {
-  const t = useTranslations('story');
-  const [photo, setPhoto] = useState<File | null>(null);
-  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
-  const [failed, setFailed] = useState(false);
-  const fileRef = useRef<HTMLInputElement>(null);
-  useEffect(() => () => {
-    if (photoUrl) URL.revokeObjectURL(photoUrl);
-  }, [photoUrl]);
-
-  if (s.saved) {
-    return (
-      <section data-testid="subst-saved" className="story-rise flex flex-col items-center gap-3 rounded-[20px] bg-white p-6 text-center shadow-sm">
-        <span className="text-5xl" aria-hidden="true">🏅</span>
-        <h2 className="font-display text-3xl text-challenge">{t('subst_saved_title')}</h2>
-        <p className="max-w-prose font-body text-base text-ink">{t('subst_saved_text')}</p>
-        <button type="button" data-testid="subst-done" onClick={onDone} className={btnPrimary}>
-          {t('subst_to_build')}
-        </button>
-      </section>
-    );
-  }
-
-  const material = s.kind === 'material';
-  return (
-    <>
-      <section className="flex flex-col gap-2 rounded-[20px] bg-white p-5 shadow-sm">
-        <p className="font-body text-base font-bold text-ink">{t('subst_kind_q')}</p>
-        <div className="flex flex-wrap gap-2" role="radiogroup" aria-label={t('subst_kind_q')}>
-          {(['material', 'other'] as const).map((k) => (
-            <button
-              key={k}
-              type="button"
-              role="radio"
-              aria-checked={s.kind === k}
-              data-testid={`subst-kind-${k}`}
-              onClick={() => set({ kind: k })}
-              className={`flex-1 basis-40 ${optionClass(s.kind === k ? 'picked' : 'idle')} !text-base`}
-            >
-              {t(`subst_kind_${k}`)}
-            </button>
-          ))}
-        </div>
-      </section>
-
-      {s.kind && (
-        <>
-          {material ? (
-            <section data-testid="subst-fair" className="story-rise flex flex-col gap-3 rounded-[20px] bg-white p-5 shadow-sm">
-              <Popi text={t('subst_fair_popi')} />
-              <h2 className="font-display text-2xl text-challenge">{t('subst_fair_title')}</h2>
-              <div className="flex flex-col gap-2">
-                {FAIR_CHECKS.map((k) => (
-                  <label key={k} className="flex items-center gap-3 font-body text-base text-ink">
-                    <input
-                      type="checkbox"
-                      data-testid={`subst-check-${k}`}
-                      checked={s.checks.includes(k)}
-                      onChange={() => set({ checks: s.checks.includes(k) ? s.checks.filter((x) => x !== k) : [...s.checks, k] })}
-                      className="h-5 w-5 accent-challenge"
-                    />
-                    {t(`subst_check_${k}`)}
-                  </label>
-                ))}
-              </div>
-              <label htmlFor="subst-cant" className="font-body text-sm font-semibold text-ink">{t('subst_cant_match')}</label>
-              <input id="subst-cant" autoComplete="off" dir="auto" maxLength={160} value={s.cantMatch} onChange={(e) => set({ cantMatch: e.target.value })} placeholder={t('subst_cant_match_ph')} className={fieldClass} />
-              <p className="rounded-xl bg-tint-blue px-3 py-2 font-body text-base font-semibold text-ink">💧 {t('subst_tray')}</p>
-            </section>
-          ) : (
-            <section data-testid="subst-other-test" className="story-rise flex flex-col gap-3 rounded-[20px] bg-white p-5 shadow-sm">
-              <Popi text={t('subst_other_popi')} />
-              <label htmlFor="subst-plan" className="font-body text-base font-bold text-ink">{t('subst_test_plan')}</label>
-              <textarea id="subst-plan" rows={2} dir="auto" maxLength={240} value={s.testPlan} onChange={(e) => set({ testPlan: e.target.value })} placeholder={t('subst_test_plan_ph')} className={fieldClass} />
-            </section>
-          )}
-
-          <section className="flex flex-col gap-3 rounded-[20px] bg-white p-5 shadow-sm">
-            <h2 className="font-display text-2xl text-challenge">{t('subst_results_title')}</h2>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <Count label={t('subst_before', { name: s.replace })} measure={measure} value={s.before} onChange={(n) => set({ before: n })} testId="subst-before" />
-              <Count label={t('subst_after', { name: s.withWhat })} measure={measure} value={s.after} onChange={(n) => set({ after: n })} testId="subst-after" />
-            </div>
-            <label htmlFor="subst-observe" className="font-body text-base font-bold text-ink">{t('subst_observe_q')}</label>
-            <textarea id="subst-observe" data-testid="subst-observe" rows={3} dir="auto" maxLength={400} value={s.observe} onChange={(e) => set({ observe: e.target.value })} placeholder={t('subst_observe_ph')} className={fieldClass} />
-          </section>
-
-          <section className="flex flex-col gap-2 rounded-[20px] bg-white p-5 shadow-sm">
-            <p className="font-body text-base font-bold text-ink">{t('subst_photo_title')}</p>
-            <input
-              ref={fileRef}
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              aria-label={t('lab_add_photo')}
-              data-testid="subst-photo-input"
-              className="sr-only"
-              onChange={(e) => {
-                const f = e.target.files?.[0];
-                if (!f) return;
-                setPhoto(f);
-                setPhotoUrl(URL.createObjectURL(f));
-              }}
-            />
-            {photoUrl ? (
-              <div className="flex flex-col items-start gap-2">
-                {/* eslint-disable-next-line @next/next/no-img-element -- the kid's own photo, a blob URL */}
-                <img src={photoUrl} alt="" data-testid="subst-photo-preview" className="max-h-48 rounded-xl object-contain" />
-                <button
-                  type="button"
-                  onClick={() => {
-                    setPhoto(null);
-                    setPhotoUrl(null);
-                    if (fileRef.current) fileRef.current.value = '';
-                  }}
-                  className={btnText}
-                >
-                  {t('lab_remove_photo')}
-                </button>
-              </div>
-            ) : (
-              <button type="button" data-testid="subst-add-photo" onClick={() => fileRef.current?.click()} className={`${btnSecondary} self-start`}>
-                📷 {t('lab_add_photo')}
-              </button>
-            )}
-            <p className="font-body text-sm text-[#4A5560]">{t('photo_private_note')}</p>
-          </section>
-
-          {failed && (
-            <p role="alert" className="rounded-xl bg-[#FDE8E6] px-3 py-2 font-body text-base text-[#A3312A]">{t('subst_save_failed')}</p>
-          )}
-        </>
-      )}
-
-      <StepNav onBack={onBack} backLabel={t('back')}>
         <button
           type="button"
-          data-testid="subst-save"
-          disabled={!s.kind || s.observe.trim().length < 2 || saving}
+          data-testid="subst-finish"
+          disabled={!ready || saving}
           onClick={async () => {
             setSaving(true);
-            setFailed(false);
-            const ok = await onSave(photo);
+            await onNext();
             setSaving(false);
-            setFailed(!ok);
           }}
           className={pillCtaClass}
         >
-          {saving ? t('saving_short') : t('subst_save')}
+          {saving ? t('saving_short') : t('subst_finish')}
         </button>
       </StepNav>
     </>
-  );
-}
-
-function Count({
-  label,
-  measure,
-  value,
-  onChange,
-  testId,
-}: {
-  label: string;
-  measure: string;
-  value: number;
-  onChange: (n: number) => void;
-  testId: string;
-}) {
-  const t = useTranslations('story');
-  return (
-    <div className="flex flex-col gap-2 rounded-2xl bg-tint-blue p-3">
-      <p dir="auto" className="font-body text-base font-bold text-ink">{label}</p>
-      <div className="flex items-center gap-2">
-        <button type="button" data-testid={`${testId}-minus`} aria-label={t('one_less')} onClick={() => onChange(Math.max(0, value - 1))} className={`${btnIcon} text-xl`}>
-          −
-        </button>
-        <output data-testid={testId} aria-live="polite" className="min-w-12 text-center font-display text-3xl tabular-nums">
-          {value}
-        </output>
-        <button type="button" data-testid={`${testId}-plus`} aria-label={t('one_more')} onClick={() => onChange(Math.min(999, value + 1))} className={`${btnIcon} text-xl`}>
-          +
-        </button>
-        <span className="font-body text-xs text-ink/60">{measure}</span>
-      </div>
-    </div>
   );
 }

@@ -190,11 +190,12 @@
     "model_material": "Clay"
   },
   "discovery": {
+    "wh": {"name":"Quizzy","popi":"Meet Quizzy, our question explorer! Quizzy will show you how to understand a problem.","says":"Want to understand a problem better? Start with the right questions. WH Questions help us explore who is involved, what is happening, where and when it happens, and why it matters. They help us understand exactly what problem we’re trying to solve."},
     "puzzle": {
       "title": "Build the Mission",
-      "intro": "Drag each clue to its question, or tap a clue and then tap a question.",
-      "summary_lead": "Mission built! Here is our big question:",
-      "summary": "How could we help Max reach school without taking the long route around the river?",
+      "intro": "Tap a question, then choose its matching clue from the opposite column.",
+      "summary_lead": "Mission complete!",
+      "summary": "How can we help Max reach school without taking the long route around the river?",
       "map": {
         "village": "Max's village",
         "river": "River",

@@ -10,6 +10,7 @@ import { useXpToast } from '@/lib/hooks/useXpToast';
 import { fetchChallenge, startAttempt, advanceStep, claimSketchBonus, getIdeaFeedback, createProject, uploadProjectPhoto } from '@/lib/api/client';
 import LabCelebration from '@/components/challenge/story/LabCelebration';
 import SubstitutePractice from '@/components/challenge/story/SubstitutePractice';
+import SubstCelebration from '@/components/challenge/story/SubstCelebration';
 import MissionHUD from '@/components/challenge/MissionHUD';
 import StepBrief from '@/components/challenge/StepBrief';
 import StepIdeaFork from '@/components/challenge/StepIdeaFork';
@@ -85,6 +86,8 @@ export default function ChallengePage() {
   const restoredRef = useRef(false);
   // The lab is done: "What Did You Build?" with an optional photo (the lab project it goes on).
   const [labCelebration, setLabCelebration] = useState<{ projectId: string | null } | null>(null);
+  // The Substitute practice is done (Skills): celebrate, then Build and Test or stop for today.
+  const [substCelebration, setSubstCelebration] = useState(false);
   // This visit's photos of the saved idea and the lab model, shown on the Substitute practice.
   const [ideaPhotoUrl, setIdeaPhotoUrl] = useState<string | null>(null);
   const [labPhotoUrl, setLabPhotoUrl] = useState<string | null>(null);
@@ -169,7 +172,15 @@ export default function ChallengePage() {
         return next;
       });
       setActiveTab('mission');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      // Every new page opens at its top: once the new content is on screen, reset both the
+      // window and the scrolling content area (instant, so nothing interrupts it).
+      const toTop = () => {
+        window.scrollTo({ top: 0 });
+        document.querySelector('main')?.scrollTo({ top: 0 });
+      };
+      toTop();
+      requestAnimationFrame(() => requestAnimationFrame(toTop));
+      window.setTimeout(toTop, 120);
     },
     [attempt, show],
   );
@@ -490,7 +501,7 @@ export default function ChallengePage() {
                   award={awardBadge}
                   ideaPhotoUrl={ideaPhotoUrl}
                   labPhotoUrl={labPhotoUrl}
-                  onDone={() => goToStep(after(6))}
+                  onDone={() => setSubstCelebration(true)}
                   onBack={() => setSkillPhase('lab')}
                 />
               ) : (
@@ -585,6 +596,20 @@ export default function ChallengePage() {
             setSolvedCelebration(null);
             if (story) updateGame((g) => ({ badges: g.badges.includes('solved') ? g.badges : [...g.badges, 'solved'] }));
             goToStep(5);
+          }}
+        />
+      )}
+
+      {substCelebration && (
+        <SubstCelebration
+          onKeepExploring={() => {
+            setSubstCelebration(false);
+            void goToStep(after(6));
+          }}
+          onEnough={() => {
+            setSubstCelebration(false);
+            resumeLater();
+            router.push('/challenges');
           }}
         />
       )}

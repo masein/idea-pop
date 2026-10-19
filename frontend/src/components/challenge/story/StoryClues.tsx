@@ -6,7 +6,6 @@ import { Character3D, Popi, RewardPop, StepNav, TapChoice, arrangeChoices, pillC
 import { btnPrimary, btnText } from '@/components/challenge/buttons';
 import type { MissionStory } from './types';
 import type { BadgeKey, MissionGame, GameUpdate } from './useMissionGame';
-import CompanionActivity from './CompanionActivity';
 import { discoveryOf } from './discovery';
 
 interface Props {
@@ -22,9 +21,7 @@ interface Props {
 
 /** The three "think like your partner" questions, asked one at a time. */
 const PARTNER_QUESTIONS = ['what', 'how', 'inspired'] as const;
-/** With a hands-on companion activity, it replaces the two tapped questions. */
-const EXPLORE_QUESTIONS = ['explore', 'inspired'] as const;
-type PartnerQuestion = (typeof PARTNER_QUESTIONS)[number] | 'explore';
+type PartnerQuestion = (typeof PARTNER_QUESTIONS)[number];
 
 /**
  * Step 3, Nature clues, in four parts (TEMP rule 37):
@@ -41,12 +38,12 @@ export default function StoryClues({ story, game, update, award, onNext, onBack,
   const cards = story.clue_cards;
   const allOpen = cards.every((_, i) => game.flipped.includes(i));
   const partner = game.partner !== null && game.partner !== undefined ? cards[game.partner] : null;
-  // The partner's hands-on activity and hint (Max's challenge), when the mission has them.
+  // The partner's own hint for the idea question (Max's challenge), when the mission has one.
   const companion =
     partner && game.partner !== null && game.partner !== undefined
       ? discoveryOf(story)?.companions?.[game.partner] ?? null
       : null;
-  const questions: readonly PartnerQuestion[] = companion ? EXPLORE_QUESTIONS : PARTNER_QUESTIONS;
+  const questions: readonly PartnerQuestion[] = PARTNER_QUESTIONS;
   const answered = questions.filter((k) => game.partnerDone.includes(k));
   const allAnswered = answered.length === questions.length;
   const current = questions.find((k) => !game.partnerDone.includes(k)) ?? null;
@@ -68,9 +65,7 @@ export default function StoryClues({ story, game, update, award, onNext, onBack,
   }
 
   const question = (k: PartnerQuestion) =>
-    k === 'explore' && companion
-      ? companion.title
-      : t(`partner_q_${k}`, { name: partner?.name ?? '', hero: story.hero.name });
+    t(`partner_q_${k}`, { name: partner?.name ?? '', hero: story.hero.name });
 
   return (
     <div data-testid="story-clues" className="flex flex-col gap-6 py-4">
@@ -181,20 +176,7 @@ export default function StoryClues({ story, game, update, award, onNext, onBack,
             </div>
           ))}
 
-          {current === 'explore' && companion && (
-            <CompanionActivity
-              key={`${game.partner}-explore`}
-              data={companion}
-              onDone={() =>
-                update((g) => ({
-                  partnerAnswers: { ...g.partnerAnswers, explore: companion.takeaway },
-                  partnerDone: [...g.partnerDone.filter((x) => x !== 'explore'), 'explore'],
-                }))
-              }
-            />
-          )}
-
-          {current && current !== 'inspired' && current !== 'explore' && partner && game.partner !== null && (
+          {current && current !== 'inspired' && partner && game.partner !== null && (
             // "What does it do?" and "How?" are tapped: the partner's own card words among two others'.
             <div key={`${game.partner}-${current}`} className="story-rise flex flex-col gap-2 rounded-xl border-2 border-[#1A6FA6] bg-white p-4">
               <p className="font-body text-base font-bold text-ink">{question(current)}</p>

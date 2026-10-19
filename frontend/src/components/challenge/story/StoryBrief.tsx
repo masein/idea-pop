@@ -58,6 +58,7 @@ export default function StoryBrief({ challenge, story, game, update, onNext }: P
         onDone={onNext}
         card={story.card}
         puzzle={discoveryOf(story)?.puzzle ?? null}
+        wh={discoveryOf(story)?.wh ?? null}
       />
     );
   }

@@ -21,7 +21,16 @@ export interface CompanionData {
   hint: string;
 }
 
+/** The WH Questions character (Quizzy) who explains the tool on the Mission Brief. */
+export interface WhCharacter {
+  name: string;
+  popi: string;
+  says: string;
+  image?: string | null;
+}
+
 export interface Discovery {
+  wh?: WhCharacter;
   puzzle?: MissionPuzzleData;
   /** One per clue card, in the same order. */
   companions?: CompanionData[];

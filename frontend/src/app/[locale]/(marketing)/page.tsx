@@ -49,6 +49,9 @@ import expertScience from "../../../../public/landing/experts/science.png";
 import expertHistory from "../../../../public/landing/experts/history.png";
 import expertArt from "../../../../public/landing/experts/art.png";
 import expertMath from "../../../../public/landing/experts/math.png";
+
+// The mission shown with the train picture, opened directly by its stable slug (not its place in the list).
+const TRAIN_CHALLENGE = "/challenges/by-slug/the-train-that-went-boom";
 // On the wall (xl) the hero buttons are a size smaller so the pair fits side by side between the shelves and the girl.
 const heroWallButton = "xl:px-6 xl:py-2.5 xl:text-[clamp(0.875rem,1vw,1.0625rem)]";
 const kidMakes = [kidMake1, kidMake2, kidMake3, kidMake4, kidMake5, kidMake6];
@@ -489,13 +492,13 @@ export default async function LandingPage({ params }: Props) {
           </p>
           {/* The kit's primary, as the one action of this band. Its fill matches the band, so the dark green outline
               (4.1:1 against the band) and the shadow are what mark it out. */}
-          <Link href="/challenges" prefetch={false} className={btnLime} data-reveal="pop" style={motionDelay(420)}>
+          <Link href={TRAIN_CHALLENGE} prefetch={false} className={btnLime} data-reveal="pop" style={motionDelay(420)}>
             {t("try_now.cta")}
           </Link>
         </div>
         {/* The picture opens the mission too: the same link, kept away from screen readers and the keyboard so they
             only meet the labelled button above. Motion: the river zooms out as it scrolls in, clipped to its box. */}
-        <Link href="/challenges" prefetch={false} aria-hidden="true" tabIndex={-1} className="block overflow-hidden" data-zoom-frame>
+        <Link href={TRAIN_CHALLENGE} prefetch={false} aria-hidden="true" tabIndex={-1} className="block overflow-hidden" data-zoom-frame>
           {/* Two registered plates (same 1670×942 frame): the picture without the sketched kingfisher, and the one with
               it on top, revealed as the flying bird lands on the paper (FlyingBird.tsx sets --mission-reveal). */}
           <div className="relative" data-scroll="zoom-out">

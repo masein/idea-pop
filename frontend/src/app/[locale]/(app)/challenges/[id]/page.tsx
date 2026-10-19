@@ -78,7 +78,7 @@ export default function ChallengePage() {
     again: boolean;
     popi: { state: 'loading' | 'done' | 'off'; text?: string; fits?: boolean };
   } | null>(null);
-  const { game, update: updateGame, award: awardBadge, reset: resetGame, loaded: gameLoaded } = useMissionGame(params.id);
+  const { game, update: updateGame, award: awardBadge, reset: resetGame, loaded: gameLoaded, resumeLater } = useMissionGame(params.id);
   // Max's Skills page (SCAMPER) is its own step after the Experiment: has the kid reached it?
   const [toolReached, setToolReached] = useState(false);
   // Coming back later: carry on where the kid left off (restored once, then kept up to date).
@@ -578,6 +578,7 @@ export default function ChallengePage() {
           onEnough={() => {
             setSolvedCelebration(null);
             if (story) updateGame((g) => ({ badges: g.badges.includes('solved') ? g.badges : [...g.badges, 'solved'] }));
+            resumeLater();
             router.push('/challenges');
           }}
           onClose={() => {
@@ -605,6 +606,7 @@ export default function ChallengePage() {
           }}
           onEnough={() => {
             setLabCelebration(null);
+            resumeLater();
             router.push('/challenges');
           }}
         />

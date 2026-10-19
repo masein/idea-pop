@@ -61,6 +61,8 @@ export interface MissionGame {
     ideaPath: 'yes' | 'no' | null;
     sketchProjectId: string | null;
   } | null;
+  /** Set by "That's Enough for Today": the next visit carries on from here. */
+  resumeNext: boolean;
 }
 
 export interface SubstState {
@@ -139,6 +141,7 @@ export const EMPTY_GAME: MissionGame = {
   subst: null,
   substSaved: null,
   nav: null,
+  resumeNext: false,
 };
 
 function storageKey(challengeId: string) {
@@ -152,10 +155,12 @@ function load(challengeId: string): MissionGame {
     // For now every visit opens the mission fresh (susan, 2026-10-08): only the earned
     // badges carry over, so one-time bonuses are not replayed. Before merging, answers will be
     // saved to the kid's account and earlier tries kept (see the kid-work-must-be-saved rule).
-    // Everything the kid did is kept, so after "That's Enough for Today" they carry on
-    // where they left off ("Play this challenge again" starts over, keeping saved work).
+    // Every visit starts the mission fresh (susan, 2026-10-19), except right after
+    // "That's Enough for Today", which carries on where the kid stopped. Earned badges stay,
+    // so one-time XP is never given twice. Saved work stays on the kid's account.
     const saved = JSON.parse(raw) as Partial<MissionGame>;
-    return { ...EMPTY_GAME, ...saved };
+    if (saved.resumeNext) return { ...EMPTY_GAME, ...saved, resumeNext: false };
+    return { ...EMPTY_GAME, badges: saved.badges ?? [] };
   } catch {
     return EMPTY_GAME;
   }
@@ -195,7 +200,7 @@ export function useMissionGame(challengeId: string) {
    *  one-time bonuses (and their celebrations) aren't replayed for nothing. */
   const reset = useCallback(() => {
     setGame((prev) => {
-      const next = { ...EMPTY_GAME, badges: prev.badges, savedIdea: prev.savedIdea, savedLab: prev.savedLab, substSaved: prev.substSaved };
+      const next = { ...EMPTY_GAME, badges: prev.badges };
       try {
         localStorage.setItem(storageKey(challengeId), JSON.stringify(next));
       } catch {
@@ -205,7 +210,26 @@ export function useMissionGame(challengeId: string) {
     });
   }, [challengeId]);
 
-  return { game, update, award, reset, loaded };
+  /** "That's Enough for Today": remember to carry on next time (written at once, before leaving). */
+  const resumeLater = useCallback(() => {
+    setGame((prev) => {
+      const next = { ...prev, resumeNext: true };
+      try {
+        localStorage.setItem(storageKey(challengeId), JSON.stringify(next));
+      } catch {
+        // storage blocked — next visit simply starts fresh
+      }
+      return next;
+    });
+    try {
+      const raw = localStorage.getItem(storageKey(challengeId));
+      if (raw) localStorage.setItem(storageKey(challengeId), JSON.stringify({ ...JSON.parse(raw), resumeNext: true }));
+    } catch {
+      // ignore
+    }
+  }, [challengeId]);
+
+  return { game, update, award, reset, loaded, resumeLater };
 }
 
 /** The `update` callback components receive: a patch, or a function of the

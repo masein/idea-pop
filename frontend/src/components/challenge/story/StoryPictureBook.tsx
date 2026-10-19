@@ -1,12 +1,14 @@
 'use client';
 
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { usePopiVoice } from '@/lib/hooks/usePopiVoice';
 import { useAutoNarration } from '@/lib/hooks/useAutoNarration';
 import { joinSegments } from '@/lib/narration';
 import { Popi, TapChoice, arrangeChoices } from './StoryBits';
 import DefineCelebration from './DefineCelebration';
+import MissionPuzzle from './MissionPuzzle';
+import type { MissionPuzzleData } from './discovery';
 import { claimDefineBonus } from '@/lib/api/client';
 import type { MissionStory } from './types';
 import { btnIcon, btnPrimary, btnSecondary } from '@/components/challenge/buttons';
@@ -31,6 +33,8 @@ interface Props {
   onDone: () => void;
   /** The story card: the right answers for the tapped Who and Where questions. */
   card?: { hero: string; place: string } | null;
+  /** "Build the Mission": a map puzzle in place of the question cards (Max's challenge). */
+  puzzle?: MissionPuzzleData | null;
 }
 
 /** Where the right answer sits among the three options, so it isn't always in the same place. */
@@ -64,6 +68,7 @@ export default function StoryPictureBook({
   onCelebrated,
   onDone,
   card = null,
+  puzzle = null,
 }: Props) {
   const t = useTranslations('story');
   const voice = usePopiVoice(useLocale());
@@ -81,7 +86,7 @@ export default function StoryPictureBook({
     voice,
     pages: pages.map(pageWords),
     onTurn: setIndex,
-    finale: define?.popi,
+    finale: puzzle ? t('puzzle_popi') : define?.popi,
   });
   // Each picture page starts at the top of the screen, with the picture in full view.
   useEffect(() => {
@@ -101,11 +106,12 @@ export default function StoryPictureBook({
   }, []);
   // The celebration plays once, the first time every 5W1H box has an answer: when the kid
   // leaves the last box, or presses Next. XP comes from the server, once per mission.
-  const [celebration, setCelebration] = useState<{ xp: number } | null>(null);
+  // xp: null until the server answers; 0 = already collected before (never given twice).
+  const [celebration, setCelebration] = useState<{ xp: number | null } | null>(null);
   const allAnswered = !!define && define.prompts.every((p) => done.includes(p.key));
   function maybeCelebrate(finished = allAnswered): boolean {
     if (!finished || celebrated || celebration) return false;
-    setCelebration({ xp: 0 });
+    setCelebration({ xp: null });
     onCelebrated();
     claimDefineBonus(challengeId)
       .then((r) => setCelebration((c) => (c ? { xp: r?.xp_earned ?? 0 } : c)))
@@ -121,6 +127,56 @@ export default function StoryPictureBook({
       if (p.image) new Image().src = p.image;
     });
   }, [pages]);
+
+  // Three equal columns, so 🔊 sits exactly under the middle of the photo.
+  const nav = (
+    <NavRow>
+        {index > 0 ? (
+          <button
+            type="button"
+            data-testid="story-page-back"
+            onClick={() => setIndex((i) => i - 1)}
+            className={`${btnSecondary} justify-self-start`}
+          >
+            {t('page_back')}
+          </button>
+        ) : (
+          <span />
+        )}
+        {voice.available ? (
+          <button
+            type="button"
+            data-testid="story-page-listen"
+            aria-label={voice.speaking ? t('popi_stop') : t('listen_story')}
+            onClick={() =>
+              voice.speaking
+                ? voice.stop()
+                : voice.speak(pageWords(page))
+            }
+            className={`${btnIcon} justify-self-center`}
+          >
+            <span aria-hidden="true">{voice.speaking ? '⏹' : '🔊'}</span>
+          </button>
+        ) : (
+          <span />
+        )}
+        {last && define && !allAnswered ? (
+          <span />
+        ) : (
+        <button
+          type="button"
+          data-testid="story-page-next"
+          onClick={() => {
+            if (!last) setIndex((i) => i + 1);
+            else if (!maybeCelebrate()) onDone();
+          }}
+          className={`${btnPrimary} justify-self-end`}
+        >
+          {t('page_next')}
+        </button>
+        )}
+    </NavRow>
+  );
 
   return (
     <div data-testid="story-picture-book" className="flex flex-col gap-4 py-4">
@@ -223,54 +279,8 @@ export default function StoryPictureBook({
         )}
       </div>
 
-      {/* Back and Next sit right under the photo, above anything else on the page. */}
-      {/* Three equal columns, so 🔊 sits exactly under the middle of the photo. */}
-      <div className="mx-auto grid w-full grid-cols-3 items-center" style={{ maxWidth: 'calc((100dvh - 380px) * 1.777)' }}>
-        {index > 0 ? (
-          <button
-            type="button"
-            data-testid="story-page-back"
-            onClick={() => setIndex((i) => i - 1)}
-            className={`${btnSecondary} justify-self-start`}
-          >
-            {t('page_back')}
-          </button>
-        ) : (
-          <span />
-        )}
-        {voice.available ? (
-          <button
-            type="button"
-            data-testid="story-page-listen"
-            aria-label={voice.speaking ? t('popi_stop') : t('listen_story')}
-            onClick={() =>
-              voice.speaking
-                ? voice.stop()
-                : voice.speak(pageWords(page))
-            }
-            className={`${btnIcon} justify-self-center`}
-          >
-            <span aria-hidden="true">{voice.speaking ? '⏹' : '🔊'}</span>
-          </button>
-        ) : (
-          <span />
-        )}
-        {last && define && !allAnswered ? (
-          <span />
-        ) : (
-        <button
-          type="button"
-          data-testid="story-page-next"
-          onClick={() => {
-            if (!last) setIndex((i) => i + 1);
-            else if (!maybeCelebrate()) onDone();
-          }}
-          className={`${btnPrimary} justify-self-end`}
-        >
-          {t('page_next')}
-        </button>
-        )}
-      </div>
+      {/* Back and Next sit right under the photo; on the last page, under the whole activity. */}
+      {!(last && define) && nav}
 
       {auto.phase === 'blocked' && (
         <p
@@ -282,7 +292,22 @@ export default function StoryPictureBook({
         </p>
       )}
 
-      {last && define && (
+      {last && define && puzzle && (
+        <div className="flex flex-col gap-4">
+          <Popi text={t('puzzle_popi')} grand talking={auto.phase === 'finale' && voice.speaking} />
+          <MissionPuzzle
+            puzzle={puzzle}
+            solved={allAnswered}
+            onSolved={() => {
+              // Building the mission defines the problem: the same one-time bonus as the questions,
+              // shown when the kid presses Next, so they can read the mission summary first.
+              onDoneChange(define.prompts.map((p) => p.key));
+            }}
+          />
+        </div>
+      )}
+
+      {last && define && !puzzle && (
         <DefineProblemCard
           define={define}
           popiTalking={auto.phase === 'finale' && voice.speaking}
@@ -297,6 +322,9 @@ export default function StoryPictureBook({
           }}
         />
       )}
+
+      {last && define && nav}
+
       {celebration && (
         <DefineCelebration
           xp={celebration.xp}
@@ -306,7 +334,14 @@ export default function StoryPictureBook({
           }}
         />
       )}
+    </div>
+  );
+}
 
+function NavRow({ children }: { children: ReactNode }) {
+  return (
+    <div className="mx-auto grid w-full grid-cols-3 items-center" style={{ maxWidth: 'calc((100dvh - 380px) * 1.777)' }}>
+      {children}
     </div>
   );
 }

@@ -7,6 +7,7 @@ import { useAutoNarration } from '@/lib/hooks/useAutoNarration';
 import { joinSegments } from '@/lib/narration';
 import { SceneStage, Popi, ctaClass, optionClass } from './StoryBits';
 import StoryPictureBook from './StoryPictureBook';
+import { discoveryOf } from './discovery';
 import type { ChallengeDetail, MissionStory } from './types';
 import type { MissionGame } from './useMissionGame';
 
@@ -56,6 +57,7 @@ export default function StoryBrief({ challenge, story, game, update, onNext }: P
         onCelebrated={() => update({ badges: game.badges.includes('define') ? game.badges : [...game.badges, 'define'] })}
         onDone={onNext}
         card={story.card}
+        puzzle={discoveryOf(story)?.puzzle ?? null}
       />
     );
   }

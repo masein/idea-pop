@@ -6,6 +6,7 @@ import { Popi, StepNav, optionClass, pillCtaClass } from './StoryBits';
 import type { ChallengeDetail, MissionStory } from './types';
 import type { MissionGame, GameUpdate } from './useMissionGame';
 import { btnText } from '@/components/challenge/buttons';
+import { discoveryOf } from './discovery';
 
 interface Props {
   challenge: ChallengeDetail;
@@ -16,6 +17,8 @@ interface Props {
   onBack: () => void;
   /** Results submitted ("Finish the lab"); without it, finishing goes straight on. */
   onFinished?: () => void;
+  /** Max's challenge: this page is the Experiment (its own step, before Skills). */
+  experiment?: boolean;
 }
 
 /** Winner index for a set of lab numbers, or null until every row is filled. */
@@ -30,7 +33,8 @@ export function labWinner(values: (number | null)[], higherIsBetter: boolean): n
 /** Step 5 as a story: predict which option wins, run the experiment, record
  *  one number per option. The best row gets a crown and Popi says whether the
  *  prediction was right — either way is a win ("surprises teach"). */
-export default function StoryLab({ challenge, story, game, update, onNext, onBack, onFinished }: Props) {
+export default function StoryLab({ challenge, story, game, update, onNext, onBack, onFinished, experiment = false }: Props) {
+  const refs = experiment ? discoveryOf(story)?.experiment ?? null : null;
   const t = useTranslations('story');
   const lab = story.lab;
   const values = lab.options.map((_, i) => {
@@ -42,6 +46,7 @@ export default function StoryLab({ challenge, story, game, update, onNext, onBac
 
   return (
     <div data-testid="story-lab" className="flex flex-col gap-5 py-4">
+      {experiment && <h1 className="font-display text-3xl text-challenge">{t('experiment_heading')}</h1>}
       <Popi text={story.guide.skill} />
 
       <div className="flex flex-col gap-3 rounded-card bg-white p-5">
@@ -52,6 +57,31 @@ export default function StoryLab({ challenge, story, game, update, onNext, onBac
               {t('do_it')}
             </span>
             <p className="whitespace-pre-line font-body text-sm text-ink">{challenge.skill_instructions}</p>
+          </div>
+        )}
+
+        {refs && (
+          // Optional starting shapes: references to build from, never a model to copy or a result.
+          <div data-testid="experiment-refs" className="flex flex-col gap-2 rounded-2xl bg-tint-blue p-3">
+            <p className="font-body text-base font-semibold text-ink">{refs.refs_caption}</p>
+            <div className="grid grid-cols-3 gap-2">
+              {refs.refs.map((r) => (
+                <figure key={r.label} className="m-0 flex flex-col items-center gap-1">
+                  {r.image ? (
+                    // eslint-disable-next-line @next/next/no-img-element -- a small reference picture
+                    <img src={r.image} alt={r.label} className="aspect-[4/3] w-full rounded-xl object-cover" />
+                  ) : (
+                    <span
+                      data-testid="experiment-ref-placeholder"
+                      className="flex aspect-[4/3] w-full items-center justify-center rounded-xl border-2 border-dashed border-[#9CC9E6] bg-white/70 font-body text-xs font-bold text-[#5B6878]"
+                    >
+                      {t('picture_coming')}
+                    </span>
+                  )}
+                  <figcaption className="text-center font-body text-sm font-semibold text-ink">{r.label}</figcaption>
+                </figure>
+              ))}
+            </div>
           </div>
         )}
 
@@ -123,7 +153,7 @@ export default function StoryLab({ challenge, story, game, update, onNext, onBac
           }}
           className={pillCtaClass}
         >
-          {t('lab_next')}
+          {experiment ? t('experiment_finished') : t('lab_next')}
         </button>
       </StepNav>
     </div>

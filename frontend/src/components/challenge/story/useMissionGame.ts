@@ -52,6 +52,15 @@ export interface MissionGame {
   subst: SubstState | null;
   /** The saved Substitute practice, as the words saved to the kid's account. Kept. */
   substSaved: string | null;
+  /** Where the kid was, so they can come back later and carry on. */
+  nav: {
+    step: number;
+    phase: 'lab' | 'tool';
+    reached: number[];
+    toolReached: boolean;
+    ideaPath: 'yes' | 'no' | null;
+    sketchProjectId: string | null;
+  } | null;
 }
 
 export interface SubstState {
@@ -129,6 +138,7 @@ export const EMPTY_GAME: MissionGame = {
   savedLab: null,
   subst: null,
   substSaved: null,
+  nav: null,
 };
 
 function storageKey(challengeId: string) {
@@ -142,16 +152,10 @@ function load(challengeId: string): MissionGame {
     // For now every visit opens the mission fresh (susan, 2026-10-08): only the earned
     // badges carry over, so one-time bonuses are not replayed. Before merging, answers will be
     // saved to the kid's account and earlier tries kept (see the kid-work-must-be-saved rule).
-    // What the kid saved (their idea, their lab, their Substitute practice) is kept, so the
-    // next steps can build on it after "That's enough for today".
+    // Everything the kid did is kept, so after "That's Enough for Today" they carry on
+    // where they left off ("Play this challenge again" starts over, keeping saved work).
     const saved = JSON.parse(raw) as Partial<MissionGame>;
-    return {
-      ...EMPTY_GAME,
-      badges: saved.badges ?? [],
-      savedIdea: saved.savedIdea ?? null,
-      savedLab: saved.savedLab ?? null,
-      substSaved: saved.substSaved ?? null,
-    };
+    return { ...EMPTY_GAME, ...saved };
   } catch {
     return EMPTY_GAME;
   }
@@ -159,9 +163,11 @@ function load(challengeId: string): MissionGame {
 
 export function useMissionGame(challengeId: string) {
   const [game, setGame] = useState<MissionGame>(EMPTY_GAME);
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     setGame(load(challengeId));
+    setLoaded(true);
   }, [challengeId]);
 
   const update = useCallback(
@@ -199,7 +205,7 @@ export function useMissionGame(challengeId: string) {
     });
   }, [challengeId]);
 
-  return { game, update, award, reset };
+  return { game, update, award, reset, loaded };
 }
 
 /** The `update` callback components receive: a patch, or a function of the

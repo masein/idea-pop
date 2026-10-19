@@ -23,7 +23,6 @@ interface Props {
   onBack: () => void;
 }
 
-const SCAMPER = ['S', 'C', 'A', 'M', 'P', 'E', 'R'] as const;
 const FAIR_CHECKS = ['shape', 'weight', 'coins', 'method'] as const;
 
 const fieldClass =
@@ -99,7 +98,7 @@ export default function SubstitutePractice({
           set={set}
           challengeId={challengeId}
           locale={locale}
-          start={{ onIdea, name: startName, photo: onIdea ? ideaPhotoUrl : labPhotoUrl, question: onIdea ? t('subst_idea_question') : sub.model_question }}
+          start={{ onIdea, name: startName, detail: !onIdea && lab ? labLine(t, lab) : null, photo: onIdea ? ideaPhotoUrl : labPhotoUrl, question: onIdea ? t('subst_idea_question') : sub.model_question }}
           hint={onIdea ? t('subst_idea_hint') : sub.hint}
           example={onIdea ? null : sub.example}
           modelMaterial={sub.model_material}
@@ -158,6 +157,21 @@ export default function SubstitutePractice({
           onDone={onDone}
         />
       )}
+    </div>
+  );
+}
+
+/** Scamper, the idea-building companion, explains the tool. A clean round spot waits for
+ *  Scamper's picture. */
+function ScamperSays({ text }: { text: string }) {
+  const t = useTranslations('story');
+  return (
+    <div data-testid="scamper-says" className="flex items-end gap-3">
+      <span aria-hidden="true" className="h-20 w-20 shrink-0 rounded-full border-2 border-dashed border-[#9CC9E6] bg-white/60" />
+      <div className="relative min-w-0 flex-1 rounded-[18px] bg-white px-4 py-3 shadow-sm">
+        <p className="font-body text-sm font-bold text-challenge">{t('scamper_says')}</p>
+        <p className="font-body text-lg font-semibold leading-snug text-ink">{text}</p>
+      </div>
     </div>
   );
 }
@@ -229,6 +243,15 @@ function PageOne({
                 >
                   {s.start === 'idea' ? `✓ ${t('subst_use_idea')}` : t('subst_use_idea')}
                 </button>
+                <button
+                  type="button"
+                  data-testid="subst-use-boat"
+                  aria-pressed={s.start === 'boat'}
+                  onClick={() => set({ start: 'boat' })}
+                  className={s.start === 'boat' ? btnPrimary : btnSecondary}
+                >
+                  {s.start === 'boat' ? `✓ ${t('subst_use_boat')}` : t('subst_use_boat')}
+                </button>
                 <button type="button" data-testid="subst-edit-idea" onClick={() => setEditing(true)} className={btnText}>
                   {t('subst_edit_idea')}
                 </button>
@@ -274,18 +297,6 @@ function PageOne({
               <Popi text={t('subst_scamper_popi')} />
             </div>
           </div>
-          <div className="flex flex-wrap justify-center gap-1.5" aria-label={t('subst_letters_aria')}>
-            {SCAMPER.map((k, i) => (
-              <span
-                key={k}
-                className={`flex h-12 min-w-10 items-center justify-center rounded-xl px-2 font-display text-xl ${
-                  i === 0 ? 'bg-challenge text-white' : 'bg-ink/10 text-ink/40'
-                }`}
-              >
-                {k}
-              </span>
-            ))}
-          </div>
         </section>
       )}
 
@@ -316,7 +327,7 @@ function PageTwo({
   set: (p: Partial<SubstState>) => void;
   challengeId: string;
   locale: string;
-  start: { onIdea: boolean; name: string; photo: string | null; question: string };
+  start: { onIdea: boolean; name: string; detail: string | null; photo: string | null; question: string };
   hint: string;
   example: string | null;
   modelMaterial: string;
@@ -345,7 +356,7 @@ function PageTwo({
 
   return (
     <>
-      <Popi text={t('subst_p2_popi')} />
+      <ScamperSays text={t('subst_p2_popi')} />
 
       <section className="flex flex-col gap-2 rounded-[20px] bg-white p-5 shadow-sm">
         <p className="font-body text-xs font-extrabold uppercase tracking-wide text-[#1E7A44]">
@@ -356,6 +367,7 @@ function PageTwo({
           <img src={start.photo} alt="" className="max-h-44 w-full rounded-xl object-contain" />
         )}
         <p dir="auto" className="font-body text-base font-semibold text-ink">{start.name}</p>
+        {start.detail && <p className="font-body text-base text-ink">{start.detail}</p>}
         <h2 className="mt-1 font-display text-2xl text-challenge">{start.question}</h2>
       </section>
 

@@ -7,7 +7,7 @@ import { btnPrimary, btnSecondary } from '@/components/challenge/buttons';
 
 interface Props {
   /** XP the server just awarded (0 when it was already given before). Define variant only. */
-  xp?: number;
+  xp?: number | null;
   onClose: () => void;
   /** 'define': the 5W problem is defined (+5 XP). 'solved': the first idea is sketched, so the
    *  problem is solved; it cheers and invites the kid on to find more ideas (TEMP rule 35). */
@@ -51,7 +51,7 @@ export default function DefineCelebration({ xp = 0, onClose, variant = 'define',
   // Rendered on the page body: an animated ancestor would otherwise trap the overlay inside it.
   return createPortal(
     <div
-      className="app-typography fixed inset-0 z-[90] flex items-center justify-center bg-[rgba(15,40,70,0.45)] p-4"
+      className="app-typography fixed inset-0 z-[90] flex items-center justify-center overflow-y-auto bg-[rgba(15,40,70,0.45)] p-4"
       onClick={onClose}
     >
       <div
@@ -60,8 +60,17 @@ export default function DefineCelebration({ xp = 0, onClose, variant = 'define',
         aria-labelledby="define-celebration-title"
         data-testid="define-celebration"
         onClick={(e) => e.stopPropagation()}
-        className="celebrate-pop relative w-full max-w-[440px] overflow-hidden rounded-[32px] bg-white px-6 pb-6 pt-5 text-center shadow-[0_24px_60px_rgba(0,0,0,0.3)]"
+        className="celebrate-pop relative my-auto w-full max-w-[440px] overflow-hidden rounded-[32px] bg-white px-6 pb-6 pt-5 text-center shadow-[0_24px_60px_rgba(0,0,0,0.3)]"
       >
+        {solved && !again && (
+          <p data-testid="solved-points" className="relative mb-1 rounded-[18px] bg-gradient-to-br from-[#FFF7D6] to-[#FFE9A8] px-4 py-3 font-body text-base font-bold leading-relaxed text-ink">
+            {t('solved_points_1')}
+            <br />
+            {t('solved_points_2')}
+            <br />
+            {t('solved_points_3')}
+          </p>
+        )}
         {CONFETTI.map((c, i) => (
           <span
             key={i}
@@ -80,11 +89,11 @@ export default function DefineCelebration({ xp = 0, onClose, variant = 'define',
             className="celebrate-float absolute bottom-1 left-1/2 h-[230px] drop-shadow-[0_0_18px_rgba(80,200,255,0.75)]"
           />
           <span className={`${chip} left-1 top-5 bg-white text-ink`}>
-            {solved && again ? (
+            {(solved && again) || xp === 0 ? (
               <>✅ {t('xp_already')}</>
             ) : (
               <>
-                ⭐ <span dir="ltr">+{xp > 0 ? xp : solved ? 10 : 5} XP</span>
+                ⭐ <span dir="ltr">+{xp ?? (solved ? 10 : 5)} XP</span>
               </>
             )}
           </span>

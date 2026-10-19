@@ -27,8 +27,8 @@ interface MissionHUDProps {
   summary?: string | null;
   /** Clears this challenge's answers and goes back to step 1. */
   onRestart?: () => void;
-  /** Steps this mission leaves out; the others are numbered 1, 2, 3… in order. */
-  hiddenSteps?: number[];
+  /** This mission's own step names, in order (e.g. Max's 9 steps); default: the usual 8. */
+  stepNames?: string[];
 }
 
 export default function MissionHUD({
@@ -39,12 +39,12 @@ export default function MissionHUD({
   keyInfo = null,
   summary = null,
   onRestart,
-  hiddenSteps = [],
+  stepNames,
 }: MissionHUDProps) {
-  const steps = ALL_STEPS.filter((s) => !hiddenSteps.includes(s));
-  // The number the kid sees: the step's place among the steps this mission shows.
-  const shown = (step: number) => steps.indexOf(step as (typeof ALL_STEPS)[number]) + 1;
   const t = useTranslations('challenge');
+  const steps: number[] = stepNames ? stepNames.map((_, i) => i + 1) : [...ALL_STEPS];
+  const shown = (step: number) => step;
+  const stepName = (step: number) => stepNames?.[step - 1] ?? t(`step_name_${step}`);
   const tStory = useTranslations('story');
   const [menuOpen, setMenuOpen] = useState(false);
   const [xpOpen, setXpOpen] = useState(false);
@@ -175,7 +175,7 @@ export default function MissionHUD({
         aria-live="polite"
         className="bg-white px-4 pb-2.5 text-center font-body text-sm font-semibold text-challenge"
       >
-        {t(`step_name_${currentStep}`)}
+        {stepName(currentStep)}
       </p>
 
       {xpOpen && (
@@ -247,7 +247,7 @@ export default function MissionHUD({
                     </span>
 
                     {/* Step name */}
-                    <span className="flex-1">{t(`step_name_${step}`)}</span>
+                    <span className="flex-1">{stepName(step)}</span>
 
                   </button>
                 </li>

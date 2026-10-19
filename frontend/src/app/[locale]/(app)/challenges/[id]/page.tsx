@@ -74,11 +74,15 @@ export default function ChallengePage() {
   const [skillPhase, setSkillPhase] = useState<'lab' | 'tool'>('lab');
   // The "you solved it!" moment after the sketch (TEMP rule 35).
   const [solvedCelebration, setSolvedCelebration] = useState<{
-    xp: number;
+    xp: number | null;
     again: boolean;
     popi: { state: 'loading' | 'done' | 'off'; text?: string; fits?: boolean };
   } | null>(null);
-  const { game, update: updateGame, award: awardBadge, reset: resetGame } = useMissionGame(params.id);
+  const { game, update: updateGame, award: awardBadge, reset: resetGame, loaded: gameLoaded } = useMissionGame(params.id);
+  // Max's Skills page (SCAMPER) is its own step after the Experiment: has the kid reached it?
+  const [toolReached, setToolReached] = useState(false);
+  // Coming back later: carry on where the kid left off (restored once, then kept up to date).
+  const restoredRef = useRef(false);
   // The lab is done: "What Did You Build?" with an optional photo (the lab project it goes on).
   const [labCelebration, setLabCelebration] = useState<{ projectId: string | null } | null>(null);
   // This visit's photos of the saved idea and the lab model, shown on the Substitute practice.
@@ -139,7 +143,7 @@ export default function ChallengePage() {
   }, [challenge, attempt]);
 
   const goToStep = useCallback(
-    async (step: number) => {
+    async (step: number, phase: 'lab' | 'tool' = 'lab') => {
       if (!isStepNum(step)) return;
 
       // Record real progress (and the step-8 completion + XP) — only when the
@@ -157,7 +161,8 @@ export default function ChallengePage() {
       }
 
       setCurrentStep(step);
-      if (step === 6) setSkillPhase('lab');
+      if (step === 6) setSkillPhase(phase);
+      if (step === 6 && phase === 'tool') setToolReached(true);
       setReachedSteps((prev) => {
         const next = new Set(prev);
         next.add(step);
@@ -181,6 +186,35 @@ export default function ChallengePage() {
     goToStep(3);
   }, [goToStep]);
 
+  // Resume: put the kid back where they were last time.
+  useEffect(() => {
+    if (!gameLoaded || !challenge || restoredRef.current) return;
+    restoredRef.current = true;
+    const nav = game.nav;
+    if (!nav) return;
+    if (isStepNum(nav.step)) setCurrentStep(nav.step);
+    setSkillPhase(nav.phase);
+    setReachedSteps(new Set(nav.reached));
+    setToolReached(nav.toolReached);
+    setIdeaPath(nav.ideaPath);
+    setSketchProjectId(nav.sketchProjectId);
+  }, [gameLoaded, challenge, game.nav]);
+
+  // ...and remember where they are as they go.
+  useEffect(() => {
+    if (!restoredRef.current) return;
+    updateGame({
+      nav: {
+        step: currentStep,
+        phase: skillPhase,
+        reached: [...reachedSteps],
+        toolReached,
+        ideaPath,
+        sketchProjectId,
+      },
+    });
+  }, [currentStep, skillPhase, reachedSteps, toolReached, ideaPath, sketchProjectId, updateGame]);
+
   // "Start over": clear this challenge's answers and go back to step 1. XP and badges stay.
   const restartMission = useCallback(() => {
     resetGame();
@@ -188,6 +222,7 @@ export default function ChallengePage() {
     setIdeaPath(null);
     setSketchProjectId(null);
     setSkillPhase('lab');
+    setToolReached(false);
     setSolvedCelebration(null);
     setReachedSteps(new Set([1]));
     setCurrentStep(1);
@@ -224,6 +259,26 @@ export default function ChallengePage() {
   }
 
   const sharedProps = { challenge, ageMode };
+  // Max's challenge shows 9 steps: the Skill step is split into Experiment (the lab) and
+  // Skills (SCAMPER). Underneath they are still step 6, in two phases.
+  const split = !!challenge.story?.substitute;
+  const stepNames = split
+    ? [1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => t(`plan9_step_${n}`))
+    : undefined;
+  const shownStep = !split || currentStep < 6 ? currentStep : currentStep === 6 ? (skillPhase === 'lab' ? 6 : 7) : currentStep + 1;
+  const shownReached = new Set<number>();
+  reachedSteps.forEach((s) => {
+    if (!split || s < 6) shownReached.add(s);
+    else if (s === 6) shownReached.add(6);
+    else shownReached.add(s + 1);
+  });
+  if (split && toolReached) shownReached.add(7);
+  const jumpTo = (n: number) => {
+    if (!split || n < 6) return goToStep(n);
+    if (n === 6) return goToStep(6, 'lab');
+    if (n === 7) return goToStep(6, 'tool');
+    return goToStep(n - 1);
+  };
   // Steps this mission leaves out (Max: no Build & test); moving on skips them.
   const hiddenSteps = challenge.story?.hidden_steps ?? [];
   const after = (step: number) => {
@@ -245,12 +300,12 @@ export default function ChallengePage() {
     <div data-testid="challenge-page" className="min-h-screen bg-tint-blue">
       <MissionHUD
         challenge={challenge}
-        currentStep={currentStep}
-        reachedSteps={reachedSteps}
-        onJumpTo={goToStep}
+        currentStep={shownStep}
+        reachedSteps={shownReached}
+        onJumpTo={jumpTo}
+        stepNames={stepNames}
         ideaPath={ideaPath}
         keyInfo={story ? story.card : null}
-        hiddenSteps={challenge.story?.hidden_steps ?? []}
         summary={challenge.brief}
       />
 
@@ -336,7 +391,7 @@ export default function ChallengePage() {
                 }
                 // The kid has solved the problem with a first idea: celebrate, then
                 // invite them on to find more ideas (design secret, skill, build).
-                setSolvedCelebration({ xp: 0, again: game.badges.includes('solved'), popi: { state: idea || game.partnerAnswers?.inspired ? 'loading' : 'off' } });
+                setSolvedCelebration({ xp: null, again: game.badges.includes('solved'), popi: { state: idea || game.partnerAnswers?.inspired ? 'loading' : 'off' } });
                 claimSketchBonus(challenge.id)
                   .then((r) => setSolvedCelebration((c) => (c ? { ...c, xp: r?.xp_earned ?? 0 } : c)))
                   .catch(() => {});
@@ -392,8 +447,10 @@ export default function ChallengePage() {
                   challenge={challenge}
                   story={story}
                   {...gameProps}
+                  experiment={split}
                   onNext={() => {
-                    setSkillPhase('tool');
+                    if (split) void goToStep(6, 'tool');
+                    else setSkillPhase('tool');
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                   }}
                   onFinished={() => {
@@ -542,7 +599,7 @@ export default function ChallengePage() {
           }}
           onKeepExploring={() => {
             setLabCelebration(null);
-            setSkillPhase('tool');
+            void goToStep(6, 'tool');
             window.scrollTo({ top: 0, behavior: 'smooth' });
             document.querySelector('main')?.scrollTo({ top: 0, behavior: 'smooth' });
           }}

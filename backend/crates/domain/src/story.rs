@@ -285,6 +285,10 @@ pub struct MissionStory {
     /// Steps this mission leaves out (e.g. [7] = no Build & test). The rest renumber.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub hidden_steps: Vec<u8>,
+    /// Hands-on discovery activities (mission puzzle, nature companion explorations,
+    /// experiment references). Shape is read by the frontend. Optional.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub discovery: Option<serde_json::Value>,
 }
 
 /// Mission words for the S — Substitute practice.
@@ -557,6 +561,7 @@ mod tests {
             define_problem: None,
             substitute: None,
             hidden_steps: vec![],
+            discovery: None,
         }
     }
 

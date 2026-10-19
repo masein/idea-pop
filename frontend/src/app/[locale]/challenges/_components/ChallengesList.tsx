@@ -167,7 +167,7 @@ export default function ChallengesList() {
 
           {/* Challenge grid */}
           <section aria-label={t('challenges_aria')} className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-            {challenges.map((c, i) => {
+            {inPageOrder(challenges).map((c, i) => {
               // Prefer the server's entitlement decision; fall back to "first free".
               const locked = c.locked ?? i > 0;
               const assigned = c.id === assignedId;
@@ -216,7 +216,21 @@ const BADGE =
 const DEFAULT_COVER = '/challenge/mission-cover.png';
 const COVER_BY_SLUG: Record<string, string> = {
   'the-guess-who-tree': '/challenge/guess-who-tree.png',
+  // Max beside the river, thinking (the third picture of his Mission Brief).
+  'help-max-cross-the-river': '/challenge/max/story-3.jpg',
+  // The landing page's boy with the train and the bird.
+  'the-train-that-went-boom': '/challenge/covers/the-train-that-went-boom.webp',
 };
+
+/** Missions shown first on the Challenges page, in this order; the rest keep theirs.
+ *  Only the place on the page changes: ids, content and progress stay the same. */
+const SHOW_FIRST = ['the-train-that-went-boom'];
+function inPageOrder<T extends { slug?: string }>(list: T[]): T[] {
+  const first = SHOW_FIRST.map((slug) => list.find((c) => c.slug === slug)).filter((c): c is T => !!c);
+  return [...first, ...list.filter((c) => !first.includes(c))];
+}
+// Where to centre a cover (Max's picture has empty word boxes at the top).
+const COVER_POSITION: Record<string, string> = { 'help-max-cross-the-river': 'center 75%' };
 function coverFor(slug: string | undefined): string {
   return (slug && COVER_BY_SLUG[slug]) || DEFAULT_COVER;
 }
@@ -264,6 +278,7 @@ function UnlockedChallengeCard({
           aria-hidden="true"
           fill
           className="object-cover"
+          style={{ objectPosition: (challenge.slug && COVER_POSITION[challenge.slug]) || 'center' }}
           sizes="(max-width: 640px) 100vw, 400px"
         />
         <span

@@ -6,6 +6,8 @@ import { Character3D, Popi, RewardPop, StepNav, TapChoice, arrangeChoices, pillC
 import { btnPrimary, btnText } from '@/components/challenge/buttons';
 import type { MissionStory } from './types';
 import type { BadgeKey, MissionGame, GameUpdate } from './useMissionGame';
+import CompanionActivity from './CompanionActivity';
+import { discoveryOf } from './discovery';
 
 interface Props {
   story: MissionStory;
@@ -20,7 +22,9 @@ interface Props {
 
 /** The three "think like your partner" questions, asked one at a time. */
 const PARTNER_QUESTIONS = ['what', 'how', 'inspired'] as const;
-type PartnerQuestion = (typeof PARTNER_QUESTIONS)[number];
+/** With a hands-on companion activity, it replaces the two tapped questions. */
+const EXPLORE_QUESTIONS = ['explore', 'inspired'] as const;
+type PartnerQuestion = (typeof PARTNER_QUESTIONS)[number] | 'explore';
 
 /**
  * Step 3, Nature clues, in four parts (TEMP rule 37):
@@ -37,9 +41,15 @@ export default function StoryClues({ story, game, update, award, onNext, onBack,
   const cards = story.clue_cards;
   const allOpen = cards.every((_, i) => game.flipped.includes(i));
   const partner = game.partner !== null && game.partner !== undefined ? cards[game.partner] : null;
-  const answered = PARTNER_QUESTIONS.filter((k) => game.partnerDone.includes(k));
-  const allAnswered = answered.length === PARTNER_QUESTIONS.length;
-  const current = PARTNER_QUESTIONS.find((k) => !game.partnerDone.includes(k)) ?? null;
+  // The partner's hands-on activity and hint (Max's challenge), when the mission has them.
+  const companion =
+    partner && game.partner !== null && game.partner !== undefined
+      ? discoveryOf(story)?.companions?.[game.partner] ?? null
+      : null;
+  const questions: readonly PartnerQuestion[] = companion ? EXPLORE_QUESTIONS : PARTNER_QUESTIONS;
+  const answered = questions.filter((k) => game.partnerDone.includes(k));
+  const allAnswered = answered.length === questions.length;
+  const current = questions.find((k) => !game.partnerDone.includes(k)) ?? null;
 
   function flip(i: number) {
     if (!game.flipped.includes(i)) {
@@ -58,7 +68,9 @@ export default function StoryClues({ story, game, update, award, onNext, onBack,
   }
 
   const question = (k: PartnerQuestion) =>
-    t(`partner_q_${k}`, { name: partner?.name ?? '', hero: story.hero.name });
+    k === 'explore' && companion
+      ? companion.title
+      : t(`partner_q_${k}`, { name: partner?.name ?? '', hero: story.hero.name });
 
   return (
     <div data-testid="story-clues" className="flex flex-col gap-6 py-4">
@@ -145,9 +157,9 @@ export default function StoryClues({ story, game, update, award, onNext, onBack,
       {partner && (
         <section data-testid="partner-questions" className="story-rise flex flex-col gap-3 rounded-[20px] bg-white p-5 shadow-sm">
           <h2 className="font-display text-2xl text-challenge">{t('partner_think_title', { name: partner.name })}</h2>
-          <Meter label={t('inspiration_meter')} value={answered.length} total={PARTNER_QUESTIONS.length} icon="⚡" />
+          <Meter label={t('inspiration_meter')} value={answered.length} total={questions.length} icon="⚡" />
 
-          {PARTNER_QUESTIONS.filter((k) => game.partnerDone.includes(k)).map((k) => (
+          {questions.filter((k) => game.partnerDone.includes(k)).map((k) => (
             <div key={k} data-testid={`partner-q-${k}`} data-state="done" className="rounded-xl border border-[#BFE6C8] bg-[#F3FBF5] px-4 py-3">
               <p className="font-body text-base font-bold text-ink">
                 {question(k)} <span aria-hidden="true">✓</span>
@@ -155,10 +167,34 @@ export default function StoryClues({ story, game, update, award, onNext, onBack,
               <p dir="auto" className="mt-1 font-body text-base font-semibold text-[#1d7a3a]">
                 {game.partnerAnswers[k]}
               </p>
+              {/* The kid can always go back and change their own idea (also after a hint). */}
+              {k === 'inspired' && companion && (
+                <button
+                  type="button"
+                  data-testid="partner-revise"
+                  onClick={() => update((g) => ({ partnerDone: g.partnerDone.filter((x) => x !== 'inspired') }))}
+                  className={`${btnText} mt-1 !px-0`}
+                >
+                  {t('partner_revise')}
+                </button>
+              )}
             </div>
           ))}
 
-          {current && current !== 'inspired' && partner && game.partner !== null && (
+          {current === 'explore' && companion && (
+            <CompanionActivity
+              key={`${game.partner}-explore`}
+              data={companion}
+              onDone={() =>
+                update((g) => ({
+                  partnerAnswers: { ...g.partnerAnswers, explore: companion.takeaway },
+                  partnerDone: [...g.partnerDone.filter((x) => x !== 'explore'), 'explore'],
+                }))
+              }
+            />
+          )}
+
+          {current && current !== 'inspired' && current !== 'explore' && partner && game.partner !== null && (
             // "What does it do?" and "How?" are tapped: the partner's own card words among two others'.
             <div key={`${game.partner}-${current}`} className="story-rise flex flex-col gap-2 rounded-xl border-2 border-[#1A6FA6] bg-white p-4">
               <p className="font-body text-base font-bold text-ink">{question(current)}</p>
@@ -188,6 +224,7 @@ export default function StoryClues({ story, game, update, award, onNext, onBack,
               onChange={(v) => update((g) => ({ partnerAnswers: { ...g.partnerAnswers, [current]: v } }))}
               onDone={() => update((g) => ({ partnerDone: [...g.partnerDone, current] }))}
               peek={`${partner.trick} ${partner.does}`}
+              hint={companion?.hint ?? null}
             />
           )}
 
@@ -268,6 +305,7 @@ function PartnerQuestionBox({
   onChange,
   onDone,
   peek,
+  hint = null,
 }: {
   id: PartnerQuestion;
   question: string;
@@ -275,6 +313,8 @@ function PartnerQuestionBox({
   onChange: (v: string) => void;
   onDone: () => void;
   peek: string;
+  /** The companion's own hint ("Need a hint?"), shown only when asked. Replaces the peek. */
+  hint?: string | null;
 }) {
   const t = useTranslations('story');
   const [peeking, setPeeking] = useState(false);
@@ -312,13 +352,13 @@ function PartnerQuestionBox({
         <button type="submit" data-testid="partner-check" disabled={!ready} className={btnPrimary}>
           {t('define_check')}
         </button>
-        <button type="button" data-testid="partner-peek" onClick={() => setPeeking((v) => !v)} className={btnText}>
-          {t('partner_peek')}
+        <button type="button" data-testid={hint ? 'partner-hint' : 'partner-peek'} onClick={() => setPeeking((v) => !v)} className={btnText}>
+          {hint ? t('subst_hint_btn') : t('partner_peek')}
         </button>
       </div>
       {peeking && (
-        <p data-testid="partner-peek-text" className="rounded-xl bg-[#FFF7E0] px-3 py-2 font-body text-base text-[#5a4300]">
-          💡 {peek}
+        <p data-testid={hint ? 'partner-hint-text' : 'partner-peek-text'} className="rounded-xl bg-[#FFF7E0] px-3 py-2 font-body text-base text-[#5a4300]">
+          💡 {hint ?? peek}
         </p>
       )}
     </form>

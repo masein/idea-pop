@@ -38,6 +38,8 @@ interface Props {
   puzzle?: MissionPuzzleData | null;
   /** Quizzy, who explains WH Questions before the puzzle. */
   wh?: WhCharacter | null;
+  /** The page shows its own reward when the kid presses Next (Max's challenge). */
+  customReward?: boolean;
 }
 
 /** Where the right answer sits among the three options, so it isn't always in the same place. */
@@ -73,6 +75,7 @@ export default function StoryPictureBook({
   card = null,
   puzzle = null,
   wh = null,
+  customReward = false,
 }: Props) {
   const t = useTranslations('story');
   const voice = usePopiVoice(useLocale());
@@ -172,7 +175,7 @@ export default function StoryPictureBook({
           data-testid="story-page-next"
           onClick={() => {
             if (!last) setIndex((i) => i + 1);
-            else if (!maybeCelebrate()) onDone();
+            else if (customReward || !maybeCelebrate()) onDone();
           }}
           className={`${btnPrimary} justify-self-end`}
         >

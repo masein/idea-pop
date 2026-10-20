@@ -6,6 +6,8 @@ import Link from 'next/link';
 import AudiencePicker from './AudiencePicker';
 import { submitIdea } from '@/lib/api/client';
 import { btnPrimary, btnSecondary } from '@/components/challenge/buttons';
+import MissionRewards from './story/MissionRewards';
+import ShareForApproval from './story/ShareForApproval';
 
 type ChallengeDetail = import('@/lib/api/schema').components['schemas']['ChallengeDetail'];
 
@@ -20,6 +22,8 @@ interface StepCelebrateProps {
   wallAlreadySubmitted: boolean;
   onWallSubmitted: () => void;
   onRestart: () => void;
+  /** Max's challenge: the itemized badge/photo XP and sharing with adult approval. */
+  badgeMode?: boolean;
 }
 
 export default function StepCelebrate({
@@ -31,6 +35,7 @@ export default function StepCelebrate({
   wallAlreadySubmitted,
   onWallSubmitted,
   onRestart,
+  badgeMode = false,
 }: StepCelebrateProps) {
   const t = useTranslations('mission');
   const format = useFormatter();
@@ -67,7 +72,11 @@ export default function StepCelebrate({
         <h2 className="font-display text-3xl text-challenge mt-3">{t('celebrate_heading')}</h2>
       </div>
 
+      {badgeMode && <MissionRewards challengeId={challenge.id} />}
+      {badgeMode && <ShareForApproval challengeId={challenge.id} projectId={sketchProjectId} onSubmitted={onWallSubmitted} />}
+
       {/* XP card */}
+      {!badgeMode && (
       <div data-testid="celebrate-xp" className="bg-challenge text-white rounded-card p-6 text-center mb-6">
         <p className="font-body text-base font-bold text-white/90">{t('total_xp_heading')}</p>
         <p dir="ltr" className="font-display text-5xl">{t('xp_chip', { xp: completionXp + defineXp + sketchXp })}</p>
@@ -88,11 +97,13 @@ export default function StepCelebrate({
         </div>
       </div>
 
+      )}
+
       {/* Audience picker — real API integration */}
       <AudiencePicker projectId={sketchProjectId} onDone={() => {}} />
 
       {/* Ideas Wall submission */}
-      {!wallDone ? (
+      {badgeMode ? null : !wallDone ? (
         <div
           data-testid="wall-submit-section"
           className="bg-white rounded-card shadow-sm p-4 flex flex-col gap-3"

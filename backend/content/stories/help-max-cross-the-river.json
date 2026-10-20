@@ -27,15 +27,15 @@
     { "step": "celebrate_and_share", "label": "Chapter 8", "beat": "And ever since then…", "title": "Max crosses the river", "line": "Max crosses in minutes and walks into school on time." }
   ],
   "guide": {
-    "brief": "I'm Popi, your story guide. Max has started thinking about what he could do. What about you? Can you help him? Let's start!",
+    "brief": "I'm PopAI, your story guide. Max has started thinking about what he could do. What about you? Can you help him? Let's start!",
     "your_idea": "Some engineers already have a spark of an idea. Do you?",
     "nature_clues": "Nature solved this millions of years ago. Tap each card to meet four nature heroes that are great at staying on top of water!",
     "design_secret": "Here's the secret all four heroes share…",
     "skill": "Scientists predict before they test. Which boat shape will hold the most coins?",
     "sketch": "Time to draw your crossing like a real engineer!",
-    "build_and_test": "Build your model and let's see how many coins Max's crossing can carry!",
-    "retry_tip": "Engineers never stop at round 1. Change ONE thing and test again!",
-    "ending": "And ever since then, Max crosses the river on YOUR crossing. He gets to school in minutes, and his whole village wants one too!"
+    "build_and_test": "You started with a first idea. You may have sketched it, built it, or both.\nNow you have another possibility—or an improved version of your original idea. You can build and test this version too.\nEngineers repeat this cycle: develop an idea, build, test, learn, and improve.",
+    "retry_tip": "Engineers don't stop after the first round. When they want to understand the effect of a change, they change one thing and test again.",
+    "ending": "From that day on, Max uses your solution to cross the river and reaches school in just a few minutes. Other people in the village need a solution like this too."
   },
   "quick_check": {
     "question": "Crossing the river takes 10 minutes. How much time does Max save each morning?",
@@ -67,8 +67,8 @@
   },
   "lab": {
     "title": "The clay boat lab",
-    "predict": "Which boat shape will hold the most coins?",
-    "options": ["Wide and flat", "Deep and narrow", "With a rim"],
+    "predict": "Looking at these clay-boat shapes, which one do you predict will hold the most coins?",
+    "options": ["Wide and shallow, with a flat base", "Deep and narrow", "Raised-rim boat"],
     "measure": "coins before it sinks",
     "higher_is_better": true
   },
@@ -101,7 +101,7 @@
     "question": "Which nature trick kept your crossing afloat?",
     "options": ["🦟 Water strider", "🐜 Fire ants", "🪷 Water lily", "🥥 Coconut"]
   },
-  "sticker": { "name": "River Crosser", "emoji": "🌉" },
+  "sticker": { "name": "River Explorer", "emoji": "🌉" },
   "define_problem": {
     "popi": "Let's be problem detectives! Answer the 5 big questions, Who, What, Where, When and Why, to define Max's problem.",
     "title": "The big question",
@@ -190,6 +190,8 @@
     "model_material": "Clay"
   },
   "discovery": {
+    "rewards": { "mode": "badges" },
+    "predict_intro": "Before testing something, we can make a prediction using what we already know and observe. A prediction doesn't have to be correct—we compare it with the result to learn more.",
     "wh": {"name":"Quizzy","popi":"Meet Quizzy, our question explorer! Quizzy will show you how to understand a problem.","says":"Want to understand a problem better? Start with the right questions. WH Questions help us explore who is involved, what is happening, where and when it happens, and why it matters. They help us understand exactly what problem we’re trying to solve."},
     "puzzle": {
       "title": "Build the Mission",
@@ -307,7 +309,7 @@
       "refs_caption": "Need a starting point? You can try one of these shapes—or design your own.",
       "refs": [
         {
-          "label": "Wide and shallow",
+          "label": "Wide and shallow, with a flat base",
           "image": null
         },
         {
@@ -315,7 +317,7 @@
           "image": null
         },
         {
-          "label": "Raised rim",
+          "label": "Raised-rim boat",
           "image": null
         }
       ]

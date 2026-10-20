@@ -85,6 +85,11 @@ export default function StoryLab({ challenge, story, game, update, onNext, onBac
           </div>
         )}
 
+        {experiment && discoveryOf(story)?.predict_intro && (
+          <p data-testid="predict-intro" className="rounded-xl bg-[#FFF7E0] px-3 py-2 font-body text-base text-[#5a4300]">
+            💡 {discoveryOf(story)?.predict_intro}
+          </p>
+        )}
         <p className="font-body text-sm font-bold text-ink">1. {t('my_prediction')} <span className="font-medium">{lab.predict}</span></p>
         <div className="flex flex-wrap gap-2">
           {lab.options.map((o, i) => (

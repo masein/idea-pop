@@ -96,7 +96,8 @@ use crate::{
     },
     progress::{
         AdvanceStepRequest, AdvanceStepResponse, BadgeResponse, LessonCompleteRequest,
-        MedalsResponse, ProgressResponse, StartAttemptResponse, VideoViewRequest, XpAwardResponse,
+        MedalsResponse, MissionRewardItem, MissionRewardRequest, MissionRewardsResponse,
+        ProgressResponse, StartAttemptResponse, VideoViewRequest, XpAwardResponse,
     },
     teacher::{
         AssignMissionRequest, ClassGalleryItemResponse, ClassReportQuery, ClassReportResponse,
@@ -249,6 +250,9 @@ pub struct CreateHealthLogRequest {
         help::teacher_help_messages, help::set_helper_enabled,
         progress::post_video_view, progress::post_lesson_complete, progress::post_define_bonus,
         progress::post_sketch_bonus,
+        progress::post_mission_badge,
+        progress::post_photo_bonus,
+        progress::get_mission_rewards,
         progress::start_attempt, progress::advance_step,
         progress::get_me_progress,
         portfolio::create_project, portfolio::list_my_projects,
@@ -281,7 +285,7 @@ pub struct CreateHealthLogRequest {
         NatureClueResponse,
         HelpRequest, HelpResponse, HelpMessageResponse, IdeaFeedbackRequest, IdeaFeedbackResponse,
         UpdateHelperEnabledRequest, HelperEnabledResponse,
-        VideoViewRequest, LessonCompleteRequest, XpAwardResponse,
+        VideoViewRequest, LessonCompleteRequest, XpAwardResponse, MissionRewardRequest, MissionRewardItem, MissionRewardsResponse,
         StartAttemptResponse, AdvanceStepRequest, AdvanceStepResponse,
         ProgressResponse, MedalsResponse, BadgeResponse,
         CreateProjectRequest, ProjectResponse, ProjectListResponse,
@@ -538,6 +542,10 @@ pub fn router_with_metrics(
         // Child profiles & consent
         .route("/children", post(children::create_child))
         .route("/children/login", post(children::child_login))
+        .route(
+            "/children/me/approval-email",
+            post(children::request_approval_email),
+        )
         // Kid asks parent to unlock premium (kid-scoped; NO billing capability)
         .route(
             "/me/upgrade-request",
@@ -621,6 +629,18 @@ pub fn router_with_metrics(
         .route(
             "/challenges/:id/sketch-bonus",
             post(progress::post_sketch_bonus),
+        )
+        .route(
+            "/challenges/:id/mission-badge",
+            post(progress::post_mission_badge),
+        )
+        .route(
+            "/challenges/:id/photo-bonus",
+            post(progress::post_photo_bonus),
+        )
+        .route(
+            "/challenges/:id/mission-rewards",
+            get(progress::get_mission_rewards),
         )
         .route(
             "/progress/lesson-complete",
@@ -782,6 +802,9 @@ impl EmailSender for NullEmail {
 pub struct NullConsentEmail;
 #[async_trait]
 impl ConsentEmailSender for NullConsentEmail {
+    fn is_live(&self) -> bool {
+        false
+    }
     async fn send_consent_request(&self, _: &str, _: &str, _: &str) -> Result<(), DomainError> {
         Ok(())
     }

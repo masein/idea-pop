@@ -586,6 +586,46 @@ export async function fetchIdeas(
 }
 
 /** Returns the new idea id. Throws with code 'restricted' on 403. */
+/** +5 XP for a mission badge (badge-reward missions), once per kid; returns the XP given now. */
+export async function claimMissionBadge(challengeId: string, key: string): Promise<number> {
+  const { data, error } = await apiClient.POST("/api/challenges/{id}/mission-badge", {
+    params: { path: { id: challengeId } },
+    body: { key },
+  });
+  if (error || !data) throw new Error("Failed to claim the badge");
+  return data.xp_earned;
+}
+
+/** +10 XP for an optional photo kind ("design" or "build"), once per kid. */
+export async function claimPhotoBonus(challengeId: string, key: "design" | "build"): Promise<number> {
+  const { data, error } = await apiClient.POST("/api/challenges/{id}/photo-bonus", {
+    params: { path: { id: challengeId } },
+    body: { key },
+  });
+  if (error || !data) throw new Error("Failed to claim the photo bonus");
+  return data.xp_earned;
+}
+
+/** Everything this kid earned on a badge-reward mission, item by item (from the XP ledger). */
+export async function fetchMissionRewards(challengeId: string) {
+  const { data, error } = await apiClient.GET("/api/challenges/{id}/mission-rewards", {
+    params: { path: { id: challengeId } },
+  });
+  if (error || !data) throw new Error("Failed to load rewards");
+  return data;
+}
+
+/** Ask the kid's adult to approve sharing. "sent" only when the email really went out. */
+export async function requestApprovalEmail(): Promise<"sent" | "already_approved" | "no_contact" | "not_sent"> {
+  try {
+    const { data, error } = await apiClient.POST("/api/children/me/approval-email", {});
+    if (error || !data) return "not_sent";
+    return data.status;
+  } catch {
+    return "not_sent";
+  }
+}
+
 export async function submitIdea(
   challengeId: string,
   projectId: string,

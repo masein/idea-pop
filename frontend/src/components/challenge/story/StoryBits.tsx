@@ -35,11 +35,14 @@ export function Popi({
   label,
   grand = false,
   talking = false,
+  keepLines = false,
 }: {
   text: string;
   label?: string;
   grand?: boolean;
   talking?: boolean;
+  /** Show the text's line breaks (Max's multi-line messages). */
+  keepLines?: boolean;
 }) {
   const t = useTranslations('story');
   const locale = useLocale();
@@ -76,7 +79,7 @@ export function Popi({
               </span>
             )}
           </p>
-          <p className="font-body text-lg font-semibold leading-snug text-ink sm:text-xl">{text}</p>
+          <p className={`font-body text-lg font-semibold leading-snug text-ink sm:text-xl ${keepLines ? 'whitespace-pre-line' : ''}`}>{text}</p>
         </div>
         {voice.available && (
           <button
@@ -148,11 +151,14 @@ export function SceneStage({
   alt,
   align = 'start',
   priority = false,
+  hideHero = false,
 }: {
   story: MissionStory;
   alt: string;
   align?: 'start' | 'end';
   priority?: boolean;
+  /** Show only the scene, without the 3D hero standing in front of it. */
+  hideHero?: boolean;
 }) {
   return (
     <div
@@ -178,7 +184,7 @@ export function SceneStage({
           <span className="absolute bottom-0 left-0 right-0 block h-10 bg-white/40" />
         </span>
       )}
-      <Character3D src={story.hero.image} emoji={story.hero.emoji} alt={alt} size={170} className="relative z-10 m-3" />
+      {!hideHero && <Character3D src={story.hero.image} emoji={story.hero.emoji} alt={alt} size={170} className="relative z-10 m-3" />}
     </div>
   );
 }

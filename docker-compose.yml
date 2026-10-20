@@ -31,6 +31,13 @@ services:
       S3_ACCESS_KEY: ${S3_ACCESS_KEY:-ideapop}
       S3_SECRET_KEY: ${S3_SECRET_KEY:-ideapop123}
       S3_BUCKET: ${S3_BUCKET:-ideapop-projects}
+      # Email (approval emails to adults). Empty = no mail service: the app says it couldn't
+      # send. Put a provider's SMTP details in the root .env to send real emails.
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      FROM_EMAIL: ${FROM_EMAIL:-noreply@idea-pop.app}
       RUN_MIGRATIONS: "true"
       # AI mission helper — DARK by default. Values come from the untracked
       # root .env via compose substitution (never put the real METIS_API_KEY

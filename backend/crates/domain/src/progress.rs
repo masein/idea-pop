@@ -17,6 +17,15 @@ pub const XP_CYCLE_BONUS: i16 = 15;
 pub const XP_DEFINE_BONUS: i16 = 5;
 /// Solving a mission's problem with a first sketched idea (once per mission).
 pub const XP_SKETCH_BONUS: i16 = 10;
+/// Each distinct mission badge (badge-reward missions, e.g. Max's challenge).
+pub const XP_MISSION_BADGE: i16 = 5;
+/// Each optional photo kind (design/sketch, built model) on a badge-reward mission.
+pub const XP_PHOTO_BONUS: i16 = 10;
+
+/// The badges a badge-reward mission can award, by stable id (names are translated).
+pub const MISSION_BADGE_KEYS: [&str; 6] = ["define", "clue", "solved", "tool", "retry", "river"];
+/// The optional photo kinds, by stable id.
+pub const PHOTO_BONUS_KEYS: [&str; 2] = ["design", "build"];
 
 // ── XP source type ────────────────────────────────────────────────────────────
 
@@ -29,6 +38,8 @@ pub enum XpSourceType {
     CycleBonus,
     DefineBonus,
     SketchBonus,
+    MissionBadge,
+    PhotoBonus,
 }
 
 impl XpSourceType {
@@ -40,6 +51,8 @@ impl XpSourceType {
             XpSourceType::CycleBonus => "cycle_bonus",
             XpSourceType::DefineBonus => "define_bonus",
             XpSourceType::SketchBonus => "sketch_bonus",
+            XpSourceType::MissionBadge => "mission_badge",
+            XpSourceType::PhotoBonus => "photo_bonus",
         }
     }
 
@@ -51,6 +64,8 @@ impl XpSourceType {
             "cycle_bonus" => Some(XpSourceType::CycleBonus),
             "define_bonus" => Some(XpSourceType::DefineBonus),
             "sketch_bonus" => Some(XpSourceType::SketchBonus),
+            "mission_badge" => Some(XpSourceType::MissionBadge),
+            "photo_bonus" => Some(XpSourceType::PhotoBonus),
             _ => None,
         }
     }
@@ -63,6 +78,8 @@ impl XpSourceType {
             XpSourceType::CycleBonus => XP_CYCLE_BONUS,
             XpSourceType::DefineBonus => XP_DEFINE_BONUS,
             XpSourceType::SketchBonus => XP_SKETCH_BONUS,
+            XpSourceType::MissionBadge => XP_MISSION_BADGE,
+            XpSourceType::PhotoBonus => XP_PHOTO_BONUS,
         }
     }
 }
@@ -148,6 +165,83 @@ pub fn award_solve(
         source_type: XpSourceType::Solve,
         source_id: challenge_id,
         amount: XP_SOLVE,
+        created_at: now,
+    })
+}
+
+/// The ledger id of one mission reward: stable for (mission, kind, key), so the
+/// (child, source_type, source_id) unique index keeps every reward once, whatever its
+/// translated name, and however often the kid replays or re-uploads.
+pub fn mission_reward_id(challenge_id: Uuid, key: &str) -> Uuid {
+    Uuid::new_v5(&challenge_id, key.as_bytes())
+}
+
+/// +5 XP for a mission badge, once per kid and mission. None if the key is unknown
+/// or the badge was already given.
+pub fn award_mission_badge(
+    child_id: Uuid,
+    challenge_id: Uuid,
+    key: &str,
+    now: DateTime<Utc>,
+    existing: &[XpEvent],
+) -> Option<XpEvent> {
+    award_mission_reward(
+        child_id,
+        challenge_id,
+        key,
+        &MISSION_BADGE_KEYS,
+        XpSourceType::MissionBadge,
+        now,
+        existing,
+    )
+}
+
+/// +10 XP for an optional photo kind (design, build), once per kid and mission.
+pub fn award_photo_bonus(
+    child_id: Uuid,
+    challenge_id: Uuid,
+    key: &str,
+    now: DateTime<Utc>,
+    existing: &[XpEvent],
+) -> Option<XpEvent> {
+    award_mission_reward(
+        child_id,
+        challenge_id,
+        key,
+        &PHOTO_BONUS_KEYS,
+        XpSourceType::PhotoBonus,
+        now,
+        existing,
+    )
+}
+
+#[allow(clippy::too_many_arguments)]
+fn award_mission_reward(
+    child_id: Uuid,
+    challenge_id: Uuid,
+    key: &str,
+    allowed: &[&str],
+    source_type: XpSourceType,
+    now: DateTime<Utc>,
+    existing: &[XpEvent],
+) -> Option<XpEvent> {
+    if !allowed.contains(&key) {
+        return None;
+    }
+    let source_id = mission_reward_id(challenge_id, key);
+    if existing
+        .iter()
+        .any(|e| e.source_type == source_type && e.source_id == source_id)
+    {
+        return None;
+    }
+    let amount = source_type.canonical_amount();
+    Some(XpEvent {
+        id: Uuid::new_v4(),
+        child_id,
+        source_type,
+        source_id,
+        amount,
         created_at: now,
     })
 }
@@ -530,6 +624,44 @@ pub fn compute_snapshot(
 }
 
 // ── Tests ────────────────────────────────────────────────────────────────────
+
+#[cfg(test)]
+mod mission_reward_tests {
+    use super::*;
+
+    #[test]
+    fn badges_and_photos_are_given_once_each() {
+        let child = Uuid::new_v4();
+        let chal = Uuid::new_v4();
+        let now = Utc::now();
+        let first = award_mission_badge(child, chal, "define", now, &[]).unwrap();
+        assert_eq!(first.amount, 5);
+        assert!(
+            award_mission_badge(child, chal, "define", now, std::slice::from_ref(&first)).is_none()
+        );
+        // Another badge is its own reward.
+        assert!(
+            award_mission_badge(child, chal, "clue", now, std::slice::from_ref(&first)).is_some()
+        );
+        // Unknown keys earn nothing.
+        assert!(award_mission_badge(child, chal, "made_up", now, &[]).is_none());
+        let photo = award_photo_bonus(child, chal, "design", now, &[]).unwrap();
+        assert_eq!(photo.amount, 10);
+        assert!(
+            award_photo_bonus(child, chal, "design", now, std::slice::from_ref(&photo)).is_none()
+        );
+        assert!(award_photo_bonus(child, chal, "selfie", now, &[]).is_none());
+        // The id is stable for the same mission and key.
+        assert_eq!(
+            mission_reward_id(chal, "river"),
+            mission_reward_id(chal, "river")
+        );
+        assert_ne!(
+            mission_reward_id(chal, "river"),
+            mission_reward_id(Uuid::new_v4(), "river")
+        );
+    }
+}
 
 #[cfg(test)]
 mod tests {

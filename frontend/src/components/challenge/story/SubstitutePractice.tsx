@@ -182,7 +182,7 @@ function PageOne({
   const [draft, setDraft] = useState(idea?.words ?? '');
   return (
     <>
-      <Popi text={t('subst_p1_popi')} />
+      <Popi text={t('subst_p1_popi')} keepLines />
 
       {idea ? (
         <section data-testid="subst-saved-idea" className="flex flex-col gap-3 rounded-[20px] bg-white p-5 shadow-sm">

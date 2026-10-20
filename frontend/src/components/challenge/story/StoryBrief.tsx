@@ -17,13 +17,15 @@ interface Props {
   game: MissionGame;
   update: (patch: Partial<MissionGame>) => void;
   onNext: () => void;
+  /** The page shows its own reward on Next (Max's challenge). */
+  customReward?: boolean;
 }
 
 const CARD_KEYS = ['hero', 'place', 'problem', 'goal', 'rules', 'helpers'] as const;
 
 /** Step 1 as a story: three opening pages, the scene with the 3D hero, the
  *  story card that defines the project, and a one-tap quick check. */
-export default function StoryBrief({ challenge, story, game, update, onNext }: Props) {
+export default function StoryBrief({ challenge, story, game, update, onNext, customReward = false }: Props) {
   const t = useTranslations('story');
   const [wrong, setWrong] = useState<number | null>(null);
   const qc = story.quick_check;
@@ -59,6 +61,7 @@ export default function StoryBrief({ challenge, story, game, update, onNext }: P
         card={story.card}
         puzzle={discoveryOf(story)?.puzzle ?? null}
         wh={discoveryOf(story)?.wh ?? null}
+        customReward={customReward}
       />
     );
   }

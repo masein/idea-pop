@@ -17,6 +17,8 @@ interface Props {
   onBack: () => void;
   /** The first few challenges show the full "what does inspired mean?" tip; later ones a small one. */
   fullInspirationTip?: boolean;
+  /** The page awards the clue badge (Nature Inspiration) on Next, with its popup. */
+  deferClueBadge?: boolean;
 }
 
 /** The three "think like your partner" questions, asked one at a time. */
@@ -31,7 +33,7 @@ type PartnerQuestion = (typeof PARTNER_QUESTIONS)[number];
  * 4. What "inspired" means: take the trick, not the animal (in full on the first challenges).
  * We never suggest an answer: "peek at the card" only repeats what the card said.
  */
-export default function StoryClues({ story, game, update, award, onNext, onBack, fullInspirationTip = true }: Props) {
+export default function StoryClues({ story, game, update, award, onNext, onBack, fullInspirationTip = true, deferClueBadge = false }: Props) {
   const t = useTranslations('story');
   // Which cards show their words right now; a card can be turned back to its photo.
   const [turned, setTurned] = useState<number[]>([]);
@@ -53,7 +55,7 @@ export default function StoryClues({ story, game, update, award, onNext, onBack,
       const flipped = [...game.flipped, i];
       update({ flipped });
       // Meeting every nature hero earns the Clue Detective badge.
-      if (cards.every((_, k) => flipped.includes(k))) award('clue');
+      if (!deferClueBadge && cards.every((_, k) => flipped.includes(k))) award('clue');
     }
     setTurned((v) => (v.includes(i) ? v.filter((x) => x !== i) : [...v, i]));
   }
@@ -110,7 +112,7 @@ export default function StoryClues({ story, game, update, award, onNext, onBack,
             );
           })}
         </div>
-        {allOpen && <RewardPop text={t('badge_earned', { badge: t('badge_clue') })} />}
+        {allOpen && !deferClueBadge && <RewardPop text={t('badge_earned', { badge: t('badge_clue') })} />}
       </section>
 
       {/* ── Part 2: pick your nature partner ── */}

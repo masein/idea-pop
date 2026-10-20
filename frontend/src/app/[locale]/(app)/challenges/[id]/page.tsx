@@ -11,6 +11,11 @@ import { fetchChallenge, startAttempt, advanceStep, claimSketchBonus, getIdeaFee
 import LabCelebration from '@/components/challenge/story/LabCelebration';
 import SubstitutePractice from '@/components/challenge/story/SubstitutePractice';
 import SubstCelebration from '@/components/challenge/story/SubstCelebration';
+import RewardPopup from '@/components/challenge/story/RewardPopup';
+import GuideNameMessages from '@/components/challenge/story/GuideNameMessages';
+import { BADGE_ART, MISSION_XP_MAX, type MissionBadgeKey } from '@/components/challenge/story/missionBadges';
+import { discoveryOf } from '@/components/challenge/story/discovery';
+import { claimMissionBadge, claimPhotoBonus } from '@/lib/api/client';
 import MissionHUD from '@/components/challenge/MissionHUD';
 import StepBrief from '@/components/challenge/StepBrief';
 import StepIdeaFork from '@/components/challenge/StepIdeaFork';
@@ -51,7 +56,18 @@ function wallStorageKey(challengeId: string) {
   return `wallSubmitted_${challengeId}`;
 }
 
+/** Max's challenge names its guide PopAI and uses its own lines: the whole page (popups
+ *  included) reads its words through this wrapper once the mission is known. */
 export default function ChallengePage() {
+  const [badgeMode, setBadgeMode] = useState(false);
+  return (
+    <GuideNameMessages enabled={badgeMode}>
+      <ChallengePageInner onBadgeMode={setBadgeMode} />
+    </GuideNameMessages>
+  );
+}
+
+function ChallengePageInner({ onBadgeMode }: { onBadgeMode: (on: boolean) => void }) {
   const params = useParams<{ id: string }>();
   const t = useTranslations('challenge');
   const ageMode = useAgeMode();
@@ -88,6 +104,10 @@ export default function ChallengePage() {
   const [labCelebration, setLabCelebration] = useState<{ projectId: string | null } | null>(null);
   // The Substitute practice is done (Skills): celebrate, then Build and Test or stop for today.
   const [substCelebration, setSubstCelebration] = useState(false);
+  // Max's badge popups (Quizzy after the puzzle, Nature Inspiration after Nature Clues) and
+  // the XP each one gave (null while the server answers).
+  const [reward, setReward] = useState<{ key: 'define' | 'clue'; xp: number | null } | null>(null);
+  const [substXp, setSubstXp] = useState<number | null>(null);
   // This visit's photos of the saved idea and the lab model, shown on the Substitute practice.
   const [ideaPhotoUrl, setIdeaPhotoUrl] = useState<string | null>(null);
   const [labPhotoUrl, setLabPhotoUrl] = useState<string | null>(null);
@@ -197,6 +217,20 @@ export default function ChallengePage() {
     goToStep(3);
   }, [goToStep]);
 
+  // Tell the wrapper whether this is a badge-reward mission (PopAI wording).
+  useEffect(() => {
+    onBadgeMode(discoveryOf(challenge?.story)?.rewards?.mode === 'badges');
+  }, [challenge, onBadgeMode]);
+
+  // Max: when Second Try Hero is earned in the fair test, give its 5 XP (once).
+  const retryEarned = game.badges.includes('retry');
+  const retryClaimed = useRef(false);
+  useEffect(() => {
+    if (!retryEarned || retryClaimed.current || !challenge || discoveryOf(challenge.story)?.rewards?.mode !== 'badges') return;
+    retryClaimed.current = true;
+    void claimMissionBadge(challenge.id, 'retry').catch(() => {});
+  }, [retryEarned, challenge]);
+
   // Resume: put the kid back where they were last time.
   useEffect(() => {
     if (!gameLoaded || !challenge || restoredRef.current) return;
@@ -299,6 +333,15 @@ export default function ChallengePage() {
   };
   // The storytelling + Popi instructor layer; null → the classic mission.
   const story = challenge.story ?? null;
+  // Max's challenge: 5 XP per badge and 10 per photo kind, its guide is PopAI.
+  const badgeMode = discoveryOf(story)?.rewards?.mode === 'badges';
+  // Give a badge once (the server keeps it once too); resolves the XP given now.
+  const giveBadge = (key: MissionBadgeKey) => {
+    updateGame((g) => ({ badges: g.badges.includes(key) ? g.badges : [...g.badges, key] }));
+    return claimMissionBadge(challenge.id, key).catch(() => 0);
+  };
+  const givePhoto = (key: 'design' | 'build') => claimPhotoBonus(challenge.id, key).catch(() => null);
+  const badgeOf = (key: MissionBadgeKey) => ({ art: BADGE_ART[key], name: tStory(`mission_badge_${key}`) });
   const gameProps = { game, update: updateGame };
 
   // A picture-book brief fills the frame; every other step keeps the narrow reading column.
@@ -310,7 +353,7 @@ export default function ChallengePage() {
   return (
     <div data-testid="challenge-page" className="min-h-screen bg-tint-blue">
       <MissionHUD
-        challenge={challenge}
+        challenge={badgeMode ? { ...challenge, completion_xp: MISSION_XP_MAX } : challenge}
         currentStep={shownStep}
         reachedSteps={shownReached}
         onJumpTo={jumpTo}
@@ -349,7 +392,17 @@ export default function ChallengePage() {
         <div key={runKey} className={`${wide} mx-auto px-4 pb-24`}>
           {currentStep === 1 &&
             (story ? (
-              <StoryBrief challenge={challenge} story={story} {...gameProps} onNext={() => goToStep(2)} />
+              <StoryBrief
+                challenge={challenge}
+                story={story}
+                {...gameProps}
+                customReward={badgeMode}
+                onNext={() => {
+                  if (!badgeMode) return goToStep(2);
+                  setReward({ key: 'define', xp: null });
+                  void giveBadge('define').then((xp) => setReward((r) => (r && r.key === 'define' ? { ...r, xp } : r)));
+                }}
+              />
             ) : (
               <StepBrief {...sharedProps} onNext={() => goToStep(2)} />
             ))}
@@ -375,7 +428,12 @@ export default function ChallengePage() {
                 story={story}
                 {...gameProps}
                 award={awardBadge}
-                onNext={() => goToStep(4)}
+                deferClueBadge={badgeMode}
+                onNext={() => {
+                  if (!badgeMode) return goToStep(4);
+                  setReward({ key: 'clue', xp: null });
+                  void giveBadge('clue').then((xp) => setReward((r) => (r && r.key === 'clue' ? { ...r, xp } : r)));
+                }}
                 onBack={() => goToStep(2)}
                 fullInspirationTip={challenge.season === 1 && challenge.week_number <= 5}
               />
@@ -403,9 +461,15 @@ export default function ChallengePage() {
                 // The kid has solved the problem with a first idea: celebrate, then
                 // invite them on to find more ideas (design secret, skill, build).
                 setSolvedCelebration({ xp: null, again: game.badges.includes('solved'), popi: { state: idea || game.partnerAnswers?.inspired ? 'loading' : 'off' } });
-                claimSketchBonus(challenge.id)
-                  .then((r) => setSolvedCelebration((c) => (c ? { ...c, xp: r?.xp_earned ?? 0 } : c)))
-                  .catch(() => {});
+                if (badgeMode) {
+                  void Promise.all([giveBadge('solved'), saved?.photo ? givePhoto('design') : Promise.resolve(0)]).then(
+                    ([b, p]) => setSolvedCelebration((c) => (c ? { ...c, xp: b + (p ?? 0) } : c)),
+                  );
+                } else {
+                  claimSketchBonus(challenge.id)
+                    .then((r) => setSolvedCelebration((c) => (c ? { ...c, xp: r?.xp_earned ?? 0 } : c)))
+                    .catch(() => {});
+                }
                 // Popi reads the idea (AI helper). The XP never waits for this.
                 // Popi reads the whole plan: the idea, how nature inspired it, the map labels.
                 const plan = [
@@ -501,7 +565,11 @@ export default function ChallengePage() {
                   award={awardBadge}
                   ideaPhotoUrl={ideaPhotoUrl}
                   labPhotoUrl={labPhotoUrl}
-                  onDone={() => setSubstCelebration(true)}
+                  onDone={() => {
+                    setSubstXp(null);
+                    setSubstCelebration(true);
+                    void giveBadge('tool').then((xp) => setSubstXp(xp));
+                  }}
                   onBack={() => setSkillPhase('lab')}
                 />
               ) : (
@@ -528,7 +596,14 @@ export default function ChallengePage() {
               {...sharedProps}
               hideTestQuestion={story !== null}
               sketchProjectId={sketchProjectId}
-              onNext={() => {
+              onPhotoSaved={badgeMode ? () => void givePhoto('build') : undefined}
+              onNext={async () => {
+                if (badgeMode) {
+                  // The final badge, given before the last page shows the totals.
+                  await giveBadge('river');
+                  goToStep(8);
+                  return;
+                }
                 show({
                   xp_earned: challenge.completion_xp,
                   xp_total: 0,
@@ -543,7 +618,7 @@ export default function ChallengePage() {
             />
           )}
 
-          {currentStep === 8 && story && <StoryEnding story={story} {...gameProps} hiddenSteps={hiddenSteps} />}
+          {currentStep === 8 && story && <StoryEnding story={story} {...gameProps} hiddenSteps={hiddenSteps} badgeMode={badgeMode} />}
 
           {currentStep === 8 && (
             <StepCelebrate
@@ -557,6 +632,7 @@ export default function ChallengePage() {
               wallAlreadySubmitted={wallUnlocked}
               onWallSubmitted={handleWallSubmitted}
               onRestart={restartMission}
+              badgeMode={badgeMode}
             />
           )}
         </div>
@@ -577,7 +653,76 @@ export default function ChallengePage() {
         </div>
       )}
 
-      {solvedCelebration && (
+      {solvedCelebration && badgeMode && (
+        <RewardPopup
+          testId="define-celebration"
+          badge={badgeOf('solved')}
+          lead={
+            <>
+              {tStory('solved_points_1')}
+              <br />
+              {tStory('solved_points_2')}
+              <br />
+              {tStory('solved_points_3')}
+            </>
+          }
+          title={`${tStory('solved_title_1')} ${tStory('solved_title_2')}`}
+          text={tStory.rich('solved_text', { b: (chunks) => <b className="font-extrabold text-ink">{chunks}</b> })}
+          xp={solvedCelebration.xp}
+          primary={{
+            label: tStory('solved_go'),
+            onClick: () => {
+              setSolvedCelebration(null);
+              goToStep(5);
+            },
+          }}
+          secondary={{
+            label: tStory('enough_today'),
+            onClick: () => {
+              setSolvedCelebration(null);
+              resumeLater();
+              router.push('/challenges');
+            },
+          }}
+        >
+          {solvedCelebration.popi && (
+            <div data-testid="popi-idea-check" aria-live="polite" className="flex items-start gap-3 rounded-[18px] bg-[#EAF5FC] p-3 text-start">
+              {/* eslint-disable-next-line @next/next/no-img-element -- the guide's small cut-out */}
+              <img src="/popi/popi.png" alt="" aria-hidden="true" className="h-14 w-auto shrink-0" />
+              <div className="min-w-0">
+                <p className="font-body text-sm font-bold text-challenge">{tStory('popi_says')}</p>
+                <p className="font-body text-base font-semibold leading-snug text-ink">
+                  {solvedCelebration.popi.state === 'loading'
+                    ? tStory('popi_reading')
+                    : solvedCelebration.popi.state === 'done'
+                      ? solvedCelebration.popi.text
+                      : tStory('popi_offline')}
+                </p>
+              </div>
+            </div>
+          )}
+        </RewardPopup>
+      )}
+
+      {reward && (
+        <RewardPopup
+          testId={reward.key === 'define' ? 'quizzy-reward' : 'nature-reward'}
+          badge={badgeOf(reward.key)}
+          title={tStory(reward.key === 'define' ? 'quizzy_reward_title' : 'nature_reward_title')}
+          text={tStory(reward.key === 'define' ? 'quizzy_reward_text' : 'nature_reward_text')}
+          xp={reward.xp}
+          primary={{
+            label: tStory('reward_continue'),
+            onClick: () => {
+              const next = reward.key === 'define' ? 2 : 4;
+              setReward(null);
+              void goToStep(next);
+            },
+          }}
+        />
+      )}
+
+      {solvedCelebration && !badgeMode && (
         <DefineCelebration
           variant="solved"
           xp={solvedCelebration.xp}
@@ -602,6 +747,8 @@ export default function ChallengePage() {
 
       {substCelebration && (
         <SubstCelebration
+          badge={badgeOf('tool')}
+          xp={substXp}
           onKeepExploring={() => {
             setSubstCelebration(false);
             void goToStep(after(6));
@@ -618,10 +765,13 @@ export default function ChallengePage() {
         <LabCelebration
           onPhoto={async (photo) => {
             setLabPhotoUrl(URL.createObjectURL(photo));
-            if (!labCelebration.projectId) return false;
-            return uploadProjectPhoto(labCelebration.projectId, photo)
+            if (!labCelebration.projectId) return null;
+            const ok = await uploadProjectPhoto(labCelebration.projectId, photo)
               .then(() => true)
               .catch(() => false);
+            if (!ok) return null;
+            if (!badgeMode) return 0;
+            return (await givePhoto('build')) ?? 0;
           }}
           onKeepExploring={() => {
             setLabCelebration(null);

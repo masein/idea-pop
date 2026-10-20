@@ -345,6 +345,17 @@ fn invalid(msg: impl Into<String>) -> DomainError {
 }
 
 impl MissionStory {
+    /// True when the mission rewards its badges (5 XP each) and optional photos instead of
+    /// a completion bonus (set in its discovery data: rewards.mode = "badges").
+    pub fn badge_rewards(&self) -> bool {
+        self.discovery
+            .as_ref()
+            .and_then(|d| d.get("rewards"))
+            .and_then(|r| r.get("mode"))
+            .and_then(|m| m.as_str())
+            == Some("badges")
+    }
+
     /// Structural rules the player relies on. Content is authored as JSON, so
     /// these catch authoring slips before they reach a kid's screen.
     pub fn validate(&self) -> Result<(), DomainError> {

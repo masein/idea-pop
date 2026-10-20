@@ -18,6 +18,8 @@ import { btnPrimary, btnText } from '@/components/challenge/buttons';
 type ChallengeDetail = import('@/lib/api/schema').components['schemas']['ChallengeDetail'];
 
 interface StepBuildProps {
+  /** A photo of the build was saved (Max: the built-model photo bonus). */
+  onPhotoSaved?: () => void;
   challenge: ChallengeDetail;
   ageMode: 'young' | 'older';
   sketchProjectId: string | null;
@@ -38,6 +40,7 @@ export default function StepBuild({
   onNext,
   onBack,
   hideTestQuestion = false,
+  onPhotoSaved,
 }: StepBuildProps) {
   const t = useTranslations('mission');
   const game = GAME_BY_SLUG[challenge.slug];
@@ -74,7 +77,10 @@ export default function StepBuild({
         challenge_id: challenge.id,
         step_type: 'build',
       });
-      if (data.photo) await uploadProjectPhoto(project.id, data.photo).catch(() => {});
+      if (data.photo) {
+        const ok = await uploadProjectPhoto(project.id, data.photo).then(() => true).catch(() => false);
+        if (ok) onPhotoSaved?.();
+      }
     } catch {
       // never block progression
     } finally {

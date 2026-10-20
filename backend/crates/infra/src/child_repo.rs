@@ -303,11 +303,31 @@ pub struct SmtpConsentEmailSender {
 }
 
 impl SmtpConsentEmailSender {
-    pub fn new(smtp_host: &str, smtp_port: u16, from: String, app_url: String) -> Self {
-        let transport =
-            lettre::AsyncSmtpTransport::<lettre::Tokio1Executor>::builder_dangerous(smtp_host)
-                .port(smtp_port)
-                .build();
+    /// With a login (a real mail provider), the connection uses STARTTLS; without one
+    /// (a local mail catcher), it's a plain connection.
+    pub fn new(
+        smtp_host: &str,
+        smtp_port: u16,
+        login: Option<(String, String)>,
+        from: String,
+        app_url: String,
+    ) -> Self {
+        type T = lettre::AsyncSmtpTransport<lettre::Tokio1Executor>;
+        let transport = match login {
+            Some((user, pass)) => match T::starttls_relay(smtp_host) {
+                Ok(b) => b
+                    .port(smtp_port)
+                    .credentials(lettre::transport::smtp::authentication::Credentials::new(
+                        user, pass,
+                    ))
+                    .build(),
+                Err(e) => {
+                    tracing::warn!(error = %e, "could not set up a secure mail connection");
+                    T::builder_dangerous(smtp_host).port(smtp_port).build()
+                }
+            },
+            None => T::builder_dangerous(smtp_host).port(smtp_port).build(),
+        };
         Self {
             app_url,
             from,
@@ -360,6 +380,10 @@ pub struct NullConsentEmailSender;
 
 #[async_trait]
 impl ConsentEmailSender for NullConsentEmailSender {
+    fn is_live(&self) -> bool {
+        false
+    }
+
     async fn send_consent_request(
         &self,
         parent_email: &str,

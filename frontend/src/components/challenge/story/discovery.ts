@@ -30,6 +30,10 @@ export interface WhCharacter {
 }
 
 export interface Discovery {
+  /** "badges": 5 XP per badge and 10 per photo kind instead of a completion bonus. */
+  rewards?: { mode: string };
+  /** The Build and Test lab's words before "My prediction". */
+  predict_intro?: string;
   wh?: WhCharacter;
   puzzle?: MissionPuzzleData;
   /** One per clue card, in the same order. */

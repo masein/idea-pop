@@ -117,6 +117,11 @@ pub trait ConsentEmailSender: Send + Sync {
         child_nickname: &str,
         token: &str,
     ) -> Result<(), DomainError>;
+    /// False when no mail service is set up (nothing actually leaves the server), so the
+    /// app never tells a kid an email was sent when it wasn't.
+    fn is_live(&self) -> bool {
+        true
+    }
 }
 
 #[async_trait]

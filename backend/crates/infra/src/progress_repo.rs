@@ -348,9 +348,11 @@ impl ProgressRepo for SqlxProgressRepo {
             XpSourceType::Explore => (true, false, false),
             XpSourceType::Learn => (false, true, false),
             XpSourceType::Solve => (false, false, true),
-            XpSourceType::CycleBonus | XpSourceType::DefineBonus | XpSourceType::SketchBonus => {
-                return Ok(CycleActivityResult::NoChange)
-            }
+            XpSourceType::CycleBonus
+            | XpSourceType::DefineBonus
+            | XpSourceType::SketchBonus
+            | XpSourceType::MissionBadge
+            | XpSourceType::PhotoBonus => return Ok(CycleActivityResult::NoChange),
         };
 
         let row = sqlx::query(

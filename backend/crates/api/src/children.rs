@@ -24,6 +24,69 @@ use crate::{
     state::AppState,
 };
 
+// ── Adult approval for sharing ────────────────────────────────────────────────
+
+#[derive(Debug, Serialize, ToSchema)]
+pub struct ApprovalEmailResponse {
+    /// "sent": the email really went out. "already_approved": sharing is on already.
+    /// "no_contact": no adult email on the account (finish the setup first).
+    /// "not_sent": it couldn't be sent (no mail service, or it failed): offer a retry.
+    pub status: String,
+}
+
+/// Ask the kid's adult (the email on the account) to approve sharing. Reports honestly
+/// whether the email went out.
+#[utoipa::path(
+    post, path = "/children/me/approval-email", tag = "children",
+    responses((status = 200, description = "What happened", body = ApprovalEmailResponse))
+)]
+pub async fn request_approval_email(
+    KidAuth { child_id, .. }: KidAuth,
+    State(state): State<AppState>,
+) -> Result<Json<ApprovalEmailResponse>, ApiError> {
+    let reply = |s: &str| {
+        Ok(Json(ApprovalEmailResponse {
+            status: s.to_owned(),
+        }))
+    };
+    if state
+        .consent
+        .check_gate(child_id, &idea_pop_domain::GatedAction::Share)
+        .await
+        .is_ok()
+    {
+        return reply("already_approved");
+    }
+    let row = sqlx::query(
+        "SELECT p.nickname, a.email FROM child_profiles p
+           LEFT JOIN accounts a ON a.id = p.parent_account_id
+          WHERE p.id = $1",
+    )
+    .bind(child_id)
+    .fetch_optional(&state.db)
+    .await
+    .map_err(|e| ApiError::Domain(DomainError::Internal(e.to_string())))?;
+    let Some(row) = row else {
+        return reply("no_contact");
+    };
+    let nickname: String = row.try_get("nickname").unwrap_or_default();
+    let email: Option<String> = row.try_get("email").ok().flatten();
+    let Some(email) = email.filter(|e| e.contains('@')) else {
+        return reply("no_contact");
+    };
+    match state
+        .consent
+        .request_again(child_id, &email, &nickname)
+        .await
+    {
+        Ok(()) => reply("sent"),
+        Err(e) => {
+            tracing::warn!(error = %e, "approval email not sent");
+            reply("not_sent")
+        }
+    }
+}
+
 // ── DTO ───────────────────────────────────────────────────────────────────────
 
 #[derive(Debug, Deserialize, Validate, ToSchema)]

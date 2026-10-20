@@ -101,6 +101,41 @@ impl ConsentService {
         Ok((child, kid_token))
     }
 
+    /// Send the adult a fresh approval link (e.g. when the kid wants to share an idea).
+    /// Fails with an error when the email can't be sent; nothing is claimed as sent then.
+    pub async fn request_again(
+        &self,
+        child_id: Uuid,
+        parent_email: &str,
+        nickname: &str,
+    ) -> Result<(), DomainError> {
+        if !self.email.is_live() {
+            return Err(DomainError::Internal("no mail service is set up".into()));
+        }
+        let now = self.clock.now();
+        let raw_token = self.tokens.generate_opaque_token();
+        let token_hash = self.tokens.hash_token(&raw_token);
+        let consent = ParentalConsent {
+            id: Uuid::new_v4(),
+            child_id,
+            token_hash,
+            status: ConsentStatus::Pending,
+            sent_at: now,
+            expires_at: now + Duration::hours(24),
+            granted_at: None,
+            revoked_at: None,
+        };
+        self.consent_repo.create(&consent).await?;
+        self.email
+            .send_consent_request(parent_email, nickname, &raw_token)
+            .await
+    }
+
+    /// Whether email really leaves the server.
+    pub fn email_is_live(&self) -> bool {
+        self.email.is_live()
+    }
+
     // ── Parental consent grant ────────────────────────────────────────────────
 
     /// Parent clicks the link in their email → grants consent.

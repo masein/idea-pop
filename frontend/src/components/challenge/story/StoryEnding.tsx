@@ -4,12 +4,15 @@ import { useTranslations } from 'next-intl';
 import { SceneStage, Confetti, Popi, optionClass } from './StoryBits';
 import type { MissionStory } from './types';
 import type { BadgeKey, MissionGame } from './useMissionGame';
+import { BADGE_ART, MISSION_BADGES } from './missionBadges';
 
 interface Props {
   story: MissionStory;
   game: MissionGame;
   update: (patch: Partial<MissionGame>) => void;
   hiddenSteps?: number[];
+  /** Max's challenge: River Explorer and the full list of badges earned. */
+  badgeMode?: boolean;
 }
 
 const BADGES: BadgeKey[] = ['define', 'clue', 'tool', 'retry'];
@@ -17,13 +20,13 @@ const BADGES: BadgeKey[] = ['define', 'clue', 'tool', 'retry'];
 /** Story top for step 8 — "And ever since then…": the hero in the scene,
  *  confetti, the mission sticker, the bonus badges and a one-tap reflection.
  *  The existing celebrate step (XP summary + Ideas Wall) sits below it. */
-export default function StoryEnding({ story, game, update, hiddenSteps = [] }: Props) {
+export default function StoryEnding({ story, game, update, hiddenSteps = [], badgeMode = false }: Props) {
   const t = useTranslations('story');
   return (
     <div data-testid="story-ending" className="flex flex-col gap-5 pt-4">
       <Confetti />
 
-      <SceneStage story={story} alt={t('hero_alt', { name: story.hero.name, role: story.hero.role })} align="end" />
+      <SceneStage story={story} alt={t('hero_alt', { name: story.hero.name, role: story.hero.role })} align="end" hideHero={badgeMode} />
 
       <Popi label={t('popi_ending')} text={story.guide.ending} />
 
@@ -35,7 +38,21 @@ export default function StoryEnding({ story, game, update, hiddenSteps = [] }: P
         >
           {story.sticker.emoji}
         </span>
-        <p className="font-display text-xl text-ink">{t('sticker_earned', { name: story.sticker.name })}</p>
+        <p className="font-display text-xl text-ink">{badgeMode ? t('mission_badge_river') : t('sticker_earned', { name: story.sticker.name })}</p>
+        {badgeMode && (
+          <>
+            <p className="font-body text-base text-ink/80">{t('river_badge_text')}</p>
+            <p className="mt-2 font-body text-sm font-extrabold uppercase tracking-wide text-[#4A5560]">{t('badges_earned_title')}</p>
+            <ul data-testid="earned-badges" className="flex flex-wrap justify-center gap-2" aria-label={t('badges_earned_title')}>
+              {MISSION_BADGES.filter((b) => game.badges.includes(b as BadgeKey) || b === 'river').map((b) => (
+                <li key={b} data-testid={`earned-badge-${b}`} className="rounded-pill bg-[#fff5d1] px-3 py-1.5 font-body text-sm font-bold text-[#6b4d00]">
+                  {BADGE_ART[b]} {t(`mission_badge_${b}`)}
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+        {!badgeMode && (
         <ul className="flex flex-wrap justify-center gap-2" aria-label={t('badges_aria')}>
           {BADGES.filter((b) => !(b === 'retry' && hiddenSteps.includes(7))).map((b) => {
             const got = game.badges.includes(b);
@@ -52,6 +69,7 @@ export default function StoryEnding({ story, game, update, hiddenSteps = [] }: P
             );
           })}
         </ul>
+        )}
       </div>
 
       <div className="flex flex-col gap-3 rounded-card bg-white p-5">

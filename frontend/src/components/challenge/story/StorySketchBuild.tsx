@@ -3,6 +3,7 @@
 import { useTranslations } from 'next-intl';
 import { Character3D, Popi, RewardPop, optionClass } from './StoryBits';
 import type { MissionStory } from './types';
+import { discoveryOf } from './discovery';
 import type { MissionGame, GameUpdate } from './useMissionGame';
 import { btnIcon } from '@/components/challenge/buttons';
 
@@ -99,7 +100,7 @@ export function StoryFairTest({
     <div data-testid="story-fair-test" className="flex flex-col gap-4 pt-4">
       <div className="flex items-end gap-2">
         <Character3D src={story.hero.image} emoji={story.hero.emoji} alt={story.hero.name} size={92} className="hidden shrink-0 sm:inline-flex" />
-        <div className="flex-1"><Popi text={story.guide.build_and_test} /></div>
+        <div className="flex-1"><Popi text={story.guide.build_and_test} keepLines={discoveryOf(story)?.rewards?.mode === 'badges'} /></div>
       </div>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">

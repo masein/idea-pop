@@ -298,6 +298,44 @@ export interface paths {
       };
     };
   };
+  "/api/challenges/{id}/mission-badge": {
+    post: {
+      parameters: { path: { id: string } };
+      requestBody: { content: { "application/json": { key: string } } };
+      responses: { 200: { content: { "application/json": components["schemas"]["XpAwardResponse"] } } };
+    };
+  };
+  "/api/challenges/{id}/photo-bonus": {
+    post: {
+      parameters: { path: { id: string } };
+      requestBody: { content: { "application/json": { key: string } } };
+      responses: { 200: { content: { "application/json": components["schemas"]["XpAwardResponse"] } } };
+    };
+  };
+  "/api/challenges/{id}/mission-rewards": {
+    get: {
+      parameters: { path: { id: string } };
+      responses: {
+        200: {
+          content: {
+            "application/json": {
+              badges: { key: string; xp: number; available: number }[];
+              photos: { key: string; xp: number; available: number }[];
+              xp_earned: number;
+              xp_max: number;
+            };
+          };
+        };
+      };
+    };
+  };
+  "/api/children/me/approval-email": {
+    post: {
+      responses: {
+        200: { content: { "application/json": { status: "sent" | "already_approved" | "no_contact" | "not_sent" } } };
+      };
+    };
+  };
   "/api/challenges/{id}/define-bonus": {
     post: {
       parameters: { path: { id: string } };

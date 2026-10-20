@@ -23,8 +23,7 @@ import seeTheWorld from "../../../../public/landing/see-the-world.png";
 import learnCircle from "../../../../public/landing/learn.png";
 import solveAndMake from "../../../../public/landing/solve-and-make.png";
 // susan's picture (2026-10-15): a boy with his cardboard kingfisher train and sketches, 1670×942 WebP.
-import tryMissionBg from "../../../../public/landing/try-mission-river.webp";
-// The same picture without the kingfisher sketches: shown first, until the flying bird lands and "becomes" the sketch.
+// The "Try one mission" picture: the boy's paper has no bird on it until the flying bird lands and becomes a drawing there.
 import tryMissionBlank from "../../../../public/landing/try-mission-blank.webp";
 import startFreeGirl from "../../../../public/landing/start-free-girl.png";
 // "Made by kids this month": the designer's photos of real makes, cropped to the tile with the make in the middle and
@@ -499,19 +498,27 @@ export default async function LandingPage({ params }: Props) {
         {/* The picture opens the mission too: the same link, kept away from screen readers and the keyboard so they
             only meet the labelled button above. Motion: the river zooms out as it scrolls in, clipped to its box. */}
         <Link href={TRAIN_CHALLENGE} prefetch={false} aria-hidden="true" tabIndex={-1} className="block overflow-hidden" data-zoom-frame>
-          {/* Two registered plates (same 1670×942 frame): the picture without the sketched kingfisher, and the one with
-              it on top, revealed as the flying bird lands on the paper (FlyingBird.tsx sets --mission-reveal). */}
+          {/* The picture, and on its paper the flying bird as a pencil drawing: the bird flattens onto the paper and this
+              drawing (same pose, same place, FlyingBird.tsx positions it) takes over, stays while the paper scrolls, and
+              hands back when the bird lifts out. Multiplied into the paper and clipped to it, so it reads as drawn on it
+              and never covers the boy, his hands or the train. */}
           <div className="relative" data-scroll="zoom-out">
             <Image unoptimized src={tryMissionBlank} data-bird-mission alt="" aria-hidden="true" className="w-full h-auto" sizes="100vw" />
-            <Image
-              unoptimized
-              src={tryMissionBg}
-              alt=""
-              aria-hidden="true"
-              className="absolute inset-0 w-full h-full"
-              sizes="100vw"
+            <div
+              className="pointer-events-none absolute inset-0 overflow-hidden mix-blend-multiply [clip-path:polygon(18%_68.3%,82%_76.6%,88.5%_99.7%,3.9%_94.2%)]"
               style={{ opacity: "var(--mission-reveal, 0)" }}
-            />
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element -- registered to the flying rig's 1659×1348 frame */}
+              <img
+                src="/landing/bird/bird-drawn.webp?v=bird-2026-10-20"
+                data-bird-drawn
+                alt=""
+                width={1659}
+                height={1348}
+                className="absolute left-0 top-0 max-w-none origin-top-left"
+                style={{ width: 1659, height: 1348 }}
+              />
+            </div>
           </div>
         </Link>
       </section>

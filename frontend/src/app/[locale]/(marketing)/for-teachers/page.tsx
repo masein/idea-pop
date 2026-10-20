@@ -1,5 +1,5 @@
 import { getTranslations } from "next-intl/server";
-import Image, { type StaticImageData } from "next/image";
+import Image, { getImageProps, type StaticImageData } from "next/image";
 import { Link } from "@/i18n/routing";
 import SamplePlanForm from "./_components/SamplePlanForm";
 import ClosingBand from "../_components/ClosingBand";
@@ -7,7 +7,9 @@ import ScrollReveal from "../_components/ScrollReveal";
 import { btnLime, cardShape, cardShapeLime, fromCenter, keepTogether, motionDelay, pagePhoto, pageTop } from "../_components/ui";
 import "../motion.css";
 
-import classroom from "../../../../../public/for-teachers/classroom.jpg";
+// susan's Teacher picture (2026-10-19): whole from 640px, and on phones a 4:3 crop around the teacher and the kids beside her.
+import classroom from "../../../../../public/for-teachers/classroom.webp";
+import classroomPhone from "../../../../../public/for-teachers/classroom-mobile.webp";
 import stepCreate from "../../../../../public/for-teachers/step-create.png";
 import stepShare from "../../../../../public/for-teachers/step-share.png";
 import stepAssign from "../../../../../public/for-teachers/step-assign.png";
@@ -60,6 +62,15 @@ export default async function ForTeachersPage({ params }: Props) {
     { img: getSheets, pos: "-top-[62px] h-[118px]", title: t("sheets_title"), sub: t("sheets_sub") },
     { img: getLetters, pos: "-top-[90px] h-[177px]", title: t("letters_title"), sub: t("letters_sub") },
   ];
+  const {
+    props: { srcSet: classroomPhoneSet },
+  } = getImageProps({ src: classroomPhone, alt: "", sizes: "calc(100vw - 32px)" });
+  const { props: classroomWide } = getImageProps({
+    src: classroom,
+    alt: "",
+    priority: true,
+    sizes: "(min-width: 1215px) 1183px, calc(100vw - 32px)",
+  });
 
   return (
     // overflow-x-clip for the same reason as the landing page: nothing that pops or slides may scroll the page sideways.
@@ -85,16 +96,18 @@ export default async function ForTeachersPage({ params }: Props) {
               {t("hero_cta")}
             </Link>
           </div>
-          <Image
-            src={classroom}
-            alt=""
-            aria-hidden="true"
-            priority
-            className={`w-full h-auto mt-6 md:mt-[25px] ${pagePhoto}`}
-            sizes="(min-width: 1215px) 1183px, calc(100vw - 32px)"
-            data-reveal="grow"
-            style={motionDelay(300)}
-          />
+          <picture>
+            <source media="(max-width: 639px)" srcSet={classroomPhoneSet} sizes="calc(100vw - 32px)" />
+            {/* eslint-disable-next-line @next/next/no-img-element -- art direction: next/image has no <picture> */}
+            <img
+              {...classroomWide}
+              alt=""
+              aria-hidden="true"
+              className={`w-full h-auto mt-6 md:mt-[25px] ${pagePhoto}`}
+              data-reveal="grow"
+              style={motionDelay(300)}
+            />
+          </picture>
         </div>
       </section>
 

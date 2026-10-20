@@ -76,6 +76,12 @@ const HERO_ART = { x: 1418 / 1.1497, y: 387 / 1.1497 + 40, scale: 0.369 / 1.1497
 // nose (susan, 2026-10-18), where it stands mid-way along its earlier path to the sketch.
 // (The spot susan approved, now measured on the unzoomed photo: it was 1035, 760, 0.32 on the photo mid zoom-out.)
 const MISSION_ART = { x: 1085, y: 832, scale: 0.4, w: 1670 };
+// How a drawing lying on that paper looks from the camera (susan, 2026-10-20): flattened by the paper's foreshortening
+// and turned with its slight tilt. The flying bird takes this pose as it enters the paper and the drawn bird keeps it.
+const PAPER = { squash: 0.62, turn: 2.5 };
+// Focus units for the mission: the bird reaches the paper 50 before the hold, flattens over the last 100 of its glide,
+// becomes the drawing over the last 90; leaving, it lifts off the paper over 90, regains depth by 150, then flies on.
+const MISSION_T = { flatten: 150, arrive: 50, enter: 90, lift: 90, deepen: 150 };
 const CANVAS_ART = { x: 815 / 1.11628, y: (2595 - 2217) / 1.11628, scale: 0.7 / 1.11628 };
 const PAINT = { w: 1720, h: 914 };
 
@@ -219,9 +225,13 @@ export default function FlyingBird() {
         const k = r.width / MISSION_ART.w;
         const X = r.left + window.scrollX + MISSION_ART.x * k;
         const Y = r.top + window.scrollY + MISSION_ART.y * k;
-        // land when the spot sits at 55% of the screen; the bird rests for ~30% of a screen of scrolling
-        const land = clamp(toNative(Y - vh * 0.55 + geo!.lead), 3960, 5000);
-        const leave = clamp(toNative(Y - vh * 0.25 + geo!.lead), land + 40, 5150);
+        // land when the spot sits at 78% of the screen (the photo has finished its zoom by then); the bird stays in the
+        // drawing for about a fifth of a screen of scrolling, and leaves itself room to fly on smoothly to Made by kids
+        const land = clamp(toNative(Y - vh * 0.78 + geo!.lead), 3960, 4800);
+        const leave = clamp(toNative(Y - vh * 0.4 + geo!.lead), land + 40, 5217 - MISSION_T.deepen - 160);
+        const drawn = document.querySelector<HTMLElement>("[data-bird-drawn]");
+        if (drawn)
+          drawn.style.transform = `translate(${(MISSION_ART.x * k).toFixed(2)}px,${(MISSION_ART.y * k).toFixed(2)}px) rotate(${PAPER.turn}deg) scale(${(MISSION_ART.scale * k).toFixed(5)},${(MISSION_ART.scale * k * PAPER.squash).toFixed(5)}) translate(${-ANCHOR.x}px,${-ANCHOR.y}px)`;
         return { X, Y, S: MISSION_ART.scale * k, land, leave };
       })();
       geo.mission = missionPose ? { land: missionPose.land, leave: missionPose.leave } : { land: 4400, leave: 4700 };
@@ -235,7 +245,7 @@ export default function FlyingBird() {
       geo.route = ROUTE.map((p) => {
         if (p.at === 387 && heroPose) return { at: p.at, ...heroPose };
         if (p.at >= 2450 && p.at <= 3000 && canvasPose) return { at: p.at, ...canvasPose };
-        if ("mission" in p && missionPose) return { at: p.mission === "land" ? missionPose.land - 50 : missionPose.leave, X: missionPose.X, Y: missionPose.Y, S: missionPose.S };
+        if ("mission" in p && missionPose) return { at: p.mission === "land" ? missionPose.land - MISSION_T.arrive : missionPose.leave + MISSION_T.deepen, X: missionPose.X, Y: missionPose.Y, S: missionPose.S };
         if ("mission" in p) return { at: p.at, X: 180 * g, Y: toDoc(p.at), S: 0.17 * g };
         return { at: p.at, X: p.x * g, Y: toDoc(p.y), S: p.scale * g };
       });
@@ -268,7 +278,7 @@ export default function FlyingBird() {
       const a = r[i];
       const b = r[i + 1];
       const t = smoothstep(a.at, b.at, focus);
-      const vt = focus >= 3360 && b.at !== geo!.mission.land - 50 ? clamp((focus - a.at) / (b.at - a.at), 0, 1) : t;
+      const vt = focus >= 3360 && b.at !== geo!.mission.land - MISSION_T.arrive ? clamp((focus - a.at) / (b.at - a.at), 0, 1) : t;
       return { at: focus, X: mix(a.X, b.X, t), Y: mix(a.Y, b.Y, vt), S: mix(a.S, b.S, t) };
     };
 
@@ -293,9 +303,21 @@ export default function FlyingBird() {
       const canvasHold = f >= 2500 && f <= 3000;
       const M = G.mission;
       const missionHold = f >= M.land && f <= M.leave;
-      // the same jump as into the girl's canvas: it glides in, fades over the last 150 units as the sketch appears, and
-      // on leaving fades back out over 300 units while it flies off
-      const missionFade = missionHold ? 1 : f > M.land - 150 && f < M.land ? smoothstep(M.land - 150, M.land, f) : f > M.leave && f < M.leave + 300 ? 1 - smoothstep(M.leave, M.leave + 300, f) : 0;
+      // Into the boy's paper, after the girl's canvas: it glides in with stilling wings, flattens onto the paper, and the
+      // drawn bird (same pose, same place) takes over; it stays while the paper scrolls, then lifts out the same way.
+      const T = MISSION_T;
+      const missionFade = missionHold
+        ? 1
+        : f > M.land - T.enter && f < M.land
+          ? smoothstep(M.land - T.enter, M.land, f)
+          : f > M.leave && f < M.leave + T.lift
+            ? 1 - smoothstep(M.leave, M.leave + T.lift, f)
+            : 0;
+      const flat = reduced
+        ? 0
+        : f >= M.land - T.flatten && f <= M.leave + T.deepen
+          ? Math.min(smoothstep(M.land - T.flatten, M.land - T.arrive, f), 1 - smoothstep(M.leave + 40, M.leave + T.deepen, f))
+          : 0;
       const reveal = paintRevealFor(f);
       // the bird first appears with the hero animation's bird; past the hero it is always on its route
       const heroVp = document.querySelector<HTMLElement>(".hero-viewport");
@@ -308,14 +330,14 @@ export default function FlyingBird() {
       const hoverElapsed = terminal ? now - hoverStartedAt! : 0;
       const slide = terminal ? (reduced ? 1 : smoothstep(0, HOVER.slideMs, hoverElapsed)) : 0;
 
-      const resting = reduced || canvasHold || missionHold;
+      const resting = reduced || canvasHold || (f >= M.land - T.arrive && f <= M.leave + 60);
       const speed = dt && Math.abs(f - lastFocus) < 650 ? Math.abs(f - lastFocus) / dt : 0;
       const rate = (f < 900 ? 7.2 : 7.8 + clamp(speed / 1800, 0, 1) * 0.8) * WING_SPEED_MULTIPLIER;
       let target = f < 900 ? 0.65 : 1;
       if (f > 2200 && f < 2500) target *= 1 - smoothstep(2200, 2500, f);
       if (f > 3000 && f < 3400) target *= smoothstep(3000, 3400, f);
-      if (f > M.land - 300 && f < M.land) target *= 1 - smoothstep(M.land - 300, M.land, f);
-      if (f > M.leave && f < M.leave + 400) target *= smoothstep(M.leave, M.leave + 400, f);
+      if (f > M.land - 300 && f < M.land) target *= 1 - smoothstep(M.land - 300, M.land - T.arrive, f);
+      if (f > M.leave && f < M.leave + 400) target *= smoothstep(M.leave + 60, M.leave + 400, f);
       if (f > 7850) target *= mix(1, HOVER.amplitude, smoothstep(7850, ARRIVAL_AT, f));
       amplitude = resting ? 0 : mix(amplitude, target, 1 - Math.exp(-dt / 0.13));
       const bob = terminal ? Math.sin((hoverElapsed / 1000) * 1.65) * 8 * smoothstep(0, 600, hoverElapsed) : 0;
@@ -324,7 +346,9 @@ export default function FlyingBird() {
       const X = terminal ? mix(G.arrivalX, G.settleX, slide) : pose.X;
       const Y = (terminal ? G.arrivalY : pose.Y) + drift * G.g;
       const S = pose.S;
-      bird.style.transform = `translate3d(${(X - window.scrollX).toFixed(2)}px,${(Y - scroll).toFixed(2)}px,0) scale(${S.toFixed(5)}) translate(${-ANCHOR.x}px,${-ANCHOR.y}px)`;
+      // on the paper the bird turns and flattens with it (identity in flight)
+      const lie = flat ? `rotate(${(PAPER.turn * flat).toFixed(3)}deg) ` : "";
+      bird.style.transform = `translate3d(${(X - window.scrollX).toFixed(2)}px,${(Y - scroll).toFixed(2)}px,0) ${lie}scale(${S.toFixed(5)},${(S * (1 - (1 - PAPER.squash) * flat)).toFixed(5)}) translate(${-ANCHOR.x}px,${-ANCHOR.y}px)`;
       bird.style.opacity = opacity.toFixed(4);
       bird.style.visibility = opacity < 0.001 ? "hidden" : "visible";
 
@@ -334,7 +358,7 @@ export default function FlyingBird() {
         tail.style.transform = `rotateZ(${deg.toFixed(3)}deg)`;
       }
       document.documentElement.style.setProperty("--painted-reveal", reveal.toFixed(4));
-      // the "Try one mission" photo shows the sketched kingfisher while the bird has turned into it
+      // the drawn bird on the boy's paper ("Try one mission") shows while the flying bird has become it
       document.documentElement.style.setProperty("--mission-reveal", missionFade.toFixed(4));
       lastFocus = f;
     };

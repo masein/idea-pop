@@ -23,8 +23,9 @@ import seeTheWorld from "../../../../public/landing/see-the-world.png";
 import learnCircle from "../../../../public/landing/learn.png";
 import solveAndMake from "../../../../public/landing/solve-and-make.png";
 // susan's picture (2026-10-15): a boy with his cardboard kingfisher train and sketches, 1670×942 WebP.
-// The "Try one mission" picture: the boy's paper has no bird on it until the flying bird lands and becomes a drawing there.
-import tryMissionBlank from "../../../../public/landing/try-mission-blank.webp";
+// "Try one mission": susan's AFTER photo, and the paper area of her BEFORE photo (no bird drawings), registered to it.
+import tryMissionAfter from "../../../../public/landing/try-mission-after.webp";
+import tryMissionBeforePaper from "../../../../public/landing/try-mission-before-paper.webp";
 import startFreeGirl from "../../../../public/landing/start-free-girl.png";
 // "Made by kids this month": the designer's photos of real makes, cropped to the tile with the make in the middle and
 // given one shared colour finish so the six read as a set. The page promises "photos show the project, not faces", so
@@ -499,29 +500,22 @@ export default async function LandingPage({ params }: Props) {
         {/* The picture opens the mission too: the same link, kept away from screen readers and the keyboard so they
             only meet the labelled button above. Motion: the river zooms out as it scrolls in, clipped to its box. */}
         <Link href={TRAIN_CHALLENGE} prefetch={false} aria-hidden="true" tabIndex={-1} className="block overflow-hidden" data-zoom-frame>
-          {/* The picture, and on its paper the flying bird as a pencil drawing: the bird flattens onto the paper and this
-              drawing (same pose, same place, FlyingBird.tsx positions it) takes over, stays while the paper scrolls, and
-              hands back when the bird lifts out. Multiplied into the paper and clipped to it, so it reads as drawn on it
-              and never covers the boy, his hands or the train. */}
+          {/* susan's AFTER photo is the scene: the boy's paper with the kingfisher drawing, its beak studies and arrows. On
+              top, the registered paper-only patch of her BEFORE photo hides that drawing until the flying bird lands
+              and hands over to it (FlyingBird.tsx sets --mission-reveal); then the patch is gone and the photo is whole.
+              Both are decoded up front so the handoff never waits for a picture. */}
           <div className="relative" data-scroll="zoom-out">
-            <Image unoptimized src={tryMissionBlank} data-bird-mission alt="" aria-hidden="true" className="w-full h-auto" sizes="100vw" />
-            <div
-              className="pointer-events-none absolute inset-0 overflow-hidden mix-blend-multiply [clip-path:polygon(18%_68.3%,82%_76.6%,88.5%_99.7%,3.9%_94.2%)]"
-              style={{ opacity: "var(--mission-reveal, 0)" }}
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element -- registered to the flying rig's 1659×1348 frame */}
-              <img
-                src="/landing/bird/bird-drawn.webp?v=bird-2026-10-20"
-                data-bird-drawn
-                loading="lazy"
-                decoding="async"
-                alt=""
-                width={1659}
-                height={1348}
-                className="absolute left-0 top-0 max-w-none origin-top-left"
-                style={{ width: 1659, height: 1348 }}
-              />
-            </div>
+            <Image unoptimized loading="eager" src={tryMissionAfter} data-bird-mission alt="" aria-hidden="true" className="w-full h-auto" sizes="100vw" />
+            <Image
+              unoptimized
+              loading="eager"
+              src={tryMissionBeforePaper}
+              alt=""
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0 w-full h-full"
+              sizes="100vw"
+              style={{ opacity: "calc(1 - var(--mission-reveal, 0))" }}
+            />
           </div>
         </Link>
       </section>

@@ -116,6 +116,25 @@ const FADES: ReadonlyArray<readonly [id: string, start: number, end: number]> = 
   ["marks3", 20400, 22800],
 ];
 
+// Phones (susan, 2026-10-20): a simpler portrait hero of its own, not the desktop scene shrunk. It keeps the landscape,
+// the window and the room around it, the main girl and the flying bird; the sketching boy, the group of kids and the deer
+// are never loaded, and the papers, graphite marks and question card stay off to keep it calm. The view is an 800-wide
+// slice of the artwork around the window, its bottom on the table; the girl is moved into that slice (lower left).
+// The entrance is short: close on the mountain, pull back to the window, then the girl, then the bird.
+const MOBILE_QUERY = "(max-width: 767px)";
+const MOBILE = {
+  skip: new Set(["deer", "boy", "kids", "paper1", "paper2", "paper3", "marks1", "marks2", "marks3", "question"]),
+  centreX: 1030,
+  width: 800,
+  bottom: 935,
+  girl: "translate(400px, 30px)",
+  // the flying bird's resting place in the hero box: fractions of its width and height, and its width as a share of the box
+  bird: { x: 0.66, y: 0.36, w: 0.42 },
+};
+type Timing = { hold: number; duration: number; camera: number; fades: ReadonlyArray<readonly [string, number, number]>; bird: readonly [number, number] };
+const DESKTOP_TIMING: Timing = { hold: HOLD_MS, duration: DURATION_MS, camera: CAMERA_MS, fades: FADES, bird: [11400, 13400] };
+const MOBILE_TIMING: Timing = { hold: 400, duration: 4000, camera: 2400, fades: [["girl", 2000, 3000]], bird: [2800, 3800] };
+
 // Back to front (spec section 3). `fade` layers start hidden; the rest arrive with the camera.
 const LAYERS: ReadonlyArray<{ id: string; file: string; z: number; fade?: boolean; className?: string }> = [
   { id: "classroom", file: "classroom-structure", z: 2 },
@@ -138,6 +157,9 @@ const LAYERS: ReadonlyArray<{ id: string; file: string; z: number; fade?: boolea
 ];
 
 export default function HeroScene() {
+  // Chosen once on arrival (a rotated phone keeps its composition; the layout still follows the box).
+  const [mobile, setMobile] = useState<boolean | null>(null);
+  useEffect(() => setMobile(window.matchMedia(MOBILE_QUERY).matches), []);
   const viewportRef = useRef<HTMLDivElement>(null);
   const worldRef = useRef<HTMLDivElement>(null);
   const sceneryRef = useRef<HTMLImageElement>(null);
@@ -149,6 +171,8 @@ export default function HeroScene() {
   preload(src("nature-damavand"), { as: "image", fetchPriority: "high" });
 
   useEffect(() => {
+    if (mobile === null) return;
+    const T = mobile ? MOBILE_TIMING : DESKTOP_TIMING;
     const viewport = viewportRef.current;
     const world = worldRef.current;
     const scenery = sceneryRef.current;
@@ -205,9 +229,9 @@ export default function HeroScene() {
       const vh = viewport.clientHeight;
       if (!vw || !vh) return false;
       const narrow = vw / vh < W / H;
-      const s = narrow ? vw / W : Math.min(vw / W, vh / H);
-      const hx = (vw - W * s) / 2;
-      const hy = narrow ? 0 : (vh - H * s) / 2;
+      const s = mobile ? vw / MOBILE.width : narrow ? vw / W : Math.min(vw / W, vh / H);
+      const hx = mobile ? vw / 2 - MOBILE.centreX * s : (vw - W * s) / 2;
+      const hy = mobile ? vh - MOBILE.bottom * s : narrow ? 0 : (vh - H * s) / 2;
       const photoScale = 0.61 + 2 / (PHOTO.h * s);
       const nearStart = Math.max(4, (2 * vw) / (886 * s), (2 * vh) / (690 * s));
       const travel = 1 - 1 / nearStart;
@@ -218,10 +242,15 @@ export default function HeroScene() {
       viewport.dataset.artHx = String(hx);
       viewport.dataset.artHy = String(hy);
       viewport.dataset.artS = String(s);
+      if (mobile) {
+        viewport.dataset.birdX = String(vw * MOBILE.bird.x);
+        viewport.dataset.birdY = String(Math.max(170, vh * MOBILE.bird.y));
+        viewport.dataset.birdS = String((vw * MOBILE.bird.w) / 1659);
+      }
       // the loading poster shows exactly the camera's first frame of the photo
       viewport.style.setProperty("--poster-k", `${photoScale * s * farStart}px`);
       viewport.dataset.poster = "";
-      set(floor, "height", `${narrow ? Math.max(103, vh / s - 839) : 103}px`);
+      set(floor, "height", `${narrow && !mobile ? Math.max(103, vh / s - 839) : 103}px`);
       lastQ = null;
       return true;
     };
@@ -229,8 +258,8 @@ export default function HeroScene() {
     // Draws every layer from one logical time t (ms after the hold).
     const draw = () => {
       if (!L) return;
-      const t = Math.max(0, Math.min(clock - HOLD_MS, DURATION_MS));
-      const q = clamp01(t / CAMERA_MS);
+      const t = Math.max(0, Math.min(clock - T.hold, T.duration));
+      const q = clamp01(t / T.camera);
       if (q !== lastQ) {
         // One camera (spec section 5): the near classroom and the far landscape share its distance and easing.
         const e = ease(q);
@@ -255,7 +284,7 @@ export default function HeroScene() {
         set(nature, "transform", `translate3d(${textureLeft}px, ${textureTop}px, 0) scale(${textureScale})`);
         lastQ = q;
       }
-      for (const [id, start, end] of FADES) {
+      for (const [id, start, end] of T.fades) {
         const el = layerRefs.current[id];
         if (!el) continue;
         const opacity = ease(clamp01((t - start) / (end - start)));
@@ -263,13 +292,13 @@ export default function HeroScene() {
         set(el, "visibility", opacity === 0 ? "hidden" : "visible");
       }
       showCopy(wide.matches ? ease(clamp01((t - 9000) / 2200)) : 1);
-      showNav(wide.matches ? ease(clamp01((t - CAMERA_MS) / 600)) : 1);
+      showNav(wide.matches ? ease(clamp01((t - T.camera) / 600)) : 1);
       // The bird is no longer a hero layer: the one flying rig (FlyingBird.tsx) appears on the old bird schedule.
-      viewport.dataset.birdIn = ease(clamp01((t - 11400) / 2000)).toFixed(4);
+      viewport.dataset.birdIn = ease(clamp01((t - T.bird[0]) / (T.bird[1] - T.bird[0]))).toFixed(4);
     };
 
     const finish = () => {
-      clock = HOLD_MS + DURATION_MS;
+      clock = T.hold + T.duration;
       playing = false;
       draw();
     };
@@ -291,8 +320,8 @@ export default function HeroScene() {
       }
       if (last !== null) {
         clock += now - last;
-        if (clock >= HOLD_MS + DURATION_MS) {
-          clock = HOLD_MS + DURATION_MS;
+        if (clock >= T.hold + T.duration) {
+          clock = T.hold + T.duration;
           playing = false;
         }
       }
@@ -372,8 +401,9 @@ export default function HeroScene() {
       document.removeEventListener("visibilitychange", onVisibility);
       reduced.removeEventListener("change", onReducedChange);
     };
-  }, []);
+  }, [mobile]);
 
+  const layers = mobile === null ? [] : LAYERS.filter((l) => !(mobile && MOBILE.skip.has(l.id)));
   return (
     <div ref={viewportRef} aria-hidden="true" className="hero-viewport" data-state={state}>
       {/* the opening frame (the reference photo region at normal centred cover) until every layer is ready */}
@@ -384,24 +414,29 @@ export default function HeroScene() {
         <div className="hero-scenery">
           <img ref={sceneryRef} className="hero-scenery-image" src={src("nature-damavand")} alt="" />
         </div>
-        {LAYERS.slice(0, 1).map((l) => (
+        {layers.slice(0, 1).map((l) => (
           <img key={l.id} className="hero-layer" style={{ zIndex: l.z }} src={src(l.file)} alt="" />
         ))}
         <div ref={floorRef} className="hero-floor" style={{ backgroundImage: `linear-gradient(165deg, #ead9bc44, #ad956666), url(/landing/hero-final/floor-texture.png?v=${REV})` }} />
-        {LAYERS.slice(1).map((l) => (
+        {layers.slice(1).map((l) => (
           <img
             key={l.id}
             ref={(el) => {
               layerRefs.current[l.id] = el;
             }}
             className={`hero-layer ${l.className ?? ""}`}
-            style={{ zIndex: l.z, ...(l.fade ? { opacity: 0, visibility: "hidden" } : null) }}
+            style={{
+              zIndex: l.z,
+              ...(l.fade ? { opacity: 0, visibility: "hidden" } : null),
+              ...(mobile && l.id === "girl" ? { transform: MOBILE.girl } : null),
+            }}
             src={src(l.file)}
             alt=""
           />
         ))}
       </div>
-      {state === "fallback" && <img className="hero-fallback" src={src("master-hero")} alt="" />}
+      {/* the finished hero; on phones the landscape alone, since the master artwork has the boy, the kids and the deer */}
+      {state === "fallback" && <img className="hero-fallback" src={src(mobile ? "nature-damavand" : "master-hero")} alt="" />}
     </div>
   );
 }

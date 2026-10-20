@@ -154,6 +154,7 @@ export default function FlyingBird() {
     type Point = { at: number; X: number; Y: number; S: number };
     let geo: {
       g: number;
+      phone: boolean;
       lead: number;
       maxScroll: number;
       native: number[];
@@ -204,13 +205,23 @@ export default function FlyingBird() {
       native.push(NATIVE_HEIGHT);
       doc.push(Math.max(document.documentElement.scrollHeight, (doc[doc.length - 1] ?? 0) + 1));
       if (native.length < 2) return false;
-      geo = { g, lead: Math.min(vh * 0.38, 300 * g), maxScroll: Math.max(0, document.documentElement.scrollHeight - vh), native, doc, route: [], mission: { land: 4400, leave: 4700 }, arrivalY: 0, arrivalX: 0, settleX: 0 };
+      // Phones (susan, 2026-10-20): the route scaled to a 390px screen kept the bird at the very top and tiny, so there it
+      // flies a third of the way down the screen, about twice as big, and always fully on screen.
+      const phone = vw < 768;
+      geo = { g, phone, lead: phone ? vh * 0.3 : Math.min(vh * 0.38, 300 * g), maxScroll: Math.max(0, document.documentElement.scrollHeight - vh), native, doc, route: [], mission: { land: 4400, leave: 4700 }, arrivalY: 0, arrivalX: 0, settleX: 0 };
 
       // the hero pose on the finished hero artwork
       const heroVp = document.querySelector<HTMLElement>(".hero-viewport");
       const heroPose = (() => {
         if (!heroVp?.dataset.artS) return null;
         const r = heroVp.getBoundingClientRect();
+        // phones: the simpler mobile hero names the bird's place and size itself (upper part, clear of nav and copy)
+        if (heroVp.dataset.birdX)
+          return {
+            X: r.left + window.scrollX + Number(heroVp.dataset.birdX),
+            Y: r.top + window.scrollY + Number(heroVp.dataset.birdY),
+            S: Number(heroVp.dataset.birdS),
+          };
         const s = Number(heroVp.dataset.artS);
         const left = r.left + window.scrollX + Number(heroVp.dataset.artHx);
         const top = r.top + window.scrollY + Number(heroVp.dataset.artHy);
@@ -247,7 +258,7 @@ export default function FlyingBird() {
         if (p.at >= 2450 && p.at <= 3000 && canvasPose) return { at: p.at, ...canvasPose };
         if ("mission" in p && missionPose) return { at: p.mission === "land" ? missionPose.land - MISSION_T.arrive : missionPose.leave + MISSION_T.deepen, X: missionPose.X, Y: missionPose.Y, S: missionPose.S };
         if ("mission" in p) return { at: p.at, X: 180 * g, Y: toDoc(p.at), S: 0.17 * g };
-        return { at: p.at, X: p.x * g, Y: toDoc(p.y), S: p.scale * g };
+        return { at: p.at, X: p.x * g, Y: toDoc(p.y), S: p.scale * g * (phone ? 1.8 : 1) };
       });
       // The ending. On the real page the final lime is not on screen at the bottom (the CTA panel straddles the
       // footer), so the bird hovers in the open green beside the "Start free" button instead of on top of it: it
@@ -343,7 +354,10 @@ export default function FlyingBird() {
       const bob = terminal ? Math.sin((hoverElapsed / 1000) * 1.65) * 8 * smoothstep(0, 600, hoverElapsed) : 0;
       const drift = resting ? 0 : (Math.sin((now / 1000) * 1.45) * 3 + Math.sin((now / 1000) * 2.13 + 0.8) + bob) * amplitude;
 
-      const X = terminal ? mix(G.arrivalX, G.settleX, slide) : pose.X;
+      const flying = terminal ? mix(G.arrivalX, G.settleX, slide) : pose.X;
+      const X = G.phone
+        ? clamp(flying, ANCHOR.x * pose.S + 4, window.innerWidth - (1659 - ANCHOR.x) * pose.S - 4)
+        : flying;
       const Y = (terminal ? G.arrivalY : pose.Y) + drift * G.g;
       const S = pose.S;
       // on the paper the bird turns and flattens with it (identity in flight)

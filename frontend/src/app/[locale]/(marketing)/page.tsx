@@ -186,7 +186,8 @@ export default async function LandingPage({ params }: Props) {
             Wide screens (xl): the copy sits on the empty pale-green wall at the left of the artwork (centred, it would cover
             the question paper above the bird). Below that the wall is too small for the copy, so it goes above. The nav floats over the photo. */}
         <div className="relative flex w-full flex-col xl:block xl:aspect-[1670/942]">
-          <div className="relative order-2 aspect-[1670/942] w-full xl:absolute xl:inset-0 xl:aspect-auto">
+          {/* Phones: the simpler portrait hero (HeroScene.tsx) comes first, under the floating nav, with the copy below it. */}
+          <div className="relative order-2 aspect-[1670/942] w-full max-md:order-1 max-md:aspect-auto max-md:h-[min(117vw,55svh)] xl:absolute xl:inset-0 xl:aspect-auto">
             <HeroScene />
           </div>
 
@@ -196,7 +197,7 @@ export default async function LandingPage({ params }: Props) {
               xl and up: exactly on the plain wall (right of the lamp and vines, above the shelves and the girl), and it
               fades in with the girl (HeroScene.tsx drives [data-hero-copy]). */}
           <div
-            className="relative z-10 order-1 pt-28 pb-8 px-[clamp(1rem,-1rem+8vw,6rem)] text-center xl:absolute xl:left-[12.4%] xl:top-[16%] xl:w-[30%] xl:p-0 xl:text-start"
+            className="relative z-10 order-1 pt-28 pb-8 max-md:order-2 max-md:pt-6 px-[clamp(1rem,-1rem+8vw,6rem)] text-center xl:absolute xl:left-[12.4%] xl:top-[16%] xl:w-[30%] xl:p-0 xl:text-start"
             dir={locale === "fa" ? "rtl" : "ltr"}
             data-scroll="hero-copy"
             data-hero-copy
@@ -512,6 +513,8 @@ export default async function LandingPage({ params }: Props) {
               <img
                 src="/landing/bird/bird-drawn.webp?v=bird-2026-10-20"
                 data-bird-drawn
+                loading="lazy"
+                decoding="async"
                 alt=""
                 width={1659}
                 height={1348}

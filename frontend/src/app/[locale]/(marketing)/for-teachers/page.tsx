@@ -64,11 +64,12 @@ export default async function ForTeachersPage({ params }: Props) {
   ];
   const {
     props: { srcSet: classroomPhoneSet },
-  } = getImageProps({ src: classroomPhone, alt: "", sizes: "calc(100vw - 32px)" });
+  } = getImageProps({ src: classroomPhone, alt: "", quality: 85, sizes: "calc(100vw - 32px)" });
   const { props: classroomWide } = getImageProps({
     src: classroom,
     alt: "",
     priority: true,
+    quality: 85,
     sizes: "(min-width: 1215px) 1183px, calc(100vw - 32px)",
   });
 

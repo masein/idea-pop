@@ -196,16 +196,18 @@ export default async function LandingPage({ params }: Props) {
               (clamp() from a 375px mobile floor to the 1440px design size).
               Below xl: in the flow above the picture, 7rem down (clear of the nav).
               xl and up: exactly on the plain wall (right of the lamp and vines, above the shelves and the girl), and it
-              fades in with the girl (HeroScene.tsx drives [data-hero-copy]). */}
+              fades in with the girl (HeroScene.tsx drives [data-hero-copy]).
+              Persian (susan, 2026-10-20): its lines end on the right, so on the wall the box is narrower to keep them off
+              the window's post, and on phones it keeps a wider margin from the screen edges. */}
           <div
-            className="relative z-10 order-1 pt-28 pb-8 max-md:order-2 max-md:pt-6 px-[clamp(1rem,-1rem+8vw,6rem)] text-center xl:absolute xl:left-[12.4%] xl:top-[16%] xl:w-[30%] xl:p-0 xl:text-start"
+            className={`relative z-10 order-1 pt-28 pb-8 max-md:order-2 max-md:pt-6 px-[clamp(1rem,-1rem+8vw,6rem)] text-center xl:absolute xl:left-[12.4%] xl:top-[16%] xl:p-0 xl:text-start ${locale === "fa" ? "max-md:px-7 xl:w-[27%]" : "xl:w-[30%]"}`}
             dir={locale === "fa" ? "rtl" : "ltr"}
             data-scroll="hero-copy"
             data-hero-copy
           >
             {/* Cherry Bomb One ships a single 400 weight — the spec's Regular.
                 Motion: the lines rise in one after another while the scene settles. */}
-            <h1 className={`[font-family:var(--font-cherry)] font-normal leading-tight text-[clamp(2rem,1.16rem+4.2vw,4rem)] ${locale === "fa" ? "xl:text-[clamp(1.625rem,2.3vw,3rem)]" : "xl:text-[clamp(2.5rem,3.6vw,4.75rem)] xl:leading-[1.1] xl:whitespace-nowrap"}`} data-intro="rise" style={motionDelay(350)}>
+            <h1 className={`[font-family:var(--font-cherry)] font-normal leading-tight text-[clamp(2rem,1.16rem+4.2vw,4rem)] ${locale === "fa" ? "xl:text-[clamp(1.5rem,2vw,2.75rem)] xl:whitespace-nowrap" : "xl:text-[clamp(2.5rem,3.6vw,4.75rem)] xl:leading-[1.1] xl:whitespace-nowrap"}`} data-intro="rise" style={motionDelay(350)}>
               <span className="text-[#194D3D]">
                 {t("hero.headline_1_pre")}
                 <span className="text-[#146047]">

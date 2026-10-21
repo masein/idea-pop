@@ -4,186 +4,42 @@
    renderer textures them straight from these elements */
 import { useEffect, useRef } from "react";
 
-/* The one flying bird of the landing page (susan's "complete bird motion implementation specification", revision
-   "quarter-speed bilateral wings, fixed heading, final left slide and looping hover", IDEA_POP_Motion_Developer_Handoff).
-   It starts in the hero, gets smaller past the year and creative-cycle sections, grows into the girl's painting and
-   crossfades into the painted bird, leaves again, keeps to the left through curriculum and the mission, crosses right
-   before Made by kids, stays right through the lime sections, returns left above the footer, slides a little farther
-   left and keeps hovering. Scroll drives the route; the wings flap in time.
+/* The one flying bird of the landing page. Since 2026-10-21 its motion is susan's complete bird animation package
+   ("idea-pop-complete-animation", public/ideapop-motion): wing-flight.js (the articulated wings, unchanged),
+   motion-core.js (route, timing and paper-handoff math) and motion.js (the page controller). The controller measures
+   this page itself: the hero artwork ([data-art-*], or the phone hero's [data-bird-*]), the girl's painting
+   ([data-bird-canvas], --painted-reveal), and the boy's paper ([data-bird-mission], --mission-reveal), which it holds
+   briefly on screen while the bird shrinks and dissolves into the drawing. This component only renders the bird rig,
+   loads the three scripts in order and mounts / destroys the controller. */
 
-   The reference is laid out on a captured 1920×8988 page. Here the native route milestones are mapped onto the real
-   sections (section 11 of the spec): each section's top is measured in the document and native Y is converted
-   piecewise-linearly between those landmarks. The hero pose is placed on the finished hero artwork and the canvas
-   pose on the displayed painting image, so the bird lands exactly on the art at every breakpoint. The articulated wing
-   renderer is the handoff's own wing-flight.js, unchanged. */
-
+const BASE = "/ideapop-motion/";
 const BIRD = "/landing/bird/";
-const REV = "bird-2026-10-15c";
-const ANCHOR = { x: 738, y: 644 };
-const WING_SPEED_MULTIPLIER = 0.25;
-const ARRIVAL_AT = 8120;
-const HOVER = { x: 140, slideMs: 1200, amplitude: 0.85 };
-// how far right of the final "Start free" button the bird settles (native px; it arrives 70 further right)
-const HOVER_GAP = 180;
+const REV = "motion-2026-10-21";
+const SCRIPTS = ["wing-flight.js", "motion-core.js", "motion.js"];
 
-// Effective route (spec section 5): focus `at`, native X/Y, sprite scale. Heading and pitch are always zero.
-const ROUTE = [
-  { at: 387, x: 1418, y: 387, scale: 0.369 },
-  { at: 1450, x: 1780, y: 1450, scale: 0.17 },
-  { at: 1990, x: 1680, y: 1990, scale: 0.2 },
-  { at: 2450, x: 815, y: 2595, scale: 0.7 },
-  { at: 2600, x: 815, y: 2595, scale: 0.7 },
-  { at: 3000, x: 815, y: 2595, scale: 0.7 },
-  { at: 3150, x: 350, y: 3140, scale: 0.3 },
-  { at: 3360, x: 180, y: 3360, scale: 0.18 },
-  { at: 3880, x: 160, y: 3880, scale: 0.17 },
-  // susan, 2026-10-20: from here the bird lands into the kingfisher drawn on the boy's paper ("Try one mission"), holds
-  // there as that drawing, and takes off again for Made by kids. Poses and focus windows are measured from the photo
-  // (DRAWN, missionPose below); these rows are placeholders in route order.
-  { at: 4400, x: 0, y: 0, scale: 0, mission: "land" },
-  { at: 4700, x: 0, y: 0, scale: 0, mission: "leave" },
-  { at: 5217, x: 1740, y: 5217, scale: 0.17 },
-  { at: 5950, x: 1750, y: 5950, scale: 0.17 },
-  { at: 6500, x: 1740, y: 6500, scale: 0.16 },
-  { at: 7050, x: 1760, y: 7050, scale: 0.16 },
-  { at: 7550, x: 1740, y: 7550, scale: 0.16 },
-  { at: 7780, x: 1740, y: 7780, scale: 0.16 },
-  { at: ARRIVAL_AT, x: 210, y: ARRIVAL_AT, scale: 0.17 },
-];
-
-// Where each real section starts on the captured reference page (native Y), and how to find it in the real DOM.
-const LANDMARKS: ReadonlyArray<readonly [nativeY: number, selector: string]> = [
-  [0, '[data-scroll-timeline="hero"]'],
-  [1083, 'section[aria-label="what a year looks like"]'],
-  [1674, 'section[aria-label="how it works"]'],
-  [2217, 'section[aria-label="paint together"]'],
-  [3237, 'section[aria-label="curriculum"]'],
-  [4190, 'section[aria-label="try a mission"]'],
-  [5220, 'section[aria-label="made by kids"]'],
-  [5602, 'section[aria-label="experts"]'],
-  [6007, 'section[aria-label="pricing"]'],
-  [6750, 'section[aria-label="questions parents ask"]'],
-  [7866, 'section[aria-label="start for free"]'],
-  [8254, "footer"],
-];
-const NATIVE_HEIGHT = 8988;
-
-// The hero pose on the 1670×942 hero artwork: the reference hero is that artwork stretched to 1920×1083 (×1.14970),
-// lowered 40 artwork px as susan asked for the bird and papers.
-const HERO_ART = { x: 1418 / 1.1497, y: 387 / 1.1497 + 40, scale: 0.369 / 1.1497 };
-// The canvas docking pose on the 1720×914 painting image (the reference shows it at 1920×1020, ×1.11628).
-// The landing on the boy's paper (susan, 2026-10-20). Her AFTER photo (the kingfisher drawn on the paper, with its beak
-// studies and arrows) is the scene; a registered patch of her BEFORE photo covers only the paper's drawing area until the
-// bird hands over. Landmarks of the drawn kingfisher, in normalised coordinates of the 1670x942 photo, and the same points
-// on the flying rig's 1659x1348 frame. The drawing faces the boy, so to us it lies upside down: the rig's pose is fitted
-// as if turned over (mirrored top to bottom, a little flattened by the paper) onto beak, eye and body, which places it; it
-// never shows that turn (susan, 2026-10-20: it fades out in its normal flight pose and the photo's drawing appears).
-const MISSION_IMG = { w: 1670, h: 942 };
-const DRAWN = {
-  beak: [905 / 1670, 875 / 942],
-  eye: [1102 / 1670, 887 / 942],
-  body: [1205 / 1670, 830 / 942],
-  tail: [1332 / 1670, 750 / 942],
-} as const;
-const RIG = { beak: [188, 371], eye: [532, 497], body: [738, 644] } as const;
-const PAPER_FLIP = -0.8;
-// The arrival runs from the last route row before the section to the landing; its phases are fractions of that window:
-// approach to 45%, slow down to a gentle wingbeat by 75% (where the route reaches the paper). The paper entry (the bird
-// fading out while the drawing fades in, briefly: ENTRY_VH of a screen of scrolling) starts ENTRY_DELAY_VH of a screen
-// later than that (susan, 2026-10-20: more time to see it flying by the boy). The departure marker is unchanged, so the
-// delay gives way where needed to leave the finished drawing at least HOLD_VH of a screen before the bird takes off.
-const ARRIVAL_FROM = 3880;
-const ARRIVE = { approach: 0.45, aligned: 0.75, wingbeat: 0.4 };
-const ENTRY_DELAY_VH = 0.25;
-const ENTRY_VH = 0.06;
-const HOLD_VH = 0.06;
-// Taking off again at the section's departure marker (focus units after it): the drawing hands back and the bird fades in
-// over 100, in its normal flight pose, stays put for 120, and its wings come back by 400.
-const DEPART = { fade: 100, go: 120, wings: 400 } as const;
-const CANVAS_ART = { x: 815 / 1.11628, y: (2595 - 2217) / 1.11628, scale: 0.7 / 1.11628 };
-const PAINT = { w: 1720, h: 914 };
-
-const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v));
-
-// The rig fitted onto the drawn kingfisher on a photo shown in rect (document px): least-squares rotation and scale of the
-// mirrored rig onto beak, eye and body, and where the rig's anchor goes.
-function fitDrawn(rect: { left: number; top: number; width: number; height: number }) {
-  const keys = ["beak", "eye", "body"] as const;
-  const P = keys.map((k) => [RIG[k][0] - ANCHOR.x, (RIG[k][1] - ANCHOR.y) * PAPER_FLIP]);
-  const Q = keys.map((k) => [rect.left + DRAWN[k][0] * rect.width, rect.top + DRAWN[k][1] * rect.height]);
-  const pc = [0, 1].map((i) => P.reduce((sum, v) => sum + v[i], 0) / P.length);
-  const qc = [0, 1].map((i) => Q.reduce((sum, v) => sum + v[i], 0) / Q.length);
-  let a = 0;
-  let b = 0;
-  let n = 0;
-  P.forEach((v, i) => {
-    const px = v[0] - pc[0];
-    const py = v[1] - pc[1];
-    const qx = Q[i][0] - qc[0];
-    const qy = Q[i][1] - qc[1];
-    a += px * qx + py * qy;
-    b += px * qy - py * qx;
-    n += px * px + py * py;
-  });
-  const angle = Math.atan2(b, a);
-  const S = Math.hypot(a, b) / n;
-  const c = Math.cos(angle);
-  const sn = Math.sin(angle);
-  return { X: qc[0] - S * (c * pc[0] - sn * pc[1]), Y: qc[1] - S * (sn * pc[0] + c * pc[1]), S, angle };
-}
-const mix = (a: number, b: number, t: number) => a + (b - a) * t;
-const smoothstep = (a: number, b: number, v: number) => {
-  const t = clamp((v - a) / (b - a), 0, 1);
-  return t * t * (3 - 2 * t);
-};
-
-function paintRevealFor(f: number) {
-  if (f <= 2350 || f >= 3300) return 0;
-  if (f < 2500) return smoothstep(2350, 2500, f);
-  if (f <= 3000) return 1;
-  return 1 - smoothstep(3000, 3300, f);
-}
-
-type Wings = {
-  ready: Promise<unknown>;
-  update: (o: { timeSeconds: number; amplitude: number; resting: boolean; pixelScale: number; flapRateHz: number }) => {
-    phase?: number;
-  };
-  destroy: () => void;
-};
+type Controller = { destroy: () => void };
 declare global {
   interface Window {
-    IdeaPopWingFlight?: new (host: HTMLElement) => Wings;
+    IdeaPopMotion?: { mount: (host: HTMLElement) => Controller };
   }
 }
 
-// Loads the handoff's wing renderer once (a plain script that defines window.IdeaPopWingFlight).
-let wingScript: Promise<void> | null = null;
-function loadWingScript() {
-  if (window.IdeaPopWingFlight) return Promise.resolve();
-  wingScript ??= new Promise<void>((resolve, reject) => {
-    const s = document.createElement("script");
-    s.src = `${BIRD}wing-flight.js?v=${REV}`;
-    s.async = true;
-    s.onload = () => resolve();
-    s.onerror = () => reject(new Error("wing renderer did not load"));
-    document.head.appendChild(s);
-  });
-  return wingScript;
-}
-
-// The displayed rectangle of an object-fit: cover image (scale and top-left of the full picture), in document px.
-function coverRect(img: HTMLImageElement, w: number, h: number) {
-  const r = img.getBoundingClientRect();
-  const k = Math.max(r.width / w, r.height / h);
-  const [px, py] = getComputedStyle(img)
-    .objectPosition.split(" ")
-    .map((v) => (v.endsWith("%") ? parseFloat(v) / 100 : 0.5));
-  return {
-    k,
-    left: r.left + window.scrollX + (r.width - w * k) * (px ?? 0.5),
-    top: r.top + window.scrollY + (r.height - h * k) * (py ?? 0.5),
-  };
+// Each script once per page load, in order (motion.js needs motion-core.js; wing-flight.js must exist at mount).
+const loaded = new Map<string, Promise<void>>();
+function loadScript(name: string) {
+  let p = loaded.get(name);
+  if (!p) {
+    p = new Promise<void>((resolve, reject) => {
+      const s = document.createElement("script");
+      s.src = `${BASE}${name}?v=${REV}`;
+      s.async = false;
+      s.onload = () => resolve();
+      s.onerror = () => reject(new Error(`${name} did not load`));
+      document.head.appendChild(s);
+    });
+    loaded.set(name, p);
+  }
+  return p;
 }
 
 export default function FlyingBird() {
@@ -192,288 +48,27 @@ export default function FlyingBird() {
   useEffect(() => {
     const bird = birdRef.current;
     if (!bird) return;
-    const tail = bird.querySelector<HTMLElement>(".tail");
-    const reducedQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
-    let reduced = reducedQuery.matches;
-
-    type Point = { at: number; X: number; Y: number; S: number };
-    let geo: {
-      g: number;
-      phone: boolean;
-      lead: number;
-      maxScroll: number;
-      native: number[];
-      doc: number[];
-      route: Point[];
-      mission: { land: number; leave: number; arrive: number; enter: number; entered: number; angle: number };
-      arrivalY: number;
-      arrivalX: number;
-      settleX: number;
-    } | null = null;
-    let needsMeasure = true;
-    let frame = 0;
-    let lastTime = 0;
-    let lastFocus = ROUTE[0].at;
-    let amplitude = 0.65;
-    let hoverStartedAt: number | null = null;
-    let wings: Wings | null = null;
+    let controller: Controller | null = null;
     let cancelled = false;
-
-    // native page Y → document Y and back, piecewise-linear between the measured section tops
-    const toDoc = (y: number) => {
-      const { native, doc } = geo!;
-      let i = 0;
-      while (i < native.length - 2 && y > native[i + 1]) i++;
-      return mix(doc[i], doc[i + 1], (y - native[i]) / (native[i + 1] - native[i]));
-    };
-    const toNative = (y: number) => {
-      const { native, doc } = geo!;
-      let i = 0;
-      while (i < doc.length - 2 && y > doc[i + 1]) i++;
-      return mix(native[i], native[i + 1], (y - doc[i]) / Math.max(1e-6, doc[i + 1] - doc[i]));
-    };
-
-    const measure = () => {
-      const vw = document.documentElement.clientWidth;
-      const vh = window.innerHeight;
-      const g = vw / 1920;
-      const native: number[] = [];
-      const doc: number[] = [];
-      for (const [n, sel] of LANDMARKS) {
-        const el = document.querySelector<HTMLElement>(sel);
-        if (!el) continue;
-        const top = el.getBoundingClientRect().top + window.scrollY;
-        if (doc.length && top <= doc[doc.length - 1]) continue; // keep the map monotonic
-        native.push(n);
-        doc.push(top);
-      }
-      native.push(NATIVE_HEIGHT);
-      doc.push(Math.max(document.documentElement.scrollHeight, (doc[doc.length - 1] ?? 0) + 1));
-      if (native.length < 2) return false;
-      // Phones (susan, 2026-10-20): the route scaled to a 390px screen kept the bird at the very top and tiny, so there it
-      // flies a third of the way down the screen, about twice as big, and always fully on screen.
-      const phone = vw < 768;
-      geo = { g, phone, lead: phone ? vh * 0.3 : Math.min(vh * 0.38, 300 * g), maxScroll: Math.max(0, document.documentElement.scrollHeight - vh), native, doc, route: [], mission: { land: 4400, leave: 4700, arrive: 4270, enter: 4400, entered: 4480, angle: 0 }, arrivalY: 0, arrivalX: 0, settleX: 0 };
-
-      // the hero pose on the finished hero artwork
-      const heroVp = document.querySelector<HTMLElement>(".hero-viewport");
-      const heroPose = (() => {
-        if (!heroVp?.dataset.artS) return null;
-        const r = heroVp.getBoundingClientRect();
-        // phones: the simpler mobile hero names the bird's place and size itself (upper part, clear of nav and copy)
-        if (heroVp.dataset.birdX)
-          return {
-            X: r.left + window.scrollX + Number(heroVp.dataset.birdX),
-            Y: r.top + window.scrollY + Number(heroVp.dataset.birdY),
-            S: Number(heroVp.dataset.birdS),
-          };
-        const s = Number(heroVp.dataset.artS);
-        const left = r.left + window.scrollX + Number(heroVp.dataset.artHx);
-        const top = r.top + window.scrollY + Number(heroVp.dataset.artHy);
-        return { X: left + HERO_ART.x * s, Y: top + HERO_ART.y * s, S: HERO_ART.scale * s };
-      })();
-      // The landing pose on the displayed photo, from its rendered rectangle (its frame: the photo itself is still mid
-      // zoom-out until it scrolls in), and the focus windows: landed when the drawing sits at 60% of the screen, taking
-      // off when it reaches 25%.
-      const missionImg = document.querySelector<HTMLImageElement>("[data-bird-mission]");
-      const missionPose = (() => {
-        if (!missionImg) return null;
-        const r = (missionImg.closest("[data-zoom-frame]") ?? missionImg).getBoundingClientRect();
-        const rect = {
-          left: r.left + window.scrollX,
-          top: r.top + window.scrollY,
-          width: r.width,
-          height: (r.width * MISSION_IMG.h) / MISSION_IMG.w,
-        };
-        const fit = fitDrawn(rect);
-        const Y = rect.top + DRAWN.body[1] * rect.height;
-        const land = clamp(toNative(Y - vh * 0.6 + geo!.lead), ARRIVAL_FROM + 300, 4900);
-        const leave = clamp(toNative(Y - vh * 0.25 + geo!.lead), land + 40, 5217 - DEPART.go - 200);
-        const arrive = ARRIVAL_FROM + ARRIVE.aligned * (land - ARRIVAL_FROM);
-        const arriveDoc = toDoc(arrive);
-        const latest = toDoc(leave) - vh * HOLD_VH;
-        const enterDoc = Math.max(arriveDoc, Math.min(arriveDoc + vh * ENTRY_DELAY_VH, latest - vh * ENTRY_VH));
-        const enter = toNative(enterDoc);
-        const entered = Math.max(enter + 1, Math.min(toNative(enterDoc + vh * ENTRY_VH), leave - 1));
-        return { ...fit, land, leave, arrive, enter, entered };
-      })();
-      geo.mission = missionPose
-        ? { land: missionPose.land, leave: missionPose.leave, arrive: missionPose.arrive, enter: missionPose.enter, entered: missionPose.entered, angle: missionPose.angle }
-        : { land: 4400, leave: 4700, arrive: 4270, enter: 4400, entered: 4480, angle: 0 };
-      // the canvas docking pose on the displayed painting image
-      const paintImg = document.querySelector<HTMLImageElement>("[data-bird-canvas]");
-      const canvasPose = (() => {
-        if (!paintImg) return null;
-        const c = coverRect(paintImg, PAINT.w, PAINT.h);
-        return { X: c.left + CANVAS_ART.x * c.k, Y: c.top + CANVAS_ART.y * c.k, S: CANVAS_ART.scale * c.k };
-      })();
-      geo.route = ROUTE.map((p) => {
-        if (p.at === 387 && heroPose) return { at: p.at, ...heroPose };
-        if (p.at >= 2450 && p.at <= 3000 && canvasPose) return { at: p.at, ...canvasPose };
-        if ("mission" in p && missionPose)
-          return { at: p.mission === "land" ? missionPose.arrive : missionPose.leave + DEPART.go, X: missionPose.X, Y: missionPose.Y, S: missionPose.S };
-        if ("mission" in p) return { at: p.at, X: 180 * g, Y: toDoc(p.at), S: 0.17 * g };
-        return { at: p.at, X: p.x * g, Y: toDoc(p.y), S: p.scale * g * (phone ? 1.8 : 1) };
-      });
-      // The ending. On the real page the final lime is not on screen at the bottom (the CTA panel straddles the
-      // footer), so the bird hovers in the open green beside the "Start free" button instead of on top of it: it
-      // arrives 250 native px right of the button and slides the spec's 70 native px left, at the button's height.
-      const cta = document.querySelector<HTMLElement>('section[aria-label="start for free"] a');
-      if (cta) {
-        const c = cta.getBoundingClientRect();
-        // keep the hover on screen at the bottom of the page (on phones the button scrolls away above the footer)
-        geo.arrivalY = clamp(c.top + window.scrollY + c.height / 2, geo.maxScroll + vh * 0.2, geo.maxScroll + vh * 0.8);
-        geo.arrivalX = c.right + window.scrollX + (HOVER_GAP + 70) * g;
-        geo.settleX = c.right + window.scrollX + HOVER_GAP * g;
-      } else {
-        geo.arrivalY = toDoc(ARRIVAL_AT);
-        geo.arrivalX = ROUTE[ROUTE.length - 1].x * g;
-        geo.settleX = HOVER.x * g;
-      }
-      geo.route[geo.route.length - 1] = { ...geo.route[geo.route.length - 1], X: geo.arrivalX, Y: geo.arrivalY };
-      needsMeasure = false;
-      return true;
-    };
-
-    const poseAt = (focus: number) => {
-      const r = geo!.route;
-      if (focus <= r[0].at) return r[0];
-      if (focus >= r[r.length - 1].at) return r[r.length - 1];
-      let i = 0;
-      while (r[i + 1].at < focus) i++;
-      const a = r[i];
-      const b = r[i + 1];
-      const t = smoothstep(a.at, b.at, focus);
-      const vt = focus >= 3360 && b.at !== geo!.mission.arrive ? clamp((focus - a.at) / (b.at - a.at), 0, 1) : t;
-      return { at: focus, X: mix(a.X, b.X, t), Y: mix(a.Y, b.Y, vt), S: mix(a.S, b.S, t) };
-    };
-
-    const render = (now: number) => {
-      if (needsMeasure && !measure()) return;
-      const G = geo!;
-      const dt = lastTime ? clamp((now - lastTime) / 1000, 0, 0.05) : 0;
-      lastTime = now;
-      const scroll = window.scrollY;
-
-      // scroll focus in native units, with the spec's intro blend and final-pixel correction
-      const cameraFocus = toNative(scroll + G.lead);
-      const introDistance = Math.min(240, Math.max(80, window.innerHeight * 0.2));
-      const raw = mix(ROUTE[0].at, cameraFocus, smoothstep(0, introDistance, scroll));
-      const finalFocus = toNative(G.maxScroll + G.lead);
-      const correctionStart = Math.max(G.maxScroll * 0.8, Math.min(G.maxScroll - 1, toDoc(3300) - G.lead));
-      const correction =
-        G.maxScroll > 0 ? smoothstep(correctionStart, G.maxScroll, scroll) * Math.max(0, ARRIVAL_AT - finalFocus) : 0;
-      const f = G.maxScroll > 0 && scroll >= G.maxScroll - 1 ? Math.max(ARRIVAL_AT, raw + correction) : raw + correction;
-
-      const pose = poseAt(f);
-      const canvasHold = f >= 2500 && f <= 3000;
-      const M = G.mission;
-      // Arrival progress through the window, and how far the drawing has taken over (the BEFORE patch fading, the bird
-      // fading out in its flight pose); taking off reverses it. The paper pose only applies while the bird is invisible.
-      const P = clamp((f - ARRIVAL_FROM) / (M.land - ARRIVAL_FROM), 0, 1);
-      const away = f - M.leave;
-      const departing = away > 0;
-      const missionFade = departing ? 1 - smoothstep(0, DEPART.fade, away) : smoothstep(M.enter, M.entered, f);
-      const turn = !reduced && missionFade >= 1 ? 1 : 0;
-      const reveal = paintRevealFor(f);
-      // the bird first appears with the hero animation's bird; past the hero it is always on its route
-      const heroVp = document.querySelector<HTMLElement>(".hero-viewport");
-      const heroIn = Math.max(Number(heroVp?.dataset.birdIn ?? 1), smoothstep(400, 900, f));
-      const opacity = (1 - missionFade) * (canvasHold ? 0 : f > 2350 && f < 2500 ? 1 - reveal : f > 3000 && f < 3300 ? 1 - reveal : 1) * heroIn;
-
-      const terminal = f >= ARRIVAL_AT;
-      if (terminal && hoverStartedAt === null) hoverStartedAt = now;
-      if (!terminal) hoverStartedAt = null;
-      const hoverElapsed = terminal ? now - hoverStartedAt! : 0;
-      const slide = terminal ? (reduced ? 1 : smoothstep(0, HOVER.slideMs, hoverElapsed)) : 0;
-
-      const resting = reduced || canvasHold || (departing ? away < DEPART.fade : f >= M.entered);
-      const speed = dt && Math.abs(f - lastFocus) < 650 ? Math.abs(f - lastFocus) / dt : 0;
-      const rate = (f < 900 ? 7.2 : 7.8 + clamp(speed / 1800, 0, 1) * 0.8) * WING_SPEED_MULTIPLIER;
-      let target = f < 900 ? 0.65 : 1;
-      if (f > 2200 && f < 2500) target *= 1 - smoothstep(2200, 2500, f);
-      if (f > 3000 && f < 3400) target *= smoothstep(3000, 3400, f);
-      if (!departing && P > 0) target *= mix(1, ARRIVE.wingbeat, smoothstep(ARRIVE.approach, ARRIVE.aligned, P));
-      if (departing && away < DEPART.wings) target *= smoothstep(DEPART.fade, DEPART.wings, away);
-      if (f > 7850) target *= mix(1, HOVER.amplitude, smoothstep(7850, ARRIVAL_AT, f));
-      amplitude = resting ? 0 : mix(amplitude, target, 1 - Math.exp(-dt / 0.13));
-      const bob = terminal ? Math.sin((hoverElapsed / 1000) * 1.65) * 8 * smoothstep(0, 600, hoverElapsed) : 0;
-      const drift = resting ? 0 : (Math.sin((now / 1000) * 1.45) * 3 + Math.sin((now / 1000) * 2.13 + 0.8) + bob) * amplitude;
-
-      const flying = terminal ? mix(G.arrivalX, G.settleX, slide) : pose.X;
-      // phones keep the bird on screen, except on its way into and out of the drawing, where the pose is the photo's
-      const X =
-        G.phone && !(f > ARRIVAL_FROM && away < DEPART.go + 200)
-          ? clamp(flying, ANCHOR.x * pose.S + 4, window.innerWidth - (1659 - ANCHOR.x) * pose.S - 4)
-          : flying;
-      const Y = (terminal ? G.arrivalY : pose.Y) + drift * G.g;
-      const S = pose.S;
-      // the drawing's orientation, only ever while the bird is fully invisible (identity whenever it can be seen)
-      const lie = turn ? `rotate(${(M.angle * turn).toFixed(5)}rad) ` : "";
-      bird.style.transform = `translate3d(${(X - window.scrollX).toFixed(2)}px,${(Y - scroll).toFixed(2)}px,0) ${lie}scale(${S.toFixed(5)},${(S * mix(1, PAPER_FLIP, turn)).toFixed(5)}) translate(${-ANCHOR.x}px,${-ANCHOR.y}px)`;
-      bird.style.opacity = opacity.toFixed(4);
-      bird.style.visibility = opacity < 0.001 ? "hidden" : "visible";
-
-      const state = wings?.update({ timeSeconds: now / 1000, amplitude, resting, pixelScale: S, flapRateHz: rate });
-      if (tail) {
-        const deg = resting ? 0 : Math.sin((state?.phase ?? 0) * Math.PI * 2 - 0.65) * 3 * amplitude;
-        tail.style.transform = `rotateZ(${deg.toFixed(3)}deg)`;
-      }
-      document.documentElement.style.setProperty("--painted-reveal", reveal.toFixed(4));
-      // the boy's paper shows the drawn kingfisher (the BEFORE patch fades) as the flying bird becomes it
-      document.documentElement.style.setProperty("--mission-reveal", missionFade.toFixed(4));
-      lastFocus = f;
-    };
-
-    const tick = (now: number) => {
-      frame = requestAnimationFrame(tick);
-      render(now);
-    };
-    const remeasure = () => {
-      needsMeasure = true;
-    };
-
-    // Draw once the wing renderer is ready (its images are decoded); without it the bird still flies, unflapped.
-    loadWingScript()
+    // without the wing renderer the controller still flies the bird, unflapped
+    SCRIPTS.reduce(
+      (chain, name) => chain.then(() => (name === "wing-flight.js" ? loadScript(name).catch(() => {}) : loadScript(name))),
+      Promise.resolve(),
+    )
       .then(() => {
-        if (cancelled || !window.IdeaPopWingFlight) return;
-        wings = new window.IdeaPopWingFlight(bird);
-        return wings.ready;
+        if (!cancelled && window.IdeaPopMotion) controller = window.IdeaPopMotion.mount(bird);
       })
       .catch(() => {
-        wings = null;
-      })
-      .finally(() => {
-        if (cancelled) return;
-        bird.dataset.ready = "";
-        frame = requestAnimationFrame(tick);
+        // without the controller the bird simply stays hidden; the page works as before
       });
-
-    const ro = new ResizeObserver(remeasure);
-    ro.observe(document.body);
-    window.addEventListener("resize", remeasure, { passive: true });
-    window.addEventListener("load", remeasure);
-    document.fonts?.ready.then(remeasure);
-    const onReduced = () => {
-      reduced = reducedQuery.matches;
-    };
-    reducedQuery.addEventListener("change", onReduced);
-
     return () => {
       cancelled = true;
-      cancelAnimationFrame(frame);
-      ro.disconnect();
-      window.removeEventListener("resize", remeasure);
-      window.removeEventListener("load", remeasure);
-      reducedQuery.removeEventListener("change", onReduced);
-      wings?.destroy();
-      document.documentElement.style.removeProperty("--painted-reveal");
-      document.documentElement.style.removeProperty("--mission-reveal");
+      controller?.destroy();
     };
   }, []);
 
   const part = (cls: string, file: string) => (
-    <img className={`part ${cls}`} src={`${BIRD}${file}.webp?v=${REV}`} width={1659} height={1348} alt="" />
+    <img className={`part ${cls}`} src={`${BIRD}${file}.webp?v=bird-2026-10-15c`} width={1659} height={1348} alt="" />
   );
   return (
     <div ref={birdRef} className="flying-bird" aria-hidden="true">

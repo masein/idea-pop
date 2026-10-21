@@ -191,6 +191,11 @@
       animation-timeline: --zoom-frame;
       animation-range: entry 0% cover 50%;
     }
+    /* The boy's photo is held on screen by the bird controller (public/ideapop-motion) while the bird enters its
+       paper; it stays at its natural size there so the drawing lines up with the bird. */
+    [data-mission-pin-track] [data-scroll="zoom-out"] {
+      animation: none;
+    }
     @keyframes motion-zoom-out {
       from {
         scale: 1.25;

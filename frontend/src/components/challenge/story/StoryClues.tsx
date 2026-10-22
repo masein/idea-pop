@@ -6,7 +6,7 @@ import { Character3D, Popi, RewardPop, StepNav, TapChoice, arrangeChoices, pillC
 import { btnPrimary, btnText } from '@/components/challenge/buttons';
 import type { MissionStory } from './types';
 import type { BadgeKey, MissionGame, GameUpdate } from './useMissionGame';
-import { discoveryOf, type PartnerLesson } from './discovery';
+import { discoveryOf, heroShort, type PartnerLesson } from './discovery';
 
 interface Props {
   story: MissionStory;
@@ -122,7 +122,7 @@ export default function StoryClues({ story, game, update, award, onNext, onBack,
       {/* ── Part 2: pick your nature partner ── */}
       {allOpen && (
         <section data-testid="pick-partner" className="story-rise flex flex-col gap-3">
-          <Popi text={t('partner_pick_popi', { hero: story.hero.name })} />
+          <Popi text={t('partner_pick_popi', { hero: heroShort(story) })} />
           <h2 className="font-display text-2xl text-challenge">{t('partner_pick_title')}</h2>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4" role="radiogroup" aria-label={t('partner_pick_title')}>
             {cards.map((c, i) => {
@@ -159,7 +159,7 @@ export default function StoryClues({ story, game, update, award, onNext, onBack,
         <section data-testid="partner-questions" className="story-rise flex flex-col gap-3 rounded-[20px] bg-white p-5 shadow-sm">
           <h2 className="font-display text-2xl text-challenge">{t('partner_think_title', { name: partner.name })}</h2>
           {lesson ? (
-            <PartnerLessonCard lesson={lesson} name={partner.name} hero={story.hero.name} />
+            <PartnerLessonCard lesson={lesson} name={partner.name} hero={heroShort(story)} />
           ) : (
             <Meter label={t('inspiration_meter')} value={answered.length} total={questions.length} icon="⚡" />
           )}

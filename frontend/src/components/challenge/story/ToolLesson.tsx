@@ -12,6 +12,8 @@ interface Props {
   award: (b: BadgeKey) => void;
   onNext: () => void;
   onBack: () => void;
+  /** The page shows the tool's badge itself, in its reward popup (template challenges). */
+  deferBadge?: boolean;
 }
 
 const PHASES = ['learn', 'see', 'try'] as const;
@@ -22,7 +24,7 @@ const PHASES = ['learn', 'see', 'try'] as const;
  * everyday object first) and Try it (finish one sentence per piece). A
  * mission teaches only a few pieces; the rest show locked for later missions.
  */
-export default function ToolLesson({ story, game, update, award, onNext, onBack }: Props) {
+export default function ToolLesson({ story, game, update, award, onNext, onBack, deferBadge = false }: Props) {
   const t = useTranslations('story');
   const tool = story.tool;
   const phase = game.toolPhase;
@@ -177,7 +179,7 @@ export default function ToolLesson({ story, game, update, award, onNext, onBack 
             <p className="font-body text-sm text-ink/60" aria-live="polite">
               {allLit ? t('tool_all_done') : t('tool_more', { count: tool.parts.length - lit })}
             </p>
-            {allLit && <RewardPop text={t('badge_earned', { badge: tool.badge })} />}
+            {allLit && !deferBadge && <RewardPop text={t('badge_earned', { badge: tool.badge })} />}
           </div>
         </>
       )}

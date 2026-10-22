@@ -7,6 +7,7 @@ import ToolSelector, { isToolKey } from './tool/ToolSelector';
 import { createProject, uploadProjectPhoto } from '@/lib/api/client';
 import { GAME_BY_SLUG } from './gameEmbeds';
 import { btnPrimary, btnText } from '@/components/challenge/buttons';
+import { heroShort } from './story/discovery';
 
 type ChallengeDetail = import('@/lib/api/schema').components['schemas']['ChallengeDetail'];
 
@@ -102,7 +103,7 @@ export default function StepSketch({ challenge, ageMode, onNext, onBack, hideToo
         <p className="mt-1 font-body text-lg font-semibold leading-snug text-ink">
           {/* Story missions ask the kid for their own idea and never list answers (TEMP rule 36). */}
           {challenge.story
-            ? t('sketch_prompt_story', { hero: challenge.story.hero.name })
+            ? t('sketch_prompt_story', { hero: heroShort(challenge.story) })
             : challenge.sketch_prompt?.trim() || t('sketch_prompt_fallback')}
         </p>
         {/* The paper-and-photo instruction contradicts the on-screen games. */}

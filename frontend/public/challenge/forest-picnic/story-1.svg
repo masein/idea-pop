@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 717 430" width="717" height="430">
+  <defs><linearGradient id="s" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#C9F0D6"/></linearGradient></defs>
+  <rect width="717" height="430" fill="url(#s)"/>
+  <path d="M0 330 Q180 290 360 320 T717 300 V430 H0Z" fill="#9ED38A"/>
+  <path d="M0 370 Q200 340 420 365 T717 350 V430 H0Z" fill="#9ED38A" opacity="0.7"/>
+  <text x="560" y="250" text-anchor="middle" font-size="150" font-family="'Segoe UI Emoji','Noto Color Emoji',sans-serif">🌲</text>
+  <rect x="470" y="388" width="230" height="30" rx="15" fill="#FFFFFF" opacity="0.85"/>
+  <text x="585" y="408" text-anchor="middle" font-size="14" font-weight="700" fill="#4A5560" font-family="Nunito,'Segoe UI',sans-serif">Picture coming soon</text>
+</svg>

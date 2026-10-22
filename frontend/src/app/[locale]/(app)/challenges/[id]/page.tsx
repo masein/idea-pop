@@ -13,7 +13,7 @@ import SubstitutePractice from '@/components/challenge/story/SubstitutePractice'
 import SubstCelebration from '@/components/challenge/story/SubstCelebration';
 import RewardPopup from '@/components/challenge/story/RewardPopup';
 import GuideNameMessages from '@/components/challenge/story/GuideNameMessages';
-import { BADGE_ART, MISSION_XP_MAX, type MissionBadgeKey } from '@/components/challenge/story/missionBadges';
+import { MISSION_XP_MAX, badgeArt, badgeName, type MissionBadgeKey } from '@/components/challenge/story/missionBadges';
 import { discoveryOf } from '@/components/challenge/story/discovery';
 import { claimMissionBadge, claimPhotoBonus, claimStar, fetchChallengeProgress } from '@/lib/api/client';
 import { announceChallengeProgress, useChallengeProgress } from '@/lib/hooks/useChallengeProgress';
@@ -119,7 +119,7 @@ function ChallengePageInner({ onBadgeMode }: { onBadgeMode: (on: boolean) => voi
   // The lab is done: "What Did You Build?" with an optional photo (the lab project it goes on).
   const [labCelebration, setLabCelebration] = useState<{ projectId: string | null } | null>(null);
   // The Substitute practice is done (Skills): celebrate, then Build and Test or stop for today.
-  const [substCelebration, setSubstCelebration] = useState(false);
+  const [substCelebration, setSubstCelebration] = useState<false | 'subst' | 'tool'>(false);
   // Max's badge popups (Quizzy after the puzzle, Nature Inspiration after Nature Clues) and
   // the XP each one gave (null while the server answers).
   const [reward, setReward] = useState<{ key: 'define' | 'clue'; xp: number | null } | null>(null);
@@ -322,7 +322,8 @@ function ChallengePageInner({ onBadgeMode }: { onBadgeMode: (on: boolean) => voi
   const sharedProps = { challenge, ageMode };
   // Max's challenge shows 9 steps: the Skill step is split into Experiment (the lab) and
   // Skills (SCAMPER). Underneath they are still step 6, in two phases.
-  const split = !!challenge.story?.substitute;
+  // Every template challenge (and Max's) has the nine steps.
+  const split = !!challenge.story?.substitute || discoveryOf(challenge.story)?.rewards?.mode === 'badges';
   const stepNames = split
     ? [1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => t(`plan9_step_${n}`))
     : undefined;
@@ -357,7 +358,7 @@ function ChallengePageInner({ onBadgeMode }: { onBadgeMode: (on: boolean) => voi
     return claimMissionBadge(challenge.id, key).catch(() => 0);
   };
   const givePhoto = (key: 'design' | 'build') => claimPhotoBonus(challenge.id, key).catch(() => null);
-  const badgeOf = (key: MissionBadgeKey) => ({ art: BADGE_ART[key], name: tStory(`mission_badge_${key}`) });
+  const badgeOf = (key: MissionBadgeKey) => ({ art: badgeArt(story, key), name: badgeName(story, key, tStory) });
   const disc = discoveryOf(story);
   // Give a star once; the server checks the work behind it. Every screen hears about it.
   const giveStar = (star: 1 | 2 | 3, note?: string) =>
@@ -610,7 +611,7 @@ function ChallengePageInner({ onBadgeMode }: { onBadgeMode: (on: boolean) => voi
                   labPhotoUrl={labPhotoUrl}
                   onDone={() => {
                     setSubstXp(null);
-                    setSubstCelebration(true);
+                    setSubstCelebration('subst');
                     void giveBadge('tool').then((xp) => setSubstXp(xp));
                   }}
                   onBack={() => setSkillPhase('lab')}
@@ -620,7 +621,14 @@ function ChallengePageInner({ onBadgeMode }: { onBadgeMode: (on: boolean) => voi
                   story={story}
                   {...gameProps}
                   award={awardBadge}
-                  onNext={() => goToStep(after(6))}
+                  deferBadge={badgeMode}
+                  onNext={() => {
+                    if (!badgeMode) return goToStep(after(6));
+                    // The template: the tool's badge in the shared reward popup, then Build and Test.
+                    setSubstXp(null);
+                    setSubstCelebration('tool');
+                    void giveBadge('tool').then((xp) => setSubstXp(xp));
+                  }}
                   onBack={() => setSkillPhase('lab')}
                 />
               )
@@ -823,6 +831,7 @@ function ChallengePageInner({ onBadgeMode }: { onBadgeMode: (on: boolean) => voi
         <SubstCelebration
           badge={badgeOf('tool')}
           xp={substXp}
+          toolName={substCelebration === 'tool' ? story?.tool.name ?? null : null}
           onKeepExploring={() => {
             setSubstCelebration(false);
             void goToStep(after(6));
@@ -878,7 +887,7 @@ function ChallengePageInner({ onBadgeMode }: { onBadgeMode: (on: boolean) => voi
       )}
 
       {threeStar && (
-        <ThreeStarCelebration xp={threeStar.xp} badges={threeStar.badges} onClose={() => setThreeStar(null)} />
+        <ThreeStarCelebration xp={threeStar.xp} badges={threeStar.badges} story={story} onClose={() => setThreeStar(null)} />
       )}
 
       {visible && award && (

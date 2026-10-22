@@ -4,7 +4,8 @@ import { useTranslations } from 'next-intl';
 import { SceneStage, Confetti, Popi, optionClass } from './StoryBits';
 import type { MissionStory } from './types';
 import type { BadgeKey, MissionGame } from './useMissionGame';
-import { BADGE_ART, MISSION_BADGES } from './missionBadges';
+import { MISSION_BADGES, badgeArt, badgeName } from './missionBadges';
+import { heroShort } from './discovery';
 
 interface Props {
   story: MissionStory;
@@ -38,15 +39,15 @@ export default function StoryEnding({ story, game, update, hiddenSteps = [], bad
         >
           {story.sticker.emoji}
         </span>
-        <p className="font-display text-xl text-ink">{badgeMode ? t('mission_badge_river') : t('sticker_earned', { name: story.sticker.name })}</p>
+        <p className="font-display text-xl text-ink">{badgeMode ? story.sticker.name : t('sticker_earned', { name: story.sticker.name })}</p>
         {badgeMode && (
           <>
-            <p className="font-body text-base text-ink/80">{t('river_badge_text')}</p>
+            <p className="font-body text-base text-ink/80">{t('river_badge_text', { hero: heroShort(story) })}</p>
             <p className="mt-2 font-body text-sm font-extrabold uppercase tracking-wide text-[#4A5560]">{t('badges_earned_title')}</p>
             <ul data-testid="earned-badges" className="flex flex-wrap justify-center gap-2" aria-label={t('badges_earned_title')}>
               {MISSION_BADGES.filter((b) => game.badges.includes(b as BadgeKey) || b === 'river').map((b) => (
                 <li key={b} data-testid={`earned-badge-${b}`} className="rounded-pill bg-[#fff5d1] px-3 py-1.5 font-body text-sm font-bold text-[#6b4d00]">
-                  {BADGE_ART[b]} {t(`mission_badge_${b}`)}
+                  {badgeArt(story, b)} {badgeName(story, b, t)}
                 </li>
               ))}
             </ul>

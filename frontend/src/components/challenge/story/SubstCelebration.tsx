@@ -10,19 +10,22 @@ export default function SubstCelebration({
   xp,
   onKeepExploring,
   onEnough,
+  toolName = null,
 }: {
   badge: RewardBadge;
   xp: number | null;
   onKeepExploring: () => void;
   onEnough: () => void;
+  /** Another creativity tool (brainstorm, mind map…): its own words instead of Substitute's. */
+  toolName?: string | null;
 }) {
   const t = useTranslations('story');
   return (
     <RewardPopup
       testId="subst-celebration"
       badge={badge}
-      title={t('subst_cel_title')}
-      text={t('subst_cel_text')}
+      title={toolName ? t('tool_cel_title', { tool: toolName }) : t('subst_cel_title')}
+      text={toolName ? t('tool_cel_text') : t('subst_cel_text')}
       xp={xp}
       primary={{ label: t('lab_keep_exploring'), onClick: onKeepExploring }}
       secondary={{ label: t('enough_today'), onClick: onEnough }}

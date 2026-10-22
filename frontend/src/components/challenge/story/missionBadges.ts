@@ -1,4 +1,4 @@
-/** Max's challenge badges, by stable id (the server's reward keys). Names are translated
+/** The template's badges, by stable id (the server's reward keys). Names are translated
  *  (story.mission_badge_<key>); renaming never changes the id, so nothing is given twice. */
 export const MISSION_BADGES = ['define', 'clue', 'solved', 'tool', 'retry', 'river'] as const;
 export type MissionBadgeKey = (typeof MISSION_BADGES)[number];
@@ -12,6 +12,22 @@ export const BADGE_ART: Record<MissionBadgeKey, string> = {
   retry: '🔁',
   river: '🌉',
 };
+
+type BadgeStory = { sticker?: { name: string; emoji: string } | null; tool?: { badge?: string } | null } | null | undefined;
+
+/** A badge's name: the creativity tool's badge and the finish badge (the story's sticker)
+ *  belong to each challenge; the others are the template's own. */
+export function badgeName(story: BadgeStory, key: MissionBadgeKey, t: (k: string) => string): string {
+  if (key === 'river' && story?.sticker?.name) return story.sticker.name;
+  if (key === 'tool' && story?.tool?.badge) return story.tool.badge;
+  return t(`mission_badge_${key}`);
+}
+
+/** A badge's art: the finish badge uses the story's sticker. */
+export function badgeArt(story: BadgeStory, key: MissionBadgeKey): string {
+  if (key === 'river' && story?.sticker?.emoji) return story.sticker.emoji;
+  return BADGE_ART[key];
+}
 
 export const PHOTO_KINDS = ['design', 'build'] as const;
 export type PhotoKind = (typeof PHOTO_KINDS)[number];

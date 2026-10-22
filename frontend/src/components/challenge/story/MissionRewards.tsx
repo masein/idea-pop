@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { fetchMissionRewards } from '@/lib/api/client';
-import { BADGE_ART, type MissionBadgeKey } from './missionBadges';
+import { badgeArt, badgeName, type MissionBadgeKey } from './missionBadges';
+import type { MissionStory } from './types';
 
 type Rewards = Awaited<ReturnType<typeof fetchMissionRewards>>;
 
@@ -13,7 +14,16 @@ type Rewards = Awaited<ReturnType<typeof fetchMissionRewards>>;
  * badge count and the total out of the maximum. Optional things not done say "Not earned" or
  * "Not added" — no minus points, nothing about failing.
  */
-export default function MissionRewards({ challengeId, refreshKey = 0 }: { challengeId: string; refreshKey?: number }) {
+export default function MissionRewards({
+  challengeId,
+  story = null,
+  refreshKey = 0,
+}: {
+  challengeId: string;
+  /** The challenge content: its own badge names. */
+  story?: MissionStory | null;
+  refreshKey?: number;
+}) {
   const t = useTranslations('story');
   const [data, setData] = useState<Rewards | null>(null);
   const [failed, setFailed] = useState(false);
@@ -43,8 +53,8 @@ export default function MissionRewards({ challengeId, refreshKey = 0 }: { challe
           return (
             <li key={b.key} data-testid={`reward-badge-${b.key}`} data-earned={got} className={`${row} ${got ? 'bg-[#F3FBF5]' : 'bg-[#F4F6F8]'}`}>
               <span className="flex min-w-0 items-center gap-2 font-body text-base font-bold text-ink">
-                <span aria-hidden="true">{BADGE_ART[b.key as MissionBadgeKey] ?? '🏅'}</span>
-                <span className="truncate">{t(`mission_badge_${b.key}`)}</span>
+                <span aria-hidden="true">{badgeArt(story, b.key as MissionBadgeKey) ?? '🏅'}</span>
+                <span className="truncate">{badgeName(story, b.key as MissionBadgeKey, t)}</span>
               </span>
               <span className="flex shrink-0 items-center gap-3 font-body text-sm font-semibold">
                 <span className={got ? 'text-[#1E7A44]' : 'text-[#5B6878]'}>{got ? t('rewards_earned') : t('rewards_not_earned')}</span>

@@ -1634,7 +1634,7 @@
     "rewards_badges": "Badges (5 XP each)",
     "rewards_title": "Where your points came from",
     "badges_earned_title": "Badges you earned in this challenge",
-    "river_badge_text": "You followed Max's challenge all the way, from the first question to testing your idea.",
+    "river_badge_text": "You followed {hero}'s challenge all the way, from the first question to testing your idea.",
     "reward_continue": "Continue",
     "nature_reward_text": "You explored a strategy from nature and connected it to a design possibility.",
     "nature_reward_title": "You earned the Nature Inspiration badge!",
@@ -1847,7 +1847,9 @@
     "lab_describe_saved": "Your description is saved.",
     "lab_describe_failed": "We couldn't save it right now. Please try again.",
     "name_idea_fallback": "Give your amazing idea a name!",
-    "submit_idea": "Submit Idea"
+    "submit_idea": "Submit Idea",
+    "tool_cel_title": "You used the {tool} tool!",
+    "tool_cel_text": "You used a creativity tool to find new ideas for your design."
   },
   "thinking_tools": {
     "accordion_young": "Stuck? Try a thinking tool!",
@@ -1968,10 +1970,10 @@
     "three_xp": "XP earned in this challenge: {xp}",
     "improved_reference": "Your new version from the Skills page:"
   },
-  "max_overrides": {
+  "template_overrides": {
     "story": {
       "badge_clue": "Nature Inspiration",
-      "sketch_popi": "Now that you've explored ideas from nature, what ideas have you come up with to help Max?",
+      "sketch_popi": "Now that you've explored ideas from nature, what ideas have you come up with to help {hero}?",
       "subst_p1_popi": "A problem can have more than one solution. If you saved an idea earlier, we can use it to create new possibilities.\nDon't have an idea yet? That's okay. We can also use our clay-boat experiment for this practice.",
       "popi_ending": "PopAI tells the ending"
     },

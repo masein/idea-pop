@@ -72,7 +72,7 @@ export default function StepCelebrate({
         <h2 className="font-display text-3xl text-challenge mt-3">{t('celebrate_heading')}</h2>
       </div>
 
-      {badgeMode && <MissionRewards challengeId={challenge.id} />}
+      {badgeMode && <MissionRewards challengeId={challenge.id} story={challenge.story ?? null} />}
       {badgeMode && <ShareForApproval challengeId={challenge.id} projectId={sketchProjectId} onSubmitted={onWallSubmitted} />}
 
       {/* XP card */}

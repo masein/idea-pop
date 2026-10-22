@@ -13,7 +13,7 @@ import { useChallengeProgress } from '@/lib/hooks/useChallengeProgress';
 import StarRow from '@/components/challenge/StarRow';
 import { Character3D } from '@/components/challenge/story/StoryBits';
 import { discoveryOf } from '@/components/challenge/story/discovery';
-import { BADGE_ART, type MissionBadgeKey } from '@/components/challenge/story/missionBadges';
+import { BADGE_ART, badgeArt, badgeName, type MissionBadgeKey } from '@/components/challenge/story/missionBadges';
 import type { MissionStory } from '@/components/challenge/story/types';
 
 type ChallengeDetail = components['schemas']['ChallengeDetail'];
@@ -246,8 +246,8 @@ const COVER_POSITION: Record<string, string> = { 'help-max-cross-the-river': 'ce
 const COVER_ZOOM: Record<string, { transform: string; transformOrigin: string }> = {
   'help-max-cross-the-river': { transform: 'scale(1.36)', transformOrigin: '42% 100%' },
 };
-function coverFor(slug: string | undefined): string {
-  return (slug && COVER_BY_SLUG[slug]) || DEFAULT_COVER;
+function coverFor(slug: string | undefined, own?: string | null): string {
+  return own || (slug && COVER_BY_SLUG[slug]) || DEFAULT_COVER;
 }
 
 function UnlockedChallengeCard({
@@ -313,7 +313,7 @@ function UnlockedChallengeCard({
             </div>
             <div className="relative w-full flex-1 overflow-hidden">
               <Image
-                src={coverFor(challenge.slug)}
+                src={coverFor(challenge.slug, discovery?.cover)}
                 alt=""
                 aria-hidden="true"
                 fill
@@ -333,11 +333,11 @@ function UnlockedChallengeCard({
                   {badges.map((b) => (
                     <li
                       key={b}
-                      title={tStory(`mission_badge_${b}`)}
+                      title={badgeName(story, b, tStory)}
                       className="flex h-7 w-7 items-center justify-center rounded-full bg-[#FFF5D1] text-base"
                     >
-                      <span aria-hidden="true">{BADGE_ART[b]}</span>
-                      <span className="sr-only">{tStory(`mission_badge_${b}`)}</span>
+                      <span aria-hidden="true">{badgeArt(story, b)}</span>
+                      <span className="sr-only">{badgeName(story, b, tStory)}</span>
                     </li>
                   ))}
                 </ul>

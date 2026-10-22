@@ -42,6 +42,8 @@ export interface PartnerLesson {
 }
 
 export interface Discovery {
+  /** The challenge card's cover picture (no text boxes in it). */
+  cover?: string | null;
   /** What the build needs, shown on the challenge card's back. */
   materials?: string[];
   /** "Think like your partner": one lesson per clue card, in the same order. */
@@ -62,6 +64,12 @@ export interface Discovery {
   /** One per clue card, in the same order. */
   companions?: CompanionData[];
   experiment?: { refs_caption: string; refs: { label: string; image: string | null }[] };
+}
+
+/** The hero's short name for friendly lines ("Lucia" for "Lucia Rossi"). */
+export function heroShort(story: MissionStory | null | undefined): string {
+  const d = discoveryOf(story) as (Discovery & { hero_short?: string }) | null;
+  return d?.hero_short ?? story?.hero.name ?? '';
 }
 
 export function discoveryOf(story: MissionStory | null | undefined): Discovery | null {

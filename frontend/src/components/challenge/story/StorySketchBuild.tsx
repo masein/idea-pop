@@ -3,7 +3,7 @@
 import { useTranslations } from 'next-intl';
 import { Character3D, Popi, RewardPop, optionClass } from './StoryBits';
 import type { MissionStory } from './types';
-import { discoveryOf } from './discovery';
+import { discoveryOf, heroShort } from './discovery';
 import type { MissionGame, GameUpdate } from './useMissionGame';
 import { btnIcon } from '@/components/challenge/buttons';
 
@@ -15,7 +15,7 @@ export function StorySketchTop({ story, game }: { story: MissionStory; game: Mis
   const partner = game.partner !== null && game.partner !== undefined ? story.clue_cards[game.partner] : null;
   return (
     <div data-testid="story-sketch" className="flex flex-col gap-5 pt-4">
-      <Popi text={t('sketch_popi')} />
+      <Popi text={t('sketch_popi', { hero: heroShort(story) })} />
       {partner && (
         <p className="self-start rounded-pill bg-[#EAF5FC] px-4 py-2 font-body text-base font-bold text-[#1A6FA6]">
           ⭐ {t('partner_reminder', { name: partner.name })}

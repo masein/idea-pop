@@ -1,11 +1,31 @@
 {
   "function_question": "How does nature shed water?",
-  "hero": { "name": "Lucia Rossi", "role": "the family's young engineer", "image": "/landing/hero/girl.webp", "emoji": "🧺" },
-  "scene_image": null,
+  "hero": {
+    "name": "Lucia Rossi",
+    "role": "the family's young engineer",
+    "image": "/landing/hero/girl.webp",
+    "emoji": "🧺"
+  },
+  "scene_image": "/challenge/forest-picnic/story-3.svg",
   "opening": [
-    { "beat": "Once upon a time…", "emoji": "🌲", "text": "There was a girl called Lucia Rossi whose family loved picnics in the forest near their home." },
-    { "beat": "Every day…", "emoji": "🎂", "text": "For weeks, Lucia helped plan a birthday picnic: sandwiches, juice and a big birthday cake." },
-    { "beat": "Until one day…", "emoji": "🌧️", "text": "On picnic morning, the forecast said showers. \"We won't cancel,\" said Lucia. \"We just need a shelter that keeps everything dry!\"" }
+    {
+      "beat": "Once upon a time…",
+      "emoji": "🌲",
+      "text": "There was a girl called Lucia Rossi whose family loved picnics in the forest near their home.",
+      "image": "/challenge/forest-picnic/story-1.svg"
+    },
+    {
+      "beat": "Every day…",
+      "emoji": "🎂",
+      "text": "For weeks, Lucia helped plan a birthday picnic: sandwiches, juice and a big birthday cake.",
+      "image": "/challenge/forest-picnic/story-2.svg"
+    },
+    {
+      "beat": "Until one day…",
+      "emoji": "🌧️",
+      "text": "On picnic morning, the forecast said showers. \"We won't cancel,\" said Lucia. \"We just need a shelter that keeps everything dry!\"",
+      "image": "/challenge/forest-picnic/story-3.svg"
+    }
   ],
   "card": {
     "hero": "Lucia Rossi, the family engineer",
@@ -16,59 +36,178 @@
     "helpers": "You and nature's heroes"
   },
   "chapters": [
-    { "step": "brief", "label": "Chapter 1", "beat": "Until one day…", "title": "Showers on picnic day", "line": "The forecast says rain, but the Rossi family won't give up their picnic." },
-    { "step": "your_idea", "label": "Chapter 2", "beat": "Because of that…", "title": "Lucia needs a teammate", "line": "Lucia has a backpack and a plan to make. Will you join her?" },
-    { "step": "nature_clues", "label": "Chapter 3", "beat": "Because of that…", "title": "The nature heroes", "line": "You and Lucia walk into the forest to meet heroes that never get soggy." },
-    { "step": "design_secret", "label": "Chapter 4", "beat": "Because of that…", "title": "The secret of the lotus", "line": "The lotus leaf shares why water can't hold on." },
-    { "step": "skill", "label": "Chapter 5", "beat": "Because of that…", "title": "Training in the drip lab", "line": "Lucia lines up four surfaces and a cup of water." },
-    { "step": "tool", "label": "Chapter 5½", "beat": "Because of that…", "title": "The idea map", "line": "Your ideas start growing like the branches of a tree!" },
-    { "step": "sketch", "label": "Chapter 6", "beat": "Because of that…", "title": "The plan", "line": "Every great shelter starts as a drawing." },
-    { "step": "build_and_test", "label": "Chapter 7", "beat": "Until finally…", "title": "The big rain test", "line": "The first roof drips. You fix it, and try again." },
-    { "step": "celebrate_and_share", "label": "Chapter 8", "beat": "And ever since then…", "title": "The best picnic ever", "line": "The rain falls, and the birthday cake stays perfectly dry." }
+    {
+      "step": "brief",
+      "label": "Chapter 1",
+      "beat": "Until one day…",
+      "title": "Showers on picnic day",
+      "line": "The forecast says rain, but the Rossi family won't give up their picnic."
+    },
+    {
+      "step": "your_idea",
+      "label": "Chapter 2",
+      "beat": "Because of that…",
+      "title": "Lucia needs a teammate",
+      "line": "Lucia has a backpack and a plan to make. Will you join her?"
+    },
+    {
+      "step": "nature_clues",
+      "label": "Chapter 3",
+      "beat": "Because of that…",
+      "title": "The nature heroes",
+      "line": "You and Lucia walk into the forest to meet heroes that never get soggy."
+    },
+    {
+      "step": "design_secret",
+      "label": "Chapter 4",
+      "beat": "Because of that…",
+      "title": "The secret of the lotus",
+      "line": "The lotus leaf shares why water can't hold on."
+    },
+    {
+      "step": "skill",
+      "label": "Chapter 5",
+      "beat": "Because of that…",
+      "title": "Training in the drip lab",
+      "line": "Lucia lines up four surfaces and a cup of water."
+    },
+    {
+      "step": "tool",
+      "label": "Chapter 5½",
+      "beat": "Because of that…",
+      "title": "The idea map",
+      "line": "Your ideas start growing like the branches of a tree!"
+    },
+    {
+      "step": "sketch",
+      "label": "Chapter 6",
+      "beat": "Because of that…",
+      "title": "The plan",
+      "line": "Every great shelter starts as a drawing."
+    },
+    {
+      "step": "build_and_test",
+      "label": "Chapter 7",
+      "beat": "Until finally…",
+      "title": "The big rain test",
+      "line": "The first roof drips. You fix it, and try again."
+    },
+    {
+      "step": "celebrate_and_share",
+      "label": "Chapter 8",
+      "beat": "And ever since then…",
+      "title": "The best picnic ever",
+      "line": "The rain falls, and the birthday cake stays perfectly dry."
+    }
   ],
   "guide": {
-    "brief": "I'm Popi, your story guide. The Rossi family needs a rain shelter that packs into a backpack and goes up in under 5 minutes. Can you help Lucia build it? Let's start!",
+    "brief": "I'm PopAI, your story guide. The Rossi family needs a rain shelter that packs into a backpack and goes up in under 5 minutes. Can you help Lucia build it? Let's start!",
     "your_idea": "Some engineers already have a spark of an idea for a quick, portable shelter. Do you?",
     "nature_clues": "Nature has been shedding rain for millions of years. Tap each card to meet four heroes who stay dry!",
     "design_secret": "Here's the secret of the lotus leaf…",
     "skill": "Scientists predict before they test. Which surface will make the most drops roll off?",
     "sketch": "Time to draw your shelter like a real engineer!",
-    "build_and_test": "Build your shelter, put a tissue picnic underneath and pour 3 tablespoons of water over the roof. Is the picnic still dry?",
+    "build_and_test": "You started with a first idea. You may have sketched it, built it, or both.\nNow you have another possibility—or an improved version of your original idea. You can build and test this version too.\nEngineers repeat this cycle: develop an idea, build, test, learn, and improve.",
     "retry_tip": "Engineers never stop at round 1. Change the roof angle or the material, and test again!",
     "ending": "And ever since then, the Rossi family packs YOUR shelter for every picnic. Rain or shine, the cake stays dry!"
   },
   "quick_check": {
     "question": "The shelter must go up in under 5 minutes. Lucia's goes up in 3 minutes. How much time is left over?",
-    "options": ["2 min", "3 min", "8 min"],
+    "options": [
+      "2 min",
+      "3 min",
+      "8 min"
+    ],
     "answer": 0,
     "right": "Right! 2 whole minutes to spare, so the picnic is covered before the first drop lands!",
     "wrong": "Not quite. Try 5 minutes take away 3 minutes."
   },
   "clue_cards": [
-    { "name": "Lotus leaf", "emoji": "🪷", "image": null, "tagline": "Pond plant", "trick": "It is covered in microscopic waxy bumps.", "does": "Drops sit on the bump tips, roll right off and carry dirt away.", "group": "surface" },
-    { "name": "Duck", "emoji": "🦆", "image": null, "tagline": "Pond paddler", "trick": "Its feathers overlap like roof tiles and are coated in oil.", "does": "Rain slides straight off, so the duck stays dry underneath.", "group": "surface" },
-    { "name": "Rainforest leaf", "emoji": "🌿", "image": null, "tagline": "Drip tip", "trick": "The leaf ends in a long, pointed drip tip.", "does": "Rain drains off the point quickly, so the leaf dries fast.", "group": "shape" },
-    { "name": "Woodpecker", "emoji": "🪶", "image": null, "tagline": "Tree-hole builder", "trick": "Its nest hole usually faces away from the wind and rain.", "does": "Rain can't blow or drip inside, so the nest stays dry.", "group": "direction" }
+    {
+      "name": "Lotus leaf",
+      "emoji": "🪷",
+      "image": null,
+      "tagline": "Pond plant",
+      "trick": "It is covered in microscopic waxy bumps.",
+      "does": "Drops sit on the bump tips, roll right off and carry dirt away.",
+      "group": "surface"
+    },
+    {
+      "name": "Duck",
+      "emoji": "🦆",
+      "image": null,
+      "tagline": "Pond paddler",
+      "trick": "Its feathers overlap like roof tiles and are coated in oil.",
+      "does": "Rain slides straight off, so the duck stays dry underneath.",
+      "group": "surface"
+    },
+    {
+      "name": "Rainforest leaf",
+      "emoji": "🌿",
+      "image": null,
+      "tagline": "Drip tip",
+      "trick": "The leaf ends in a long, pointed drip tip.",
+      "does": "Rain drains off the point quickly, so the leaf dries fast.",
+      "group": "shape"
+    },
+    {
+      "name": "Woodpecker",
+      "emoji": "🐦",
+      "image": null,
+      "tagline": "Tree-hole builder",
+      "trick": "Its nest hole usually faces away from the wind and rain.",
+      "does": "Rain can't blow or drip inside, so the nest stays dry.",
+      "group": "direction"
+    }
   ],
   "match_groups": [
-    { "key": "surface", "label": "💧 Water-hating surface" },
-    { "key": "shape", "label": "📐 Shape that drains" },
-    { "key": "direction", "label": "🧭 Faces away from rain" }
+    {
+      "key": "surface",
+      "label": "💧 Water-hating surface"
+    },
+    {
+      "key": "shape",
+      "label": "📐 Shape that drains"
+    },
+    {
+      "key": "direction",
+      "label": "🧭 Faces away from rain"
+    }
   ],
   "predict": {
     "prompt": "Soak in or roll off? Predict first!",
-    "choices": ["Soak in", "Roll off"],
+    "choices": [
+      "Soak in",
+      "Roll off"
+    ],
     "items": [
-      { "emoji": "🧻", "label": "Drop on a paper towel", "answer": 0 },
-      { "emoji": "🪷", "label": "Drop on a lotus leaf", "answer": 1 },
-      { "emoji": "🦆", "label": "Drop on a duck feather", "answer": 1 }
+      {
+        "emoji": "🧻",
+        "label": "Drop on a paper towel",
+        "answer": 0
+      },
+      {
+        "emoji": "🪷",
+        "label": "Drop on a lotus leaf",
+        "answer": 1
+      },
+      {
+        "emoji": "🦆",
+        "label": "Drop on a duck feather",
+        "answer": 1
+      }
     ],
     "explain": "On the lotus and the feather, water only touches the tips of tiny waxy bumps or an oily coat, so it can't spread out and soak in. Surfaces like this are called superhydrophobic: water-hating!"
   },
   "lab": {
     "title": "The drip lab",
     "predict": "Tilt each surface at the same angle and add 10 drops. Which one will make the most drops roll off?",
-    "options": ["Plain paper", "Paper rubbed with wax crayon", "Foil", "A leaf"],
+    "options": [
+      "Plain paper",
+      "Paper rubbed with wax crayon",
+      "Foil",
+      "A leaf"
+    ],
     "measure": "drops that rolled off (out of 10)",
     "higher_is_better": true
   },
@@ -78,11 +217,32 @@
     "intro": "A mind map is a drawing of your thinking. One big idea goes in the middle, and smaller ideas grow out from it like a tree. Today you'll learn the first 3 pieces.",
     "example_object": "a bicycle",
     "parts": [
-      { "key": "C", "name": "Centre", "what": "Write the big question in the middle.", "example": "🚲 Write \"a better bike\" in the middle of the page.", "starter": "In the centre of my map I'll write…" },
-      { "key": "B", "name": "Branches", "what": "Draw lines out to the main topics.", "example": "🚲 Branches for wheels, seat and brakes.", "starter": "My branches for staying dry are shape, surface and…" },
-      { "key": "T", "name": "Twigs", "what": "Add smaller ideas to each branch.", "example": "🚲 On the wheels branch: tyres, spokes, a pump.", "starter": "On the surface branch I'll add the lotus leaf and…" }
+      {
+        "key": "C",
+        "name": "Centre",
+        "what": "Write the big question in the middle.",
+        "example": "🚲 Write \"a better bike\" in the middle of the page.",
+        "starter": "In the centre of my map I'll write…"
+      },
+      {
+        "key": "B",
+        "name": "Branches",
+        "what": "Draw lines out to the main topics.",
+        "example": "🚲 Branches for wheels, seat and brakes.",
+        "starter": "My branches for staying dry are shape, surface and…"
+      },
+      {
+        "key": "T",
+        "name": "Twigs",
+        "what": "Add smaller ideas to each branch.",
+        "example": "🚲 On the wheels branch: tyres, spokes, a pump.",
+        "starter": "On the surface branch I'll add the lotus leaf and…"
+      }
     ],
-    "locked": ["P", "L"],
+    "locked": [
+      "P",
+      "L"
+    ],
     "badge": "Map Maker"
   },
   "sketch_checklist": [
@@ -94,12 +254,232 @@
     "measure": "drops that roll off the roof (out of 10)",
     "higher_is_better": true,
     "check_question": "Rain test: does the water run off, or pool on the roof?",
-    "check_options": ["Runs right off", "A little pools", "Big puddle"],
+    "check_options": [
+      "Runs right off",
+      "A little pools",
+      "Big puddle"
+    ],
     "change_prompt": "The ONE thing I changed"
   },
   "reflection": {
     "question": "What was your secret waterproof material?",
-    "options": ["🖍️ Wax crayon", "🥫 Foil", "🛍️ Plastic bag", "🍃 Big leaves"]
+    "options": [
+      "🖍️ Wax crayon",
+      "🥫 Foil",
+      "🛍️ Plastic bag",
+      "🍃 Big leaves"
+    ]
   },
-  "sticker": { "name": "Picnic Saver", "emoji": "☂️" }
+  "sticker": {
+    "name": "Picnic Saver",
+    "emoji": "☂️"
+  },
+  "define_problem": {
+    "popi": "Let's be problem detectives! Match each clue to its question to build Lucia's mission.",
+    "title": "The big question",
+    "question": "What exactly is the problem?",
+    "hint": "Match each question with its clue.",
+    "prompts": [
+      {
+        "key": "who",
+        "label": "Who",
+        "question": "Who needs help?",
+        "example": "Lucia and her family",
+        "keywords": [
+          "lucia",
+          "family"
+        ],
+        "hint": "Who is planning the picnic?"
+      },
+      {
+        "key": "what",
+        "label": "What",
+        "question": "What could ruin the picnic?",
+        "example": "Rain",
+        "keywords": [
+          "rain",
+          "shower"
+        ],
+        "hint": "What did the forecast say?"
+      },
+      {
+        "key": "where",
+        "label": "Where",
+        "question": "Where is the picnic?",
+        "example": "In the forest",
+        "keywords": [
+          "forest"
+        ],
+        "hint": "Where does the family go?"
+      },
+      {
+        "key": "why",
+        "label": "Why",
+        "question": "Why is a normal tent not enough?",
+        "example": "It must fit a backpack and go up fast",
+        "keywords": [
+          "backpack",
+          "fast",
+          "5"
+        ],
+        "hint": "Think about the rules."
+      }
+    ],
+    "image": "/challenge/forest-picnic/story-3.svg"
+  },
+  "discovery": {
+    "hero_short": "Lucia",
+    "rewards": {
+      "mode": "badges"
+    },
+    "materials": [
+      "Paper",
+      "Wax crayon",
+      "Foil",
+      "Leaves",
+      "Straws or sticks",
+      "Tape",
+      "Tissue",
+      "A spoon of water"
+    ],
+    "partner_lessons": [
+      {
+        "secret": "Rain drops land on a lotus leaf, roll straight off, and even carry dirt away with them.",
+        "how": "The leaf is covered in microscopic bumps topped with wax. A drop only touches the tips of the bumps, so it cannot spread out and soak in. It stays round and rolls away. Scientists call this the lotus effect.",
+        "inspiration": [
+          "What if Lucia’s shelter had a roof with a bumpy, waxy surface, so the rain beads up and rolls away like on a lotus leaf?"
+        ],
+        "your_turn": "How could you give your shelter’s roof a “lotus” surface? What would you use, and where would the rain go?"
+      },
+      {
+        "secret": "A duck can swim in the rain all day and its body underneath stays dry.",
+        "how": "Its feathers overlap like roof tiles, and the duck spreads oil on them from a gland near its tail. The overlap sends water down and away, and the oil helps water slide off instead of soaking in.",
+        "inspiration": [
+          "What if Lucia’s shelter were made of overlapping pieces, like duck feathers or roof tiles, so water always runs down and off?"
+        ],
+        "your_turn": "Which pieces could you overlap for your shelter, and which way would they face so the water runs off?"
+      },
+      {
+        "secret": "Leaves in the rainforest dry quickly, even though it rains there almost every day.",
+        "how": "Many of them end in a long, pointed “drip tip”. Water runs along the leaf to the tip and drips off from one spot, so less water stays on the leaf.",
+        "inspiration": [
+          "What if Lucia’s shelter had drip tips at its edges, so the rain drips off away from the picnic?"
+        ],
+        "your_turn": "Where would you put drip tips on your shelter, and where would you want the water to land?"
+      },
+      {
+        "secret": "A woodpecker’s nest hole stays dry inside, even in a storm.",
+        "how": "The hole is usually made facing away from the wind and the rain, so the rain can’t blow or drip in. Its direction protects it.",
+        "inspiration": [
+          "What if Lucia set up the shelter with its open side facing away from the wind, like a woodpecker’s nest hole?"
+        ],
+        "your_turn": "Which way would your shelter face, and how would you know where the wind and rain come from?"
+      }
+    ],
+    "idea_questions": [
+      "What are you planning to build to keep the picnic dry?",
+      "How will your shelter work?",
+      "Which idea from nature inspired your design?",
+      "How will your shelter keep the rain off and still fit in a backpack?",
+      "What materials might you use?"
+    ],
+    "idea_name_prompt": "Give your amazing idea a name!",
+    "checklist_intro": "Before we build something, it's helpful to make a checklist! Think about the tools and materials you'll need, gather everything together, and get ready to bring your idea to life.",
+    "improved_idea": {
+      "title": "Your improved idea",
+      "prompt": "You tested your shelter and made it better. Describe your improved idea for Lucia: what did you change, and why is it better?",
+      "placeholder": "My improved shelter is… I changed… because…"
+    },
+    "predict_intro": "Before testing something, we can make a prediction using what we already know and observe. A prediction doesn't have to be correct—we compare it with the result to learn more.",
+    "wh": {
+      "name": "Quizzy",
+      "popi": "Meet Quizzy, our question explorer! Quizzy will help us understand the Rossi family’s problem.",
+      "says": "Want to understand a problem better? Start with the right questions. WH Questions help us explore who is involved, what is happening, where and when it happens, and why it matters."
+    },
+    "puzzle": {
+      "title": "Build the Mission",
+      "intro": "Tap a question and then its matching clue, or tap a clue first and then find its question.",
+      "summary_lead": "Mission complete!",
+      "summary": "How can we keep the Rossi family’s picnic dry with a shelter that fits in a backpack and goes up in under 5 minutes?",
+      "map": {
+        "village": "Home",
+        "river": "Rain",
+        "school": "Picnic spot",
+        "route": "Forecast"
+      },
+      "questions": [
+        {
+          "key": "who",
+          "text": "Who needs help?",
+          "clue": "lucia",
+          "part": "village",
+          "wrong": "Look for a person. Who is the story about?"
+        },
+        {
+          "key": "where",
+          "text": "Where is the picnic?",
+          "clue": "forest",
+          "part": "school",
+          "wrong": "Think about the place where the family eats outdoors."
+        },
+        {
+          "key": "what",
+          "text": "What could ruin the picnic?",
+          "clue": "rain",
+          "part": "river",
+          "wrong": "What did the forecast say would fall from the sky?"
+        },
+        {
+          "key": "why",
+          "text": "Why is a normal tent not enough?",
+          "clue": "rules",
+          "part": "route",
+          "wrong": "Think about how the shelter must travel and how fast it must go up."
+        }
+      ],
+      "clues": [
+        {
+          "key": "rules",
+          "emoji": "🎒",
+          "text": "It must fit a backpack and go up in 5 minutes"
+        },
+        {
+          "key": "lucia",
+          "emoji": "🧺",
+          "text": "Lucia and the Rossi family"
+        },
+        {
+          "key": "rain",
+          "emoji": "🌧️",
+          "text": "Rain showers on picnic day"
+        },
+        {
+          "key": "forest",
+          "emoji": "🌲",
+          "text": "A picnic spot in the forest"
+        }
+      ]
+    },
+    "experiment": {
+      "refs_caption": "Need a starting point? These are the four surfaces to test.",
+      "refs": [
+        {
+          "label": "Plain paper",
+          "image": null
+        },
+        {
+          "label": "Paper rubbed with wax crayon",
+          "image": null
+        },
+        {
+          "label": "Foil",
+          "image": null
+        },
+        {
+          "label": "A leaf",
+          "image": null
+        }
+      ]
+    }
+  }
 }

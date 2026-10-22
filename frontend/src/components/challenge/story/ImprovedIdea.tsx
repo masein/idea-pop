@@ -5,7 +5,8 @@ import { useTranslations } from 'next-intl';
 import { btnPrimary } from '@/components/challenge/buttons';
 import StarRow from '@/components/challenge/StarRow';
 import RewardPopup from './RewardPopup';
-import { BADGE_ART, type MissionBadgeKey } from './missionBadges';
+import { BADGE_ART, badgeArt, badgeName, type MissionBadgeKey } from './missionBadges';
+import type { MissionStory } from './types';
 
 /**
  * The last page's improved idea: the kid writes (or keeps) the better version of their idea
@@ -91,11 +92,13 @@ export function ImprovedIdeaBox({
 export function ThreeStarCelebration({
   xp,
   badges,
+  story,
   onClose,
 }: {
   /** XP earned on this challenge. */
   xp: number | null;
   badges: string[];
+  story: MissionStory | null;
   onClose: () => void;
 }) {
   const t = useTranslations('stars');
@@ -120,7 +123,7 @@ export function ThreeStarCelebration({
           <ul data-testid="three-star-badges" className="flex flex-wrap justify-center gap-2" aria-label={tStory('badges_earned_title')}>
             {shown.map((b) => (
               <li key={b} className="rounded-pill bg-[#fff5d1] px-3 py-1.5 font-body text-sm font-bold text-[#6b4d00]">
-                {BADGE_ART[b]} {tStory(`mission_badge_${b}`)}
+                {badgeArt(story, b)} {badgeName(story, b, tStory)}
               </li>
             ))}
           </ul>

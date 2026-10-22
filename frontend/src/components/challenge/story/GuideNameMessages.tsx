@@ -20,9 +20,9 @@ function merge(base: Messages, extra: Messages): Messages {
 }
 
 /**
- * Max's challenge calls its guide PopAI (پاپ‌آی) everywhere — labels, messages, popups and
- * accessibility text — and uses a few lines of its own (messages.max_overrides). Only this
- * challenge's page is wrapped, so the rest of the app keeps its wording.
+ * Template challenges call their guide PopAI (پاپ‌آی) everywhere — labels, messages, popups and
+ * accessibility text — and uses a few lines of its own (messages.template_overrides). Only template
+ * challenges' pages are wrapped, so the rest of the app keeps its wording.
  */
 export default function GuideNameMessages({ enabled, children }: { enabled: boolean; children: ReactNode }) {
   const messages = useMessages() as unknown as Messages;
@@ -32,7 +32,7 @@ export default function GuideNameMessages({ enabled, children }: { enabled: bool
   // Always the same provider (only its words change), so the page never remounts.
   const swapped = useMemo(() => {
     if (!enabled) return messages;
-    const overrides = (messages.max_overrides as Messages | undefined) ?? {};
+    const overrides = (messages.template_overrides as Messages | undefined) ?? {};
     return merge(rename(messages) as Messages, overrides);
   }, [enabled, messages]);
   return (

@@ -815,7 +815,23 @@
     "xp_info_levels": "New levels give you new ranks: Explorer, Maker, Inventor, Innovator, Master, Mentor. At Level 4 you unlock themes!",
     "xp_info_keep": "Your XP is never taken away.",
     "xp_info_once": "You earn XP for each video, lesson or challenge only the first time.",
-    "hud_menu_close_aria": "Close mission menu"
+    "hud_menu_close_aria": "Close mission menu",
+    "card_badges": "Badges earned",
+    "card_xp": "{xp} XP",
+    "card_flip_aria": "Turn the card: nature inspirations and materials for {title}",
+    "card_flip_back_aria": "Turn the card back",
+    "card_nature": "Nature inspirations",
+    "card_materials": "Materials and tools",
+    "card_start": "Start the challenge",
+    "card_continue": "Continue the challenge",
+    "hud_step_level_aria": "Step {step}: {name}. {level}. {state}",
+    "hud_level_1": "Explore and Understand",
+    "hud_level_2": "Create and Experiment",
+    "hud_level_3": "Improve and Master",
+    "hud_state_current": "You are here",
+    "hud_state_done": "Completed",
+    "hud_state_available": "Available",
+    "hud_state_locked": "Locked"
   },
   "ideas_wall": {
     "tab_mission": "🚀 Mission",
@@ -1360,7 +1376,9 @@
     "wall_empty": "No ideas yet — be the first! 🌟",
     "sketch_instruction": "Draw it on paper, then take a photo — or just describe it in words. A photo is optional.",
     "default_sketch_title": "My sketch",
-    "default_build_title": "My build"
+    "default_build_title": "My build",
+    "idea_answer_placeholder": "Write your answer…",
+    "idea_name_placeholder": "My idea is called…"
   },
   "player": {
     "back": "Back",
@@ -1815,7 +1833,21 @@
     "badge_earned": "🏅 {badge} badge!",
     "tell_your_part": "Tell your part of the story",
     "power_up": "Power-up",
-    "back": "Back"
+    "back": "Back",
+    "puzzle_cheer": "Great match!",
+    "lesson_secret": "Nature's Secret",
+    "lesson_how": "How It Works",
+    "lesson_inspiration": "{hero}'s Inspiration",
+    "lesson_not_answer": "This is an idea to inspire you, not the answer. Your own version can be different!",
+    "lesson_your_turn": "Your Turn!",
+    "lab_no_photo": "Can't take a photo? Describe your model instead",
+    "lab_describe_label": "Describe the model you built: its shape, what you made it from, and what happened in the test.",
+    "lab_describe_placeholder": "I built… from… When I tested it…",
+    "lab_describe_save": "Save my description",
+    "lab_describe_saved": "Your description is saved.",
+    "lab_describe_failed": "We couldn't save it right now. Please try again.",
+    "name_idea_fallback": "Give your amazing idea a name!",
+    "submit_idea": "Submit Idea"
   },
   "thinking_tools": {
     "accordion_young": "Stuck? Try a thinking tool!",
@@ -1911,12 +1943,40 @@
     "design_spiral_emulate": "5. Emulate: your design idea",
     "design_spiral_evaluate": "6. Evaluate: how will you test it?"
   },
+  "stars": {
+    "aria": "{count} of 3 stars earned",
+    "info_title": "XP and stars",
+    "what_xp_title": "What is XP?",
+    "what_xp_text": "XP means Experience Points! You earn XP by exploring, creating ideas, experimenting, and solving challenges. Collect XP to grow and unlock higher levels.",
+    "what_stars_title": "What do three stars mean?",
+    "what_stars_text": "Three stars mean you've completed this challenge at its highest level! You've explored the problem, tested your creation, and improved your idea.",
+    "star_1_rule": "Submit your first idea.",
+    "star_2_rule": "Finish the experiment and add a photo of your model (or describe it).",
+    "star_3_rule": "Finish the last stage and submit your improved idea.",
+    "xp_vs_stars": "XP and stars are different: XP adds up to your level, and stars show how far you went in this challenge. Both count toward your overall progress.",
+    "earned_title": "You earned star {star}!",
+    "earned_1": "You submitted your first idea.",
+    "earned_2": "You finished the experiment and showed your model.",
+    "earned_3": "You finished the challenge and submitted your improved idea.",
+    "improved_hint": "Submitting your improved idea earns the third star.",
+    "improved_submit": "Submit My Improved Idea",
+    "improved_saved": "Your improved idea is saved.",
+    "improved_failed": "We couldn't save it right now. Your words are still here, so please try again.",
+    "saving": "Saving…",
+    "three_title": "Amazing! You earned all 3 stars!",
+    "three_text": "You've completed this challenge at the highest level! You explored nature, built and tested your idea, and made it even better. You're becoming a creative problem-solver!",
+    "three_xp": "XP earned in this challenge: {xp}",
+    "improved_reference": "Your new version from the Skills page:"
+  },
   "max_overrides": {
     "story": {
       "badge_clue": "Nature Inspiration",
       "sketch_popi": "Now that you've explored ideas from nature, what ideas have you come up with to help Max?",
       "subst_p1_popi": "A problem can have more than one solution. If you saved an idea earlier, we can use it to create new possibilities.\nDon't have an idea yet? That's okay. We can also use our clay-boat experiment for this practice.",
       "popi_ending": "PopAI tells the ending"
+    },
+    "mission": {
+      "build_heading": "Build It & Test It!"
     }
   }
 }

@@ -29,7 +29,30 @@ export interface WhCharacter {
   image?: string | null;
 }
 
+/** One nature partner's biomimicry lesson: what it does, how, an inspiration, the kid's turn. */
+export interface PartnerLesson {
+  secret: string;
+  how: string;
+  /** One or two design directions, as inspiration (never the answer). */
+  inspiration: string[];
+  your_turn: string;
+  /** A reference picture or simple diagram of the mechanism. */
+  diagram?: string | null;
+  diagram_alt?: string;
+}
+
 export interface Discovery {
+  /** What the build needs, shown on the challenge card's back. */
+  materials?: string[];
+  /** "Think like your partner": one lesson per clue card, in the same order. */
+  partner_lessons?: PartnerLesson[];
+  /** The Initial Design's guiding questions, then the name prompt. */
+  idea_questions?: string[];
+  idea_name_prompt?: string;
+  /** The words before "Build It & Test It!" on the build page. */
+  checklist_intro?: string;
+  /** The last page's improved-idea box (the third star). */
+  improved_idea?: { title: string; prompt: string; placeholder: string };
   /** "badges": 5 XP per badge and 10 per photo kind instead of a completion bonus. */
   rewards?: { mode: string };
   /** The Build and Test lab's words before "My prediction". */

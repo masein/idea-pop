@@ -87,6 +87,9 @@ export function StoryFairTest({
   const test = story.test;
   const max = Math.max(game.round1, game.round2, 1);
   const better = improved(game.round1, game.round2, test.higher_is_better);
+  // The template (Max) keeps the page lean: no tip and no round-against-round chart; the
+  // checklist words follow instead (on the build part below).
+  const template = discoveryOf(story)?.rewards?.mode === 'badges';
 
   function setRound(key: 'round1' | 'round2', n: number) {
     update((g) => {
@@ -100,7 +103,7 @@ export function StoryFairTest({
     <div data-testid="story-fair-test" className="flex flex-col gap-4 pt-4">
       <div className="flex items-end gap-2">
         <Character3D src={story.hero.image} emoji={story.hero.emoji} alt={story.hero.name} size={92} className="hidden shrink-0 sm:inline-flex" />
-        <div className="flex-1"><Popi text={story.guide.build_and_test} keepLines={discoveryOf(story)?.rewards?.mode === 'badges'} /></div>
+        <div className="flex-1"><Popi text={story.guide.build_and_test} keepLines={template} /></div>
       </div>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -140,8 +143,9 @@ export function StoryFairTest({
         </div>
       </div>
 
-      <Popi label={t('popi_tip')} text={story.guide.retry_tip} />
+      {!template && <Popi label={t('popi_tip')} text={story.guide.retry_tip} />}
 
+      {!template && (
       <figure className="rounded-card bg-white p-4">
         <figcaption className="mb-2 font-body text-xs font-bold uppercase tracking-wide text-ink/60">
           {t('chart_caption', { measure: test.measure })}
@@ -162,6 +166,7 @@ export function StoryFairTest({
           <span className="flex-1 text-center">{t('round', { n: 2 })}</span>
         </div>
       </figure>
+      )}
       {better && <RewardPop text={t('badge_earned', { badge: t('badge_retry') })} />}
     </div>
   );

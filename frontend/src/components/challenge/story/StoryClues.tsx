@@ -1,12 +1,12 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useTranslations } from 'next-intl';
 import { Character3D, Popi, RewardPop, StepNav, TapChoice, arrangeChoices, pillCtaClass } from './StoryBits';
 import { btnPrimary, btnText } from '@/components/challenge/buttons';
 import type { MissionStory } from './types';
 import type { BadgeKey, MissionGame, GameUpdate } from './useMissionGame';
-import { discoveryOf } from './discovery';
+import { discoveryOf, type PartnerLesson } from './discovery';
 
 interface Props {
   story: MissionStory;
@@ -45,7 +45,11 @@ export default function StoryClues({ story, game, update, award, onNext, onBack,
     partner && game.partner !== null && game.partner !== undefined
       ? discoveryOf(story)?.companions?.[game.partner] ?? null
       : null;
-  const questions: readonly PartnerQuestion[] = PARTNER_QUESTIONS;
+  // Template missions teach each partner with a worked example (secret, how, inspiration),
+  // then only ask the kid's own turn.
+  const lesson: PartnerLesson | null =
+    game.partner !== null && game.partner !== undefined ? discoveryOf(story)?.partner_lessons?.[game.partner] ?? null : null;
+  const questions: readonly PartnerQuestion[] = lesson ? ['inspired'] : PARTNER_QUESTIONS;
   const answered = questions.filter((k) => game.partnerDone.includes(k));
   const allAnswered = answered.length === questions.length;
   const current = questions.find((k) => !game.partnerDone.includes(k)) ?? null;
@@ -67,7 +71,7 @@ export default function StoryClues({ story, game, update, award, onNext, onBack,
   }
 
   const question = (k: PartnerQuestion) =>
-    t(`partner_q_${k}`, { name: partner?.name ?? '', hero: story.hero.name });
+    lesson && k === 'inspired' ? lesson.your_turn : t(`partner_q_${k}`, { name: partner?.name ?? '', hero: story.hero.name });
 
   return (
     <div data-testid="story-clues" className="flex flex-col gap-6 py-4">
@@ -154,7 +158,11 @@ export default function StoryClues({ story, game, update, award, onNext, onBack,
       {partner && (
         <section data-testid="partner-questions" className="story-rise flex flex-col gap-3 rounded-[20px] bg-white p-5 shadow-sm">
           <h2 className="font-display text-2xl text-challenge">{t('partner_think_title', { name: partner.name })}</h2>
-          <Meter label={t('inspiration_meter')} value={answered.length} total={questions.length} icon="⚡" />
+          {lesson ? (
+            <PartnerLessonCard lesson={lesson} name={partner.name} hero={story.hero.name} />
+          ) : (
+            <Meter label={t('inspiration_meter')} value={answered.length} total={questions.length} icon="⚡" />
+          )}
 
           {questions.filter((k) => game.partnerDone.includes(k)).map((k) => (
             <div key={k} data-testid={`partner-q-${k}`} data-state="done" className="rounded-xl border border-[#BFE6C8] bg-[#F3FBF5] px-4 py-3">
@@ -209,6 +217,7 @@ export default function StoryClues({ story, game, update, award, onNext, onBack,
               onDone={() => update((g) => ({ partnerDone: [...g.partnerDone, current] }))}
               peek={`${partner.trick} ${partner.does}`}
               hint={companion?.hint ?? null}
+              turnLabel={lesson ? t('lesson_your_turn') : null}
             />
           )}
 
@@ -254,6 +263,58 @@ export default function StoryClues({ story, game, update, award, onNext, onBack,
   );
 }
 
+/** Biomimicry by example: what the partner does, how it works, what it could inspire for
+ *  the hero, then the kid's turn (asked below). The inspiration is never the answer. */
+function PartnerLessonCard({ lesson, name, hero }: { lesson: PartnerLesson; name: string; hero: string }) {
+  const t = useTranslations('story');
+  const part = (icon: string, title: string, tone: string, body: ReactNode, testId: string) => (
+    <div data-testid={testId} className={`flex gap-3 rounded-[16px] p-3 ${tone}`}>
+      <span aria-hidden="true" className="text-2xl leading-none">{icon}</span>
+      <div className="min-w-0">
+        <p className="font-body text-sm font-extrabold uppercase tracking-wide text-ink/70">{title}</p>
+        <div className="mt-0.5 font-body text-base font-medium leading-snug text-ink">{body}</div>
+      </div>
+    </div>
+  );
+  return (
+    <div data-testid="partner-lesson" className="flex flex-col gap-2">
+      {part('🔍', t('lesson_secret', { name }), 'bg-[#E6F8EC]', lesson.secret, 'lesson-secret')}
+      {part(
+        '⚙️',
+        t('lesson_how'),
+        'bg-[#EAF5FC]',
+        <>
+          <p>{lesson.how}</p>
+          {lesson.diagram && (
+            <figure className="mt-2">
+              {/* eslint-disable-next-line @next/next/no-img-element -- a small authored diagram (SVG) */}
+              <img
+                src={lesson.diagram}
+                alt={lesson.diagram_alt ?? ''}
+                data-testid="lesson-diagram"
+                className="w-full max-w-md rounded-xl border border-[#CDE7F7] bg-white"
+              />
+            </figure>
+          )}
+        </>,
+        'lesson-how',
+      )}
+      {part(
+        '💡',
+        t('lesson_inspiration', { hero }),
+        'bg-[#FFF7D6]',
+        <ul className="flex flex-col gap-1">
+          {lesson.inspiration.map((i) => (
+            <li key={i} className="font-semibold">{i}</li>
+          ))}
+        </ul>,
+        'lesson-inspiration',
+      )}
+      <p className="px-1 font-body text-sm font-semibold text-[#4A5560]">{t('lesson_not_answer')}</p>
+    </div>
+  );
+}
+
 /** A progress meter that fills as the kid goes (heroes met, inspiration). */
 function Meter({ label, value, total, icon = '🏅' }: { label: string; value: number; total: number; icon?: string }) {
   const shown = Math.min(value, total);
@@ -290,6 +351,7 @@ function PartnerQuestionBox({
   onDone,
   peek,
   hint = null,
+  turnLabel = null,
 }: {
   id: PartnerQuestion;
   question: string;
@@ -299,6 +361,8 @@ function PartnerQuestionBox({
   peek: string;
   /** The companion's own hint ("Need a hint?"), shown only when asked. Replaces the peek. */
   hint?: string | null;
+  /** A heading over the question ("Your turn!"). */
+  turnLabel?: string | null;
 }) {
   const t = useTranslations('story');
   const [peeking, setPeeking] = useState(false);
@@ -317,6 +381,7 @@ function PartnerQuestionBox({
         if (ready) onDone();
       }}
     >
+      {turnLabel && <p className="font-display text-xl text-challenge">✏️ {turnLabel}</p>}
       <label htmlFor={`partner-input-${id}`} className="font-body text-base font-bold text-ink">
         {question}
       </label>

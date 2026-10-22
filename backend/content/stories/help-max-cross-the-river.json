@@ -47,7 +47,7 @@
   "clue_cards": [
     { "name": "Water strider", "emoji": "🦟", "image": "/challenge/max/clues/water-strider.webp", "tagline": "Pond skater", "trick": "Long legs covered in tiny waxy hairs.", "does": "Spreads its weight so it stands on the water's skin without breaking it.", "group": "weight" },
     { "name": "Fire ants", "emoji": "🐜", "image": "/challenge/max/clues/fire-ants.webp", "tagline": "Flood survivors", "trick": "They link their bodies into a living raft.", "does": "Air trapped between them keeps the colony afloat for days.", "group": "air" },
-    { "name": "Giant water lily", "emoji": "🪷", "image": "/challenge/max/clues/giant-water-lily.webp", "tagline": "Amazon river", "trick": "A huge leaf with a rim and air-filled ribs underneath.", "does": "It floats even with a small child sitting on it.", "group": "rim" },
+    { "name": "Giant water lily", "emoji": "🪷", "image": "/challenge/max/clues/giant-water-lily.webp", "tagline": "Amazon river", "trick": "A huge, wide leaf with a strong network of ribs underneath.", "does": "It floats even with a small child sitting on it.", "group": "rim" },
     { "name": "Coconut", "emoji": "🥥", "image": "/challenge/max/clues/coconut.webp", "tagline": "Ocean traveller", "trick": "A thick, hairy husk full of air.", "does": "Floats across oceans for months and keeps the seed dry.", "group": "air" }
   ],
   "match_groups": [
@@ -190,12 +190,76 @@
     "model_material": "Clay"
   },
   "discovery": {
+    "materials": [
+      "Modelling clay",
+      "Coins",
+      "A tray of water",
+      "Foil",
+      "Straws",
+      "Corks",
+      "Card",
+      "Sticks",
+      "Tape"
+    ],
+    "partner_lessons": [
+      {
+        "secret": "A water strider can stand and run on top of a pond without sinking.",
+        "how": "Its legs are covered in very fine, water-repellent hairs. Together with the surface tension of water (the surface acts like a thin, stretchy skin) and its weight spread out over long legs, the water bends under each leg but does not break. This only works because the insect is tiny and light.",
+        "inspiration": [
+          "What if Max designed a lightweight object with special water-repellent supports that spread its weight across the water?"
+        ],
+        "your_turn": "What could you design for Max using the water strider's idea? What would it look like, and what would you make it from?",
+        "diagram": "/challenge/max/diagrams/water-strider-leg.svg",
+        "diagram_alt": "A close-up of a water strider leg: tiny water-repellent hairs dent the water surface without breaking it."
+      },
+      {
+        "secret": "When a flood comes, fire ants hold on to each other and float together as a living raft.",
+        "how": "They connect their legs and bodies into one group. Their bodies repel water, and air gets trapped between them, so the whole group stays afloat. One ant on its own could not do this for long.",
+        "inspiration": [
+          "What if Max built a raft from many small pieces that connect together, just like fire ants forming a floating group?"
+        ],
+        "your_turn": "Which small pieces could you connect for Max, and how would you join them? Try a pattern of your own.",
+        "diagram": "/challenge/max/diagrams/fire-ant-raft.svg",
+        "diagram_alt": "One fire ant alone on the water, then many ants linked into a floating raft with air between them."
+      },
+      {
+        "secret": "The giant water lily has a huge, wide leaf that lies flat on the river and can hold a surprising load.",
+        "how": "Under the leaf is a strong network of ribs that branch out like a web. The ribs reinforce the leaf and spread the weight across its wide surface, while the leaf stays lightweight.",
+        "inspiration": [
+          "What if Max designed a wide floating platform with a network of lightweight supporting ribs underneath, just like the giant water lily?"
+        ],
+        "your_turn": "What shape would your platform be, how would you arrange its supports, and what would you build it from?"
+      },
+      {
+        "secret": "A coconut can float across the sea for months and still grow into a new palm tree.",
+        "how": "Its thick, fibrous husk is full of tiny spaces that trap air. That trapped air helps it float, and the husk cushions and protects the seed inside.",
+        "inspiration": [
+          "What if Max designed a floating platform with lightweight, air-filled spaces inside it, inspired by the coconut's fibrous husk?",
+          "It could become a raft, a floating shoe, or a protective floating structure."
+        ],
+        "your_turn": "Imagine your own structure for Max. Where would the air go, and which materials would you use?"
+      }
+    ],
+    "idea_questions": [
+      "What are you planning to build to help Max?",
+      "How will your invention work?",
+      "Which idea from nature inspired your design?",
+      "What will keep your invention floating or help Max cross the river?",
+      "What materials might you use?"
+    ],
+    "idea_name_prompt": "Give your amazing idea a name!",
+    "checklist_intro": "Before we build something, it's helpful to make a checklist! Think about the tools and materials you'll need, gather everything together, and get ready to bring your idea to life.",
+    "improved_idea": {
+      "title": "Your improved idea",
+      "prompt": "You tested your idea and made it better. Describe your improved idea for Max: what did you change, and why is it better?",
+      "placeholder": "My improved idea is… I changed… because…"
+    },
     "rewards": { "mode": "badges" },
     "predict_intro": "Before testing something, we can make a prediction using what we already know and observe. A prediction doesn't have to be correct—we compare it with the result to learn more.",
     "wh": {"name":"Quizzy","popi":"Meet Quizzy, our question explorer! Quizzy will show you how to understand a problem.","says":"Want to understand a problem better? Start with the right questions. WH Questions help us explore who is involved, what is happening, where and when it happens, and why it matters. They help us understand exactly what problem we’re trying to solve."},
     "puzzle": {
       "title": "Build the Mission",
-      "intro": "Tap a question, then choose its matching clue from the opposite column.",
+      "intro": "Tap a question and then its matching clue, or tap a clue first and then find its question.",
       "summary_lead": "Mission complete!",
       "summary": "How can we help Max reach school without taking the long route around the river?",
       "map": {
@@ -288,7 +352,7 @@
           "Tap each rib to trace the network."
         ],
         "action": "Flip the leaf",
-        "takeaway": "This is the Victoria water lily, also called the giant water lily. Under its huge leaf, a network of thick, air-filled ribs supports the leaf and helps it keep its flat shape on the water. Most water lilies are much smaller and cannot hold large loads.",
+        "takeaway": "This is the Victoria water lily, also called the giant water lily. Under its huge leaf, a network of strong ribs reinforces it and spreads the weight across its wide surface, so the leaf stays flat on the water while staying light. Most water lilies are much smaller and cannot hold large loads.",
         "hint": "Look underneath the leaf. How does its supporting network help it hold its shape? Where could your idea need support?"
       },
       {

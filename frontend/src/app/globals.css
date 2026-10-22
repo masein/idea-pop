@@ -308,3 +308,21 @@ html {
 }
 .popi-float { animation: popi-float 3s ease-in-out infinite; }
 .popi-bar { animation: popi-bar 0.6s ease-in-out infinite; transform-origin: bottom; }
+
+/* Challenge cards turn over on hover (mouse) or with their flip button (touch, keyboard).
+   Same .story-flip faces; only the trigger differs. Reduced motion skips the turn animation. */
+@media (hover: hover) {
+  .card-flip:hover .story-flip-inner { transform: rotateY(180deg); }
+}
+
+/* A star the kid has just earned: a gentle pop and glow. */
+@keyframes star-earn {
+  0% { transform: scale(0.4) rotate(-30deg); filter: drop-shadow(0 0 0 rgba(255, 196, 0, 0)); }
+  55% { transform: scale(1.35) rotate(8deg); filter: drop-shadow(0 0 10px rgba(255, 196, 0, 0.9)); }
+  100% { transform: none; filter: drop-shadow(0 0 0 rgba(255, 196, 0, 0)); }
+}
+.star-earn { animation: star-earn 0.9s ease-out; }
+@media (prefers-reduced-motion: reduce) {
+  .star-earn { animation: none; }
+  .card-flip .story-flip-inner { transition: none; }
+}

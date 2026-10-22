@@ -615,6 +615,38 @@ export async function fetchMissionRewards(challengeId: string) {
   return data;
 }
 
+/** Give a challenge star once (the server checks the work behind it). Returns all stars now earned. */
+export async function claimStar(
+  challengeId: string,
+  star: 1 | 2 | 3,
+  note?: string,
+): Promise<{ stars: number[]; is_new: boolean }> {
+  const { data, error } = await apiClient.POST("/api/challenges/{id}/star", {
+    params: { path: { id: challengeId } },
+    body: { star, note: note ?? null },
+  });
+  if (error || !data) throw new Error("Failed to give the star");
+  return data;
+}
+
+export type ChallengeProgress = {
+  challenge_id: string;
+  stars: number[];
+  badges: string[];
+  xp: number;
+  improved_idea?: string | null;
+};
+
+/** Stars, badges and XP per challenge for this kid: the one shared state for cards and header. */
+export async function fetchChallengeProgress(ids: string[]): Promise<ChallengeProgress[]> {
+  if (ids.length === 0) return [];
+  const { data, error } = await apiClient.GET("/api/children/me/challenge-progress", {
+    params: { query: { ids: ids.join(",") } },
+  });
+  if (error || !data) throw new Error("Failed to load progress");
+  return data;
+}
+
 /** Ask the kid's adult to approve sharing. "sent" only when the email really went out. */
 export async function requestApprovalEmail(): Promise<"sent" | "already_approved" | "no_contact" | "not_sent"> {
   try {

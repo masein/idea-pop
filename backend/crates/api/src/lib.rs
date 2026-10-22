@@ -95,9 +95,10 @@ use crate::{
         UpdateVisibilityResponse,
     },
     progress::{
-        AdvanceStepRequest, AdvanceStepResponse, BadgeResponse, LessonCompleteRequest,
-        MedalsResponse, MissionRewardItem, MissionRewardRequest, MissionRewardsResponse,
-        ProgressResponse, StartAttemptResponse, VideoViewRequest, XpAwardResponse,
+        AdvanceStepRequest, AdvanceStepResponse, BadgeResponse, ChallengeProgressItem,
+        LessonCompleteRequest, MedalsResponse, MissionRewardItem, MissionRewardRequest,
+        MissionRewardsResponse, ProgressResponse, StarRequest, StarsResponse, StartAttemptResponse,
+        VideoViewRequest, XpAwardResponse,
     },
     teacher::{
         AssignMissionRequest, ClassGalleryItemResponse, ClassReportQuery, ClassReportResponse,
@@ -253,6 +254,8 @@ pub struct CreateHealthLogRequest {
         progress::post_mission_badge,
         progress::post_photo_bonus,
         progress::get_mission_rewards,
+        progress::post_challenge_star,
+        progress::get_challenge_progress,
         progress::start_attempt, progress::advance_step,
         progress::get_me_progress,
         portfolio::create_project, portfolio::list_my_projects,
@@ -286,6 +289,7 @@ pub struct CreateHealthLogRequest {
         HelpRequest, HelpResponse, HelpMessageResponse, IdeaFeedbackRequest, IdeaFeedbackResponse,
         UpdateHelperEnabledRequest, HelperEnabledResponse,
         VideoViewRequest, LessonCompleteRequest, XpAwardResponse, MissionRewardRequest, MissionRewardItem, MissionRewardsResponse,
+        StarRequest, StarsResponse, ChallengeProgressItem,
         StartAttemptResponse, AdvanceStepRequest, AdvanceStepResponse,
         ProgressResponse, MedalsResponse, BadgeResponse,
         CreateProjectRequest, ProjectResponse, ProjectListResponse,
@@ -641,6 +645,11 @@ pub fn router_with_metrics(
         .route(
             "/challenges/:id/mission-rewards",
             get(progress::get_mission_rewards),
+        )
+        .route("/challenges/:id/star", post(progress::post_challenge_star))
+        .route(
+            "/children/me/challenge-progress",
+            get(progress::get_challenge_progress),
         )
         .route(
             "/progress/lesson-complete",

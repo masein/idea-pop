@@ -27,6 +27,8 @@ interface StepBuildProps {
   onBack: () => void;
   /** Story missions run their own two-round fair test above this step. */
   hideTestQuestion?: boolean;
+  /** A few words before the heading (Max: why a checklist helps before building). */
+  intro?: string | null;
 }
 
 const CHECKLIST_KEYS = ['build_check_1', 'build_check_2', 'build_check_3'] as const;
@@ -41,6 +43,7 @@ export default function StepBuild({
   onBack,
   hideTestQuestion = false,
   onPhotoSaved,
+  intro = null,
 }: StepBuildProps) {
   const t = useTranslations('mission');
   const game = GAME_BY_SLUG[challenge.slug];
@@ -115,6 +118,11 @@ export default function StepBuild({
 
   return (
     <div data-testid="step-build" className="flex flex-col gap-4 px-4 py-6">
+      {intro && (
+        <p data-testid="build-intro" className="rounded-[18px] bg-white px-4 py-3 font-body text-lg font-semibold leading-snug text-ink shadow-[0_4px_14px_rgba(0,0,0,0.06)]">
+          📝 {intro}
+        </p>
+      )}
       <div>
         <h2 className="font-display text-2xl text-challenge">{t('build_heading')}</h2>
       </div>

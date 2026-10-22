@@ -177,6 +177,16 @@ pub trait XpRepo: Send + Sync {
         level: u32,
         rank: &str,
     ) -> Result<(), DomainError>;
+    /// Record a challenge star once. Returns true when it is new.
+    async fn award_star(&self, star: &crate::ChallengeStar) -> Result<bool, DomainError> {
+        let _ = star;
+        Err(DomainError::Internal("stars are not stored here".into()))
+    }
+    /// Every star this kid has earned, on every challenge.
+    async fn list_stars(&self, child_id: Uuid) -> Result<Vec<crate::ChallengeStar>, DomainError> {
+        let _ = child_id;
+        Ok(Vec::new())
+    }
 }
 
 #[async_trait]

@@ -82,6 +82,8 @@ pub struct ChallengeResponse {
     /// The Sketch step's own prompt/guidance (frontend `sketch_prompt` etc.).
     pub sketch_prompt: String,
     pub sketch_guidance: String,
+    /// The Build & test step's instructions (what to build it from): the card's materials.
+    pub build_instructions: String,
     /// The Design-secret step's reveal hint (teaser shown to older kids).
     pub design_secret_story: Option<String>,
     /// The Nature-clues step's clues, flattened for the player.
@@ -177,6 +179,7 @@ fn challenge_to_dto(c: Challenge, has_premium: bool, lang: Option<&str>) -> Chal
     use idea_pop_domain::challenge::ChallengeStep;
     let mut skill_hints = Vec::new();
     let mut build_hints = Vec::new();
+    let mut build_instructions = String::new();
     let mut brief = String::new();
     let mut design_secret = String::new();
     let mut design_secret_story = None;
@@ -228,7 +231,14 @@ fn challenge_to_dto(c: Challenge, has_premium: bool, lang: Option<&str>) -> Chal
                 sketch_prompt = prompt.clone();
                 sketch_guidance = guidance.clone();
             }
-            ChallengeStep::BuildAndTest { hints, .. } => build_hints = hints.clone(),
+            ChallengeStep::BuildAndTest {
+                hints,
+                instructions,
+                ..
+            } => {
+                build_hints = hints.clone();
+                build_instructions = instructions.clone();
+            }
             _ => {}
         }
     }
@@ -276,6 +286,7 @@ fn challenge_to_dto(c: Challenge, has_premium: bool, lang: Option<&str>) -> Chal
         design_secret_story,
         sketch_prompt,
         sketch_guidance,
+        build_instructions,
         nature_clues,
         skill_lesson_id,
         skill_instructions,

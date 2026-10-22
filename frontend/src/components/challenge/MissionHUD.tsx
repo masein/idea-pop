@@ -3,10 +3,19 @@
 import React, { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import XpInfoDialog from './XpInfoDialog';
+import StarRow from './StarRow';
 import { btnPrimary, btnSecondary } from '@/components/challenge/buttons';
 
 const ALL_STEPS = [1, 2, 3, 4, 5, 6, 7, 8] as const;
 const INFO_KEYS = ['problem', 'goal', 'rules'] as const;
+
+/** Difficulty bands for the step dots: 1 explore and understand, 2 create and experiment,
+ *  3 improve and master. Soft outline, darker fill (white tick stays readable). */
+const LEVEL_STYLE: Record<number, { line: string; fill: string; tint: string; text: string }> = {
+  1: { line: '#7FD4A0', fill: '#2E8B57', tint: '#E6F8EC', text: '#1E6B40' },
+  2: { line: '#F5B57A', fill: '#B85A12', tint: '#FFF0E0', text: '#8A4310' },
+  3: { line: '#F29A8F', fill: '#C0473A', tint: '#FDE8E5', text: '#9A3328' },
+};
 
 /** The mission's key facts, shown under the title on every step. */
 export interface MissionKeyInfo {
@@ -29,6 +38,10 @@ interface MissionHUDProps {
   onRestart?: () => void;
   /** This mission's own step names, in order (e.g. Max's 9 steps); default: the usual 8. */
   stepNames?: string[];
+  /** Each step's difficulty band (1–3), same order as the steps; colours the step dots. */
+  stepLevels?: number[];
+  /** The kid's stars on this challenge; shown beside the XP when given. */
+  stars?: number[] | null;
 }
 
 export default function MissionHUD({
@@ -40,6 +53,8 @@ export default function MissionHUD({
   summary = null,
   onRestart,
   stepNames,
+  stepLevels,
+  stars = null,
 }: MissionHUDProps) {
   const t = useTranslations('challenge');
   const steps: number[] = stepNames ? stepNames.map((_, i) => i + 1) : [...ALL_STEPS];
@@ -49,6 +64,8 @@ export default function MissionHUD({
   const [menuOpen, setMenuOpen] = useState(false);
   const [xpOpen, setXpOpen] = useState(false);
   const [confirmRestart, setConfirmRestart] = useState(false);
+  const levelOf = (step: number) => stepLevels?.[step - 1] ?? 0;
+  const maxReached = Math.max(currentStep, ...Array.from(reachedSteps));
 
   function handleStepClick(step: number) {
     if (reachedSteps.has(step)) {
@@ -86,8 +103,9 @@ export default function MissionHUD({
           {challenge.emoji} {challenge.title}
         </h1>
 
-        {/* Right: XP badge — a button that explains XP. dir=ltr so "+N XP"
-            doesn't reorder in RTL. */}
+        {/* Right: the three stars, then the XP badge — a button that explains XP and stars.
+            dir=ltr so "+N XP" doesn't reorder in RTL. */}
+        {stars && <StarRow stars={stars} size={20} className="shrink-0" />}
         <button
           type="button"
           dir="ltr"
@@ -145,6 +163,48 @@ export default function MissionHUD({
           const isCurrent = step === currentStep;
           const isVisited = !isCurrent && reachedSteps.has(step);
           const state = isCurrent ? 'current' : isVisited ? 'done' : 'locked';
+          const level = levelOf(step);
+          if (level) {
+            // Difficulty dots: shape and fill say the state, not only the colour.
+            const c = LEVEL_STYLE[level];
+            const levelState = isCurrent ? 'current' : isVisited ? (step < maxReached ? 'done' : 'available') : 'locked';
+            return (
+              <button
+                key={step}
+                type="button"
+                data-testid={`progress-dot-${step}`}
+                data-state={state}
+                data-level={level}
+                disabled={!isCurrent && !isVisited}
+                aria-current={isCurrent ? 'step' : undefined}
+                aria-label={t('hud_step_level_aria', {
+                  step,
+                  name: stepName(step),
+                  level: t(`hud_level_${level}`),
+                  state: t(`hud_state_${levelState}`),
+                })}
+                title={`${stepName(step)} · ${t(`hud_level_${level}`)}`}
+                onClick={() => isVisited && onJumpTo(step)}
+                style={
+                  levelState === 'done'
+                    ? { background: c.fill, borderColor: c.fill, color: '#fff' }
+                    : levelState === 'current'
+                      ? { background: c.tint, borderColor: c.fill, color: c.text, boxShadow: `0 0 0 3px #fff, 0 0 0 5px ${c.line}` }
+                      : levelState === 'available'
+                        ? { background: '#fff', borderColor: c.line, color: c.text }
+                        : { background: '#fff', borderColor: c.line, color: c.text, opacity: 0.6 }
+                }
+                className={[
+                  'flex shrink-0 items-center justify-center rounded-full border-2 font-display leading-none transition-all duration-300',
+                  isCurrent ? 'h-8 w-8 text-sm' : 'h-6 w-6 text-[11px]',
+                  levelState === 'locked' ? 'cursor-not-allowed border-dashed' : '',
+                  isVisited ? 'hover:scale-110' : '',
+                ].join(' ')}
+              >
+                {levelState === 'done' ? <span aria-hidden="true">✓</span> : step}
+              </button>
+            );
+          }
 
           return (
             <button
@@ -176,10 +236,16 @@ export default function MissionHUD({
         className="bg-white px-4 pb-2.5 text-center font-body text-sm font-semibold text-challenge"
       >
         {stepName(currentStep)}
+        {levelOf(currentStep) > 0 && (
+          <span style={{ color: LEVEL_STYLE[levelOf(currentStep)].text }} className="font-bold">
+            {' · '}
+            {t(`hud_level_${levelOf(currentStep)}`)}
+          </span>
+        )}
       </p>
 
       {xpOpen && (
-        <XpInfoDialog missionXp={challenge.completion_xp} onClose={() => setXpOpen(false)} />
+        <XpInfoDialog missionXp={challenge.completion_xp} withStars={!!stars} onClose={() => setXpOpen(false)} />
       )}
 
       {/* Mission menu dropdown */}

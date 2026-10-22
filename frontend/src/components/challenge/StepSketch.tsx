@@ -27,9 +27,11 @@ interface StepSketchProps {
   hideTools?: boolean;
   /** Story sketch: what still needs doing before the idea can be saved (null when ready). */
   blockedHint?: string | null;
+  /** Guiding questions about the idea, then the idea's name and submit wording (Max). */
+  guide?: { questions: string[]; nameLabel: string; submitLabel: string } | null;
 }
 
-export default function StepSketch({ challenge, ageMode, onNext, onBack, hideTools = false, blockedHint = null }: StepSketchProps) {
+export default function StepSketch({ challenge, ageMode, onNext, onBack, hideTools = false, blockedHint = null, guide = null }: StepSketchProps) {
   const t = useTranslations('mission');
   const game = GAME_BY_SLUG[challenge.slug];
   // The hook must run unconditionally; the namespace is only read when a game exists.
@@ -149,13 +151,14 @@ export default function StepSketch({ challenge, ageMode, onNext, onBack, hideToo
         <CaptureCard
           showExtendedFields={false}
           photoPrompt={t('sketch_photo_prompt')}
-          submitLabel={t('sketch_submit')}
+          submitLabel={guide?.submitLabel ?? t('sketch_submit')}
           ageMode={ageMode}
           onSubmit={handleSubmit}
           submitting={submitting}
           helper={{ challengeId: challenge.id, step: 6 }}
           nameOnly={!!challenge.story}
-          titleLabel={challenge.story ? t('name_your_idea') : undefined}
+          titleLabel={guide?.nameLabel ?? (challenge.story ? t('name_your_idea') : undefined)}
+          questions={guide?.questions}
           blockedHint={blockedHint}
         />
       )}

@@ -6,6 +6,7 @@
 #![forbid(unsafe_code)]
 
 pub mod account;
+pub mod achievements;
 pub mod auth_service;
 pub mod billing;
 pub mod challenge;
@@ -19,6 +20,7 @@ pub mod progress;
 pub mod story;
 
 pub use account::{Account, RefreshSession, Role, TokenClaims, TokenPair};
+pub use achievements::{challenge_badges, challenge_xp, check_star, ChallengeStar, STAR_COUNT};
 pub use auth_service::AuthService;
 pub use billing::{
     apply_webhook_event, is_premium, CheckoutResult, Plan, Subscription, SubscriptionStatus,

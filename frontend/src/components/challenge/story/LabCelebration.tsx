@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useTranslations } from 'next-intl';
 import { btnSecondary, btnText } from '@/components/challenge/buttons';
 import RewardPopup from './RewardPopup';
@@ -11,17 +11,25 @@ interface Props {
   onPhoto: (photo: File) => Promise<number | null>;
   onKeepExploring: () => void;
   onEnough: () => void;
+  /** No camera? The kid describes the model in words instead (resolves true when saved). */
+  onDescribe?: (text: string) => Promise<boolean>;
+  /** The star this documentation earned, shown once it is given. */
+  star?: ReactNode;
 }
 
 /** The lab is done: "What Did You Build?", an optional photo of the model (private, never
  *  published by itself), then keep exploring or stop for today. Same reward popup as the
  *  badges; the photo earns its XP once. */
-export default function LabCelebration({ onPhoto, onKeepExploring, onEnough }: Props) {
+export default function LabCelebration({ onPhoto, onKeepExploring, onEnough, onDescribe, star = null }: Props) {
   const t = useTranslations('story');
   const fileRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [state, setState] = useState<'none' | 'saving' | 'saved' | 'failed'>('none');
   const [xp, setXp] = useState<number | null>(null);
+  // The words-instead-of-a-photo box (only when the page offers it).
+  const [describing, setDescribing] = useState(false);
+  const [words, setWords] = useState('');
+  const [wordsState, setWordsState] = useState<'none' | 'saving' | 'saved' | 'failed'>('none');
   useEffect(() => () => {
     if (preview) URL.revokeObjectURL(preview);
   }, [preview]);
@@ -35,6 +43,7 @@ export default function LabCelebration({ onPhoto, onKeepExploring, onEnough }: P
       primary={{ label: t('lab_keep_exploring'), onClick: onKeepExploring, disabled: state === 'saving' }}
       secondary={{ label: t('enough_today'), onClick: onEnough, disabled: state === 'saving' }}
     >
+      {star && <div className="mb-3">{star}</div>}
       <div className="flex flex-col items-center gap-2 rounded-[18px] bg-[#EAF5FC] p-4">
         <input
           ref={fileRef}
@@ -68,6 +77,47 @@ export default function LabCelebration({ onPhoto, onKeepExploring, onEnough }: P
           <button type="button" data-testid="lab-add-photo" onClick={() => fileRef.current?.click()} className={btnSecondary}>
             📷 {t('lab_add_photo')}
           </button>
+        )}
+        {onDescribe && !preview && wordsState !== 'saved' && (
+          describing ? (
+            <form
+              data-testid="lab-describe"
+              className="flex w-full flex-col gap-2"
+              onSubmit={async (e) => {
+                e.preventDefault();
+                if (words.trim().length < 3) return;
+                setWordsState('saving');
+                setWordsState((await onDescribe(words.trim())) ? 'saved' : 'failed');
+              }}
+            >
+              <label htmlFor="lab-describe-input" className="font-body text-sm font-bold text-ink">
+                {t('lab_describe_label')}
+              </label>
+              <textarea
+                id="lab-describe-input"
+                rows={3}
+                maxLength={600}
+                dir="auto"
+                value={words}
+                onChange={(e) => setWords(e.target.value)}
+                placeholder={t('lab_describe_placeholder')}
+                className="w-full resize-none rounded-lg border border-[#8FA3B8] bg-white px-3 py-2 font-body text-base text-ink focus:border-challenge focus:outline-none"
+              />
+              <button type="submit" data-testid="lab-describe-save" disabled={words.trim().length < 3 || wordsState === 'saving'} className={btnSecondary}>
+                {wordsState === 'saving' ? t('lab_photo_saving') : t('lab_describe_save')}
+              </button>
+              {wordsState === 'failed' && <p className="font-body text-sm font-semibold text-[#9A3328]">{t('lab_describe_failed')}</p>}
+            </form>
+          ) : (
+            <button type="button" data-testid="lab-describe-open" onClick={() => setDescribing(true)} className={btnText}>
+              {t('lab_no_photo')}
+            </button>
+          )
+        )}
+        {wordsState === 'saved' && (
+          <p data-testid="lab-describe-saved" aria-live="polite" className="font-body text-sm font-semibold text-[#1E7A44]">
+            ✓ {t('lab_describe_saved')}
+          </p>
         )}
         <p className="font-body text-xs text-[#4A5560]">{t('photo_private_note')}</p>
         <p className="font-body text-xs font-semibold text-[#4A5560]">{t('photo_bonus_note')}</p>

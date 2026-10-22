@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 340" role="img" aria-label="A water strider standing on water, and a close-up of its leg with tiny water-repellent hairs that dent the water surface without breaking it.">
+  <rect width="640" height="340" rx="18" fill="#F4FBFF"/>
+  <!-- Left: the whole insect on the water -->
+  <rect x="0" y="190" width="300" height="150" fill="#BFE7F8"/>
+  <path d="M0 190 H300" stroke="#58A9D6" stroke-width="3"/>
+  <ellipse cx="150" cy="165" rx="34" ry="12" fill="#5B4636"/>
+  <circle cx="186" cy="161" r="9" fill="#5B4636"/>
+  <g stroke="#5B4636" stroke-width="4" fill="none" stroke-linecap="round">
+    <path d="M130 168 Q70 150 30 188"/>
+    <path d="M170 168 Q230 150 270 188"/>
+    <path d="M140 170 Q110 182 92 189"/>
+    <path d="M162 170 Q192 182 210 189"/>
+  </g>
+  <g fill="none" stroke="#2D7FB0" stroke-width="2.5">
+    <path d="M14 190 Q30 200 46 190"/>
+    <path d="M254 190 Q270 200 286 190"/>
+    <path d="M78 190 Q92 197 106 190"/>
+    <path d="M196 190 Q210 197 224 190"/>
+  </g>
+  <text x="150" y="40" text-anchor="middle" font-family="Montserrat, 'Playpen Sans Arabic', sans-serif" font-size="20" font-weight="800" fill="#1B3A6B">Water strider</text>
+  <text x="150" y="232" text-anchor="middle" font-family="Montserrat, 'Playpen Sans Arabic', sans-serif" font-size="15" font-weight="700" fill="#0F4F7A">Legs press small dents in the water</text>
+  <!-- Zoom lens -->
+  <circle cx="246" cy="190" r="22" fill="none" stroke="#F2994A" stroke-width="4"/>
+  <path d="M266 176 L372 92" stroke="#F2994A" stroke-width="3" stroke-dasharray="6 5"/>
+  <path d="M266 204 L372 258" stroke="#F2994A" stroke-width="3" stroke-dasharray="6 5"/>
+  <!-- Right: the magnified leg -->
+  <circle cx="480" cy="175" r="115" fill="#FFFFFF" stroke="#F2994A" stroke-width="5"/>
+  <clipPath id="lens"><circle cx="480" cy="175" r="112"/></clipPath>
+  <g clip-path="url(#lens)">
+    <rect x="360" y="210" width="240" height="90" fill="#BFE7F8"/>
+    <path d="M360 210 Q480 250 600 210" fill="#BFE7F8" stroke="#2D7FB0" stroke-width="4"/>
+    <path d="M372 158 Q480 212 590 158" fill="none" stroke="#5B4636" stroke-width="16" stroke-linecap="round"/>
+    <g stroke="#7A6450" stroke-width="2.5" stroke-linecap="round">
+      <path d="M382.0 168.7 l-5 12"/>
+      <path d="M393.0 173.4 l5 12"/>
+      <path d="M404.0 177.5 l-5 12"/>
+      <path d="M415.0 181.1 l5 12"/>
+      <path d="M426.0 184.1 l-5 12"/>
+      <path d="M437.0 186.6 l5 12"/>
+      <path d="M448.0 188.5 l-5 12"/>
+      <path d="M459.0 189.9 l5 12"/>
+      <path d="M470.0 190.7 l-5 12"/>
+      <path d="M481.0 191.0 l5 12"/>
+      <path d="M492.0 190.7 l-5 12"/>
+      <path d="M503.0 189.9 l5 12"/>
+      <path d="M514.0 188.5 l-5 12"/>
+      <path d="M525.0 186.6 l5 12"/>
+      <path d="M536.0 184.1 l-5 12"/>
+      <path d="M547.0 181.1 l5 12"/>
+      <path d="M558.0 177.5 l-5 12"/>
+      <path d="M569.0 173.4 l5 12"/>
+      <path d="M580.0 168.7 l-5 12"/>
+    </g>
+    <g fill="#FFFFFF" stroke="#58A9D6" stroke-width="1.5">
+      <circle cx="396" cy="204" r="4"/>
+      <circle cx="421" cy="209.5244129544237" r="4"/>
+      <circle cx="446" cy="212.72789228047705" r="4"/>
+      <circle cx="471" cy="204.4233600241796" r="4"/>
+      <circle cx="496" cy="204.72959251407622" r="4"/>
+      <circle cx="521" cy="207.12322717601057" r="4"/>
+      <circle cx="546" cy="203.16175350540323" r="4"/>
+      <circle cx="571" cy="208.97095979615636" r="4"/>
+    </g>
+  </g>
+  <text x="630" y="28" text-anchor="end" font-family="Montserrat, 'Playpen Sans Arabic', sans-serif" font-size="15" font-weight="800" fill="#7A4A10">Tiny water-repellent hairs</text>
+  <text x="630" y="48" text-anchor="end" font-family="Montserrat, 'Playpen Sans Arabic', sans-serif" font-size="13" font-weight="600" fill="#5B4636">They trap air and push water away</text>
+  <text x="480" y="318" text-anchor="middle" font-family="Montserrat, 'Playpen Sans Arabic', sans-serif" font-size="14" font-weight="700" fill="#0F4F7A">The water surface bends but does not break</text>
+</svg>

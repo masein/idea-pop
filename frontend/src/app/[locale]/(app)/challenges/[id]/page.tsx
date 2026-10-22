@@ -15,7 +15,10 @@ import RewardPopup from '@/components/challenge/story/RewardPopup';
 import GuideNameMessages from '@/components/challenge/story/GuideNameMessages';
 import { BADGE_ART, MISSION_XP_MAX, type MissionBadgeKey } from '@/components/challenge/story/missionBadges';
 import { discoveryOf } from '@/components/challenge/story/discovery';
-import { claimMissionBadge, claimPhotoBonus } from '@/lib/api/client';
+import { claimMissionBadge, claimPhotoBonus, claimStar, fetchChallengeProgress } from '@/lib/api/client';
+import { announceChallengeProgress, useChallengeProgress } from '@/lib/hooks/useChallengeProgress';
+import StarNotice from '@/components/challenge/StarNotice';
+import { ImprovedIdeaBox, ThreeStarCelebration } from '@/components/challenge/story/ImprovedIdea';
 import MissionHUD from '@/components/challenge/MissionHUD';
 import StepBrief from '@/components/challenge/StepBrief';
 import StepIdeaFork from '@/components/challenge/StepIdeaFork';
@@ -47,6 +50,10 @@ type XpAward = components['schemas']['XpAwardResponse'];
 
 type StepNum = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 type ActiveTab = 'mission' | 'wall';
+
+/** The nine-step template's difficulty bands: 1–4 explore and understand, 5–6 create and
+ *  experiment, 7–9 improve and master. */
+const NINE_STEP_LEVELS = [1, 1, 1, 1, 2, 2, 3, 3, 3];
 
 function isStepNum(n: number): n is StepNum {
   return n >= 1 && n <= 8;
@@ -94,7 +101,16 @@ function ChallengePageInner({ onBadgeMode }: { onBadgeMode: (on: boolean) => voi
     xp: number | null;
     again: boolean;
     popi: { state: 'loading' | 'done' | 'off'; text?: string; fits?: boolean };
+    /** The stars after this idea earned the first one (shown once, when it is new). */
+    stars?: number[];
   } | null>(null);
+  // Stars, badges and XP on this challenge: the same shared state as the Challenges cards.
+  const progressMap = useChallengeProgress(params.id ? [params.id] : []);
+  const myProgress = progressMap[params.id] ?? null;
+  // A star just earned in the lab popup (star 2), and on the last page (star 3 / all three).
+  const [labStars, setLabStars] = useState<number[] | null>(null);
+  const [lastStar, setLastStar] = useState<number[] | null>(null);
+  const [threeStar, setThreeStar] = useState<{ xp: number | null; badges: string[] } | null>(null);
   const { game, update: updateGame, award: awardBadge, reset: resetGame, loaded: gameLoaded, resumeLater } = useMissionGame(params.id);
   // Max's Skills page (SCAMPER) is its own step after the Experiment: has the kid reached it?
   const [toolReached, setToolReached] = useState(false);
@@ -342,6 +358,16 @@ function ChallengePageInner({ onBadgeMode }: { onBadgeMode: (on: boolean) => voi
   };
   const givePhoto = (key: 'design' | 'build') => claimPhotoBonus(challenge.id, key).catch(() => null);
   const badgeOf = (key: MissionBadgeKey) => ({ art: BADGE_ART[key], name: tStory(`mission_badge_${key}`) });
+  const disc = discoveryOf(story);
+  // Give a star once; the server checks the work behind it. Every screen hears about it.
+  const giveStar = (star: 1 | 2 | 3, note?: string) =>
+    claimStar(challenge.id, star, note)
+      .then((r) => {
+        announceChallengeProgress(challenge.id);
+        return r;
+      })
+      .catch(() => null);
+  const stars = myProgress?.stars ?? [];
   const gameProps = { game, update: updateGame };
 
   // A picture-book brief fills the frame; every other step keeps the narrow reading column.
@@ -358,6 +384,8 @@ function ChallengePageInner({ onBadgeMode }: { onBadgeMode: (on: boolean) => voi
         reachedSteps={shownReached}
         onJumpTo={jumpTo}
         stepNames={stepNames}
+        stepLevels={split ? NINE_STEP_LEVELS : undefined}
+        stars={badgeMode ? stars : null}
         ideaPath={ideaPath}
         keyInfo={story ? story.card : null}
         summary={challenge.brief}
@@ -451,6 +479,15 @@ function ChallengePageInner({ onBadgeMode }: { onBadgeMode: (on: boolean) => voi
             <StepSketch
               {...sharedProps}
               hideTools={story !== null}
+              guide={
+                badgeMode && disc?.idea_questions?.length
+                  ? {
+                      questions: disc.idea_questions,
+                      nameLabel: disc.idea_name_prompt ?? tStory('name_idea_fallback'),
+                      submitLabel: tStory('submit_idea'),
+                    }
+                  : null
+              }
               onNext={(projectId, idea, saved) => {
                 if (projectId) setSketchProjectId(projectId);
                 // The saved idea goes on to the Substitute practice (and is kept for next time).
@@ -463,7 +500,13 @@ function ChallengePageInner({ onBadgeMode }: { onBadgeMode: (on: boolean) => voi
                 setSolvedCelebration({ xp: null, again: game.badges.includes('solved'), popi: { state: idea || game.partnerAnswers?.inspired ? 'loading' : 'off' } });
                 if (badgeMode) {
                   void Promise.all([giveBadge('solved'), saved?.photo ? givePhoto('design') : Promise.resolve(0)]).then(
-                    ([b, p]) => setSolvedCelebration((c) => (c ? { ...c, xp: b + (p ?? 0) } : c)),
+                    ([b, p]) => {
+                      setSolvedCelebration((c) => (c ? { ...c, xp: b + (p ?? 0) } : c));
+                      // The first idea is in: the first star (after the badge, which it needs).
+                      void giveStar(1).then((r) => {
+                        if (r?.is_new) setSolvedCelebration((c) => (c ? { ...c, stars: r.stars } : c));
+                      });
+                    },
                   );
                 } else {
                   claimSketchBonus(challenge.id)
@@ -594,6 +637,7 @@ function ChallengePageInner({ onBadgeMode }: { onBadgeMode: (on: boolean) => voi
           {currentStep === 7 && !hiddenSteps.includes(7) && (
             <StepBuild
               {...sharedProps}
+              intro={badgeMode ? disc?.checklist_intro ?? null : null}
               hideTestQuestion={story !== null}
               sketchProjectId={sketchProjectId}
               onPhotoSaved={badgeMode ? () => void givePhoto('build') : undefined}
@@ -619,6 +663,31 @@ function ChallengePageInner({ onBadgeMode }: { onBadgeMode: (on: boolean) => voi
           )}
 
           {currentStep === 8 && story && <StoryEnding story={story} {...gameProps} hiddenSteps={hiddenSteps} badgeMode={badgeMode} />}
+
+          {currentStep === 8 && badgeMode && disc?.improved_idea && (
+            <div className="mt-4 flex flex-col gap-3">
+              <ImprovedIdeaBox
+                key={myProgress?.improved_idea ? 'saved' : 'open'}
+                box={disc.improved_idea}
+                reference={game.substSaved}
+                submitted={myProgress?.improved_idea ?? null}
+                onSubmit={async (text) => {
+                  const r = await giveStar(3, text);
+                  if (!r) return false;
+                  if ([1, 2, 3].every((n) => r.stars.includes(n))) {
+                    // Every requirement met: the three-star celebration, with this challenge's XP and
+                    // badges (the same numbers as the challenge card).
+                    const [now] = await fetchChallengeProgress([challenge.id]).catch(() => []);
+                    setThreeStar({ xp: now?.xp ?? myProgress?.xp ?? null, badges: now?.badges ?? myProgress?.badges ?? [] });
+                  } else if (r.is_new) {
+                    setLastStar(r.stars);
+                  }
+                  return true;
+                }}
+              />
+              {lastStar && <StarNotice star={3} stars={lastStar} />}
+            </div>
+          )}
 
           {currentStep === 8 && (
             <StepCelebrate
@@ -685,6 +754,11 @@ function ChallengePageInner({ onBadgeMode }: { onBadgeMode: (on: boolean) => voi
             },
           }}
         >
+          {solvedCelebration.stars && (
+            <div className="mb-3">
+              <StarNotice star={1} stars={solvedCelebration.stars} />
+            </div>
+          )}
           {solvedCelebration.popi && (
             <div data-testid="popi-idea-check" aria-live="polite" className="flex items-start gap-3 rounded-[18px] bg-[#EAF5FC] p-3 text-start">
               {/* eslint-disable-next-line @next/next/no-img-element -- the guide's small cut-out */}
@@ -771,10 +845,26 @@ function ChallengePageInner({ onBadgeMode }: { onBadgeMode: (on: boolean) => voi
               .catch(() => false);
             if (!ok) return null;
             if (!badgeMode) return 0;
-            return (await givePhoto('build')) ?? 0;
+            const xp = (await givePhoto('build')) ?? 0;
+            // Experiment finished and the prototype documented: the second star.
+            const r = await giveStar(2);
+            if (r?.is_new) setLabStars(r.stars);
+            return xp;
           }}
+          onDescribe={
+            badgeMode
+              ? async (text) => {
+                  // No photo: the kid's own description documents the model instead (kept with the star).
+                  const r = await giveStar(2, text);
+                  if (r?.is_new) setLabStars(r.stars);
+                  return !!r && r.stars.includes(2);
+                }
+              : undefined
+          }
+          star={labStars ? <StarNotice star={2} stars={labStars} /> : null}
           onKeepExploring={() => {
             setLabCelebration(null);
+            setLabStars(null);
             void goToStep(6, 'tool');
             window.scrollTo({ top: 0, behavior: 'smooth' });
             document.querySelector('main')?.scrollTo({ top: 0, behavior: 'smooth' });
@@ -785,6 +875,10 @@ function ChallengePageInner({ onBadgeMode }: { onBadgeMode: (on: boolean) => voi
             router.push('/challenges');
           }}
         />
+      )}
+
+      {threeStar && (
+        <ThreeStarCelebration xp={threeStar.xp} badges={threeStar.badges} onClose={() => setThreeStar(null)} />
       )}
 
       {visible && award && (

@@ -329,6 +329,33 @@ export interface paths {
       };
     };
   };
+  "/api/challenges/{id}/star": {
+    post: {
+      parameters: { path: { id: string } };
+      requestBody: { content: { "application/json": { star: number; note?: string | null } } };
+      responses: {
+        200: { content: { "application/json": { stars: number[]; is_new: boolean } } };
+      };
+    };
+  };
+  "/api/children/me/challenge-progress": {
+    get: {
+      parameters: { query: { ids: string } };
+      responses: {
+        200: {
+          content: {
+            "application/json": {
+              challenge_id: string;
+              stars: number[];
+              badges: string[];
+              xp: number;
+              improved_idea?: string | null;
+            }[];
+          };
+        };
+      };
+    };
+  };
   "/api/children/me/approval-email": {
     post: {
       responses: {
@@ -1050,6 +1077,8 @@ export interface components {
       /** The Sketch step's own prompt/guidance (empty string when absent). */
       sketch_prompt?: string;
       sketch_guidance?: string;
+      /** The Build & test step's instructions: the challenge card's materials. */
+      build_instructions?: string;
       nature_clues: components["schemas"]["NatureClue"][];
       skill_lesson_id: string | null;
       /** The Skill step's authored instructions text, if any. */

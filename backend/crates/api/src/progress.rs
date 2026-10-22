@@ -7,7 +7,7 @@
 //!   requesting child before mutating.
 
 use axum::{
-    extract::{Path, State},
+    extract::{Path, Query, State},
     http::StatusCode,
     response::IntoResponse,
     Json,
@@ -18,6 +18,7 @@ use utoipa::ToSchema;
 use uuid::Uuid;
 
 use idea_pop_domain::{
+    challenge_badges, challenge_xp, check_star,
     progress::{
         award_cycle_bonus, award_define_bonus, award_mission_badge, award_photo_bonus,
         award_sketch_bonus, evaluate_new_badges, level_from_xp, medal_from_count,
@@ -25,7 +26,7 @@ use idea_pop_domain::{
         AttemptStatus, ChallengeAttempt, CycleActivityResult, XpEvent, XpSourceType,
         MISSION_BADGE_KEYS, PHOTO_BONUS_KEYS,
     },
-    DomainError,
+    ChallengeStar, DomainError,
 };
 
 use crate::{error::ApiError, extractor::KidAuth, state::AppState};
@@ -529,6 +530,150 @@ pub async fn get_mission_rewards(
         xp_earned,
         xp_max,
     }))
+}
+
+// ── Challenge stars (three per challenge) and per-challenge progress ───────────
+
+#[derive(Debug, Deserialize, ToSchema)]
+pub struct StarRequest {
+    /// 1 = first idea submitted, 2 = experiment finished and documented,
+    /// 3 = final stage done and the improved idea submitted.
+    pub star: i16,
+    /// The prototype description (star 2 without a photo) or the improved idea (star 3).
+    pub note: Option<String>,
+}
+
+#[derive(Debug, Serialize, ToSchema)]
+pub struct StarsResponse {
+    /// Every star this kid now has on the challenge, ascending.
+    pub stars: Vec<i16>,
+    /// True when this call gave the star (false = it was already earned).
+    pub is_new: bool,
+}
+
+/// Give a challenge star once, only when its activity is really done.
+#[utoipa::path(
+    post, path = "/challenges/{id}/star", tag = "progress",
+    params(("id" = Uuid, Path, description = "Challenge UUID")),
+    request_body = StarRequest,
+    responses(
+        (status = 200, description = "The kid's stars on this challenge", body = StarsResponse),
+        (status = 404, description = "Challenge not found", body = crate::ProblemDetail),
+        (status = 422, description = "The star's activity is not finished", body = crate::ProblemDetail),
+    )
+)]
+pub async fn post_challenge_star(
+    KidAuth { child_id, .. }: KidAuth,
+    State(state): State<AppState>,
+    Path(challenge_id): Path<Uuid>,
+    Json(body): Json<StarRequest>,
+) -> Result<Json<StarsResponse>, ApiError> {
+    let star_mission = state
+        .challenge
+        .find_by_id(challenge_id)
+        .await?
+        .ok_or(ApiError::Domain(DomainError::NotFound))?
+        .story
+        .is_some_and(|s| s.badge_rewards());
+    if !star_mission {
+        return Err(ApiError::Domain(DomainError::Validation(
+            "this mission has no stars yet".into(),
+        )));
+    }
+    let xp = &state.gamification.xp;
+    let note = body
+        .note
+        .as_deref()
+        .map(str::trim)
+        .filter(|n| !n.is_empty())
+        .map(|n| n.chars().take(2000).collect::<String>());
+    let events = xp.list_events(child_id).await?;
+    let already = xp
+        .list_stars(child_id)
+        .await?
+        .iter()
+        .any(|s| s.challenge_id == challenge_id && s.star == body.star);
+    let is_new = if already {
+        false
+    } else {
+        check_star(body.star, challenge_id, &events, note.as_deref())?;
+        xp.award_star(&ChallengeStar {
+            child_id,
+            challenge_id,
+            star: body.star,
+            note,
+        })
+        .await?
+    };
+    let stars = xp
+        .list_stars(child_id)
+        .await?
+        .into_iter()
+        .filter(|s| s.challenge_id == challenge_id)
+        .map(|s| s.star)
+        .collect();
+    Ok(Json(StarsResponse { stars, is_new }))
+}
+
+#[derive(Debug, Deserialize)]
+pub struct ChallengeProgressQuery {
+    /// Comma-separated challenge ids (the cards on screen).
+    pub ids: String,
+}
+
+#[derive(Debug, Serialize, ToSchema)]
+pub struct ChallengeProgressItem {
+    pub challenge_id: Uuid,
+    /// Stars earned, ascending (at most 3).
+    pub stars: Vec<i16>,
+    /// Badge keys earned on this challenge.
+    pub badges: Vec<String>,
+    /// XP earned on this challenge.
+    pub xp: i32,
+    /// The improved idea submitted for star 3, if any.
+    pub improved_idea: Option<String>,
+}
+
+/// Stars, badges and XP per challenge for this kid: one shared state for cards and header.
+#[utoipa::path(
+    get, path = "/children/me/challenge-progress", tag = "progress",
+    params(("ids" = String, Query, description = "Comma-separated challenge UUIDs")),
+    responses((status = 200, description = "Progress per challenge", body = [ChallengeProgressItem]))
+)]
+pub async fn get_challenge_progress(
+    KidAuth { child_id, .. }: KidAuth,
+    State(state): State<AppState>,
+    Query(q): Query<ChallengeProgressQuery>,
+) -> Result<Json<Vec<ChallengeProgressItem>>, ApiError> {
+    let ids: Vec<Uuid> = q
+        .ids
+        .split(',')
+        .filter_map(|s| Uuid::parse_str(s.trim()).ok())
+        .take(200)
+        .collect();
+    let events = state.gamification.xp.list_events(child_id).await?;
+    let stars = state.gamification.xp.list_stars(child_id).await?;
+    Ok(Json(
+        ids.into_iter()
+            .map(|id| {
+                let mine: Vec<&ChallengeStar> =
+                    stars.iter().filter(|s| s.challenge_id == id).collect();
+                ChallengeProgressItem {
+                    challenge_id: id,
+                    stars: mine.iter().map(|s| s.star).collect(),
+                    badges: challenge_badges(id, &events)
+                        .into_iter()
+                        .map(str::to_owned)
+                        .collect(),
+                    xp: challenge_xp(id, &events),
+                    improved_idea: mine
+                        .iter()
+                        .find(|s| s.star == 3)
+                        .and_then(|s| s.note.clone()),
+                }
+            })
+            .collect(),
+    ))
 }
 
 // ── POST /progress/lesson-complete ───────────────────────────────────────────

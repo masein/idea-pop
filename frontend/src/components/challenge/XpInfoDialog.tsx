@@ -4,10 +4,13 @@ import { useEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { fetchKidProgress } from '@/lib/api/client';
 import { levelProgress } from '@/lib/progress';
+import StarRow from './StarRow';
 
 interface XpInfoDialogProps {
   /** XP this mission gives when it is finished. */
   missionXp: number;
+  /** The challenge has three stars: explain XP and stars separately. */
+  withStars?: boolean;
   onClose: () => void;
 }
 
@@ -27,8 +30,9 @@ const EARN_ROWS = [
 
 /** The "What is XP?" panel. It drops down from the mission's top bar, like
  *  the mission menu, when the kid taps the XP badge. */
-export default function XpInfoDialog({ missionXp, onClose }: XpInfoDialogProps) {
+export default function XpInfoDialog({ missionXp, withStars = false, onClose }: XpInfoDialogProps) {
   const t = useTranslations('challenge');
+  const tStars = useTranslations('stars');
   const [mine, setMine] = useState<MyXp | null | 'loading'>('loading');
   const closeRef = useRef<HTMLButtonElement>(null);
 
@@ -67,7 +71,7 @@ export default function XpInfoDialog({ missionXp, onClose }: XpInfoDialogProps) 
         <div className="mx-auto max-w-2xl">
           <div className="flex items-center justify-between px-5 pt-4">
             <h2 id="xp-info-title" className="font-display text-lg text-challenge">
-              ⭐ {t('xp_info_title')}
+              ⭐ {withStars ? tStars('info_title') : t('xp_info_title')}
             </h2>
             <button
               ref={closeRef}
@@ -82,7 +86,33 @@ export default function XpInfoDialog({ missionXp, onClose }: XpInfoDialogProps) 
 
           <div className="flex flex-col gap-4 px-5 pb-5 pt-2 font-body text-sm text-ink">
             {/* 1. What XP means */}
-            <p>{t('xp_info_what')}</p>
+            {withStars ? (
+              <section data-testid="xp-info-what" className="flex flex-col gap-1 rounded-card bg-[#EAF5FC] p-3">
+                <h3 className="font-display text-base text-[#135A85]">⭐ {tStars('what_xp_title')}</h3>
+                <p>{tStars('what_xp_text')}</p>
+              </section>
+            ) : (
+              <p>{t('xp_info_what')}</p>
+            )}
+
+            {/* 1b. What three stars mean (never the same thing as XP) */}
+            {withStars && (
+              <section data-testid="xp-info-stars" className="flex flex-col gap-2 rounded-card bg-[#FFF7D6] p-3">
+                <h3 className="flex items-center gap-2 font-display text-base text-[#7A5A00]">
+                  <StarRow stars={[1, 2, 3]} size={18} /> {tStars('what_stars_title')}
+                </h3>
+                <p>{tStars('what_stars_text')}</p>
+                <ol className="flex flex-col gap-1">
+                  {[1, 2, 3].map((n) => (
+                    <li key={n} className="flex items-start gap-2">
+                      <span aria-hidden="true" className="shrink-0 font-extrabold text-[#B07A00]">★{n}</span>
+                      <span>{tStars(`star_${n}_rule`)}</span>
+                    </li>
+                  ))}
+                </ol>
+                <p className="text-xs font-semibold text-[#5a4300]">{tStars('xp_vs_stars')}</p>
+              </section>
+            )}
 
             {/* 4. This mission */}
             <div
@@ -123,7 +153,8 @@ export default function XpInfoDialog({ missionXp, onClose }: XpInfoDialogProps) 
             <div className="flex flex-col gap-1.5">
               <p className="font-body font-bold text-sm text-ink">{t('xp_info_how_title')}</p>
               <ul className="flex flex-col gap-1.5">
-                {EARN_ROWS.map((row) => (
+                {/* Star challenges give XP per badge and photo, not the +20 for finishing. */}
+                {EARN_ROWS.filter((row) => !(withStars && row.key === 'solve')).map((row) => (
                   <li key={row.key} className="flex items-center gap-2">
                     <span aria-hidden="true">{row.emoji}</span>
                     <span className="flex-1">{t(`xp_info_earn_${row.key}`)}</span>

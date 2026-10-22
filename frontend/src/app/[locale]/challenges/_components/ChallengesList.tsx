@@ -8,6 +8,13 @@ import { useAgeMode } from '@/lib/hooks/useAgeMode';
 import { fetchChallenges, fetchClassMission, requestPremiumUnlock } from '@/lib/api/client';
 import IdeasWallTab from '@/components/challenge/IdeasWallTab';
 import type { components } from '@/lib/api/schema';
+import type { ChallengeProgress } from '@/lib/api/client';
+import { useChallengeProgress } from '@/lib/hooks/useChallengeProgress';
+import StarRow from '@/components/challenge/StarRow';
+import { Character3D } from '@/components/challenge/story/StoryBits';
+import { discoveryOf } from '@/components/challenge/story/discovery';
+import { BADGE_ART, type MissionBadgeKey } from '@/components/challenge/story/missionBadges';
+import type { MissionStory } from '@/components/challenge/story/types';
 
 type ChallengeDetail = components['schemas']['ChallengeDetail'];
 
@@ -76,6 +83,9 @@ export default function ChallengesList() {
       .then((m) => setAssignedId(m?.challenge_id ?? null))
       .catch(() => {});
   }, [locale]);
+
+  // Stars, badges and XP for the cards the kid can open (one shared state with the header).
+  const progress = useChallengeProgress(challenges.filter((c, i) => !(c.locked ?? i > 0)).map((c) => c.id));
 
   // Prefer the class-assigned mission; fall back to the first challenge.
   const featured =
@@ -184,6 +194,7 @@ export default function ChallengesList() {
                   index={i + 1}
                   challenge={c}
                   assigned={assigned}
+                  progress={progress[c.id] ?? null}
                   onOpen={() => router.push(`/challenges/${c.id}`)}
                 />
               );
@@ -231,6 +242,10 @@ function inPageOrder<T extends { slug?: string }>(list: T[]): T[] {
 }
 // Where to centre a cover (Max's picture has empty word boxes at the top).
 const COVER_POSITION: Record<string, string> = { 'help-max-cross-the-river': 'center 75%' };
+// Covers zoomed in from one corner, so an empty word box at the top stays out of the frame.
+const COVER_ZOOM: Record<string, { transform: string; transformOrigin: string }> = {
+  'help-max-cross-the-river': { transform: 'scale(1.36)', transformOrigin: '42% 100%' },
+};
 function coverFor(slug: string | undefined): string {
   return (slug && COVER_BY_SLUG[slug]) || DEFAULT_COVER;
 }
@@ -239,55 +254,176 @@ function UnlockedChallengeCard({
   index,
   challenge,
   assigned = false,
+  progress,
   onOpen,
 }: {
   index: number;
   challenge: ChallengeDetail;
   assigned?: boolean;
+  progress: ChallengeProgress | null;
   onOpen: () => void;
 }) {
   const t = useTranslations('challenge');
+  const tStory = useTranslations('story');
+  // Touch and keyboard turn the card with its button; a mouse turns it on hover.
+  const [open, setOpen] = useState(false);
+  const story = (challenge.story ?? null) as MissionStory | null;
+  const discovery = discoveryOf(story);
+  // Nature inspirations: the story's nature heroes, or the classic clues.
+  const nature = story?.clue_cards?.length
+    ? story.clue_cards.map((c) => ({ name: c.name, image: c.image ?? null, emoji: c.emoji }))
+    : (challenge.nature_clues ?? []).map((c) => ({ name: c.title, image: c.image_url ?? null, emoji: c.emoji }));
+  const materials = discovery?.materials ?? [];
+  const buildText = challenge.build_instructions ?? '';
+  const stars = progress?.stars ?? [];
+  const badges = (progress?.badges ?? []).filter((b): b is MissionBadgeKey => b in BADGE_ART);
+  const xp = progress?.xp ?? 0;
+  const started = stars.length > 0 || xp > 0;
+  const backId = `card-back-${challenge.id}`;
 
   return (
-    <button
-      type="button"
+    <div
       data-testid="challenge-card"
       data-assigned={assigned || undefined}
-      onClick={onOpen}
-      className={`group relative overflow-hidden rounded-[1.25rem] border border-[#58C6EE] text-left shadow-sm transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-[#0F3F63] focus-visible:ring-offset-2 ${
-        assigned ? 'ring-2 ring-library ring-offset-2' : ''
-      }`}
+      data-open={open}
+      className={`card-flip story-flip relative h-[25rem] rounded-[1.25rem] ${assigned ? 'ring-2 ring-library ring-offset-2' : ''}`}
     >
-      {assigned && (
-        <span
-          data-testid="assigned-badge"
-          className="absolute left-3 top-3 z-10 rounded-pill bg-library px-3 py-1 font-display text-xs font-bold text-white shadow-md"
+      <div className="story-flip-inner h-full">
+        {/* ── Front ── */}
+        <div className="story-face flex flex-col overflow-hidden rounded-[1.25rem] border border-[#58C6EE] bg-white shadow-sm">
+          <button
+            type="button"
+            data-testid="challenge-card-open"
+            onClick={onOpen}
+            tabIndex={open ? -1 : 0}
+            className="relative flex flex-1 flex-col text-start focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-inset focus-visible:ring-[#0F3F63]"
+          >
+            {assigned && (
+              <span
+                data-testid="assigned-badge"
+                className="absolute left-3 top-3 z-10 rounded-pill bg-library px-3 py-1 font-display text-xs font-bold text-white shadow-md"
+              >
+                {t('pinned_badge')}
+              </span>
+            )}
+            {/* #1A7AB8 keeps white text at 4.7:1, close to the design's sky blue. */}
+            <div className="w-full bg-[#1A7AB8] px-5 py-4 text-white">
+              <p className="font-body text-xl font-extrabold leading-tight">{challenge.title}</p>
+              <p className="mt-1 line-clamp-1 font-body text-[15px] font-semibold">{challenge.brief}</p>
+            </div>
+            <div className="relative w-full flex-1 overflow-hidden">
+              <Image
+                src={coverFor(challenge.slug)}
+                alt=""
+                aria-hidden="true"
+                fill
+                className="object-cover"
+                style={{
+                  objectPosition: (challenge.slug && COVER_POSITION[challenge.slug]) || 'center',
+                  ...((challenge.slug && COVER_ZOOM[challenge.slug]) || {}),
+                }}
+                sizes="(max-width: 640px) 100vw, 400px"
+              />
+              {badges.length > 0 && (
+                <ul
+                  data-testid="card-badges"
+                  aria-label={t('card_badges')}
+                  className="absolute bottom-3 start-3 flex max-w-[60%] flex-wrap gap-1 rounded-[14px] bg-white/90 p-1.5 shadow-sm"
+                >
+                  {badges.map((b) => (
+                    <li
+                      key={b}
+                      title={tStory(`mission_badge_${b}`)}
+                      className="flex h-7 w-7 items-center justify-center rounded-full bg-[#FFF5D1] text-base"
+                    >
+                      <span aria-hidden="true">{BADGE_ART[b]}</span>
+                      <span className="sr-only">{tStory(`mission_badge_${b}`)}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <span className={BADGE}>{t('challenge_badge', { index })}</span>
+            </div>
+          </button>
+          {/* This challenge's stars, badges and XP */}
+          <div className="flex items-center gap-3 border-t border-[#D6E4EE] px-4 py-2.5">
+            <StarRow stars={stars} />
+            <span className="flex-1" />
+            <span data-testid="card-xp" className="shrink-0 rounded-pill bg-[#EAF5FC] px-2.5 py-1 font-body text-sm font-extrabold text-[#135A85]">
+              {t('card_xp', { xp })}
+            </span>
+            <button
+              type="button"
+              data-testid="card-flip"
+              aria-controls={backId}
+              aria-expanded={open}
+              aria-label={t('card_flip_aria', { title: challenge.title })}
+              tabIndex={open ? -1 : 0}
+              onClick={() => setOpen(true)}
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#EAF5FC] text-lg text-[#135A85] transition-colors hover:bg-[#CDE7F7] focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-[#0F3F63]"
+            >
+              <span aria-hidden="true">🔄</span>
+            </button>
+          </div>
+        </div>
+
+        {/* ── Back: nature inspirations, materials, and the way in ── */}
+        <div
+          id={backId}
+          data-testid="challenge-card-back"
+          className="story-face story-back flex flex-col gap-3 overflow-hidden rounded-[1.25rem] border border-[#58C6EE] bg-[#F7FCFF] p-4 shadow-sm"
         >
-          {t('pinned_badge')}
-        </span>
-      )}
-      {/* #1A7AB8 keeps white text at 4.7:1, close to the design's sky blue. */}
-      <div className="bg-[#1A7AB8] px-5 py-4 text-white">
-        <p className="font-body text-xl font-extrabold leading-tight">{challenge.title}</p>
-        <p className="mt-1 line-clamp-1 font-body text-[15px] font-semibold">{challenge.brief}</p>
+          <p className="font-body text-lg font-extrabold leading-tight text-ink">{challenge.title}</p>
+          <div>
+            <p className="font-body text-xs font-extrabold uppercase tracking-wide text-[#1E7A44]">{t('card_nature')}</p>
+            <ul className="mt-1.5 grid grid-cols-4 gap-2">
+              {nature.slice(0, 4).map((n) => (
+                <li key={n.name} className="flex flex-col items-center gap-1 text-center">
+                  <Character3D src={n.image} emoji={n.emoji} alt="" size={56} />
+                  <span className="font-body text-xs font-bold leading-tight text-ink">{n.name}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="min-h-0 flex-1">
+            <p className="font-body text-xs font-extrabold uppercase tracking-wide text-[#A4520B]">{t('card_materials')}</p>
+            {materials.length > 0 ? (
+              <ul className="mt-1 flex flex-wrap gap-1.5">
+                {materials.map((m) => (
+                  <li key={m} className="rounded-pill bg-white px-2.5 py-1 font-body text-sm font-semibold text-ink shadow-[0_1px_2px_rgba(0,0,0,0.08)]">
+                    {m}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="mt-1 line-clamp-3 font-body text-sm font-medium text-ink">{buildText}</p>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              data-testid="card-enter"
+              tabIndex={open ? 0 : -1}
+              onClick={onOpen}
+              className="flex min-h-11 flex-1 items-center justify-center rounded-pill bg-[#1A6FA6] px-5 font-body text-base font-extrabold text-white shadow-[0_4px_4px_rgba(0,0,0,0.2)] transition-transform hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-[#0F3F63] focus-visible:ring-offset-2"
+            >
+              {started ? t('card_continue') : t('card_start')}
+            </button>
+            <button
+              type="button"
+              data-testid="card-flip-back"
+              aria-label={t('card_flip_back_aria')}
+              aria-controls={backId}
+              tabIndex={open ? 0 : -1}
+              onClick={() => setOpen(false)}
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white text-lg text-[#135A85] shadow-sm hover:bg-[#EAF5FC] focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-[#0F3F63]"
+            >
+              <span aria-hidden="true">↩</span>
+            </button>
+          </div>
+        </div>
       </div>
-      <div className="relative h-44">
-        <Image
-          src={coverFor(challenge.slug)}
-          alt=""
-          aria-hidden="true"
-          fill
-          className="object-cover"
-          style={{ objectPosition: (challenge.slug && COVER_POSITION[challenge.slug]) || 'center' }}
-          sizes="(max-width: 640px) 100vw, 400px"
-        />
-        <span
-          className={BADGE}
-        >
-          {t('challenge_badge', { index })}
-        </span>
-      </div>
-    </button>
+    </div>
   );
 }
 

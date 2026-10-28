@@ -29,7 +29,7 @@ interface StepSketchProps {
   /** Story sketch: what still needs doing before the idea can be saved (null when ready). */
   blockedHint?: string | null;
   /** Guiding questions about the idea, then the idea's name and submit wording (Max). */
-  guide?: { questions: string[]; nameLabel: string; submitLabel: string } | null;
+  guide?: { questions: string[]; nameLabel: string; submitLabel: string; answers?: Record<number, string> } | null;
 }
 
 export default function StepSketch({ challenge, ageMode, onNext, onBack, hideTools = false, blockedHint = null, guide = null }: StepSketchProps) {
@@ -160,6 +160,7 @@ export default function StepSketch({ challenge, ageMode, onNext, onBack, hideToo
           nameOnly={!!challenge.story}
           titleLabel={guide?.nameLabel ?? (challenge.story ? t('name_your_idea') : undefined)}
           questions={guide?.questions}
+          initialAnswers={guide?.answers}
           blockedHint={blockedHint}
         />
       )}

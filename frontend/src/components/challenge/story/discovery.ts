@@ -39,11 +39,15 @@ export interface PartnerLesson {
   /** A reference picture or simple diagram of the mechanism. */
   diagram?: string | null;
   diagram_alt?: string;
+  /** "Need a hint?": points at the mechanism and asks a question, never a finished design. */
+  hint?: { text: string; ask: string };
 }
 
 export interface Discovery {
   /** The challenge card's cover picture (no text boxes in it). */
   cover?: string | null;
+  /** Under "Choose Your Nature Hero": what the kid has just discovered. */
+  choose_hero_text?: string;
   /** What the build needs, shown on the challenge card's back. */
   materials?: string[];
   /** "Think like your partner": one lesson per clue card, in the same order. */

@@ -1,12 +1,13 @@
 'use client';
 
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Character3D, Popi, RewardPop, StepNav, TapChoice, arrangeChoices, pillCtaClass } from './StoryBits';
 import { btnPrimary, btnText } from '@/components/challenge/buttons';
 import type { MissionStory } from './types';
 import type { BadgeKey, MissionGame, GameUpdate } from './useMissionGame';
 import { discoveryOf, heroShort, type PartnerLesson } from './discovery';
+import HeroFocus, { heroFlowDone } from './HeroFocus';
 
 interface Props {
   story: MissionStory;
@@ -51,7 +52,8 @@ export default function StoryClues({ story, game, update, award, onNext, onBack,
     game.partner !== null && game.partner !== undefined ? discoveryOf(story)?.partner_lessons?.[game.partner] ?? null : null;
   const questions: readonly PartnerQuestion[] = lesson ? ['inspired'] : PARTNER_QUESTIONS;
   const answered = questions.filter((k) => game.partnerDone.includes(k));
-  const allAnswered = answered.length === questions.length;
+  // Template challenges: the Nature Hero flow (observe → mechanism → idea) instead of the questions.
+  const allAnswered = lesson ? heroFlowDone(game.partnerAnswers ?? {}, game.partnerDone ?? []) : answered.length === questions.length;
   const current = questions.find((k) => !game.partnerDone.includes(k)) ?? null;
 
   function flip(i: number) {
@@ -122,8 +124,14 @@ export default function StoryClues({ story, game, update, award, onNext, onBack,
       {/* ── Part 2: pick your nature partner ── */}
       {allOpen && (
         <section data-testid="pick-partner" className="story-rise flex flex-col gap-3">
-          <Popi text={t('partner_pick_popi', { hero: heroShort(story) })} />
+          {/* With its own words under the title, PopAI's line would say the same thing twice. */}
+          {!discoveryOf(story)?.choose_hero_text && <Popi text={t('partner_pick_popi', { hero: heroShort(story) })} />}
           <h2 className="font-display text-2xl text-challenge">{t('partner_pick_title')}</h2>
+          {discoveryOf(story)?.choose_hero_text && (
+            <p data-testid="choose-hero-text" className="font-body text-lg font-semibold leading-snug text-ink">
+              {discoveryOf(story)?.choose_hero_text}
+            </p>
+          )}
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4" role="radiogroup" aria-label={t('partner_pick_title')}>
             {cards.map((c, i) => {
               const on = game.partner === i;
@@ -154,15 +162,16 @@ export default function StoryClues({ story, game, update, award, onNext, onBack,
         </section>
       )}
 
+      {/* ── Parts 3–4 for template challenges: the chosen hero in focus ── */}
+      {partner && lesson && game.partner !== null && game.partner !== undefined && (
+        <HeroFocus key={game.partner} card={partner} lesson={lesson} hero={heroShort(story)} game={game} update={update} />
+      )}
+
       {/* ── Part 3: think like your partner ── */}
-      {partner && (
+      {partner && !lesson && (
         <section data-testid="partner-questions" className="story-rise flex flex-col gap-3 rounded-[20px] bg-white p-5 shadow-sm">
           <h2 className="font-display text-2xl text-challenge">{t('partner_think_title', { name: partner.name })}</h2>
-          {lesson ? (
-            <PartnerLessonCard lesson={lesson} name={partner.name} hero={heroShort(story)} />
-          ) : (
-            <Meter label={t('inspiration_meter')} value={answered.length} total={questions.length} icon="⚡" />
-          )}
+          <Meter label={t('inspiration_meter')} value={answered.length} total={questions.length} icon="⚡" />
 
           {questions.filter((k) => game.partnerDone.includes(k)).map((k) => (
             <div key={k} data-testid={`partner-q-${k}`} data-state="done" className="rounded-xl border border-[#BFE6C8] bg-[#F3FBF5] px-4 py-3">
@@ -226,7 +235,7 @@ export default function StoryClues({ story, game, update, award, onNext, onBack,
       )}
 
       {/* ── Part 4: what "inspired" means ── */}
-      {partner && allAnswered && (
+      {partner && allAnswered && !lesson && (
         <section data-testid="inspiration-tip" className="story-rise flex flex-col gap-3">
           {fullInspirationTip ? (
             <div className="flex flex-col gap-3 rounded-[20px] bg-gradient-to-br from-[#FFF7D6] to-[#FFE9A8] p-5">
@@ -256,61 +265,9 @@ export default function StoryClues({ story, game, update, award, onNext, onBack,
 
       <StepNav onBack={onBack} backLabel={t('back')}>
         <button type="button" data-testid="clues-next" onClick={onNext} disabled={!allAnswered} className={pillCtaClass}>
-          {t('clues_next')}
+          {lesson ? t('clues_next_hero') : t('clues_next')}
         </button>
       </StepNav>
-    </div>
-  );
-}
-
-/** Biomimicry by example: what the partner does, how it works, what it could inspire for
- *  the hero, then the kid's turn (asked below). The inspiration is never the answer. */
-function PartnerLessonCard({ lesson, name, hero }: { lesson: PartnerLesson; name: string; hero: string }) {
-  const t = useTranslations('story');
-  const part = (icon: string, title: string, tone: string, body: ReactNode, testId: string) => (
-    <div data-testid={testId} className={`flex gap-3 rounded-[16px] p-3 ${tone}`}>
-      <span aria-hidden="true" className="text-2xl leading-none">{icon}</span>
-      <div className="min-w-0">
-        <p className="font-body text-sm font-extrabold uppercase tracking-wide text-ink/70">{title}</p>
-        <div className="mt-0.5 font-body text-base font-medium leading-snug text-ink">{body}</div>
-      </div>
-    </div>
-  );
-  return (
-    <div data-testid="partner-lesson" className="flex flex-col gap-2">
-      {part('🔍', t('lesson_secret', { name }), 'bg-[#E6F8EC]', lesson.secret, 'lesson-secret')}
-      {part(
-        '⚙️',
-        t('lesson_how'),
-        'bg-[#EAF5FC]',
-        <>
-          <p>{lesson.how}</p>
-          {lesson.diagram && (
-            <figure className="mt-2">
-              {/* eslint-disable-next-line @next/next/no-img-element -- a small authored diagram (SVG) */}
-              <img
-                src={lesson.diagram}
-                alt={lesson.diagram_alt ?? ''}
-                data-testid="lesson-diagram"
-                className="w-full max-w-md rounded-xl border border-[#CDE7F7] bg-white"
-              />
-            </figure>
-          )}
-        </>,
-        'lesson-how',
-      )}
-      {part(
-        '💡',
-        t('lesson_inspiration', { hero }),
-        'bg-[#FFF7D6]',
-        <ul className="flex flex-col gap-1">
-          {lesson.inspiration.map((i) => (
-            <li key={i} className="font-semibold">{i}</li>
-          ))}
-        </ul>,
-        'lesson-inspiration',
-      )}
-      <p className="px-1 font-body text-sm font-semibold text-[#4A5560]">{t('lesson_not_answer')}</p>
     </div>
   );
 }

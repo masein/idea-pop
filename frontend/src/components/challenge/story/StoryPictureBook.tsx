@@ -143,7 +143,6 @@ export default function StoryPictureBook({
           {t('page_back')}
         </button>
       ) : null}
-      <PageCount index={index} total={pages.length} label={t('page_of', { n: index + 1, total: pages.length })} />
       <span className="flex-1" />
       {voice.available && (
         <button
@@ -175,6 +174,9 @@ export default function StoryPictureBook({
 
   return (
     <div data-testid="story-picture-book" className="flex flex-col gap-4 py-4">
+      <div className="flex justify-center">
+        <PageCount index={index} total={pages.length} label={t('page_of', { n: index + 1, total: pages.length })} />
+      </div>
       <div
         ref={frameRef}
         data-testid={`story-page-${index + 1}`}

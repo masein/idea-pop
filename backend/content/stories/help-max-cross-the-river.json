@@ -190,6 +190,7 @@
     "model_material": "Clay"
   },
   "discovery": {
+    "choose_hero_text": "You've discovered some amazing ways nature stays on water. Now choose the hero you like most to help Max solve his problem.",
     "materials": [
       "Modelling clay",
       "Coins",
@@ -209,6 +210,7 @@
           "What if Max designed a lightweight object with special water-repellent supports that spread its weight across the water?"
         ],
         "your_turn": "What could you design for Max using the water strider's idea? What would it look like, and what would you make it from?",
+        "hint": {"text":"Look closely at the water strider’s legs. They are long, light and water-repellent, so its weight is spread out and the water’s surface only bends under them.","ask":"What could you create that spreads weight out over the water in a similar way?"},
         "diagram": "/challenge/max/diagrams/water-strider-leg.svg",
         "diagram_alt": "A close-up of a water strider leg: tiny water-repellent hairs dent the water surface without breaking it."
       },
@@ -219,6 +221,7 @@
           "What if Max built a raft from many small pieces that connect together, just like fire ants forming a floating group?"
         ],
         "your_turn": "Which small pieces could you connect for Max, and how would you join them? Try a pattern of your own.",
+        "hint": {"text":"Look closely at how the ants connect. When many ants join together, small spaces between their bodies can trap air and their connected structure helps them stay on the water.","ask":"What could you create that uses lots of connected parts or trapped air in a similar way?"},
         "diagram": "/challenge/max/diagrams/fire-ant-raft.svg",
         "diagram_alt": "One fire ant alone on the water, then many ants linked into a floating raft with air between them."
       },
@@ -228,7 +231,8 @@
         "inspiration": [
           "What if Max designed a wide floating platform with a network of lightweight supporting ribs underneath, just like the giant water lily?"
         ],
-        "your_turn": "What shape would your platform be, how would you arrange its supports, and what would you build it from?"
+        "your_turn": "What shape would your platform be, how would you arrange its supports, and what would you build it from?",
+        "hint": {"text":"Look under the giant water lily’s leaf. A network of strong ribs supports the wide, light leaf and spreads the load across it.","ask":"What could you create that uses a wide surface with a light supporting network in a similar way?"}
       },
       {
         "secret": "A coconut can float across the sea for months and still grow into a new palm tree.",
@@ -237,7 +241,8 @@
           "What if Max designed a floating platform with lightweight, air-filled spaces inside it, inspired by the coconut's fibrous husk?",
           "It could become a raft, a floating shoe, or a protective floating structure."
         ],
-        "your_turn": "Imagine your own structure for Max. Where would the air go, and which materials would you use?"
+        "your_turn": "Imagine your own structure for Max. Where would the air go, and which materials would you use?",
+        "hint": {"text":"Look inside the coconut’s husk. Its fibres hold many tiny air spaces, which help it float and protect what is inside.","ask":"What could you create that holds lots of small air spaces inside in a similar way?"}
       }
     ],
     "idea_questions": [

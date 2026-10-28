@@ -394,7 +394,7 @@ function ChallengePageInner({ onBadgeMode }: { onBadgeMode: (on: boolean) => voi
 
       {/* Mission / Ideas Wall tabs */}
       <div className={`${wide} mx-auto px-4 pt-4`}>
-        <div className="mb-3 ms-auto flex w-fit gap-1 rounded-pill bg-white p-1 shadow-sm" role="tablist">
+        <div className="mx-auto mb-3 flex w-fit gap-1 rounded-pill bg-white p-1 shadow-sm" role="tablist">
           <button
             role="tab"
             aria-selected={activeTab === 'mission'}
@@ -486,6 +486,15 @@ function ChallengePageInner({ onBadgeMode }: { onBadgeMode: (on: boolean) => voi
                       questions: disc.idea_questions,
                       nameLabel: disc.idea_name_prompt ?? tStory('name_idea_fallback'),
                       submitLabel: tStory('submit_idea'),
+                      // From the Nature Hero flow: the first idea (question 1) and the hero's
+                      // feature that inspired it (question 3).
+                      answers: {
+                        0: game.partnerAnswers?.inspired ?? '',
+                        2:
+                          game.partner !== null && game.partner !== undefined && story && game.partnerAnswers?.attention
+                            ? `${story.clue_cards[game.partner]?.name}: ${game.partnerAnswers.attention}`
+                            : '',
+                      },
                     }
                   : null
               }

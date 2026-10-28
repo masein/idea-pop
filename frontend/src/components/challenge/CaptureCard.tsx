@@ -38,6 +38,8 @@ interface CaptureCardProps {
   /** Guiding questions about the idea, asked one under another before its name (the
    *  answers become the idea's description). At least one answer is needed. */
   questions?: string[];
+  /** Answers already given earlier (by question index), so the kid doesn't write them twice. */
+  initialAnswers?: Record<number, string>;
 }
 
 export default function CaptureCard({
@@ -53,6 +55,7 @@ export default function CaptureCard({
   titleLabel,
   blockedHint = null,
   questions = [],
+  initialAnswers = {},
 }: CaptureCardProps) {
   const t = useTranslations('mission');
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
@@ -64,7 +67,7 @@ export default function CaptureCard({
   const [whatWasHard, setWhatWasHard] = useState('');
   const [whatIdImprove, setWhatIdImprove] = useState('');
   const [showPopi, setShowPopi] = useState(false);
-  const [answers, setAnswers] = useState<string[]>(() => questions.map(() => ''));
+  const [answers, setAnswers] = useState<string[]>(() => questions.map((_, i) => initialAnswers[i] ?? ''));
   const guided = questions.length > 0;
   const answered = answers.some((a) => a.trim().length > 0);
 

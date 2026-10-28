@@ -326,3 +326,8 @@ html {
   .star-earn { animation: none; }
   .card-flip .story-flip-inner { transition: none; }
 }
+
+/* The chosen Nature Hero floats gently in the middle of its features. */
+@keyframes hero-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+.hero-float { animation: hero-float 3.2s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .hero-float { animation: none; } }

@@ -17,9 +17,15 @@ export function StorySketchTop({ story, game }: { story: MissionStory; game: Mis
     <div data-testid="story-sketch" className="flex flex-col gap-5 pt-4">
       <Popi text={t('sketch_popi', { hero: heroShort(story) })} />
       {partner && (
-        <p className="self-start rounded-pill bg-[#EAF5FC] px-4 py-2 font-body text-base font-bold text-[#1A6FA6]">
-          ⭐ {t('partner_reminder', { name: partner.name })}
-        </p>
+        <div data-testid="hero-memory" className="flex flex-col gap-1.5 self-stretch rounded-[18px] bg-[#EAF5FC] px-4 py-3 font-body text-base text-[#1F2A33]">
+          <p className="font-bold text-[#1A6FA6]">⭐ {t('partner_reminder', { name: partner.name })}</p>
+          {(game.partnerAnswers?.attention ?? '').trim() && (
+            <p dir="auto"><b>{t('hero_memory_feature')}</b> {game.partnerAnswers.attention}</p>
+          )}
+          {(game.partnerAnswers?.inspired ?? '').trim() && (
+            <p dir="auto"><b>{t('hero_memory_idea')}</b> {game.partnerAnswers.inspired}</p>
+          )}
+        </div>
       )}
     </div>
   );

@@ -349,7 +349,11 @@
         "inspiration": [
           "What if Lucia’s shelter had a roof with a bumpy, waxy surface, so the rain beads up and rolls away like on a lotus leaf?"
         ],
-        "your_turn": "How could you give your shelter’s roof a “lotus” surface? What would you use, and where would the rain go?"
+        "your_turn": "How could you give your shelter’s roof a “lotus” surface? What would you use, and where would the rain go?",
+        "hint": {
+          "text": "Look closely at the lotus leaf’s surface. Tiny waxy bumps keep each drop from touching most of the leaf, so the drop stays round and rolls away.",
+          "ask": "What could you create with a surface that makes water bead up and roll away in a similar way?"
+        }
       },
       {
         "secret": "A duck can swim in the rain all day and its body underneath stays dry.",
@@ -357,7 +361,11 @@
         "inspiration": [
           "What if Lucia’s shelter were made of overlapping pieces, like duck feathers or roof tiles, so water always runs down and off?"
         ],
-        "your_turn": "Which pieces could you overlap for your shelter, and which way would they face so the water runs off?"
+        "your_turn": "Which pieces could you overlap for your shelter, and which way would they face so the water runs off?",
+        "hint": {
+          "text": "Look at how a duck’s feathers lie. They overlap like tiles, all pointing the same way, and their oil helps water slide off.",
+          "ask": "What could you create from overlapping pieces that send water down and away in a similar way?"
+        }
       },
       {
         "secret": "Leaves in the rainforest dry quickly, even though it rains there almost every day.",
@@ -365,7 +373,11 @@
         "inspiration": [
           "What if Lucia’s shelter had drip tips at its edges, so the rain drips off away from the picnic?"
         ],
-        "your_turn": "Where would you put drip tips on your shelter, and where would you want the water to land?"
+        "your_turn": "Where would you put drip tips on your shelter, and where would you want the water to land?",
+        "hint": {
+          "text": "Look at the tip of the rainforest leaf. Water runs to the pointed tip and drips off from one spot.",
+          "ask": "What could you create that guides the water to drip off where you want it to?"
+        }
       },
       {
         "secret": "A woodpecker’s nest hole stays dry inside, even in a storm.",
@@ -373,7 +385,11 @@
         "inspiration": [
           "What if Lucia set up the shelter with its open side facing away from the wind, like a woodpecker’s nest hole?"
         ],
-        "your_turn": "Which way would your shelter face, and how would you know where the wind and rain come from?"
+        "your_turn": "Which way would your shelter face, and how would you know where the wind and rain come from?",
+        "hint": {
+          "text": "Look at which way the woodpecker’s nest hole faces. It points away from the wind and the rain.",
+          "ask": "How could the direction of your shelter help keep the rain out?"
+        }
       }
     ],
     "idea_questions": [
@@ -481,6 +497,7 @@
           "image": null
         }
       ]
-    }
+    },
+    "choose_hero_text": "You've discovered some amazing ways nature stays dry in the rain. Now choose the hero you like most to help Lucia solve her problem."
   }
 }

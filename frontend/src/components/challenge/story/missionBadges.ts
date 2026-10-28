@@ -5,7 +5,7 @@ export type MissionBadgeKey = (typeof MISSION_BADGES)[number];
 
 /** Badge artwork for now (emoji), until the drawn badges arrive. */
 export const BADGE_ART: Record<MissionBadgeKey, string> = {
-  define: '❓',
+  define: '/characters/quizzy.png',
   clue: '🌿',
   solved: '💡',
   tool: '🧠',

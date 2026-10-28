@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { fetchMissionRewards } from '@/lib/api/client';
 import { badgeArt, badgeName, type MissionBadgeKey } from './missionBadges';
+import BadgeIcon from './BadgeIcon';
 import type { MissionStory } from './types';
 
 type Rewards = Awaited<ReturnType<typeof fetchMissionRewards>>;
@@ -53,7 +54,7 @@ export default function MissionRewards({
           return (
             <li key={b.key} data-testid={`reward-badge-${b.key}`} data-earned={got} className={`${row} ${got ? 'bg-[#F3FBF5]' : 'bg-[#F4F6F8]'}`}>
               <span className="flex min-w-0 items-center gap-2 font-body text-base font-bold text-ink">
-                <span aria-hidden="true">{badgeArt(story, b.key as MissionBadgeKey) ?? '🏅'}</span>
+                <BadgeIcon art={badgeArt(story, b.key as MissionBadgeKey) ?? '🏅'} />
                 <span className="truncate">{badgeName(story, b.key as MissionBadgeKey, t)}</span>
               </span>
               <span className="flex shrink-0 items-center gap-3 font-body text-sm font-semibold">

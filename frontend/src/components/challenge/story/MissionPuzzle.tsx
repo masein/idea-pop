@@ -72,7 +72,13 @@ export default function MissionPuzzle({
         </span>
         <h2 className="font-display text-2xl text-[#1B3A6B]">{puzzle.title}</h2>
       </div>
-      <p className="font-body text-sm font-semibold text-[#3B4A5A]">{puzzle.intro}</p>
+      <div data-testid="puzzle-how" className="flex flex-wrap items-center gap-2 rounded-[18px] bg-[#FFF7D6] px-4 py-3 font-body text-lg font-bold text-[#5a4300]">
+        <span aria-hidden="true">👆</span>
+        <span className="rounded-pill bg-white px-3 py-1">{t('puzzle_step_1')}</span>
+        <span aria-hidden="true">→</span>
+        <span className="rounded-pill bg-white px-3 py-1">{t('puzzle_step_2')}</span>
+        <span className="text-base font-semibold">{t('puzzle_either_way')}</span>
+      </div>
 
       {/* Clues on the left, questions on the right, in every language. */}
       <div dir="ltr" className="grid grid-cols-2 gap-3">

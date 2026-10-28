@@ -1849,7 +1849,12 @@
     "name_idea_fallback": "Give your amazing idea a name!",
     "submit_idea": "Submit Idea",
     "tool_cel_title": "You used the {tool} tool!",
-    "tool_cel_text": "You used a creativity tool to find new ideas for your design."
+    "tool_cel_text": "You used a creativity tool to find new ideas for your design.",
+    "page_of": "Page {n} of {total}",
+    "listen_again": "Listen again",
+    "puzzle_step_1": "1. Tap a question",
+    "puzzle_step_2": "2. Tap its clue",
+    "puzzle_either_way": "(or the other way round)"
   },
   "thinking_tools": {
     "accordion_young": "Stuck? Try a thinking tool!",

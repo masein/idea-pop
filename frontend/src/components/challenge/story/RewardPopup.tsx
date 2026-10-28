@@ -90,7 +90,7 @@ export default function RewardPopup({
           {badge ? (
             isImage ? (
               // eslint-disable-next-line @next/next/no-img-element -- badge artwork
-              <img src={badge.art} alt="" className="h-20 w-20 object-contain" />
+              <img src={badge.art} alt="" className="h-full w-full rounded-full bg-white object-cover object-top" />
             ) : (
               badge.art
             )

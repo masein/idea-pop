@@ -15,6 +15,7 @@ import { Character3D } from '@/components/challenge/story/StoryBits';
 import { discoveryOf } from '@/components/challenge/story/discovery';
 import { BADGE_ART, badgeArt, badgeName, type MissionBadgeKey } from '@/components/challenge/story/missionBadges';
 import type { MissionStory } from '@/components/challenge/story/types';
+import BadgeIcon from '@/components/challenge/story/BadgeIcon';
 
 type ChallengeDetail = components['schemas']['ChallengeDetail'];
 
@@ -336,7 +337,7 @@ function UnlockedChallengeCard({
                       title={badgeName(story, b, tStory)}
                       className="flex h-7 w-7 items-center justify-center rounded-full bg-[#FFF5D1] text-base"
                     >
-                      <span aria-hidden="true">{badgeArt(story, b)}</span>
+                      <BadgeIcon art={badgeArt(story, b)} className="h-6 w-6" />
                       <span className="sr-only">{badgeName(story, b, tStory)}</span>
                     </li>
                   ))}

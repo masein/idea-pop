@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { btnPrimary } from '@/components/challenge/buttons';
 import StarRow from '@/components/challenge/StarRow';
 import RewardPopup from './RewardPopup';
+import BadgeIcon from './BadgeIcon';
 import { BADGE_ART, badgeArt, badgeName, type MissionBadgeKey } from './missionBadges';
 import type { MissionStory } from './types';
 
@@ -123,7 +124,7 @@ export function ThreeStarCelebration({
           <ul data-testid="three-star-badges" className="flex flex-wrap justify-center gap-2" aria-label={tStory('badges_earned_title')}>
             {shown.map((b) => (
               <li key={b} className="rounded-pill bg-[#fff5d1] px-3 py-1.5 font-body text-sm font-bold text-[#6b4d00]">
-                {badgeArt(story, b)} {badgeName(story, b, tStory)}
+                <BadgeIcon art={badgeArt(story, b)} className="h-5 w-5 align-[-4px]" /> {badgeName(story, b, tStory)}
               </li>
             ))}
           </ul>

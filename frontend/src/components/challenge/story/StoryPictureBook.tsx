@@ -12,7 +12,7 @@ import type { MissionPuzzleData, WhCharacter } from './discovery';
 import GuideCharacter from './GuideCharacter';
 import { claimDefineBonus } from '@/lib/api/client';
 import type { MissionStory } from './types';
-import { btnIcon, btnPrimary, btnSecondary } from '@/components/challenge/buttons';
+import { btnPrimary, btnSecondary } from '@/components/challenge/buttons';
 
 type Page = MissionStory['opening'][number];
 type Define = NonNullable<MissionStory['define_problem']>;
@@ -135,41 +135,29 @@ export default function StoryPictureBook({
     });
   }, [pages]);
 
-  // Three equal columns, so 🔊 sits exactly under the middle of the photo.
+  // Back on one side; which page this is; then Listen again and Next together as pills.
   const nav = (
     <NavRow>
-        {index > 0 ? (
-          <button
-            type="button"
-            data-testid="story-page-back"
-            onClick={() => setIndex((i) => i - 1)}
-            className={`${btnSecondary} justify-self-start`}
-          >
-            {t('page_back')}
-          </button>
-        ) : (
-          <span />
-        )}
-        {voice.available ? (
-          <button
-            type="button"
-            data-testid="story-page-listen"
-            aria-label={voice.speaking ? t('popi_stop') : t('listen_story')}
-            onClick={() =>
-              voice.speaking
-                ? voice.stop()
-                : voice.speak(pageWords(page))
-            }
-            className={`${btnIcon} justify-self-center`}
-          >
-            <span aria-hidden="true">{voice.speaking ? '⏹' : '🔊'}</span>
-          </button>
-        ) : (
-          <span />
-        )}
-        {last && define && !allAnswered ? (
-          <span />
-        ) : (
+      {index > 0 ? (
+        <button type="button" data-testid="story-page-back" onClick={() => setIndex((i) => i - 1)} className={btnSecondary}>
+          {t('page_back')}
+        </button>
+      ) : null}
+      <PageCount index={index} total={pages.length} label={t('page_of', { n: index + 1, total: pages.length })} />
+      <span className="flex-1" />
+      {voice.available && (
+        <button
+          type="button"
+          data-testid="story-page-listen"
+          aria-label={voice.speaking ? t('popi_stop') : t('listen_story')}
+          onClick={() => (voice.speaking ? voice.stop() : voice.speak(pageWords(page)))}
+          className="flex min-h-11 items-center gap-2 rounded-pill bg-[#FBF7D5] px-4 font-body text-base font-extrabold text-[#5a4300] shadow-[0_2px_4px_rgba(0,0,0,0.12)] transition-colors hover:bg-[#F5EDB0] focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-[#0F3F63]"
+        >
+          <span aria-hidden="true">{voice.speaking ? '⏹' : '🔊'}</span>
+          {voice.speaking ? t('popi_stop') : t('listen_again')}
+        </button>
+      )}
+      {last && define && !allAnswered ? null : (
         <button
           type="button"
           data-testid="story-page-next"
@@ -177,11 +165,11 @@ export default function StoryPictureBook({
             if (!last) setIndex((i) => i + 1);
             else if (customReward || !maybeCelebrate()) onDone();
           }}
-          className={`${btnPrimary} justify-self-end`}
+          className={btnPrimary}
         >
           {t('page_next')}
         </button>
-        )}
+      )}
     </NavRow>
   );
 
@@ -349,9 +337,26 @@ export default function StoryPictureBook({
 
 function NavRow({ children }: { children: ReactNode }) {
   return (
-    <div className="mx-auto grid w-full grid-cols-3 items-center" style={{ maxWidth: 'calc((100dvh - 380px) * 1.777)' }}>
+    <div className="mx-auto flex w-full flex-wrap items-center gap-3" style={{ maxWidth: 'calc((100dvh - 380px) * 1.777)' }}>
       {children}
     </div>
+  );
+}
+
+/** "Page 1 of 3" with a dot per page; the current page's dot is a longer pill. */
+function PageCount({ index, total, label }: { index: number; total: number; label: string }) {
+  return (
+    <span data-testid="story-page-count" className="flex items-center gap-2 font-body text-sm font-extrabold uppercase tracking-wide text-[#4A5560]">
+      {label}
+      <span aria-hidden="true" className="flex items-center gap-1">
+        {Array.from({ length: total }, (_, i) => (
+          <span
+            key={i}
+            className={`block h-2.5 rounded-pill transition-all ${i === index ? 'w-6 bg-[#2D9CDB]' : 'w-2.5 bg-[#CDDDE8]'}`}
+          />
+        ))}
+      </span>
+    </span>
   );
 }
 

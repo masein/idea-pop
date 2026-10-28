@@ -256,7 +256,7 @@
     },
     "rewards": { "mode": "badges" },
     "predict_intro": "Before testing something, we can make a prediction using what we already know and observe. A prediction doesn't have to be correct—we compare it with the result to learn more.",
-    "wh": {"name":"Quizzy","popi":"Meet Quizzy, our question explorer! Quizzy will show you how to understand a problem.","says":"Want to understand a problem better? Start with the right questions. WH Questions help us explore who is involved, what is happening, where and when it happens, and why it matters. They help us understand exactly what problem we’re trying to solve."},
+    "wh": {"name":"Quizzy","image": "/characters/quizzy.png","popi":"Meet Quizzy, our question explorer! Quizzy will show you how to understand a problem.","says":"Want to understand a problem better? Start with the right questions. WH Questions help us explore who is involved, what is happening, where and when it happens, and why it matters. They help us understand exactly what problem we’re trying to solve."},
     "puzzle": {
       "title": "Build the Mission",
       "intro": "Tap a question and then its matching clue, or tap a clue first and then find its question.",

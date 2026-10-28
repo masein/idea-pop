@@ -6,6 +6,7 @@ import type { MissionStory } from './types';
 import type { BadgeKey, MissionGame } from './useMissionGame';
 import { MISSION_BADGES, badgeArt, badgeName } from './missionBadges';
 import { heroShort } from './discovery';
+import BadgeIcon from './BadgeIcon';
 
 interface Props {
   story: MissionStory;
@@ -47,7 +48,7 @@ export default function StoryEnding({ story, game, update, hiddenSteps = [], bad
             <ul data-testid="earned-badges" className="flex flex-wrap justify-center gap-2" aria-label={t('badges_earned_title')}>
               {MISSION_BADGES.filter((b) => game.badges.includes(b as BadgeKey) || b === 'river').map((b) => (
                 <li key={b} data-testid={`earned-badge-${b}`} className="rounded-pill bg-[#fff5d1] px-3 py-1.5 font-body text-sm font-bold text-[#6b4d00]">
-                  {badgeArt(story, b)} {badgeName(story, b, t)}
+                  <BadgeIcon art={badgeArt(story, b)} className="h-5 w-5 align-[-4px]" /> {badgeName(story, b, t)}
                 </li>
               ))}
             </ul>

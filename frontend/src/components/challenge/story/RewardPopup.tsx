@@ -60,12 +60,24 @@ export default function RewardPopup({
 
   return createPortal(
     <div className="app-typography fixed inset-0 z-[90] flex items-center justify-center overflow-y-auto bg-[rgba(15,40,70,0.45)] p-4">
+      {/* The character (when there is one) and the popup, side by side; stacked on phones. */}
+      <div className="my-auto flex w-full max-w-[460px] flex-col items-center sm:w-auto sm:max-w-none sm:flex-row">
+      {isImage && badge && (
+        // eslint-disable-next-line @next/next/no-img-element -- the character, whole
+        <img
+          src={badge.art}
+          alt=""
+          aria-hidden="true"
+          data-testid={`${testId}-character`}
+          className="quizzy-idle pointer-events-none relative z-[91] -mb-6 h-40 w-auto shrink-0 object-contain drop-shadow-[0_10px_14px_rgba(0,0,0,0.25)] sm:-me-8 sm:mb-0 sm:h-80 sm:self-center"
+        />
+      )}
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby={`${testId}-title`}
         data-testid={testId}
-        className="celebrate-pop relative my-auto flex w-full max-w-[460px] flex-col items-center gap-3 overflow-hidden rounded-[32px] bg-white px-6 pb-6 pt-6 text-center shadow-[0_24px_60px_rgba(0,0,0,0.3)]"
+        className="celebrate-pop relative my-auto flex w-full max-w-[460px] sm:w-[460px] flex-col items-center gap-3 overflow-hidden rounded-[32px] bg-white px-6 pb-6 pt-6 text-center shadow-[0_24px_60px_rgba(0,0,0,0.3)]"
       >
         {CONFETTI.map((c, i) => (
           <span
@@ -82,22 +94,16 @@ export default function RewardPopup({
           </div>
         )}
 
-        {/* Badge artwork: always the same size and place. */}
+        {/* Badge artwork: always the same size and place. A character (e.g. Quizzy) stands
+            beside the popup instead, whole, never cropped. */}
+        {!isImage && (
         <span
           aria-hidden="true"
           className="relative flex h-28 w-28 items-center justify-center rounded-full border-[6px] border-white bg-[radial-gradient(circle_at_35%_30%,#fff,#ffe38a_40%,#f2b705)] text-5xl shadow-[0_6px_18px_rgba(0,0,0,0.18)]"
         >
-          {badge ? (
-            isImage ? (
-              // eslint-disable-next-line @next/next/no-img-element -- badge artwork
-              <img src={badge.art} alt="" className="h-full w-full rounded-full bg-white object-cover object-top" />
-            ) : (
-              badge.art
-            )
-          ) : (
-            '🎉'
-          )}
+          {badge ? badge.art : '🎉'}
         </span>
+        )}
         {badge && (
           <p data-testid={`${testId}-badge`} className="relative rounded-pill bg-[#FFF5D1] px-4 py-1 font-body text-sm font-extrabold uppercase tracking-wide text-[#6b4d00]">
             🏅 {badge.name}
@@ -127,6 +133,7 @@ export default function RewardPopup({
             </button>
           )}
         </div>
+      </div>
       </div>
     </div>,
     document.body,

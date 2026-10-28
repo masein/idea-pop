@@ -14,10 +14,15 @@ export default function GuideCharacter({
   testId?: string;
 }) {
   return (
-    <div data-testid={testId} className="flex items-end gap-3">
+    <div data-testid={testId} className="flex flex-col items-start gap-2 sm:flex-row sm:items-end sm:gap-3">
       {image ? (
         // eslint-disable-next-line @next/next/no-img-element -- a small character cut-out
-        <img src={image} alt="" aria-hidden="true" className="h-28 w-28 shrink-0 rounded-full bg-white object-cover object-top shadow-[0_4px_12px_rgba(0,0,0,0.12)]" />
+        <img
+          src={image}
+          alt=""
+          aria-hidden="true"
+          className="quizzy-idle h-28 w-auto shrink-0 object-contain drop-shadow-[0_6px_8px_rgba(0,0,0,0.15)] sm:h-44"
+        />
       ) : (
         <span aria-hidden="true" className="h-24 w-24 shrink-0 rounded-full border-2 border-dashed border-[#9CC9E6] bg-white/60" />
       )}

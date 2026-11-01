@@ -247,75 +247,28 @@
   }
 }
 
-/* The layered title on the Animals and Train pictures (DepthReveal.tsx; susan, 2026-11-01). At rest, and without motion,
-   the title sits behind the subject, who has a soft shadow on it. The sequence (only from 768px, once the picture is on
-   screen): the title rises in clearly and in front (0-0.5s), holds (to 1.3s), moves back, smaller (to 2.1s), and the
-   subject's own layer comes in front of it (1.5-2.4s). Only transform and opacity animate; nothing changes size. */
-.depth-title {
-  transform: scale(0.94);
-  transform-origin: 50% 40%;
-}
-.depth-front {
-  filter: drop-shadow(0 14px 22px rgba(25, 77, 61, 0.22));
-}
-@media (prefers-reduced-motion: no-preference) and (min-width: 768px) {
-  [data-depth-state="ready"] .depth-title {
-    opacity: 0;
-    transform: translate3d(0, 28px, 0) scale(1.06);
-  }
-  [data-depth-state="ready"] .depth-front {
-    opacity: 0;
-  }
-  [data-depth-state="play"] .depth-title {
-    animation: depth-title 2.4s cubic-bezier(0.33, 0, 0.2, 1) both;
-  }
-  [data-depth-state="play"] .depth-front {
-    animation: depth-front 0.9s cubic-bezier(0.33, 0, 0.2, 1) 1.5s both;
-  }
-  @keyframes depth-title {
-    0% {
-      opacity: 0;
-      transform: translate3d(0, 28px, 0) scale(1.06);
-    }
-    21% {
-      opacity: 1;
-      transform: translate3d(0, 0, 0) scale(1.06);
-    }
-    54% {
-      opacity: 1;
-      transform: translate3d(0, 0, 0) scale(1.06);
-    }
-    88%,
-    100% {
-      opacity: 1;
-      transform: translate3d(0, 0, 0) scale(0.94);
-    }
-  }
-  @keyframes depth-front {
-    from {
-      opacity: 0;
-    }
-    to {
-      opacity: 1;
-    }
-  }
-}
-
-/* "hands" in the hero (susan, 2026-11-01): Cherry Bomb One's lowercase a has a very small counter, and the 0.17em dark
-   green outline fills it, so the a read as a blob. A dark green inner opening, sized like the d's, is drawn back in. */
+/* "hands" in the hero (susan, 2026-11-01): Cherry Bomb One's lowercase a has a tiny counter that the 0.17em dark green
+   outline fills. It is given the d's opening, measured from the d itself: a dark green ring 0.125em across with a hollow
+   0.035em centre that shows the wall through it (a real hole, cut with a mask), at the a's own counter. The span is
+   widened by 0.12em a side (and pulled back with margins) so the mask never clips the outline. */
 .hands-a {
   position: relative;
   display: inline-block;
+  padding: 0 0.12em;
+  margin: 0 -0.12em;
+  -webkit-mask: radial-gradient(circle at 0.35em 1.04em, transparent 0.0175em, #000 0.023em);
+  mask: radial-gradient(circle at 0.35em 1.04em, transparent 0.0175em, #000 0.023em);
 }
 .hands-a::after {
   content: "";
   position: absolute;
-  left: 44%;
-  top: 63%;
-  width: 0.23em;
-  height: 0.26em;
+  left: 0.35em;
+  top: 1.04em;
+  width: 0.125em;
+  height: 0.125em;
+  box-sizing: border-box;
+  border: 0.045em solid #194d3d;
   border-radius: 50%;
-  background: #194d3d;
   transform: translate(-50%, -50%);
   pointer-events: none;
 }

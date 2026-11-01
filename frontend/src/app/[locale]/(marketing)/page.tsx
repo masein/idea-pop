@@ -11,7 +11,6 @@ import FaqList from "./_components/FaqList";
 import HeroScene from "./_components/HeroScene";
 // The one flying bird that travels the whole page (hands off to the girl's painting on the way).
 import FlyingBird from "./_components/FlyingBird";
-import DepthReveal from "./_components/DepthReveal";
 import "./motion.css";
 import "./hero.css";
 
@@ -55,17 +54,6 @@ import expertMath from "../../../../public/landing/experts/math.png";
 const TRAIN_CHALLENGE = "/challenges/by-slug/the-train-that-went-boom";
 // On the wall (xl) the hero buttons are a size smaller so the pair fits side by side between the shelves and the girl.
 const heroWallButton = "xl:px-6 xl:py-2.5 xl:text-[clamp(0.875rem,1vw,1.0625rem)]";
-// The layered title on a picture (Animals and Train, md+): the picture box sizes the type (container units), the title
-// sits between the picture and the subject's own layer, and motion.css plays the depth sequence (DepthReveal).
-const depthBox = "[container-type:inline-size]";
-const depthTitle =
-  "depth-title pointer-events-none absolute hidden md:block [font-family:var(--font-cherry)] font-normal leading-[1.05] text-[#4F4F4F] [text-shadow:0_2px_14px_rgba(255,255,255,0.7)]";
-const depthFront = "depth-front pointer-events-none hidden md:block";
-// The Animals title as two lines, split after its question (both languages).
-const headingLines = (text: string) => {
-  const i = text.search(/[?؟]/);
-  return i < 0 ? [text] : [text.slice(0, i + 1).trim(), text.slice(i + 1).trim()].filter(Boolean);
-};
 const kidMakes = [kidMake1, kidMake2, kidMake3, kidMake4, kidMake5, kidMake6];
 
 const DEEP = "#2E5F4B";
@@ -192,7 +180,6 @@ export default async function LandingPage({ params }: Props) {
     // so the scroll-linked motion still follows the page.
     <div className="bg-[#F3FFC2] overflow-x-clip">
       <ScrollReveal />
-      <DepthReveal />
       <FlyingBird />
       {/* 1. Hero — the animated nature-to-classroom scene (HeroScene.tsx), the copy layered above it */}
       <section aria-label="hero" className="relative" dir="ltr" data-scroll-timeline="hero">
@@ -238,7 +225,7 @@ export default async function LandingPage({ params }: Props) {
                 {[...t("hero.sub_2")].map((ch, i) => (ch === "a" ? <span key={i} className="hands-a">a</span> : ch))}
               </span>
             </p>
-            <p className="[font-family:var(--font-adlam)] font-normal text-[#4F4F4F] text-[clamp(0.9375rem,0.79rem+0.68vw,1.25rem)] leading-[normal] [text-shadow:0_4px_4px_rgba(0,0,0,0.25)] max-w-[680px] mx-auto xl:mx-0 xl:max-w-none xl:whitespace-nowrap xl:text-[clamp(0.8125rem,0.95vw,1.3125rem)] mt-3 xl:mt-2" data-intro="rise" style={motionDelay(770)}>
+            <p className="[font-family:var(--font-adlam)] font-normal text-[#4F4F4F] text-[clamp(1rem,0.85rem+0.75vw,1.375rem)] leading-[normal] [text-shadow:0_4px_4px_rgba(0,0,0,0.25)] max-w-[720px] mx-auto xl:mx-0 xl:max-w-none xl:whitespace-nowrap xl:text-[clamp(0.875rem,1vw,1.375rem)] mt-3 xl:mt-2" data-intro="rise" style={motionDelay(770)}>
               {t("hero.body_1_pre")}
               <span className="text-[#0F4C39]">{t("hero.body_1_word")}</span>
               {t("hero.body_1_post")}
@@ -367,12 +354,11 @@ export default async function LandingPage({ params }: Props) {
       {/* 4. Paint together — the heading, a line under it and the button sit on the page lime above the painting, styled
           like "Try one mission" (susan, 2026-10-15: on the photo they weren't readable); the approved painting follows,
           uncropped from md up. */}
-      {/* Desktop (susan, 2026-11-01): the title sits large on the picture and the girl comes in front of it (DepthReveal,
-          motion.css); the line and the button stay in the band above, and the picture is sized so the band, the whole
-          picture and the button fit one screen. Phones keep the title in the band and the picture as it was. */}
+      {/* Desktop (susan, 2026-11-01): the picture is sized so the band (title, line, button) and the whole picture fit one
+          screen. Phones keep the picture as it was. */}
       <section aria-label="paint together" className="relative flex flex-col overflow-hidden">
         <div className="px-4 pt-8 pb-6 md:pt-6 md:pb-5 text-center">
-          <h2 className="[font-family:var(--font-cherry)] font-normal text-[clamp(1.875rem,1.435rem+1.878vw,3rem)] leading-[normal] text-[#4F4F4F] md:sr-only" data-reveal="grow">
+          <h2 className="[font-family:var(--font-cherry)] font-normal text-[clamp(1.875rem,1.435rem+1.878vw,3rem)] leading-[normal] text-[#4F4F4F]" data-reveal="grow">
             {keepTogether(t("paint.heading"))}
           </h2>
           <p className="[font-family:var(--font-adlam)] font-normal text-[clamp(1rem,0.85rem+0.6vw,1.25rem)] leading-[1.48] text-[#4F4F4F] mb-[14px]" data-reveal="grow" style={motionDelay(140)}>
@@ -389,8 +375,7 @@ export default async function LandingPage({ params }: Props) {
             cropped at 90% across so the girl stays in view; md+: the whole picture at its own proportions. */}
         <div
           aria-hidden="true"
-          className={`relative h-[260px] w-full md:h-auto md:aspect-[1720/914] md:mx-auto md:w-[min(calc(100%-32px),max(720px,calc((100svh-190px)*1720/914)))] md:rounded-[28px] md:overflow-hidden ${depthBox}`}
-          data-depth
+          className="relative h-[260px] w-full md:h-auto md:aspect-[1720/914] md:mx-auto md:w-[min(calc(100%-32px),max(720px,calc((100svh-250px)*1720/914)))] md:rounded-[28px] md:overflow-hidden"
         >
           {/* eslint-disable-next-line @next/next/no-img-element -- a registered plate: its exact pixels and rectangle matter */}
           <img
@@ -409,23 +394,6 @@ export default async function LandingPage({ params }: Props) {
             data-bird-canvas
             className="absolute inset-0 h-full w-full object-cover object-[90%_50%] md:object-center"
             style={{ opacity: "var(--painted-reveal, 1)" }}
-          />
-          {/* the title, behind the girl once she comes forward; on the canvas side in both languages (she is on the right) */}
-          <p className={`${depthTitle} left-[4%] top-[5%] w-[92%] text-left ${locale === "fa" ? "text-[3.9cqw]" : "text-[4.6cqw]"}`} dir={locale === "fa" ? "rtl" : "ltr"}>
-            {headingLines(t("paint.heading")).map((line) => (
-              <span key={line} className="block">
-                {line}
-              </span>
-            ))}
-          </p>
-          {/* the girl from the same picture, on her own layer in front of the title */}
-          {/* eslint-disable-next-line @next/next/no-img-element -- registered to the same 1720×914 picture */}
-          <img
-            src="/landing/paint-girl-front.webp?v=depth-2026-11-01"
-            alt=""
-            width={1720}
-            height={914}
-            className={`absolute inset-0 h-full w-full object-cover object-center ${depthFront}`}
           />
         </div>
       </section>
@@ -524,7 +492,7 @@ export default async function LandingPage({ params }: Props) {
         {/* Figma: a lime band 194px tall at 1440 — heading box 26px from the top, the line right under it, the button 11px
             lower and 6px above the picture. */}
         <div className="bg-[#CFEC5A] px-4 pt-6 pb-4 md:pt-[26px] md:pb-[6px] text-center">
-          <h2 className="[font-family:var(--font-cherry)] font-normal text-[clamp(1.875rem,1.435rem+1.878vw,3rem)] leading-[normal] text-[#4F4F4F] md:sr-only" data-reveal="grow">
+          <h2 className="[font-family:var(--font-cherry)] font-normal text-[clamp(1.875rem,1.435rem+1.878vw,3rem)] leading-[normal] text-[#4F4F4F]" data-reveal="grow">
             {keepTogether(t("try_now.heading"))}
           </h2>
           <p className="[font-family:var(--font-adlam)] font-normal text-[clamp(1rem,0.85rem+0.6vw,1.25rem)] leading-[1.48] text-[#4F4F4F]" data-reveal="grow" style={motionDelay(140)}>
@@ -541,16 +509,14 @@ export default async function LandingPage({ params }: Props) {
         </div>
         {/* The picture opens the mission too: the same link, kept away from screen readers and the keyboard so they
             only meet the labelled button above. Motion: the river zooms out as it scrolls in, clipped to its box. */}
-        {/* Desktop (susan, 2026-11-01): sized so the band, the whole photo and the button fit one screen; the title is on the
-            photo and the boy comes in front of it, as in the Animals section. */}
+        {/* Desktop (susan, 2026-11-01): sized so the band (title, lines, button) and the whole photo fit one screen. */}
         <Link
           href={TRAIN_CHALLENGE}
           prefetch={false}
           aria-hidden="true"
           tabIndex={-1}
-          className={`block overflow-hidden md:mx-auto md:mt-3 md:w-[min(calc(100%-32px),max(720px,calc((100svh-190px)*1670/942)))] md:rounded-[28px] ${depthBox}`}
+          className="block overflow-hidden md:mx-auto md:mt-3 md:w-[min(calc(100%-32px),max(720px,calc((100svh-250px)*1670/942)))] md:rounded-[28px]"
           data-zoom-frame
-          data-depth
         >
           {/* susan's AFTER photo is the scene: the boy's paper with the kingfisher drawing, its beak studies and arrows. On
               top, the registered paper-only patch of her BEFORE photo hides that drawing until the flying bird lands
@@ -567,18 +533,6 @@ export default async function LandingPage({ params }: Props) {
               className="pointer-events-none absolute inset-0 w-full h-full"
               sizes="100vw"
               style={{ opacity: "calc(1 - var(--mission-reveal, 0))" }}
-            />
-            <p className={`${depthTitle} inset-x-[4%] top-[12%] text-center text-[7.4cqw]`} dir={locale === "fa" ? "rtl" : "ltr"}>
-              {t("try_now.heading")}
-            </p>
-            {/* the boy from the same photo, on his own layer in front of the title */}
-            {/* eslint-disable-next-line @next/next/no-img-element -- registered to the same 1670×942 photo */}
-            <img
-              src="/landing/try-mission-boy-front.webp?v=depth-2026-11-01"
-              alt=""
-              width={1670}
-              height={942}
-              className={`absolute inset-0 h-full w-full ${depthFront}`}
             />
           </div>
         </Link>

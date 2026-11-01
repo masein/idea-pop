@@ -13,6 +13,7 @@ import GuideCharacter from './GuideCharacter';
 import { claimDefineBonus } from '@/lib/api/client';
 import type { MissionStory } from './types';
 import { btnPrimary, btnSecondary } from '@/components/challenge/buttons';
+import AssetSlot from '@/components/AssetSlot';
 
 type Page = MissionStory['opening'][number];
 type Define = NonNullable<MissionStory['define_problem']>;
@@ -238,7 +239,7 @@ export default function StoryPictureBook({
                   fontSize: u(2.3),
                 }}
               >
-                🕒 {page.badge}
+                {page.badge}
               </span>
             )}
 
@@ -284,7 +285,7 @@ export default function StoryPictureBook({
           data-testid="popi-tap-hint"
           className="story-pop self-center rounded-pill bg-white px-4 py-2 font-body text-sm font-bold text-challenge shadow-sm"
         >
-          <span aria-hidden="true">👆 </span>
+          
           {t('tap_to_listen')}
         </p>
       )}
@@ -436,7 +437,7 @@ function DefineProblemCard({
             aria-hidden="true"
             className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#2D6FC4] text-2xl"
           >
-            💡
+            <AssetSlot id="CHALLENGE-UI-003" className="!rounded-full" />
           </span>
           <div>
             <h2 className="font-display text-2xl text-[#1B3A6B]">{define.title}</h2>
@@ -542,7 +543,7 @@ function DefineProblemCard({
                     data-testid="define-hint"
                     className="mt-2 rounded-xl bg-[#FFF7E0] px-3 py-2 font-body text-sm text-[#7a5a00]"
                   >
-                    💡 {t('define_almost')} {current.hint}
+                    <AssetSlot id="CHALLENGE-UI-003" variant="dot" />{t('define_almost')} {current.hint}
                   </p>
                 )}
               </div>

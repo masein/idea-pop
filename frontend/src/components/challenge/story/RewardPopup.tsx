@@ -4,6 +4,7 @@ import { useEffect, useRef, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslations } from 'next-intl';
 import { btnPrimary, btnSecondary } from '@/components/challenge/buttons';
+import AssetSlot from '@/components/AssetSlot';
 
 const CONFETTI_COLORS = ['#2D9CDB', '#FFD93D', '#6BCB77', '#FF6B6B', '#C77DFF', '#FF9F45'];
 // Fixed positions and delays (no randomness), so every render looks the same.
@@ -56,7 +57,7 @@ export default function RewardPopup({
   useEffect(() => {
     goRef.current?.focus();
   }, []);
-  const isImage = !!badge && /^\/|\.(png|webp|jpe?g|svg)$/i.test(badge.art);
+  const isImage = !!badge && !badge.art.startsWith('asset:') && /^\/|\.(png|webp|jpe?g|svg)$/i.test(badge.art);
 
   return createPortal(
     <div className="app-typography fixed inset-0 z-[90] flex items-center justify-center overflow-y-auto bg-[rgba(15,40,70,0.45)] p-4">
@@ -101,12 +102,12 @@ export default function RewardPopup({
           aria-hidden="true"
           className="relative flex h-28 w-28 items-center justify-center rounded-full border-[6px] border-white bg-[radial-gradient(circle_at_35%_30%,#fff,#ffe38a_40%,#f2b705)] text-5xl shadow-[0_6px_18px_rgba(0,0,0,0.18)]"
         >
-          {badge ? badge.art : '🎉'}
+          {badge?.art.startsWith('asset:') ? <AssetSlot id={badge.art.slice(6)} className="!rounded-full" /> : <AssetSlot id="CHALLENGE-UI-001" className="!rounded-full" />}
         </span>
         )}
         {badge && (
           <p data-testid={`${testId}-badge`} className="relative rounded-pill bg-[#FFF5D1] px-4 py-1 font-body text-sm font-extrabold uppercase tracking-wide text-[#6b4d00]">
-            🏅 {badge.name}
+            {badge.name}
           </p>
         )}
 
@@ -117,7 +118,7 @@ export default function RewardPopup({
 
         {(xp !== null || xpAlready) && (
           <p data-testid={`${testId}-xp`} className="relative rounded-pill bg-[#EAF5FC] px-4 py-1.5 font-body text-base font-extrabold text-[#1A6FA6]">
-            {xpAlready || xp === 0 ? `✅ ${t('xp_already')}` : <span dir="ltr">⭐ +{xp} XP</span>}
+            {xpAlready || xp === 0 ? t('xp_already') : <span dir="ltr"><AssetSlot id="CHALLENGE-UI-004" variant="dot" />+{xp} XP</span>}
           </p>
         )}
 

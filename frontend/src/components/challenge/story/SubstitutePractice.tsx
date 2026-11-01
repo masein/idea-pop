@@ -8,6 +8,7 @@ import type { BadgeKey, GameUpdate, MissionGame, SubstState } from './useMission
 import { EMPTY_SUBST } from './useMissionGame';
 import { createProject, getIdeaFeedback } from '@/lib/api/client';
 import { btnPrimary, btnSecondary, btnText } from '@/components/challenge/buttons';
+import AssetSlot from '@/components/AssetSlot';
 
 interface Props {
   challengeId: string;
@@ -147,7 +148,7 @@ function ScamperSays({ text }: { text: string }) {
   const t = useTranslations('story');
   return (
     <div data-testid="scamper-says" className="flex items-end gap-3">
-      <span aria-hidden="true" className="h-20 w-20 shrink-0 rounded-full border-2 border-dashed border-[#9CC9E6] bg-white/60" />
+      <span className="h-20 w-20 shrink-0"><AssetSlot id="SCAMPER-CHAR-001" className="!rounded-full" /></span>
       <div className="relative min-w-0 flex-1 rounded-[18px] bg-white px-4 py-3 shadow-sm">
         <p className="font-body text-sm font-bold text-challenge">{t('scamper_says')}</p>
         <p className="font-body text-lg font-semibold leading-snug text-ink">{text}</p>
@@ -380,7 +381,7 @@ function PageTwo({
 
         {s.hintOpen && (
           <div data-testid="subst-hint-text" className="flex flex-col gap-2 rounded-xl bg-[#FFF7E0] p-3">
-            <p className="font-body text-base font-semibold text-[#5a4300]">💡 {hint}</p>
+            <p className="font-body text-base font-semibold text-[#5a4300]"><AssetSlot id="CHALLENGE-UI-003" variant="dot" />{hint}</p>
             {example && !s.exampleOpen && (
               <button type="button" data-testid="subst-example" onClick={() => set({ exampleOpen: true })} className={`${btnText} self-start`}>
                 {t('subst_example_btn')}

@@ -328,6 +328,7 @@
     "image": "/challenge/forest-picnic/story-3.svg"
   },
   "discovery": {
+    "asset_set": "CHALLENGE-SET-021",
     "hero_short": "Lucia",
     "rewards": {
       "mode": "badges"

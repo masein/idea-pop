@@ -7,6 +7,7 @@ import PopiAvatar from '@/components/PopiAvatar';
 import { usePopiVoice } from '@/lib/hooks/usePopiVoice';
 import type { MissionStory } from './types';
 import { btnIcon, btnPrimary, btnSecondary } from '@/components/challenge/buttons';
+import AssetSlot from '@/components/AssetSlot';
 
 /**
  * Popi — the ONE penguin (same character as the Ask-Me mascot), here as the
@@ -104,13 +105,13 @@ export function Popi({
  */
 export function Character3D({
   src,
-  emoji,
   alt,
   size = 140,
   className = '',
 }: {
   src: string | null;
-  emoji: string;
+  /** Unused while a picture is pending (AssetSlot shows its ID); kept so content can stay as is. */
+  emoji?: string;
   alt: string;
   size?: number;
   className?: string;
@@ -127,13 +128,8 @@ export function Character3D({
             className="h-full w-full object-contain drop-shadow-[0_8px_10px_rgba(0,0,0,0.15)]"
           />
         ) : (
-          <span
-            role="img"
-            aria-label={alt}
-            className="flex h-full w-full items-center justify-center"
-            style={{ fontSize: size * 0.55 }}
-          >
-            {emoji}
+          <span role="img" aria-label={alt} className="block h-full w-full">
+            <AssetSlot />
           </span>
         )}
       </span>
@@ -273,7 +269,7 @@ export function TapChoice({
       </div>
       {wrong !== null && (
         <p role="status" className="rounded-xl bg-[#FFF7E0] px-3 py-2 font-body text-base text-[#5a4300]">
-          💡 {wrongHint}
+          <AssetSlot id="CHALLENGE-UI-003" variant="dot" />{wrongHint}
         </p>
       )}
     </div>

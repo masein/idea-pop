@@ -13,6 +13,8 @@ import SubstitutePractice from '@/components/challenge/story/SubstitutePractice'
 import SubstCelebration from '@/components/challenge/story/SubstCelebration';
 import RewardPopup from '@/components/challenge/story/RewardPopup';
 import GuideNameMessages from '@/components/challenge/story/GuideNameMessages';
+import { AssetScope } from '@/components/AssetSlot';
+import { assetSetFor } from '@/lib/assets/assetSets';
 import { MISSION_XP_MAX, badgeArt, badgeName, type MissionBadgeKey } from '@/components/challenge/story/missionBadges';
 import { discoveryOf } from '@/components/challenge/story/discovery';
 import { claimMissionBadge, claimPhotoBonus, claimStar, fetchChallengeProgress } from '@/lib/api/client';
@@ -378,6 +380,7 @@ function ChallengePageInner({ onBadgeMode }: { onBadgeMode: (on: boolean) => voi
       ? 'max-w-5xl'
       : 'max-w-2xl';
   return (
+    <AssetScope.Provider value={assetSetFor(challenge.slug)}>
     <div data-testid="challenge-page" className="min-h-screen bg-tint-blue">
       <MissionHUD
         challenge={badgeMode ? { ...challenge, completion_xp: MISSION_XP_MAX } : challenge}
@@ -907,5 +910,6 @@ function ChallengePageInner({ onBadgeMode }: { onBadgeMode: (on: boolean) => voi
         />
       )}
     </div>
+    </AssetScope.Provider>
   );
 }

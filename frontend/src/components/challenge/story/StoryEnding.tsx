@@ -7,6 +7,7 @@ import type { BadgeKey, MissionGame } from './useMissionGame';
 import { MISSION_BADGES, badgeArt, badgeName } from './missionBadges';
 import { heroShort } from './discovery';
 import BadgeIcon from './BadgeIcon';
+import AssetSlot from '@/components/AssetSlot';
 
 interface Props {
   story: MissionStory;
@@ -38,7 +39,7 @@ export default function StoryEnding({ story, game, update, hiddenSteps = [], bad
           aria-hidden="true"
           className="story-stick flex h-28 w-28 items-center justify-center rounded-full border-[6px] border-white bg-[radial-gradient(circle_at_35%_30%,#fff,#ffe38a_40%,#f2b705)] text-5xl shadow-[0_6px_18px_rgba(0,0,0,0.18)]"
         >
-          {story.sticker.emoji}
+          <AssetSlot id={badgeMode ? badgeArt(story, 'river').slice(6) : undefined} className="!rounded-full" />
         </span>
         <p className="font-display text-xl text-ink">{badgeMode ? story.sticker.name : t('sticker_earned', { name: story.sticker.name })}</p>
         {badgeMode && (
@@ -66,7 +67,7 @@ export default function StoryEnding({ story, game, update, hiddenSteps = [], bad
                 data-earned={got}
                 className={`rounded-pill px-3 py-1.5 font-body text-sm font-bold ${got ? 'bg-[#fff5d1] text-[#6b4d00]' : 'bg-ink/10 text-ink/60'}`}
               >
-                {t(`badge_icon_${b}`)} {name} {got ? '' : '🔒'}
+                {name} {got ? '' : '🔒'}
               </li>
             );
           })}

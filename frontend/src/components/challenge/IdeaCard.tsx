@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import type { components } from '@/lib/api/schema';
+import AssetSlot from '@/components/AssetSlot';
 
 type IdeaWallEntry = components['schemas']['IdeaWallEntry'];
 
@@ -66,7 +67,7 @@ export default function IdeaCard({ idea, onReact, onRemix, remixing = false }: I
           data-testid="react-clap"
           className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-tint-blue text-ink text-sm font-body hover:opacity-80 transition-opacity"
         >
-          👏 <span>{idea.clap_count}</span>
+          <AssetSlot id="CHALLENGE-UI-006" variant="dot" /><span>{idea.clap_count}</span>
         </button>
 
         <button
@@ -75,7 +76,7 @@ export default function IdeaCard({ idea, onReact, onRemix, remixing = false }: I
           data-testid="react-star"
           className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-tint-blue text-ink text-sm font-body hover:opacity-80 transition-opacity"
         >
-          ⭐ <span>{idea.star_count}</span>
+          <AssetSlot id="CHALLENGE-UI-006" variant="dot" /><span>{idea.star_count}</span>
         </button>
 
         <button
@@ -84,7 +85,7 @@ export default function IdeaCard({ idea, onReact, onRemix, remixing = false }: I
           data-testid="react-lightbulb"
           className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-tint-blue text-ink text-sm font-body hover:opacity-80 transition-opacity"
         >
-          💡 <span>{idea.lightbulb_count}</span>
+          <AssetSlot id="CHALLENGE-UI-006" variant="dot" /><span>{idea.lightbulb_count}</span>
         </button>
 
         <button

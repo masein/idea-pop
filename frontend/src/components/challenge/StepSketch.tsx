@@ -8,6 +8,7 @@ import { createProject, uploadProjectPhoto } from '@/lib/api/client';
 import { GAME_BY_SLUG } from './gameEmbeds';
 import { btnPrimary, btnText } from '@/components/challenge/buttons';
 import { heroShort } from './story/discovery';
+import AssetSlot from '@/components/AssetSlot';
 
 type ChallengeDetail = import('@/lib/api/schema').components['schemas']['ChallengeDetail'];
 
@@ -112,7 +113,7 @@ export default function StepSketch({ challenge, ageMode, onNext, onBack, hideToo
             data-testid="sketch-instruction"
             className="mt-2 rounded-card bg-tint-blue px-3 py-2 font-body text-sm text-ink/80"
           >
-            ✏️ {t('sketch_instruction')}
+            {t('sketch_instruction')}
           </p>
         )}
         {!challenge.story && challenge.sketch_guidance?.trim() && (
@@ -120,7 +121,7 @@ export default function StepSketch({ challenge, ageMode, onNext, onBack, hideToo
             data-testid="sketch-guidance"
             className="mt-2 rounded-card bg-tint-cream px-3 py-2 font-body text-sm text-ink/70"
           >
-            💡 {challenge.sketch_guidance}
+            <AssetSlot id="CHALLENGE-UI-003" variant="dot" />{challenge.sketch_guidance}
           </p>
         )}
       </div>

@@ -9,7 +9,7 @@ export interface MissionPuzzleData {
   summary: string;
   map: { village: string; river: string; school: string; route: string };
   questions: { key: string; text: string; clue: string; part: string; wrong: string }[];
-  clues: { key: string; emoji: string; text: string }[];
+  clues: { key: string; emoji?: string; asset?: string; text: string }[];
 }
 
 export interface CompanionData {
@@ -44,6 +44,8 @@ export interface PartnerLesson {
 }
 
 export interface Discovery {
+  /** This challenge's picture set in the Master Asset Manifest (e.g. CHALLENGE-SET-021). */
+  asset_set?: string;
   /** The challenge card's cover picture (no text boxes in it). */
   cover?: string | null;
   /** Under "Choose Your Nature Hero": what the kid has just discovered. */
@@ -67,7 +69,7 @@ export interface Discovery {
   puzzle?: MissionPuzzleData;
   /** One per clue card, in the same order. */
   companions?: CompanionData[];
-  experiment?: { refs_caption: string; refs: { label: string; image: string | null }[] };
+  experiment?: { refs_caption: string; refs: { label: string; image: string | null; asset?: string }[] };
 }
 
 /** The hero's short name for friendly lines ("Lucia" for "Lucia Rossi"). */

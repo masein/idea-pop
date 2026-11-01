@@ -6,6 +6,7 @@ import MissionHints from './MissionHints';
 import MissionHelper from './MissionHelper';
 import { GAME_BY_SLUG } from './gameEmbeds';
 import { btnPrimary, btnText } from '@/components/challenge/buttons';
+import AssetSlot from '@/components/AssetSlot';
 
 // Dark-launch flag for the scoped AI helper (server enforces the real gates).
 const HELPER_ON = process.env.NEXT_PUBLIC_MISSION_HELPER === 'true';
@@ -54,7 +55,7 @@ export default function StepSkill({
           data-testid="skill-lesson-card"
           className="bg-white rounded-card shadow-sm p-4 flex items-center gap-4"
         >
-          <span className="text-4xl shrink-0">📚</span>
+          <span className="h-12 w-12 shrink-0"><AssetSlot /></span>
 
           <div className="flex flex-col gap-1 flex-1 min-w-0">
             <p className="font-body font-bold text-base text-ink">{t('skill_lesson_title')}</p>

@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import MissionHelper from './MissionHelper';
 import PopiAvatar from '@/components/PopiAvatar';
 import { btnPrimary, btnText } from '@/components/challenge/buttons';
+import AssetSlot from '@/components/AssetSlot';
 
 // Dark-launch flag for the scoped AI helper (server enforces the real gates).
 const HELPER_ON = process.env.NEXT_PUBLIC_MISSION_HELPER === 'true';
@@ -297,7 +298,7 @@ export default function CaptureCard({
 
       {blockedHint && (
         <p data-testid="capture-blocked" className="rounded-xl bg-[#FFF7E0] px-3 py-2 font-body text-base text-[#5a4300]">
-          💡 {blockedHint}
+          <AssetSlot id="CHALLENGE-UI-003" variant="dot" />{blockedHint}
         </p>
       )}
 

@@ -18,7 +18,7 @@ export function StorySketchTop({ story, game }: { story: MissionStory; game: Mis
       <Popi text={t('sketch_popi', { hero: heroShort(story) })} />
       {partner && (
         <div data-testid="hero-memory" className="flex flex-col gap-1.5 self-stretch rounded-[18px] bg-[#EAF5FC] px-4 py-3 font-body text-base text-[#1F2A33]">
-          <p className="font-bold text-[#1A6FA6]">⭐ {t('partner_reminder', { name: partner.name })}</p>
+          <p className="font-bold text-[#1A6FA6]">{t('partner_reminder', { name: partner.name })}</p>
           {(game.partnerAnswers?.attention ?? '').trim() && (
             <p dir="auto"><b>{t('hero_memory_feature')}</b> {game.partnerAnswers.attention}</p>
           )}

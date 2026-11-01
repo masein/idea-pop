@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslations } from 'next-intl';
 import { btnPrimary, btnSecondary } from '@/components/challenge/buttons';
+import AssetSlot from '@/components/AssetSlot';
 
 interface Props {
   /** XP the server just awarded (0 when it was already given before). Define variant only. */
@@ -90,23 +91,22 @@ export default function DefineCelebration({ xp = 0, onClose, variant = 'define',
           />
           <span className={`${chip} left-1 top-5 bg-white text-ink`}>
             {(solved && again) || xp === 0 ? (
-              <>✅ {t('xp_already')}</>
+              <>{t('xp_already')}</>
             ) : (
               <>
-                ⭐ <span dir="ltr">+{xp ?? (solved ? 10 : 5)} XP</span>
+                <AssetSlot id="CHALLENGE-UI-004" variant="dot" /><span dir="ltr">+{xp ?? (solved ? 10 : 5)} XP</span>
               </>
             )}
           </span>
           {solved && (
             <span className={`${chip} right-1 top-16 bg-white text-ink`} style={{ animationDelay: '0.6s' }}>
-              🏅 {t('solved_badge')}
+              {t('solved_badge')}
             </span>
           )}
           <span className={`${chip} bottom-8 left-3 bg-white text-ink`} style={{ animationDelay: '1.2s' }}>
-            ✅ {solved ? t('solved_chip') : t('celebrate_defined')}
+            {solved ? t('solved_chip') : t('celebrate_defined')}
           </span>
-          <span className="celebrate-twinkle absolute left-[28%] top-2 text-xl">✨</span>
-          <span
+                    <span
             className="celebrate-twinkle absolute right-[24%] top-[150px] text-xl"
             style={{ animationDelay: '0.8s' }}
           >

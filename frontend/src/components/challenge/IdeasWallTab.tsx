@@ -6,6 +6,7 @@ import type { components } from '@/lib/api/schema';
 import { fetchIdeas, reactToIdea, remixIdea } from '@/lib/api/client';
 import IdeaCard from './IdeaCard';
 import { btnSecondary } from '@/components/challenge/buttons';
+import AssetSlot from '@/components/AssetSlot';
 
 type IdeaWallEntry = components['schemas']['IdeaWallEntry'];
 
@@ -108,7 +109,7 @@ export default function IdeasWallTab({
           className="bg-white rounded-card shadow-sm p-6 border border-ink/10 max-w-sm w-full text-center flex flex-col gap-4"
           data-testid="wall-locked"
         >
-          <p className="text-4xl">🔒</p>
+          <p className="mx-auto h-14 w-14"><AssetSlot id="CHALLENGE-UI-006" /></p>
           <h2 className="font-display text-challenge text-ink">{tWall('locked_heading')}</h2>
           <p className="font-body text-sm text-ink/50">
             {tWall('locked_body')}

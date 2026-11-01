@@ -54,7 +54,7 @@ export default function MissionRewards({
           return (
             <li key={b.key} data-testid={`reward-badge-${b.key}`} data-earned={got} className={`${row} ${got ? 'bg-[#F3FBF5]' : 'bg-[#F4F6F8]'}`}>
               <span className="flex min-w-0 items-center gap-2 font-body text-base font-bold text-ink">
-                <BadgeIcon art={badgeArt(story, b.key as MissionBadgeKey) ?? '🏅'} />
+                <BadgeIcon art={badgeArt(story, b.key as MissionBadgeKey) } />
                 <span className="truncate">{badgeName(story, b.key as MissionBadgeKey, t)}</span>
               </span>
               <span className="flex shrink-0 items-center gap-3 font-body text-sm font-semibold">
@@ -74,7 +74,7 @@ export default function MissionRewards({
           const got = p.xp > 0;
           return (
             <li key={p.key} data-testid={`reward-photo-${p.key}`} data-earned={got} className={`${row} ${got ? 'bg-[#F3FBF5]' : 'bg-[#F4F6F8]'}`}>
-              <span className="min-w-0 font-body text-base font-bold text-ink">📷 {t(`photo_kind_${p.key}`)}</span>
+              <span className="min-w-0 font-body text-base font-bold text-ink">{t(`photo_kind_${p.key}`)}</span>
               <span className="flex shrink-0 items-center gap-3 font-body text-sm font-semibold">
                 <span className={got ? 'text-[#1E7A44]' : 'text-[#5B6878]'}>{got ? t('rewards_added') : t('rewards_not_added')}</span>
                 <span dir="ltr" className="tabular-nums text-ink">

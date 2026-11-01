@@ -10,6 +10,7 @@ import { AVATARS } from '@/lib/avatars';
 import KidMedals from '@/components/profile/KidMedals';
 import KidProjectsGrid from '@/components/profile/KidProjectsGrid';
 import type { components } from '@/lib/api/schema';
+import AssetSlot from '@/components/AssetSlot';
 
 type KidProgressResponse = components['schemas']['KidProgressResponse'];
 type KidProjectSummary = components['schemas']['KidProjectSummary'];
@@ -28,7 +29,7 @@ function ParentHandoffModal({ onDismiss }: { onDismiss: () => void }) {
       data-testid="parent-handoff-modal"
     >
       <div className="mx-4 w-full max-w-sm rounded-2xl bg-white p-8 shadow-xl">
-        <div className="mb-4 text-center text-5xl">🤝</div>
+        <div className="mx-auto mb-4 h-16 w-16"><AssetSlot id="DASHBOARD-001" /></div>
         <h2 className="mb-2 text-center font-display text-xl font-bold text-ink">
           {t('handoff_heading')}
         </h2>
@@ -184,7 +185,7 @@ export default function ProfilePage() {
         </div>
 
         <p className="w-fit rounded-pill bg-white px-4 py-1.5 font-body text-sm font-semibold text-ink shadow-sm">
-          ⚡ {t('level_up_hint', { xp: lp.remaining })}
+          {t('level_up_hint', { xp: lp.remaining })}
         </p>
 
         {/* 3 adventures */}
@@ -215,7 +216,7 @@ export default function ProfilePage() {
                   { key: 'adventure_solve', count: prog.solve_count, emoji: '🔧' },
                 ].map((a) => (
                   <div key={a.key} className="rounded-card bg-white p-4 text-center shadow-sm">
-                    <div className="text-2xl" aria-hidden="true">{a.emoji}</div>
+                    <div className="mx-auto h-10 w-10"><AssetSlot id="PROFILE-ADV-001" /></div>
                     <p className="mt-1 font-display font-bold text-ink">{t(a.key)}</p>
                     <p className="font-body text-sm text-ink/60">
                       {t('adventure_count', { count: Number.isFinite(a.count) ? a.count : 0 })}

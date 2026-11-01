@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import type { MissionPuzzleData } from './discovery';
+import AssetSlot from '@/components/AssetSlot';
 
 /**
  * "Build the Mission": the kid taps a question then its matching clue, or a clue then its
@@ -68,12 +69,11 @@ export default function MissionPuzzle({
     <section data-testid="mission-puzzle" className="story-rise flex flex-col gap-4 rounded-[20px] border border-[#dfe8f2] bg-[#F4F8FC] p-4 sm:p-5">
       <div className="flex items-center gap-3">
         <span aria-hidden="true" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#2D6FC4] text-2xl">
-          🧩
+          <AssetSlot id="CHALLENGE-UI-002" variant="dot" className="!me-0 !border-white/80 !bg-transparent" />
         </span>
         <h2 className="font-display text-2xl text-[#1B3A6B]">{puzzle.title}</h2>
       </div>
       <div data-testid="puzzle-how" className="flex flex-wrap items-center gap-2 rounded-[18px] bg-[#FFF7D6] px-4 py-3 font-body text-lg font-bold text-[#5a4300]">
-        <span aria-hidden="true">👆</span>
         <span className="rounded-pill bg-white px-3 py-1">{t('puzzle_step_1')}</span>
         <span aria-hidden="true">→</span>
         <span className="rounded-pill bg-white px-3 py-1">{t('puzzle_step_2')}</span>
@@ -108,7 +108,7 @@ export default function MissionPuzzle({
                         : 'border-[#D6E4EE] hover:border-[#58C6EE]',
                 ].join(' ')}
               >
-                <span aria-hidden="true" className="text-2xl">{used ? '✓' : c.emoji}</span>
+                {used ? <span aria-hidden="true" className="text-2xl">✓</span> : <AssetSlot id={c.asset} variant="chip" />}
                 <span>{c.text}</span>
               </button>
             );
@@ -148,12 +148,12 @@ export default function MissionPuzzle({
                 </button>
                 {cheer === q.key && !done && (
                   <p dir="auto" role="status" data-testid="puzzle-cheer" className="story-pop rounded-xl bg-[#F3FBF5] px-3 py-1.5 font-body text-sm font-bold text-[#1d7a3a]">
-                    🎉 {t('puzzle_cheer')}
+                    {t('puzzle_cheer')}
                   </p>
                 )}
                 {nudge?.q === q.key && (
                   <p dir="auto" role="status" data-testid="puzzle-nudge" className="rounded-xl bg-[#FFF7E0] px-3 py-2 font-body text-sm text-[#5a4300]">
-                    💡 {nudge.text}
+                    <AssetSlot id="CHALLENGE-UI-003" variant="dot" />{nudge.text}
                   </p>
                 )}
               </div>

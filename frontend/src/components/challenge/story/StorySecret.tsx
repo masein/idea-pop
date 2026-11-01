@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl';
 import { Popi, StepNav, pillCtaClass } from './StoryBits';
 import type { ChallengeDetail, MissionStory } from './types';
 import type { MissionGame, GameUpdate } from './useMissionGame';
+import AssetSlot from '@/components/AssetSlot';
 
 interface Props {
   challenge: ChallengeDetail;
@@ -54,13 +55,13 @@ export default function StorySecret({ challenge, story, game, update, onNext, on
                     // eslint-disable-next-line @next/next/no-img-element -- a small transparent cut-out
                     <img src={item.image} alt="" width={112} height={112} className="h-28 w-28 object-contain drop-shadow-[0_6px_8px_rgba(0,0,0,0.18)]" />
                   ) : (
-                    item.emoji
+                    <span className="block h-28 w-28"><AssetSlot /></span>
                   )}
                 </span>
                 <span className="relative font-body text-base font-extrabold text-ink">{item.label}</span>
                 {answered ? (
                   <span className="story-pop relative font-body text-sm font-bold text-ink" aria-live="polite">
-                    {guess === item.answer ? '✅' : '💡'} {t('predict_answer', { answer: p.choices[item.answer] })}
+                    {t('predict_answer', { answer: p.choices[item.answer] })}
                   </span>
                 ) : (
                   <span className="relative flex flex-wrap justify-center gap-1.5">

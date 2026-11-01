@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { fetchKidProgress } from '@/lib/api/client';
 import { levelProgress } from '@/lib/progress';
 import StarRow from './StarRow';
+import AssetSlot from '@/components/AssetSlot';
 
 interface XpInfoDialogProps {
   /** XP this mission gives when it is finished. */
@@ -22,10 +23,10 @@ interface MyXp {
 
 // Canonical XP amounts (CLAUDE.md "Gamification").
 const EARN_ROWS = [
-  { key: 'explore', xp: 5, emoji: '🎬' },
-  { key: 'learn', xp: 10, emoji: '📚' },
-  { key: 'solve', xp: 20, emoji: '🏆' },
-  { key: 'cycle', xp: 15, emoji: '🔄' },
+  { key: 'explore', xp: 5 },
+  { key: 'learn', xp: 10 },
+  { key: 'solve', xp: 20 },
+  { key: 'cycle', xp: 15 },
 ] as const;
 
 /** The "What is XP?" panel. It drops down from the mission's top bar, like
@@ -71,7 +72,7 @@ export default function XpInfoDialog({ missionXp, withStars = false, onClose }: 
         <div className="mx-auto max-w-2xl">
           <div className="flex items-center justify-between px-5 pt-4">
             <h2 id="xp-info-title" className="font-display text-lg text-challenge">
-              ⭐ {withStars ? tStars('info_title') : t('xp_info_title')}
+              <AssetSlot id="CHALLENGE-UI-004" variant="dot" />{withStars ? tStars('info_title') : t('xp_info_title')}
             </h2>
             <button
               ref={closeRef}
@@ -88,7 +89,7 @@ export default function XpInfoDialog({ missionXp, withStars = false, onClose }: 
             {/* 1. What XP means */}
             {withStars ? (
               <section data-testid="xp-info-what" className="flex flex-col gap-1 rounded-card bg-[#EAF5FC] p-3">
-                <h3 className="font-display text-base text-[#135A85]">⭐ {tStars('what_xp_title')}</h3>
+                <h3 className="font-display text-base text-[#135A85]"><AssetSlot id="CHALLENGE-UI-004" variant="dot" />{tStars('what_xp_title')}</h3>
                 <p>{tStars('what_xp_text')}</p>
               </section>
             ) : (
@@ -120,7 +121,7 @@ export default function XpInfoDialog({ missionXp, withStars = false, onClose }: 
               className="flex items-center gap-3 rounded-card bg-challenge/10 p-3"
               data-testid="xp-info-mission"
             >
-              <span className="text-2xl" aria-hidden="true">🎯</span>
+              <span className="h-8 w-8 shrink-0"><AssetSlot id="CHALLENGE-UI-005" variant="dot" className="!h-full !w-full" /></span>
               <p className="font-semibold">{t('xp_info_mission', { xp: missionXp })}</p>
             </div>
 
@@ -156,7 +157,7 @@ export default function XpInfoDialog({ missionXp, withStars = false, onClose }: 
                 {/* Star challenges give XP per badge and photo, not the +20 for finishing. */}
                 {EARN_ROWS.filter((row) => !(withStars && row.key === 'solve')).map((row) => (
                   <li key={row.key} className="flex items-center gap-2">
-                    <span aria-hidden="true">{row.emoji}</span>
+                    <AssetSlot id="CHALLENGE-UI-005" variant="dot" />
                     <span className="flex-1">{t(`xp_info_earn_${row.key}`)}</span>
                     <span dir="ltr" className="rounded-pill bg-challenge/10 px-2 py-0.5 text-xs font-semibold text-challenge">
                       +{row.xp} XP

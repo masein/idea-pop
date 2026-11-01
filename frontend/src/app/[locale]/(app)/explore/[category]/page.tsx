@@ -11,6 +11,7 @@ import VideoCard from '@/components/explore/VideoCard';
 import VideoPlayer from '@/components/explore/VideoPlayer';
 import XpBurst from '@/components/explore/XpBurst';
 import type { components } from '@/lib/api/schema';
+import AssetSlot from '@/components/AssetSlot';
 
 type ExploreVideo = components['schemas']['ExploreVideo'];
 type XpAwardResponse = components['schemas']['XpAwardResponse'];
@@ -93,7 +94,7 @@ export default function CategoryPage() {
           <div className="flex flex-col gap-1">
             <div className="flex items-center gap-3">
               <span className="text-4xl select-none" aria-hidden="true">
-                {catMeta.emoji}
+                <AssetSlot id="EXPLORE-001" />
               </span>
               <div>
                 <h1 className="font-display text-3xl text-ink">

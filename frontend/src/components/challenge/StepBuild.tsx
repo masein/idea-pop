@@ -120,7 +120,7 @@ export default function StepBuild({
     <div data-testid="step-build" className="flex flex-col gap-4 px-4 py-6">
       {intro && (
         <p data-testid="build-intro" className="rounded-[18px] bg-white px-4 py-3 font-body text-lg font-semibold leading-snug text-ink shadow-[0_4px_14px_rgba(0,0,0,0.06)]">
-          📝 {intro}
+          {intro}
         </p>
       )}
       <div>

@@ -8,6 +8,7 @@ import RewardPopup from './RewardPopup';
 import BadgeIcon from './BadgeIcon';
 import { BADGE_ART, badgeArt, badgeName, type MissionBadgeKey } from './missionBadges';
 import type { MissionStory } from './types';
+import AssetSlot from '@/components/AssetSlot';
 
 /**
  * The last page's improved idea: the kid writes (or keeps) the better version of their idea
@@ -34,7 +35,7 @@ export function ImprovedIdeaBox({
   return (
     <section data-testid="improved-idea" className="flex flex-col gap-3 rounded-card bg-white p-4 shadow-sm">
       <h2 className="flex items-center gap-2 font-display text-2xl text-challenge">
-        <span aria-hidden="true">{submitted ? '🌟' : '☆'}</span>
+        <AssetSlot id="CHALLENGE-UI-004" variant="dot" />
         {box.title}
       </h2>
       {submitted ? (
@@ -117,7 +118,7 @@ export function ThreeStarCelebration({
         <StarRow stars={[1, 2, 3]} size={52} pop={[1, 2, 3]} />
         {xp !== null && (
           <p data-testid="three-star-xp" className="rounded-pill bg-[#EAF5FC] px-4 py-1.5 font-body text-base font-extrabold text-[#1A6FA6]">
-            ⭐ {t('three_xp', { xp })}
+            <AssetSlot id="CHALLENGE-UI-004" variant="dot" />{t('three_xp', { xp })}
           </p>
         )}
         {shown.length > 0 && (

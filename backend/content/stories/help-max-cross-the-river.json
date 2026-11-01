@@ -306,21 +306,25 @@
       "clues": [
         {
           "key": "time",
+          "asset": "MAX-PUZZLE-001",
           "emoji": "🕒",
           "text": "The long way round takes 3 hours"
         },
         {
           "key": "max",
+          "asset": "MAX-PUZZLE-002",
           "emoji": "🎒",
           "text": "Max, a student from the village"
         },
         {
           "key": "river",
+          "asset": "MAX-PUZZLE-003",
           "emoji": "🌊",
           "text": "A wide, fast river"
         },
         {
           "key": "school",
+          "asset": "MAX-PUZZLE-004",
           "emoji": "🏫",
           "text": "The school on the other side"
         }
@@ -379,14 +383,17 @@
       "refs": [
         {
           "label": "Wide and shallow, with a flat base",
+          "asset": "MAX-EXP-001",
           "image": null
         },
         {
           "label": "Deep and narrow",
+          "asset": "MAX-EXP-002",
           "image": null
         },
         {
           "label": "Raised-rim boat",
+          "asset": "MAX-EXP-003",
           "image": null
         }
       ]

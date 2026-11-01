@@ -308,21 +308,25 @@
       "clues": [
         {
           "key": "time",
+          "asset": "MAX-PUZZLE-001",
           "emoji": "🕒",
           "text": "دور زدن ۳ ساعت طول می‌کشد"
         },
         {
           "key": "max",
+          "asset": "MAX-PUZZLE-002",
           "emoji": "🎒",
           "text": "مکس، دانش‌آموزی از روستا"
         },
         {
           "key": "river",
+          "asset": "MAX-PUZZLE-003",
           "emoji": "🌊",
           "text": "یک رودخانهٔ پهن و پرآب"
         },
         {
           "key": "school",
+          "asset": "MAX-PUZZLE-004",
           "emoji": "🏫",
           "text": "مدرسه، آن طرف رودخانه"
         }
@@ -381,14 +385,17 @@
       "refs": [
         {
           "label": "پهن و کم‌عمق، با کف صاف",
+          "asset": "MAX-EXP-001",
           "image": null
         },
         {
           "label": "گود و باریک",
+          "asset": "MAX-EXP-002",
           "image": null
         },
         {
           "label": "قایق لبه‌بلند",
+          "asset": "MAX-EXP-003",
           "image": null
         }
       ]

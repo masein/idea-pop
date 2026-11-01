@@ -8,6 +8,7 @@ import { submitIdea } from '@/lib/api/client';
 import { btnPrimary, btnSecondary } from '@/components/challenge/buttons';
 import MissionRewards from './story/MissionRewards';
 import ShareForApproval from './story/ShareForApproval';
+import AssetSlot from '@/components/AssetSlot';
 
 type ChallengeDetail = import('@/lib/api/schema').components['schemas']['ChallengeDetail'];
 
@@ -68,7 +69,7 @@ export default function StepCelebrate({
     <div data-testid="step-celebrate" className="flex flex-col gap-6 px-4 py-6">
       {/* Celebration header */}
       <div className="text-center py-8">
-        <div className="text-6xl">🎉</div>
+        <div className="mx-auto h-20 w-20"><AssetSlot id="CHALLENGE-UI-001" className="!rounded-full" /></div>
         <h2 className="font-display text-3xl text-challenge mt-3">{t('celebrate_heading')}</h2>
       </div>
 

@@ -8,6 +8,7 @@ import type { MissionStory } from './types';
 import type { BadgeKey, MissionGame, GameUpdate } from './useMissionGame';
 import { discoveryOf, heroShort, type PartnerLesson } from './discovery';
 import HeroFocus, { heroFlowDone } from './HeroFocus';
+import AssetSlot from '@/components/AssetSlot';
 
 interface Props {
   story: MissionStory;
@@ -152,7 +153,7 @@ export default function StoryClues({ story, game, update, award, onNext, onBack,
                   <span className="font-body text-base font-extrabold text-ink">{c.name}</span>
                   {on && (
                     <span className="rounded-pill bg-[#1A6FA6] px-2.5 py-0.5 font-body text-xs font-bold text-white">
-                      ⭐ {t('partner_chip')}
+                      {t('partner_chip')}
                     </span>
                   )}
                 </button>
@@ -171,7 +172,7 @@ export default function StoryClues({ story, game, update, award, onNext, onBack,
       {partner && !lesson && (
         <section data-testid="partner-questions" className="story-rise flex flex-col gap-3 rounded-[20px] bg-white p-5 shadow-sm">
           <h2 className="font-display text-2xl text-challenge">{t('partner_think_title', { name: partner.name })}</h2>
-          <Meter label={t('inspiration_meter')} value={answered.length} total={questions.length} icon="⚡" />
+          <Meter label={t('inspiration_meter')} value={answered.length} total={questions.length} icon="" />
 
           {questions.filter((k) => game.partnerDone.includes(k)).map((k) => (
             <div key={k} data-testid={`partner-q-${k}`} data-state="done" className="rounded-xl border border-[#BFE6C8] bg-[#F3FBF5] px-4 py-3">
@@ -256,7 +257,7 @@ export default function StoryClues({ story, game, update, award, onNext, onBack,
             </div>
           ) : (
             <details className="rounded-[16px] bg-[#FFF7D6] px-4 py-3">
-              <summary className="cursor-pointer font-body text-base font-bold text-[#7A5A00]">💡 {t('inspired_tip_small')}</summary>
+              <summary className="cursor-pointer font-body text-base font-bold text-[#7A5A00]">{t('inspired_tip_small')}</summary>
               <p className="mt-2 font-body text-base font-medium text-ink">“{t('inspired_quote')}”</p>
             </details>
           )}
@@ -273,7 +274,7 @@ export default function StoryClues({ story, game, update, award, onNext, onBack,
 }
 
 /** A progress meter that fills as the kid goes (heroes met, inspiration). */
-function Meter({ label, value, total, icon = '🏅' }: { label: string; value: number; total: number; icon?: string }) {
+function Meter({ label, value, total, icon = '' }: { label: string; value: number; total: number; icon?: string }) {
   const shown = Math.min(value, total);
   const pct = total > 0 ? Math.round((shown / total) * 100) : 0;
   return (
@@ -338,7 +339,7 @@ function PartnerQuestionBox({
         if (ready) onDone();
       }}
     >
-      {turnLabel && <p className="font-display text-xl text-challenge">✏️ {turnLabel}</p>}
+      {turnLabel && <p className="font-display text-xl text-challenge">{turnLabel}</p>}
       <label htmlFor={`partner-input-${id}`} className="font-body text-base font-bold text-ink">
         {question}
       </label>
@@ -364,7 +365,7 @@ function PartnerQuestionBox({
       </div>
       {peeking && (
         <p data-testid={hint ? 'partner-hint-text' : 'partner-peek-text'} className="rounded-xl bg-[#FFF7E0] px-3 py-2 font-body text-base text-[#5a4300]">
-          💡 {hint ?? peek}
+          <AssetSlot id="CHALLENGE-UI-003" variant="dot" />{hint ?? peek}
         </p>
       )}
     </form>

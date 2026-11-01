@@ -3,17 +3,17 @@
 export const MISSION_BADGES = ['define', 'clue', 'solved', 'tool', 'retry', 'river'] as const;
 export type MissionBadgeKey = (typeof MISSION_BADGES)[number];
 
-/** Badge artwork for now (emoji), until the drawn badges arrive. */
+/** Badge artwork: an approved picture's path, or "asset:<ID>" while its picture is pending. */
 export const BADGE_ART: Record<MissionBadgeKey, string> = {
   define: '/characters/quizzy.png',
-  clue: '🌿',
-  solved: '💡',
-  tool: '🧠',
-  retry: '🔁',
-  river: '🌉',
+  clue: 'asset:MAX-BADGE-002',
+  solved: 'asset:MAX-BADGE-003',
+  tool: 'asset:MAX-BADGE-004',
+  retry: 'asset:MAX-BADGE-005',
+  river: 'asset:MAX-BADGE-006',
 };
 
-type BadgeStory = { sticker?: { name: string; emoji: string } | null; tool?: { badge?: string } | null } | null | undefined;
+type BadgeStory = { sticker?: { name: string; emoji: string } | null; tool?: { badge?: string } | null; discovery?: unknown } | null | undefined;
 
 /** A badge's name: the creativity tool's badge and the finish badge (the story's sticker)
  *  belong to each challenge; the others are the template's own. */
@@ -23,9 +23,10 @@ export function badgeName(story: BadgeStory, key: MissionBadgeKey, t: (k: string
   return t(`mission_badge_${key}`);
 }
 
-/** A badge's art: the finish badge uses the story's sticker. */
+/** A badge's art: another challenge's finish and tool badges belong to its own manifest set. */
 export function badgeArt(story: BadgeStory, key: MissionBadgeKey): string {
-  if (key === 'river' && story?.sticker?.emoji) return story.sticker.emoji;
+  const set = (story?.discovery as { asset_set?: string } | null | undefined)?.asset_set;
+  if (set && (key === 'river' || key === 'tool')) return `asset:${set}`;
   return BADGE_ART[key];
 }
 

@@ -7,6 +7,7 @@ import type { ChallengeDetail, MissionStory } from './types';
 import type { MissionGame, GameUpdate } from './useMissionGame';
 import { btnText } from '@/components/challenge/buttons';
 import { discoveryOf } from './discovery';
+import AssetSlot from '@/components/AssetSlot';
 
 interface Props {
   challenge: ChallengeDetail;
@@ -71,11 +72,8 @@ export default function StoryLab({ challenge, story, game, update, onNext, onBac
                     // eslint-disable-next-line @next/next/no-img-element -- a small reference picture
                     <img src={r.image} alt={r.label} className="aspect-[4/3] w-full rounded-xl object-cover" />
                   ) : (
-                    <span
-                      data-testid="experiment-ref-placeholder"
-                      className="flex aspect-[4/3] w-full items-center justify-center rounded-xl border-2 border-dashed border-[#9CC9E6] bg-white/70 font-body text-xs font-bold text-[#5B6878]"
-                    >
-                      {t('picture_coming')}
+                    <span data-testid="experiment-ref-placeholder" className="block aspect-[4/3] w-full">
+                      <AssetSlot id={r.asset} />
                     </span>
                   )}
                   <figcaption className="text-center font-body text-sm font-semibold text-ink">{r.label}</figcaption>
@@ -87,7 +85,7 @@ export default function StoryLab({ challenge, story, game, update, onNext, onBac
 
         {experiment && discoveryOf(story)?.predict_intro && (
           <p data-testid="predict-intro" className="rounded-xl bg-[#FFF7E0] px-3 py-2 font-body text-base text-[#5a4300]">
-            💡 {discoveryOf(story)?.predict_intro}
+            <AssetSlot id="CHALLENGE-UI-003" variant="dot" />{discoveryOf(story)?.predict_intro}
           </p>
         )}
         <p className="font-body text-sm font-bold text-ink">1. {t('my_prediction')} <span className="font-medium">{lab.predict}</span></p>

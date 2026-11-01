@@ -3,6 +3,7 @@
 import React from 'react';
 import { useTranslations } from 'next-intl';
 import { btnPrimary } from '@/components/challenge/buttons';
+import AssetSlot from '@/components/AssetSlot';
 
 type ChallengeDetail = import('@/lib/api/schema').components['schemas']['ChallengeDetail'];
 type AgeMode = import('@/lib/hooks/useAgeMode').AgeMode;
@@ -21,7 +22,7 @@ export default function StepBrief({ challenge, ageMode, onNext }: StepBriefProps
     <div data-testid="step-brief" className="mx-auto flex max-w-lg flex-col items-center gap-6 px-4 py-8">
       {/* Big emoji */}
       <span className="text-6xl text-center" role="img" aria-label={challenge.title}>
-        {challenge.emoji}
+        <AssetSlot id="CHALLENGE-CARD-001" />
       </span>
 
       {/* Headings */}

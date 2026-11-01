@@ -16,6 +16,7 @@ import { discoveryOf } from '@/components/challenge/story/discovery';
 import { BADGE_ART, badgeArt, badgeName, type MissionBadgeKey } from '@/components/challenge/story/missionBadges';
 import type { MissionStory } from '@/components/challenge/story/types';
 import BadgeIcon from '@/components/challenge/story/BadgeIcon';
+import AssetSlot from '@/components/AssetSlot';
 
 type ChallengeDetail = components['schemas']['ChallengeDetail'];
 
@@ -42,7 +43,7 @@ function UpgradeHandoffModal({ onDismiss }: { onDismiss: () => void }) {
       }}
     >
       <div className="w-full max-w-sm rounded-2xl bg-white p-8 text-center shadow-xl">
-        <div className="mb-4 text-5xl" aria-hidden="true">🤝</div>
+        <div className="mx-auto mb-4 h-16 w-16"><AssetSlot id="DASHBOARD-001" /></div>
         <h2 className="mb-2 font-display text-xl font-bold text-ink">{t('upgrade_modal_title')}</h2>
         <p className="mb-5 font-body text-sm text-ink/70">{t('upgrade_modal_body')}</p>
         <button
@@ -163,7 +164,7 @@ export default function ChallengesList() {
                   className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-tint-cream text-3xl"
                   aria-hidden="true"
                 >
-                  {featured.emoji || '🚀'}
+                  <AssetSlot id="CHALLENGE-CARD-001" />
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="text-lg text-ink [font-family:var(--font-adlam)]">{featured.title}</p>
@@ -338,7 +339,7 @@ function UnlockedChallengeCard({
                       title={badgeName(story, b, tStory)}
                       className="flex h-7 w-7 items-center justify-center rounded-full bg-[#FFF5D1] text-base"
                     >
-                      <BadgeIcon art={badgeArt(story, b)} className="h-6 w-6" />
+                      <BadgeIcon art={badgeArt(story, b)} className="h-6 w-6" compact />
                       <span className="sr-only">{badgeName(story, b, tStory)}</span>
                     </li>
                   ))}

@@ -1,5 +1,6 @@
 import React from 'react';
 import Image from 'next/image';
+import AssetSlot from '@/components/AssetSlot';
 
 export type Visibility = 'private' | 'class' | 'public';
 
@@ -33,7 +34,7 @@ export default function ProjectCard({
           <Image src={imageSrc} alt={title} fill className="object-cover" sizes="192px" />
         ) : (
           <div className="absolute inset-0 flex items-center justify-center">
-            <span className="text-4xl select-none opacity-30" aria-hidden="true">🖼️</span>
+            <AssetSlot id="PROFILE-PROJECT-001" />
           </div>
         )}
         {aiGenerated && (

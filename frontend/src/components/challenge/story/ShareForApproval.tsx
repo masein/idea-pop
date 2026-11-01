@@ -83,7 +83,7 @@ export default function ShareForApproval({
             className="w-full resize-none rounded-card border border-ink/20 px-3 py-2 font-body text-base focus:outline-none focus:ring-2 focus:ring-challenge"
           />
           <button type="button" data-testid="wall-submit-btn" onClick={() => void share()} disabled={phase === 'working'} className={btnPrimary}>
-            {phase === 'working' ? t('saving_short') : `📤 ${t('share_button')}`}
+            {phase === 'working' ? t('saving_short') : t('share_button')}
           </button>
         </>
       )}
@@ -91,7 +91,7 @@ export default function ShareForApproval({
       <div aria-live="polite" className="flex flex-col gap-2">
         {phase === 'email_sent' && (
           <p data-testid="share-email-sent" className="rounded-xl bg-[#F3FBF5] px-3 py-2 font-body text-base font-semibold text-[#1E7A44]">
-            ✉️ {t('share_email_sent')}
+            {t('share_email_sent')}
           </p>
         )}
         {phase === 'in_review' && (
@@ -101,7 +101,7 @@ export default function ShareForApproval({
         )}
         {waiting && (
           <p data-testid="share-awaiting" className="self-start rounded-pill bg-[#FFF5D1] px-3 py-1 font-body text-sm font-extrabold text-[#6b4d00]">
-            ⏳ {t('share_awaiting')}
+            {t('share_awaiting')}
           </p>
         )}
         {phase === 'not_sent' && (

@@ -7,6 +7,7 @@ import { btnPrimary, btnText } from '@/components/challenge/buttons';
 import type { PartnerLesson } from './discovery';
 import type { MissionStory } from './types';
 import type { GameUpdate, MissionGame } from './useMissionGame';
+import AssetSlot from '@/components/AssetSlot';
 
 type ClueCard = MissionStory['clue_cards'][number];
 
@@ -98,7 +99,7 @@ export default function HeroFocus({
               <Character3D src={card.image ?? null} emoji={card.emoji} alt={card.name} size={200} />
             </span>
             <span data-testid="my-hero-label" className="mt-1 rounded-pill bg-[#1A6FA6] px-4 py-1 font-body text-sm font-extrabold text-white shadow-md">
-              ⭐ {t('partner_chip')}: {card.name}
+              {t('partner_chip')}: {card.name}
             </span>
           </div>
           <Callout {...callouts[1]} side="end" />
@@ -115,7 +116,7 @@ export default function HeroFocus({
       {/* 3. How it works, again, simply, with a picture of the trick when there is one. */}
       {step2 && (
         <section data-testid="hero-how" className="story-rise flex flex-col gap-3 rounded-[20px] bg-[#E6F8EC] p-5">
-          <p className="font-display text-2xl text-[#1E6B40]">⚙️ {t('hero_how_title')}</p>
+          <p className="font-display text-2xl text-[#1E6B40]">{t('hero_how_title')}</p>
           <p className="font-body text-lg font-medium leading-snug text-ink">{lesson.how}</p>
           {lesson.diagram && (
             // eslint-disable-next-line @next/next/no-img-element -- a small authored diagram (SVG)
@@ -141,7 +142,7 @@ export default function HeroFocus({
           {lesson.hint && (
             <>
               <button type="button" data-testid="hero-hint-btn" onClick={() => setHintOpen((v) => !v)} className={`${btnText} self-start !px-0`}>
-                💡 {t('subst_hint_btn')}
+                <AssetSlot id="CHALLENGE-UI-003" variant="dot" />{t('subst_hint_btn')}
               </button>
               {hintOpen && (
                 <div data-testid="hero-hint" className="story-pop flex flex-col gap-1 rounded-[14px] bg-white px-4 py-3">
@@ -166,7 +167,7 @@ export default function HeroFocus({
               <li key={k} className="flex items-center gap-2">
                 {i > 0 && <span aria-hidden="true" className="text-xl text-challenge">→</span>}
                 <span className="rounded-pill bg-[#EAF5FC] px-3 py-1.5 font-body text-sm font-extrabold text-[#135A85]">
-                  {['🌿', '🔍', '💡', '🛠️'][i]} {t(k)}
+                  <AssetSlot id="CHALLENGE-STORY-001" variant="dot" />{t(k)}
                 </span>
               </li>
             ))}

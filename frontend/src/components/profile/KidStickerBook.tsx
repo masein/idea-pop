@@ -22,7 +22,7 @@ function stickerEmoji(id: string): string {
 export default function KidStickerBook({ stickers }: KidStickerBookProps) {
   return (
     <div data-testid="kid-sticker-book" className="bg-white rounded-card shadow-sm p-5 flex flex-col gap-3">
-      <h3 className="font-display text-base text-ink">🎨 My stickers</h3>
+      <h3 className="font-display text-base text-ink">My stickers</h3>
 
       {stickers.length === 0 ? (
         <p className="font-body text-sm text-ink/50">

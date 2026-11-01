@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import XpInfoDialog from './XpInfoDialog';
 import StarRow from './StarRow';
 import { btnPrimary, btnSecondary } from '@/components/challenge/buttons';
+import AssetSlot from '@/components/AssetSlot';
 
 const ALL_STEPS = [1, 2, 3, 4, 5, 6, 7, 8] as const;
 const INFO_KEYS = ['problem', 'goal', 'rules'] as const;
@@ -100,7 +101,7 @@ export default function MissionHUD({
           data-testid="mission-title"
           className="line-clamp-2 min-w-0 flex-1 text-center font-display text-xl leading-tight text-ink sm:text-2xl md:text-3xl"
         >
-          {challenge.emoji} {challenge.title}
+          {challenge.title}
         </h1>
 
         {/* Right: the three stars, then the XP badge — a button that explains XP and stars.
@@ -118,7 +119,7 @@ export default function MissionHUD({
           }}
           className="flex shrink-0 items-center gap-1 rounded-pill bg-challenge px-3 py-1.5 font-body text-xs font-semibold text-white shadow-sm transition-transform hover:scale-105 hover:bg-challenge/90 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-challenge focus-visible:ring-offset-2"
         >
-          <span aria-hidden="true">⭐</span>
+          <AssetSlot id="CHALLENGE-UI-004" variant="dot" className="!me-0 !border-white/70 !bg-transparent" />
           {t('hud_xp', { xp: challenge.completion_xp })}
           <span
             aria-hidden="true"
@@ -266,7 +267,7 @@ export default function MissionHUD({
               kept to a centred column rather than stretched edge to edge. */}
           <div className="mx-auto max-w-2xl">
           <div className="flex items-center justify-between px-5 pt-4">
-            <h2 className="font-display text-lg text-challenge">🗺️ {t('hud_menu_title')}</h2>
+            <h2 className="font-display text-lg text-challenge">{t('hud_menu_title')}</h2>
             <button
               type="button"
               data-testid="mission-menu-close"

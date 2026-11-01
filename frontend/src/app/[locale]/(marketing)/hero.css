@@ -28,7 +28,13 @@
 .hero-viewport[data-poster] .hero-poster {
   opacity: 1;
 }
-.hero-viewport:not([data-state="preparing"]) .hero-poster {
+/* The poster stays underneath while the finished scene fades in on top of it (same first frame), and goes once the
+   scene is fully shown: the loading never pops from one picture to the next (susan, 2026-11-01). */
+.hero-viewport[data-state="ready"] .hero-poster {
+  opacity: 0;
+  transition: opacity 0s linear 600ms;
+}
+.hero-viewport[data-state="fallback"] .hero-poster {
   display: none;
 }
 /* Wide screens: the nav waits for the camera to settle (HeroScene.tsx fades it in); hidden until then. */
@@ -48,9 +54,13 @@
   will-change: transform;
 }
 /* Nothing shows until every layer has decoded, so no partial scene flashes. */
+.hero-world {
+  transition: opacity 450ms ease-out;
+}
 .hero-viewport[data-state="preparing"] .hero-world,
 .hero-viewport[data-state="fallback"] .hero-world {
   visibility: hidden;
+  opacity: 0;
 }
 .hero-layer {
   position: absolute;

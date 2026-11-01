@@ -404,6 +404,8 @@ export default function HeroScene() {
   }, [mobile]);
 
   const layers = mobile === null ? [] : LAYERS.filter((l) => !(mobile && MOBILE.skip.has(l.id)));
+  // fetch every layer of this composition up front (with the landscape), so the scene can decode and appear together
+  for (const l of layers) preload(src(l.file), { as: "image" });
   return (
     <div ref={viewportRef} aria-hidden="true" className="hero-viewport" data-state={state}>
       {/* the opening frame (the reference photo region at normal centred cover) until every layer is ready */}

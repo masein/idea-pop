@@ -158,6 +158,14 @@
       } else {
         geometry.arrivalY = nativeToDoc(8120); geometry.arrivalX = 210 * g; geometry.settleX = 140 * g;
       }
+      // Idea Pop site (susan, 2026-11-01): the descent ends in the light area above the dark "Start free" band, so the
+      // bird never enters the dark green; it stays there and keeps flapping (the hover loop is separate from the path).
+      const closing = doc.querySelector('section[aria-label="start for free"]');
+      if (closing) {
+        const endScale = .17 * g * (geometry.phone ? 1.8 : 1);
+        const lightBottom = docBounds(closing).top - (1348 - ANCHOR.y) * endScale - 16;
+        geometry.arrivalY = Math.min(geometry.arrivalY, lightBottom);
+      }
       geometry.route[geometry.route.length - 1] = { ...geometry.route.at(-1), X: geometry.arrivalX, Y: geometry.arrivalY };
       dirty = false;
       return true;

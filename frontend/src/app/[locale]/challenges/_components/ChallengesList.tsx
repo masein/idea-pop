@@ -166,7 +166,7 @@ export default function ChallengesList() {
                   {featured.emoji || '🚀'}
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="font-body text-lg font-extrabold text-ink">{featured.title}</p>
+                  <p className="text-lg text-ink [font-family:var(--font-adlam)]">{featured.title}</p>
                   <p className="line-clamp-1 font-body text-[15px] font-medium text-[#4A5560]">{featured.brief}</p>
                 </div>
                 <span className="hidden min-h-12 shrink-0 items-center rounded-pill bg-[#1A6FA6] px-7 font-body text-base font-extrabold text-white shadow-[inset_0_0_0_1px_#0F4F7A,0_4px_4px_rgba(0,0,0,0.25)] transition-transform group-hover:scale-105 sm:inline-flex">
@@ -309,7 +309,8 @@ function UnlockedChallengeCard({
             )}
             {/* #1A7AB8 keeps white text at 4.7:1, close to the design's sky blue. */}
             <div className="w-full bg-[#1A7AB8] px-5 py-4 text-white">
-              <p className="font-body text-xl font-extrabold leading-tight">{challenge.title}</p>
+              {/* Card titles share the sidebar labels' face (ADLaM Display, one heavy 400 weight). */}
+              <p className="text-xl leading-tight [font-family:var(--font-adlam)]">{challenge.title}</p>
               <p className="mt-1 line-clamp-1 font-body text-[15px] font-semibold">{challenge.brief}</p>
             </div>
             <div className="relative w-full flex-1 overflow-hidden">
@@ -374,7 +375,7 @@ function UnlockedChallengeCard({
           data-testid="challenge-card-back"
           className="story-face story-back flex flex-col gap-3 overflow-hidden rounded-[1.25rem] border border-[#58C6EE] bg-[#F7FCFF] p-4 shadow-sm"
         >
-          <p className="font-body text-lg font-extrabold leading-tight text-ink">{challenge.title}</p>
+          <p className="text-lg leading-tight text-ink [font-family:var(--font-adlam)]">{challenge.title}</p>
           <div>
             <p className="font-body text-xs font-extrabold uppercase tracking-wide text-[#1E7A44]">{t('card_nature')}</p>
             <ul className="mt-1.5 grid grid-cols-4 gap-2">

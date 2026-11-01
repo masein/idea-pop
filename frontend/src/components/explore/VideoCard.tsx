@@ -1,6 +1,7 @@
 'use client';
 
 import type { components } from '@/lib/api/schema';
+import AssetSlot from '@/components/AssetSlot';
 
 type ExploreVideo = components['schemas']['ExploreVideo'];
 
@@ -10,20 +11,6 @@ export interface VideoCardProps {
   onSelect: (v: ExploreVideo) => void;
 }
 
-const TAXONOMY_EMOJI: Record<string, string> = {
-  Cephalopoda: '🐙',
-  Reptilia: '🦎',
-  Aves: '🦅',
-  Insecta: '🐝',
-  Mammalia: '🦁',
-  Amphibia: '🐸',
-  Arachnida: '🕷️',
-  Pisces: '🐟',
-};
-
-function getEmoji(taxonomy: string): string {
-  return TAXONOMY_EMOJI[taxonomy] ?? '🎬';
-}
 
 export default function VideoCard({ video, ageMode, onSelect }: VideoCardProps) {
   return (
@@ -37,7 +24,7 @@ export default function VideoCard({ video, ageMode, onSelect }: VideoCardProps) 
       {/* Thumbnail area */}
       <div className="h-36 bg-tint-lime flex items-center justify-center relative">
         <span className="text-5xl select-none" aria-hidden="true">
-          {getEmoji(video.taxonomy)}
+          <AssetSlot id="EXPLORE-001" />
         </span>
 
         {video.ai_generated && (

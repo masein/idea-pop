@@ -167,7 +167,6 @@ export default function ProfilePage() {
                   {t('xp_to_level', { remaining: xpToNext, next: lp.nextLevel })}
                 </span>
               </span>
-              <span className="text-lg" aria-hidden="true">🏁</span>
             </div>
             <div className="relative mt-2 h-5 w-full overflow-hidden rounded-full bg-black/5">
               <div

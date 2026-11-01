@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import AssetSlot from '@/components/AssetSlot';
 
 type KidProjectSummary = import('@/lib/api/schema').components['schemas']['KidProjectSummary'];
 
@@ -10,15 +11,15 @@ interface KidProjectCardProps {
 }
 
 const VISIBILITY_LABELS: Record<string, string> = {
-  private: '🔒 Private',
-  class: '🏫 Class',
-  public: '🌍 Public',
+  private: 'Private',
+  class: 'Class',
+  public: 'Public',
 };
 
 export default function KidProjectCard({ project, onShare }: KidProjectCardProps) {
   const visLabel = project.visibility_pending
-    ? '⏳ Pending review'
-    : (VISIBILITY_LABELS[project.visibility] ?? '🔒 Private');
+    ? 'Pending review'
+    : (VISIBILITY_LABELS[project.visibility] ?? 'Private');
 
   return (
     <div
@@ -36,8 +37,8 @@ export default function KidProjectCard({ project, onShare }: KidProjectCardProps
           />
         </div>
       ) : (
-        <div className="w-full h-36 bg-tint-blue flex items-center justify-center text-4xl" aria-hidden="true">
-          🔨
+        <div className="h-36 w-full bg-tint-blue">
+          <AssetSlot id="PROFILE-PROJECT-001" />
         </div>
       )}
 
@@ -46,7 +47,7 @@ export default function KidProjectCard({ project, onShare }: KidProjectCardProps
         <p className="font-display text-sm text-ink leading-snug line-clamp-2">{project.title}</p>
 
         {project.challenge_title && (
-          <p className="font-body text-xs text-ink/50">⚡ {project.challenge_title}</p>
+          <p className="font-body text-xs text-ink/50">{project.challenge_title}</p>
         )}
 
         <div className="flex items-center justify-between mt-auto pt-1">

@@ -29,7 +29,7 @@ export interface WhCharacter {
   image?: string | null;
 }
 
-/** One nature partner's biomimicry lesson: what it does, how, an inspiration, the kid's turn. */
+/** One Nature Hero's biomimicry lesson: what it does, how, an inspiration, the kid's turn. */
 export interface PartnerLesson {
   secret: string;
   how: string;
@@ -49,6 +49,8 @@ export interface Discovery {
   /** The challenge card's cover picture (no text boxes in it). */
   cover?: string | null;
   /** Under "Choose Your Nature Hero": what the kid has just discovered. */
+  /** The top of Nature Clues: PopAI repeats the mission question, then the intro under it. */
+  clues_top?: { question: string; intro: string };
   choose_hero_text?: string;
   /** What the build needs, shown on the challenge card's back. */
   materials?: string[];

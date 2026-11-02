@@ -190,6 +190,7 @@
     "model_material": "Clay"
   },
   "discovery": {
+    "clues_top": { "question": "How can we help Max cross the river?", "intro": "Nature solved this problem millions of years ago. Meet four Nature Heroes who are masters at staying afloat!" },
     "choose_hero_text": "You've discovered some amazing ways nature stays on water. Now choose the hero you like most to help Max solve his problem.",
     "materials": [
       "Modelling clay",

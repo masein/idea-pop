@@ -37,6 +37,7 @@ export function Popi({
   grand = false,
   talking = false,
   keepLines = false,
+  spokenText,
 }: {
   text: string;
   label?: string;
@@ -44,6 +45,8 @@ export function Popi({
   talking?: boolean;
   /** Show the text's line breaks (Max's multi-line messages). */
   keepLines?: boolean;
+  /** What the listen button reads, when it goes beyond the bubble's own words. */
+  spokenText?: string;
 }) {
   const t = useTranslations('story');
   const locale = useLocale();
@@ -87,7 +90,7 @@ export function Popi({
             type="button"
             data-testid="popi-speak"
             aria-label={voice.speaking ? t('popi_stop') : t('popi_listen')}
-            onClick={() => (voice.speaking ? voice.stop() : voice.speak(text))}
+            onClick={() => (voice.speaking ? voice.stop() : voice.speak(spokenText ?? text))}
             className={btnIcon}
           >
             <span aria-hidden="true">{voice.speaking ? '⏹' : '🔊'}</span>

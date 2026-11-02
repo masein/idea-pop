@@ -36,7 +36,7 @@ export interface MissionGame {
   defineAnswers: Record<string, string>;
   /** The 5W1H questions answered so far, in order (they open one by one). */
   defineDone: string[];
-  /** Nature clues: the hero the kid picked as their nature partner (card index). */
+  /** Nature clues: the hero the kid picked as their Nature Hero (card index). */
   partner: number | null;
   /** The three "think like your partner" answers (what, how, inspired). */
   partnerAnswers: Record<string, string>;

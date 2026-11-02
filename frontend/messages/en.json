@@ -1640,14 +1640,14 @@
     "river_badge_text": "You followed {hero}'s challenge all the way, from the first question to testing your idea.",
     "reward_continue": "Continue",
     "nature_reward_text": "You explored a strategy from nature and connected it to a design possibility.",
-    "nature_reward_title": "You earned the Nature Inspiration badge!",
+    "nature_reward_title": "You earned the Nature Hero badge!",
     "quizzy_reward_text": "You used WH Questions to understand the problem more clearly.",
     "quizzy_reward_title": "You earned the Quizzy badge!",
     "mission_badge_river": "River Explorer",
     "mission_badge_retry": "Second Try Hero",
     "mission_badge_tool": "SCAMPER Starter",
     "mission_badge_solved": "Idea Maker",
-    "mission_badge_clue": "Nature Inspiration",
+    "mission_badge_clue": "Nature Hero",
     "mission_badge_define": "Quizzy",
     "puzzle_questions": "Questions",
     "subst_finish": "Save My New Idea",
@@ -2004,7 +2004,7 @@
   },
   "template_overrides": {
     "story": {
-      "badge_clue": "Nature Inspiration",
+      "badge_clue": "Nature Hero",
       "sketch_popi": "Now that you've explored ideas from nature, what ideas have you come up with to help {hero}?",
       "subst_p1_popi": "A problem can have more than one solution. If you saved an idea earlier, we can use it to create new possibilities.\nDon't have an idea yet? That's okay. We can also use our clay-boat experiment for this practice.",
       "popi_ending": "PopAI tells the ending"

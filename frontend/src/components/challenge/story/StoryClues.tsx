@@ -19,7 +19,7 @@ interface Props {
   onBack: () => void;
   /** The first few challenges show the full "what does inspired mean?" tip; later ones a small one. */
   fullInspirationTip?: boolean;
-  /** The page awards the clue badge (Nature Inspiration) on Next, with its popup. */
+  /** The page awards the clue badge (Nature Hero) on Next, with its popup. */
   deferClueBadge?: boolean;
 }
 
@@ -30,7 +30,7 @@ type PartnerQuestion = (typeof PARTNER_QUESTIONS)[number];
 /**
  * Step 3, Nature clues, in four parts (TEMP rule 37):
  * 1. Meet the heroes: turn every card (photo → trick → what it does). All met → Clue Detective badge.
- * 2. Pick your nature partner: the hero the kid likes best to help solve the problem.
+ * 2. Pick your Nature Hero: the hero the kid likes best to help solve the problem.
  * 3. Think like your partner: what does it do, how, and how could we be inspired by it.
  * 4. What "inspired" means: take the trick, not the animal (in full on the first challenges).
  * We never suggest an answer: "peek at the card" only repeats what the card said.
@@ -56,6 +56,7 @@ export default function StoryClues({ story, game, update, award, onNext, onBack,
   // Template challenges: the Nature Hero flow (observe → mechanism → idea) instead of the questions.
   const allAnswered = lesson ? heroFlowDone(game.partnerAnswers ?? {}, game.partnerDone ?? []) : answered.length === questions.length;
   const current = questions.find((k) => !game.partnerDone.includes(k)) ?? null;
+  const cluesTop = discoveryOf(story)?.clues_top ?? null;
 
   function flip(i: number) {
     if (!game.flipped.includes(i)) {
@@ -78,7 +79,16 @@ export default function StoryClues({ story, game, update, award, onNext, onBack,
 
   return (
     <div data-testid="story-clues" className="flex flex-col gap-6 py-4">
-      <Popi text={story.guide.nature_clues} />
+      {cluesTop ? (
+        <div className="flex flex-col gap-3">
+          <Popi text={cluesTop.question} spokenText={`${cluesTop.question} ${cluesTop.intro}`} />
+          <p data-testid="clues-intro" className="font-body text-lg font-semibold leading-snug text-ink">
+            {cluesTop.intro}
+          </p>
+        </div>
+      ) : (
+        <Popi text={story.guide.nature_clues} />
+      )}
 
       {/* ── Part 1: meet the heroes ── */}
       <section className="flex flex-col gap-3">
@@ -122,7 +132,7 @@ export default function StoryClues({ story, game, update, award, onNext, onBack,
         {allOpen && !deferClueBadge && <RewardPop text={t('badge_earned', { badge: t('badge_clue') })} />}
       </section>
 
-      {/* ── Part 2: pick your nature partner ── */}
+      {/* ── Part 2: pick your Nature Hero ── */}
       {allOpen && (
         <section data-testid="pick-partner" className="story-rise flex flex-col gap-3">
           {/* With its own words under the title, PopAI's line would say the same thing twice. */}

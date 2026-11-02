@@ -122,7 +122,7 @@ function ChallengePageInner({ onBadgeMode }: { onBadgeMode: (on: boolean) => voi
   const [labCelebration, setLabCelebration] = useState<{ projectId: string | null } | null>(null);
   // The Substitute practice is done (Skills): celebrate, then Build and Test or stop for today.
   const [substCelebration, setSubstCelebration] = useState<false | 'subst' | 'tool'>(false);
-  // Max's badge popups (Quizzy after the puzzle, Nature Inspiration after Nature Clues) and
+  // Max's badge popups (Quizzy after the puzzle, Nature Hero after Nature Clues) and
   // the XP each one gave (null while the server answers).
   const [reward, setReward] = useState<{ key: 'define' | 'clue'; xp: number | null } | null>(null);
   const [substXp, setSubstXp] = useState<number | null>(null);

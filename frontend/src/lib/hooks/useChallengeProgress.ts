@@ -20,13 +20,20 @@ export function announceChallengeProgress(challengeId: string) {
 }
 
 export function useChallengeProgress(ids: string[]) {
+  return useChallengeProgressState(ids).progress;
+}
+
+/** The same state, plus whether the server has answered for these ids yet. */
+export function useChallengeProgressState(ids: string[]) {
   const key = ids.join(',');
   const [progress, setProgress] = useState<Record<string, ChallengeProgress>>({});
+  const [loadedKey, setLoadedKey] = useState<string | null>(null);
   const load = useCallback(() => {
     if (!key) return;
     fetchChallengeProgress(key.split(','))
       .then((list) => setProgress(Object.fromEntries(list.map((p) => [p.challenge_id, p]))))
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setLoadedKey(key));
   }, [key]);
   useEffect(() => {
     load();
@@ -37,5 +44,5 @@ export function useChallengeProgress(ids: string[]) {
     window.addEventListener(EVENT, onChange);
     return () => window.removeEventListener(EVENT, onChange);
   }, [key, load]);
-  return progress;
+  return { progress, loaded: !key || loadedKey === key };
 }

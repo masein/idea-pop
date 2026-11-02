@@ -315,6 +315,7 @@ html {
 
 /* Challenge cards turn over on hover (mouse) or with their flip button (touch, keyboard).
    Same .story-flip faces; only the trigger differs. Reduced motion skips the turn animation. */
+.card-flip .story-flip-inner { transition: transform 650ms ease-in-out; }
 @media (hover: hover) {
   .card-flip:hover .story-flip-inner { transform: rotateY(180deg); }
 }

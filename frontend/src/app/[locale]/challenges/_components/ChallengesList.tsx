@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { useRouter } from '@/i18n/routing';
 import { useAgeMode } from '@/lib/hooks/useAgeMode';
@@ -9,9 +9,9 @@ import { fetchChallenges, fetchClassMission, requestPremiumUnlock } from '@/lib/
 import IdeasWallTab from '@/components/challenge/IdeasWallTab';
 import type { components } from '@/lib/api/schema';
 import type { ChallengeProgress } from '@/lib/api/client';
-import { useChallengeProgress } from '@/lib/hooks/useChallengeProgress';
+import { useChallengeProgressState } from '@/lib/hooks/useChallengeProgress';
+import { nextChallenge } from '@/lib/challenges/nextChallenge';
 import StarRow from '@/components/challenge/StarRow';
-import { Character3D } from '@/components/challenge/story/StoryBits';
 import { discoveryOf } from '@/components/challenge/story/discovery';
 import { BADGE_ART, badgeArt, badgeName, type MissionBadgeKey } from '@/components/challenge/story/missionBadges';
 import type { MissionStory } from '@/components/challenge/story/types';
@@ -62,6 +62,10 @@ function UpgradeHandoffModal({ onDismiss }: { onDismiss: () => void }) {
 
 type Tab = 'mission' | 'wall';
 
+const PER_PAGE = 10;
+// Coming back from a challenge returns the kid to the same page of cards.
+const PAGE_KEY = 'challengesPage';
+
 export default function ChallengesList() {
   const t = useTranslations('challenge');
   const router = useRouter();
@@ -73,7 +77,18 @@ export default function ChallengesList() {
   const [tab, setTab] = useState<Tab>('mission');
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [wallUnlocked, setWallUnlocked] = useState(false);
+  const [page, setPage] = useState(1);
+  const gridRef = useRef<HTMLElement>(null);
   const locale = useLocale();
+
+  useEffect(() => {
+    try {
+      const saved = Number(sessionStorage.getItem(PAGE_KEY));
+      if (saved >= 1) setPage(saved);
+    } catch {
+      /* ignore */
+    }
+  }, []);
 
   useEffect(() => {
     fetchChallenges(locale)
@@ -87,11 +102,30 @@ export default function ChallengesList() {
   }, [locale]);
 
   // Stars, badges and XP for the cards the kid can open (one shared state with the header).
-  const progress = useChallengeProgress(challenges.filter((c, i) => !(c.locked ?? i > 0)).map((c) => c.id));
+  const { progress, loaded: progressLoaded } = useChallengeProgressState(
+    challenges.filter((c, i) => !(c.locked ?? i > 0)).map((c) => c.id),
+  );
 
   // Prefer the class-assigned mission; fall back to the first challenge.
   const featured =
     (assignedId && challenges.find((c) => c.id === assignedId)) || challenges[0] || null;
+
+  // The Continue area: what the kid should do next, never a challenge they already finished.
+  const ordered = inPageOrder(challenges);
+  const next = progressLoaded ? nextChallenge(ordered, progress, assignedId) : null;
+
+  const pageCount = Math.max(1, Math.ceil(ordered.length / PER_PAGE));
+  const currentPage = Math.min(page, pageCount);
+  const firstOnPage = (currentPage - 1) * PER_PAGE;
+  const goToPage = (n: number) => {
+    setPage(n);
+    try {
+      sessionStorage.setItem(PAGE_KEY, String(n));
+    } catch {
+      /* ignore */
+    }
+    gridRef.current?.scrollIntoView({ block: 'start' });
+  };
 
   useEffect(() => {
     if (!featured) return;
@@ -111,10 +145,10 @@ export default function ChallengesList() {
         <h1 className="font-display text-4xl font-bold text-ink md:text-5xl">
           {t('header_title')}
         </h1>
-        {featured && (
+        {next?.kind === 'open' && (
           <p className="mt-2 font-body text-lg font-bold text-[#3B4A44] md:text-2xl">
             {t.rich('header_today', {
-              title: featured.title,
+              title: next.challenge.title,
               hl: (chunks) => <span className="text-[#C2610E]">{chunks}</span>,
             })}
           </p>
@@ -151,13 +185,20 @@ export default function ChallengesList() {
       {!loading && tab === 'mission' && (
         <div className="flex flex-col gap-6">
           {/* Continue */}
-          {featured && (
+          {!progressLoaded && <div className="h-24 animate-pulse rounded-[1rem] bg-white" />}
+          {next?.kind === 'all_done' && (
+            <section data-testid="all-challenges-done" className="rounded-[1rem] border border-[#58C6EE] bg-white p-5 text-center shadow-sm">
+              <h2 className="font-display text-2xl font-bold text-ink">{t('all_done_title')}</h2>
+              <p className="mt-1 font-body text-[15px] font-medium text-[#4A5560]">{t('all_done_text')}</p>
+            </section>
+          )}
+          {next && next.kind !== 'all_done' && (
             <section aria-label={t('continue_aria')} className="flex flex-col gap-2">
               <h2 className="font-display text-2xl font-bold text-ink">{t('continue_heading')}</h2>
               <button
                 type="button"
                 data-testid="continue-mission"
-                onClick={() => router.push(`/challenges/${featured.id}`)}
+                onClick={() => (next.kind === 'locked' ? setShowUpgrade(true) : router.push(`/challenges/${next.challenge.id}`))}
                 className="group flex items-center gap-4 rounded-[1rem] border border-[#58C6EE] bg-white p-3 text-left shadow-sm transition-shadow hover:shadow-md focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-[#0F3F63] focus-visible:ring-offset-2"
               >
                 <span
@@ -167,19 +208,28 @@ export default function ChallengesList() {
                   <AssetSlot id="CHALLENGE-CARD-001" />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="text-lg text-ink [font-family:var(--font-adlam)]">{featured.title}</p>
-                  <p className="line-clamp-1 font-body text-[15px] font-medium text-[#4A5560]">{featured.brief}</p>
+                  {next.kind === 'locked' ? (
+                    <p className="font-body text-lg font-extrabold text-ink">{t('locked_card_title')}</p>
+                  ) : (
+                    <>
+                      <p className="text-lg text-ink [font-family:var(--font-adlam)]">{next.challenge.title}</p>
+                      <p className="line-clamp-1 font-body text-[15px] font-medium text-[#4A5560]">{next.challenge.brief}</p>
+                    </>
+                  )}
                 </div>
-                <span className="hidden min-h-12 shrink-0 items-center rounded-pill bg-[#1A6FA6] px-7 font-body text-base font-extrabold text-white shadow-[inset_0_0_0_1px_#0F4F7A,0_4px_4px_rgba(0,0,0,0.25)] transition-transform group-hover:scale-105 sm:inline-flex">
-                  {t('continue_button')}
-                </span>
+                {next.kind === 'open' && (
+                  <span className="hidden min-h-12 shrink-0 items-center rounded-pill bg-[#1A6FA6] px-7 font-body text-base font-extrabold text-white shadow-[inset_0_0_0_1px_#0F4F7A,0_4px_4px_rgba(0,0,0,0.25)] transition-transform group-hover:scale-105 sm:inline-flex">
+                    {t('continue_button')}
+                  </span>
+                )}
               </button>
             </section>
           )}
 
           {/* Challenge grid */}
-          <section aria-label={t('challenges_aria')} className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-            {inPageOrder(challenges).map((c, i) => {
+          <section ref={gridRef} data-testid="challenge-grid" aria-label={t('challenges_aria')} className="grid scroll-mt-4 grid-cols-1 gap-5 sm:grid-cols-2">
+            {ordered.slice(firstOnPage, firstOnPage + PER_PAGE).map((c, onPage) => {
+              const i = firstOnPage + onPage;
               // Prefer the server's entitlement decision; fall back to "first free".
               const locked = c.locked ?? i > 0;
               const assigned = c.id === assignedId;
@@ -202,6 +252,24 @@ export default function ChallengesList() {
               );
             })}
           </section>
+
+          {pageCount > 1 && (
+            <nav aria-label={t('pagination_aria')} data-testid="challenge-pagination" className="flex flex-wrap justify-center gap-2">
+              {Array.from({ length: pageCount }, (_, n) => n + 1).map((n) => (
+                <button
+                  key={n}
+                  type="button"
+                  data-testid={`challenge-page-${n}`}
+                  aria-label={t('page_aria', { page: n })}
+                  aria-current={n === currentPage ? 'page' : undefined}
+                  onClick={() => goToPage(n)}
+                  className={`flex h-11 w-11 items-center justify-center rounded-full font-body text-base font-extrabold shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-[#0F3F63] focus-visible:ring-offset-1 ${n === currentPage ? 'bg-[#1A6FA6] text-white' : 'bg-white text-[#135A85] hover:bg-[#EAF5FC]'}`}
+                >
+                  {n}
+                </button>
+              ))}
+            </nav>
+          )}
         </div>
       )}
 
@@ -267,11 +335,12 @@ function UnlockedChallengeCard({
 }) {
   const t = useTranslations('challenge');
   const tStory = useTranslations('story');
-  // Touch and keyboard turn the card with its button; a mouse turns it on hover.
+  // A mouse turns the card on hover. Touch and keyboard use the stars row on the front; a tap
+  // on the back, Escape, or moving on to another card turns it again.
   const [open, setOpen] = useState(false);
   const story = (challenge.story ?? null) as MissionStory | null;
   const discovery = discoveryOf(story);
-  // Nature inspirations: the story's nature heroes, or the classic clues.
+  // The story's Nature Heroes, or the classic clues.
   const nature = story?.clue_cards?.length
     ? story.clue_cards.map((c) => ({ name: c.name, image: c.image ?? null, emoji: c.emoji }))
     : (challenge.nature_clues ?? []).map((c) => ({ name: c.title, image: c.image_url ?? null, emoji: c.emoji }));
@@ -288,7 +357,14 @@ function UnlockedChallengeCard({
       data-testid="challenge-card"
       data-assigned={assigned || undefined}
       data-open={open}
-      className={`card-flip story-flip relative h-[25rem] rounded-[1.25rem] ${assigned ? 'ring-2 ring-library ring-offset-2' : ''}`}
+      onMouseLeave={() => setOpen(false)}
+      onBlur={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget)) setOpen(false);
+      }}
+      onKeyDown={(e) => {
+        if (e.key === 'Escape') setOpen(false);
+      }}
+      className={`card-flip story-flip relative h-[27rem] rounded-[1.25rem] ${assigned ? 'ring-2 ring-library ring-offset-2' : ''}`}
     >
       <div className="story-flip-inner h-full">
         {/* ── Front ── */}
@@ -348,82 +424,65 @@ function UnlockedChallengeCard({
               <span className={BADGE}>{t('challenge_badge', { index })}</span>
             </div>
           </button>
-          {/* This challenge's stars, badges and XP */}
-          <div className="flex items-center gap-3 border-t border-[#D6E4EE] px-4 py-2.5">
+          {/* This challenge's stars and XP; the row also turns the card on touch and keyboard. */}
+          <button
+            type="button"
+            data-testid="card-flip"
+            aria-controls={backId}
+            aria-expanded={open}
+            aria-label={t('card_flip_aria', { title: challenge.title })}
+            tabIndex={open ? -1 : 0}
+            onClick={() => setOpen(true)}
+            className="flex min-h-[3.75rem] w-full items-center gap-3 border-t border-[#D6E4EE] px-4 py-2.5 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-inset focus-visible:ring-[#0F3F63]"
+          >
             <StarRow stars={stars} />
             <span className="flex-1" />
             <span data-testid="card-xp" className="shrink-0 rounded-pill bg-[#EAF5FC] px-2.5 py-1 font-body text-sm font-extrabold text-[#135A85]">
               {t('card_xp', { xp })}
             </span>
-            <button
-              type="button"
-              data-testid="card-flip"
-              aria-controls={backId}
-              aria-expanded={open}
-              aria-label={t('card_flip_aria', { title: challenge.title })}
-              tabIndex={open ? -1 : 0}
-              onClick={() => setOpen(true)}
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#EAF5FC] text-lg text-[#135A85] transition-colors hover:bg-[#CDE7F7] focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-[#0F3F63]"
-            >
-              <span aria-hidden="true">🔄</span>
-            </button>
-          </div>
+          </button>
         </div>
 
-        {/* ── Back: nature inspirations, materials, and the way in ── */}
+        {/* ── Back: the four Nature Heroes lead, then materials and the way in ── */}
         <div
           id={backId}
           data-testid="challenge-card-back"
-          className="story-face story-back flex flex-col gap-3 overflow-hidden rounded-[1.25rem] border border-[#58C6EE] bg-[#F7FCFF] p-4 shadow-sm"
+          onClick={(e) => {
+            if (!(e.target as HTMLElement).closest('button')) setOpen(false);
+          }}
+          className="story-face story-back flex flex-col gap-2 overflow-hidden rounded-[1.25rem] border border-[#58C6EE] bg-[#F7FCFF] p-3 shadow-sm"
         >
-          <p className="text-lg leading-tight text-ink [font-family:var(--font-adlam)]">{challenge.title}</p>
-          <div>
+          <div className="flex flex-wrap items-baseline justify-between gap-x-3">
+            <p className="text-lg leading-tight text-ink [font-family:var(--font-adlam)]">{challenge.title}</p>
             <p className="font-body text-xs font-extrabold uppercase tracking-wide text-[#1E7A44]">{t('card_nature')}</p>
-            <ul className="mt-1.5 grid grid-cols-4 gap-2">
-              {nature.slice(0, 4).map((n) => (
-                <li key={n.name} className="flex flex-col items-center gap-1 text-center">
-                  <Character3D src={n.image} emoji={n.emoji} alt="" size={56} />
-                  <span className="font-body text-xs font-bold leading-tight text-ink">{n.name}</span>
-                </li>
-              ))}
-            </ul>
           </div>
-          <div className="min-h-0 flex-1">
-            <p className="font-body text-xs font-extrabold uppercase tracking-wide text-[#A4520B]">{t('card_materials')}</p>
-            {materials.length > 0 ? (
-              <ul className="mt-1 flex flex-wrap gap-1.5">
-                {materials.map((m) => (
-                  <li key={m} className="rounded-pill bg-white px-2.5 py-1 font-body text-sm font-semibold text-ink shadow-[0_1px_2px_rgba(0,0,0,0.08)]">
-                    {m}
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="mt-1 line-clamp-3 font-body text-sm font-medium text-ink">{buildText}</p>
-            )}
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              data-testid="card-enter"
-              tabIndex={open ? 0 : -1}
-              onClick={onOpen}
-              className="flex min-h-11 flex-1 items-center justify-center rounded-pill bg-[#1A6FA6] px-5 font-body text-base font-extrabold text-white shadow-[0_4px_4px_rgba(0,0,0,0.2)] transition-transform hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-[#0F3F63] focus-visible:ring-offset-2"
-            >
-              {started ? t('card_continue') : t('card_start')}
-            </button>
-            <button
-              type="button"
-              data-testid="card-flip-back"
-              aria-label={t('card_flip_back_aria')}
-              aria-controls={backId}
-              tabIndex={open ? 0 : -1}
-              onClick={() => setOpen(false)}
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white text-lg text-[#135A85] shadow-sm hover:bg-[#EAF5FC] focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-[#0F3F63]"
-            >
-              <span aria-hidden="true">↩</span>
-            </button>
-          </div>
+          <ul data-testid="card-heroes" className="grid min-h-0 flex-1 grid-cols-2 grid-rows-2 gap-2">
+            {nature.slice(0, 4).map((n) => (
+              <li key={n.name} className="flex min-h-0 flex-col items-center gap-0.5 text-center">
+                <span className="relative block min-h-0 w-full flex-1 overflow-hidden rounded-xl">
+                  {n.image ? (
+                    <Image src={n.image} alt="" fill sizes="(max-width: 640px) 50vw, 220px" className="object-contain" />
+                  ) : (
+                    <AssetSlot />
+                  )}
+                </span>
+                <span className="font-body text-xs font-semibold leading-tight text-[#4A5560]">{n.name}</span>
+              </li>
+            ))}
+          </ul>
+          <p data-testid="card-materials" className="line-clamp-2 font-body text-[13px] font-medium leading-snug text-ink">
+            <span className="me-1.5 text-xs font-extrabold uppercase tracking-wide text-[#A4520B]">{t('card_materials')}</span>
+            {materials.length > 0 ? materials.join(' · ') : buildText}
+          </p>
+          <button
+            type="button"
+            data-testid="card-enter"
+            tabIndex={open ? 0 : -1}
+            onClick={onOpen}
+            className="flex min-h-11 w-full shrink-0 items-center justify-center rounded-pill bg-[#1A6FA6] px-5 font-body text-base font-extrabold text-white shadow-[0_4px_4px_rgba(0,0,0,0.2)] transition-transform hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-[#0F3F63] focus-visible:ring-offset-2"
+          >
+            {started ? t('card_continue') : t('card_start')}
+          </button>
         </div>
       </div>
     </div>

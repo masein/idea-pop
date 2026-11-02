@@ -131,29 +131,9 @@ const MOBILE = {
   // the flying bird's resting place in the hero box: fractions of its width and height, and its width as a share of the box
   bird: { x: 0.66, y: 0.36, w: 0.42 },
 };
-type Timing = {
-  hold: number;
-  duration: number;
-  camera: number;
-  fades: ReadonlyArray<readonly [string, number, number]>;
-  bird: readonly [number, number];
-  depth: readonly [number, number];
-};
-const DESKTOP_TIMING: Timing = { hold: HOLD_MS, duration: DURATION_MS, camera: CAMERA_MS, fades: FADES, bird: [11400, 13400], depth: [11200, 13400] };
-const MOBILE_TIMING: Timing = { hold: 400, duration: 4000, camera: 2400, fades: [["girl", 2000, 3000]], bird: [2800, 3800], depth: [3000, 4000] };
-
-// Depth (susan, 2026-11-02): once everything has loaded, a white veil fades in over all the layers behind the girl
-// (FAR_WHITE, her picture C). The girl, papers, marks and question card sit above it, and so do the text and the flying
-// bird, untouched. Her left-side and front groups (LEFT_WHITE, her picture A) are second copies of the same layers above
-// the veil, masked to their part of the artwork in hero.css. The group is one flat picture, see-through by exactly the amount that
-// leaves LEFT_WHITE of white; over its own originals it looks identical until the veil arrives, so only the veil animates.
-const FAR_WHITE = 0.38;
-const LEFT_WHITE = 0.18;
-const MID_COPIES: ReadonlyArray<{ file: string; className: string }> = [
-  { file: "classroom-plants", className: "hero-mid-left" },
-  { file: "classroom-props", className: "hero-mid-left" },
-  { file: "foreground-table", className: "hero-mid-front" },
-];
+type Timing = { hold: number; duration: number; camera: number; fades: ReadonlyArray<readonly [string, number, number]>; bird: readonly [number, number] };
+const DESKTOP_TIMING: Timing = { hold: HOLD_MS, duration: DURATION_MS, camera: CAMERA_MS, fades: FADES, bird: [11400, 13400] };
+const MOBILE_TIMING: Timing = { hold: 400, duration: 4000, camera: 2400, fades: [["girl", 2000, 3000]], bird: [2800, 3800] };
 
 // Back to front (spec section 3). `fade` layers start hidden; the rest arrive with the camera.
 const LAYERS: ReadonlyArray<{ id: string; file: string; z: number; fade?: boolean; className?: string }> = [
@@ -184,7 +164,6 @@ export default function HeroScene() {
   const worldRef = useRef<HTMLDivElement>(null);
   const sceneryRef = useRef<HTMLImageElement>(null);
   const floorRef = useRef<HTMLDivElement>(null);
-  const veilRef = useRef<HTMLDivElement>(null);
   const natureRef = useRef<HTMLImageElement>(null);
   const layerRefs = useRef<Record<string, HTMLImageElement | null>>({});
   const [state, setState] = useState<"preparing" | "ready" | "fallback">("preparing");
@@ -311,10 +290,6 @@ export default function HeroScene() {
         const opacity = ease(clamp01((t - start) / (end - start)));
         set(el, "opacity", String(opacity));
         set(el, "visibility", opacity === 0 ? "hidden" : "visible");
-      }
-      if (veilRef.current) {
-        const back = ease(clamp01((t - T.depth[0]) / (T.depth[1] - T.depth[0])));
-        set(veilRef.current, "opacity", (FAR_WHITE * back).toFixed(4));
       }
       showCopy(wide.matches ? ease(clamp01((t - 9000) / 2200)) : 1);
       showNav(wide.matches ? ease(clamp01((t - T.camera) / 600)) : 1);
@@ -461,16 +436,6 @@ export default function HeroScene() {
             alt=""
           />
         ))}
-        {mobile !== null && (
-          <>
-            <div ref={veilRef} className="hero-veil" style={{ zIndex: 5, opacity: 0 }} />
-            <div className="hero-mid" style={{ zIndex: 5, opacity: 1 - LEFT_WHITE / FAR_WHITE }}>
-              {MID_COPIES.map((m) => (
-                <img key={m.file} className={`hero-layer ${m.className}`} src={src(m.file)} alt="" />
-              ))}
-            </div>
-          </>
-        )}
       </div>
       {/* the finished hero; on phones the landscape alone, since the master artwork has the boy, the kids and the deer */}
       {state === "fallback" && <img className="hero-fallback" src={src(mobile ? "nature-damavand" : "master-hero")} alt="" />}

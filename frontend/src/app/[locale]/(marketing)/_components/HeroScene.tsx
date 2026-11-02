@@ -122,6 +122,7 @@ const FADES: ReadonlyArray<readonly [id: string, start: number, end: number]> = 
 // slice of the artwork around the window, its bottom on the table; the girl is moved into that slice (lower left).
 // The entrance is short: close on the mountain, pull back to the window, then the girl, then the bird.
 const MOBILE_QUERY = "(max-width: 767px)";
+const SMALL_PHOTO_QUERY = "(max-width: 900px)";
 const MOBILE = {
   skip: new Set(["deer", "boy", "kids", "paper1", "paper2", "paper3", "marks1", "marks2", "marks3", "question"]),
   centreX: 1030,
@@ -159,7 +160,13 @@ const LAYERS: ReadonlyArray<{ id: string; file: string; z: number; fade?: boolea
 export default function HeroScene() {
   // Chosen once on arrival (a rotated phone keeps its composition; the layout still follows the box).
   const [mobile, setMobile] = useState<boolean | null>(null);
-  useEffect(() => setMobile(window.matchMedia(MOBILE_QUERY).matches), []);
+  // The landscape in the size this screen needs (always drawn at the same logical size, so its placement never changes):
+  // the same choice as the two preload links below, so it is fetched once.
+  const [photo, setPhoto] = useState<string | null>(null);
+  useEffect(() => {
+    setMobile(window.matchMedia(MOBILE_QUERY).matches);
+    setPhoto(src(window.matchMedia(SMALL_PHOTO_QUERY).matches ? "nature-damavand-1600" : "nature-damavand-2600"));
+  }, []);
   const viewportRef = useRef<HTMLDivElement>(null);
   const worldRef = useRef<HTMLDivElement>(null);
   const sceneryRef = useRef<HTMLImageElement>(null);
@@ -168,7 +175,6 @@ export default function HeroScene() {
   const layerRefs = useRef<Record<string, HTMLImageElement | null>>({});
   const [state, setState] = useState<"preparing" | "ready" | "fallback">("preparing");
   // The landscape is the first thing on screen: fetch it first, and show it as a still poster while the rest loads.
-  preload(src("nature-damavand"), { as: "image", fetchPriority: "high" });
 
   useEffect(() => {
     if (mobile === null) return;
@@ -409,12 +415,14 @@ export default function HeroScene() {
   return (
     <div ref={viewportRef} aria-hidden="true" className="hero-viewport" data-state={state}>
       {/* the opening frame (the reference photo region at normal centred cover) until every layer is ready */}
-      <div className="hero-poster" style={{ backgroundImage: `url(${src("nature-damavand")})` }} />
+      <link rel="preload" as="image" href={src("nature-damavand-1600")} media={SMALL_PHOTO_QUERY} fetchPriority="high" />
+      <link rel="preload" as="image" href={src("nature-damavand-2600")} media="(min-width: 901px)" fetchPriority="high" />
+      <div className="hero-poster" style={photo ? { backgroundImage: `url(${photo})` } : undefined} />
       <div ref={worldRef} className="hero-world">
-        <img ref={natureRef} className="hero-nature" style={{ zIndex: 0 }} src={src("nature-damavand")} alt="" />
+        {photo && <img ref={natureRef} className="hero-nature" style={{ zIndex: 0 }} src={photo} alt="" />}
         {/* the fixed rear-opening aperture; the far-plane photograph moves inside it */}
         <div className="hero-scenery">
-          <img ref={sceneryRef} className="hero-scenery-image" src={src("nature-damavand")} alt="" />
+          {photo && <img ref={sceneryRef} className="hero-scenery-image" src={photo} alt="" />}
         </div>
         {layers.slice(0, 1).map((l) => (
           <img key={l.id} className="hero-layer" style={{ zIndex: l.z }} src={src(l.file)} alt="" />
@@ -438,7 +446,7 @@ export default function HeroScene() {
         ))}
       </div>
       {/* the finished hero; on phones the landscape alone, since the master artwork has the boy, the kids and the deer */}
-      {state === "fallback" && <img className="hero-fallback" src={src(mobile ? "nature-damavand" : "master-hero")} alt="" />}
+      {state === "fallback" && <img className="hero-fallback" src={mobile && photo ? photo : src("master-hero")} alt="" />}
     </div>
   );
 }

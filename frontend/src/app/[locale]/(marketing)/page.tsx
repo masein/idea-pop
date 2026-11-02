@@ -380,6 +380,8 @@ export default async function LandingPage({ params }: Props) {
           {/* eslint-disable-next-line @next/next/no-img-element -- a registered plate: its exact pixels and rectangle matter */}
           <img
             src="/landing/bird/canvas-before.webp?v=bird-2026-10-15"
+            loading="lazy"
+            decoding="async"
             alt=""
             width={1720}
             height={914}
@@ -388,6 +390,8 @@ export default async function LandingPage({ params }: Props) {
           {/* eslint-disable-next-line @next/next/no-img-element -- a registered plate: its exact pixels and rectangle matter */}
           <img
             src="/landing/bird/canvas-after.webp?v=bird-2026-10-15"
+            loading="lazy"
+            decoding="async"
             alt=""
             width={1720}
             height={914}
@@ -521,12 +525,11 @@ export default async function LandingPage({ params }: Props) {
           {/* susan's AFTER photo is the scene: the boy's paper with the kingfisher drawing, its beak studies and arrows. On
               top, the registered paper-only patch of her BEFORE photo hides that drawing until the flying bird lands
               and hands over to it (FlyingBird.tsx sets --mission-reveal); then the patch is gone and the photo is whole.
-              Both are decoded up front so the handoff never waits for a picture. */}
+              Both load as the section comes near, well before the bird arrives. */}
           <div className="relative" data-scroll="zoom-out">
-            <Image unoptimized loading="eager" src={tryMissionAfter} data-bird-mission alt="" aria-hidden="true" className="w-full h-auto" sizes="100vw" />
+            <Image unoptimized src={tryMissionAfter} data-bird-mission alt="" aria-hidden="true" className="w-full h-auto" sizes="100vw" />
             <Image
               unoptimized
-              loading="eager"
               src={tryMissionBeforePaper}
               alt=""
               aria-hidden="true"

@@ -2,7 +2,7 @@
 
 /* eslint-disable @next/next/no-img-element -- the four registered 1659×1348 bird parts share one origin; the wing
    renderer textures them straight from these elements */
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 /* The one flying bird of the landing page. Since 2026-10-21 its motion is susan's complete bird animation package
    ("idea-pop-complete-animation", public/ideapop-motion): wing-flight.js (the articulated wings, unchanged),
@@ -10,7 +10,8 @@ import { useEffect, useRef } from "react";
    this page itself: the hero artwork ([data-art-*], or the phone hero's [data-bird-*]), the girl's painting
    ([data-bird-canvas], --painted-reveal), and the boy's paper ([data-bird-mission], --mission-reveal), which it holds
    briefly on screen while the bird shrinks and dissolves into the drawing. This component only renders the bird rig,
-   loads the three scripts in order and mounts / destroys the controller. */
+   loads the three scripts in order and mounts / destroys the controller. The bird's large pictures and scripts wait until
+   the hero scene is ready (it appears after the scene anyway), so they never hold up the first thing people see. */
 
 const BASE = "/ideapop-motion/";
 const BIRD = "/landing/bird/";
@@ -44,10 +45,25 @@ function loadScript(name: string) {
 
 export default function FlyingBird() {
   const birdRef = useRef<HTMLDivElement>(null);
+  const [heroReady, setHeroReady] = useState(false);
+
+  useEffect(() => {
+    const hero = document.querySelector<HTMLElement>(".hero-viewport");
+    const settled = () => !hero || hero.dataset.state !== "preparing";
+    if (settled()) {
+      setHeroReady(true);
+      return;
+    }
+    const observer = new MutationObserver(() => {
+      if (settled()) setHeroReady(true);
+    });
+    observer.observe(hero!, { attributes: true, attributeFilter: ["data-state"] });
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     const bird = birdRef.current;
-    if (!bird) return;
+    if (!bird || !heroReady) return;
     let controller: Controller | null = null;
     let cancelled = false;
     // without the wing renderer the controller still flies the bird, unflapped
@@ -55,6 +71,8 @@ export default function FlyingBird() {
       (chain, name) => chain.then(() => (name === "wing-flight.js" ? loadScript(name).catch(() => {}) : loadScript(name))),
       Promise.resolve(),
     )
+      // the whole rig decoded first, so the bird never shows part by part
+      .then(() => Promise.all([...bird.querySelectorAll("img")].map((img) => img.decode().catch(() => {}))))
       .then(() => {
         if (!cancelled && window.IdeaPopMotion) controller = window.IdeaPopMotion.mount(bird);
       })
@@ -65,17 +83,21 @@ export default function FlyingBird() {
       cancelled = true;
       controller?.destroy();
     };
-  }, []);
+  }, [heroReady]);
 
   const part = (cls: string, file: string) => (
     <img className={`part ${cls}`} src={`${BIRD}${file}.webp?v=bird-2026-10-15c`} width={1659} height={1348} alt="" />
   );
   return (
     <div ref={birdRef} className="flying-bird" aria-hidden="true">
-      {part("far-wing", "bird-wing-far")}
-      {part("tail", "bird-tail")}
-      {part("body", "bird-body")}
-      {part("near-wing", "bird-wing-near")}
+      {heroReady && (
+        <>
+          {part("far-wing", "bird-wing-far")}
+          {part("tail", "bird-tail")}
+          {part("body", "bird-body")}
+          {part("near-wing", "bird-wing-near")}
+        </>
+      )}
     </div>
   );
 }

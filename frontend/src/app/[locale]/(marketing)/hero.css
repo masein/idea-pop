@@ -135,6 +135,34 @@
     visibility: hidden;
   }
 }
+/* Depth (HeroScene.tsx; susan, 2026-11-02). The veil is larger than any viewport so it always covers the scene. The two
+   masks pick her groups out of the full-canvas layers, with soft edges so no line shows where the treatment changes:
+   the left side (shelves, globe, their objects, the left leaves), and the front (leaves, pine cone, the books and the part
+   of the desk where the girl works, and the leaf in the far corner). */
+.hero-veil {
+  position: absolute;
+  left: -3000px;
+  top: -3000px;
+  width: 8000px;
+  height: 8000px;
+  background: #fff;
+  pointer-events: none;
+}
+.hero-mid {
+  position: absolute;
+  inset: 0;
+  width: 1670px;
+  height: 942px;
+  pointer-events: none;
+}
+.hero-mid-left {
+  -webkit-mask-image: linear-gradient(to right, #000 25%, transparent 34%);
+  mask-image: linear-gradient(to right, #000 25%, transparent 34%);
+}
+.hero-mid-front {
+  -webkit-mask-image: linear-gradient(to right, #000 55%, transparent 62%, transparent 92%, #000 96%);
+  mask-image: linear-gradient(to right, #000 55%, transparent 62%, transparent 92%, #000 96%);
+}
 /* An essential layer failed to load: the completed Master Hero, still. */
 .hero-fallback {
   position: absolute;

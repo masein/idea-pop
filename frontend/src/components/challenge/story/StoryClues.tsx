@@ -1,14 +1,14 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Character3D, Popi, RewardPop, StepNav, TapChoice, arrangeChoices, pillCtaClass } from './StoryBits';
-import { btnPrimary, btnText } from '@/components/challenge/buttons';
+import { Character3D, Popi, RewardPop, StepNav, pillCtaClass } from './StoryBits';
 import type { MissionStory } from './types';
 import type { BadgeKey, MissionGame, GameUpdate } from './useMissionGame';
-import { discoveryOf, heroShort, type PartnerLesson } from './discovery';
-import HeroFocus, { heroFlowDone } from './HeroFocus';
-import AssetSlot from '@/components/AssetSlot';
+import { discoveryOf, heroExtra, heroShort, type PartnerLesson } from './discovery';
+import HeroJourney, { heroJourneyDone } from './HeroJourney';
+import { howQuestion } from './StoryPictureBook';
+import Inspired from '@/components/characters/Inspired';
 
 interface Props {
   story: MissionStory;
@@ -21,21 +21,19 @@ interface Props {
   fullInspirationTip?: boolean;
   /** The page awards the clue badge (Nature Hero) on Next, with its popup. */
   deferClueBadge?: boolean;
+  /** Names this challenge's saved work (the kid's voice note). */
+  workKey: string;
 }
 
-/** The three "think like your partner" questions, asked one at a time. */
-const PARTNER_QUESTIONS = ['what', 'how', 'inspired'] as const;
-type PartnerQuestion = (typeof PARTNER_QUESTIONS)[number];
-
 /**
- * Step 3, Nature clues, in four parts (TEMP rule 37):
- * 1. Meet the heroes: turn every card (photo → trick → what it does). All met → Clue Detective badge.
+ * Step 3, Nature clues, in four parts:
+ * 1. Meet the heroes: turn every card (intro → trick → what it does). All met → Clue Detective badge.
  * 2. Pick your Nature Hero: the hero the kid likes best to help solve the problem.
- * 3. Think like your partner: what does it do, how, and how could we be inspired by it.
+ * 3. The hero's journey: its video, Conspy, Popi's questions, and the kid's one answer.
  * 4. What "inspired" means: take the trick, not the animal (in full on the first challenges).
  * We never suggest an answer: "peek at the card" only repeats what the card said.
  */
-export default function StoryClues({ story, game, update, award, onNext, onBack, fullInspirationTip = true, deferClueBadge = false }: Props) {
+export default function StoryClues({ story, game, update, award, onNext, onBack, fullInspirationTip = true, deferClueBadge = false, workKey }: Props) {
   const t = useTranslations('story');
   // Which cards show their words right now; a card can be turned back to its photo.
   const [turned, setTurned] = useState<number[]>([]);
@@ -51,12 +49,12 @@ export default function StoryClues({ story, game, update, award, onNext, onBack,
   // then only ask the kid's own turn.
   const lesson: PartnerLesson | null =
     game.partner !== null && game.partner !== undefined ? discoveryOf(story)?.partner_lessons?.[game.partner] ?? null : null;
-  const questions: readonly PartnerQuestion[] = lesson ? ['inspired'] : PARTNER_QUESTIONS;
-  const answered = questions.filter((k) => game.partnerDone.includes(k));
-  // Template challenges: the Nature Hero flow (observe → mechanism → idea) instead of the questions.
-  const allAnswered = lesson ? heroFlowDone(game.partnerAnswers ?? {}, game.partnerDone ?? []) : answered.length === questions.length;
-  const current = questions.find((k) => !game.partnerDone.includes(k)) ?? null;
+  const allAnswered = partner !== null && heroJourneyDone(game);
   const cluesTop = discoveryOf(story)?.clues_top ?? null;
+  // Popi opens with the mission's own question; every challenge then hears why nature can help.
+  const missionQuestion = cluesTop?.question ?? howQuestion(story) ?? t('clues_how_help', { hero: heroShort(story) });
+  const opening = [missionQuestion, t('clues_nature_inspires')].filter(Boolean).join('\n');
+  const intro = cluesTop?.intro ?? story.guide.nature_clues;
 
   function flip(i: number) {
     if (!game.flipped.includes(i)) {
@@ -74,21 +72,14 @@ export default function StoryClues({ story, game, update, award, onNext, onBack,
     update({ partner: i, partnerAnswers: {}, partnerDone: [] });
   }
 
-  const question = (k: PartnerQuestion) =>
-    lesson && k === 'inspired' ? lesson.your_turn : t(`partner_q_${k}`, { name: partner?.name ?? '', hero: story.hero.name });
-
   return (
     <div data-testid="story-clues" className="flex flex-col gap-6 py-4">
-      {cluesTop ? (
-        <div className="flex flex-col gap-3">
-          <Popi text={cluesTop.question} spokenText={`${cluesTop.question} ${cluesTop.intro}`} />
-          <p data-testid="clues-intro" className="font-body text-lg font-semibold leading-snug text-ink">
-            {cluesTop.intro}
-          </p>
-        </div>
-      ) : (
-        <Popi text={story.guide.nature_clues} />
-      )}
+      <div className="flex flex-col gap-3">
+        <Popi text={opening} keepLines spokenText={`${opening} ${intro}`} />
+        <p data-testid="clues-intro" className="font-body text-lg font-semibold leading-snug text-ink">
+          <Inspired text={intro} />
+        </p>
+      </div>
 
       {/* ── Part 1: meet the heroes ── */}
       <section className="flex flex-col gap-3">
@@ -113,7 +104,7 @@ export default function StoryClues({ story, game, update, award, onNext, onBack,
                   <span className="story-face flex flex-col items-center justify-center gap-2 rounded-[20px] border border-[#58C6EE] bg-white p-5 text-center shadow-sm">
                     <Character3D src={c.image} emoji={c.emoji} alt={c.name} size={170} />
                     <span className="font-body text-2xl font-extrabold text-ink">{c.name}</span>
-                    <span className="font-body text-base font-semibold text-[#4A5560]">{c.tagline}</span>
+                    <span data-testid={`clue-intro-${i}`} className="font-body text-base font-semibold leading-snug text-[#4A5560]">{heroExtra(story, i)?.intro ?? c.tagline}</span>
                     <span className="font-body text-sm font-bold text-[#1A6FA6]">{t('tap_to_open')}</span>
                   </span>
                   {/* Back: the words. */}
@@ -135,12 +126,12 @@ export default function StoryClues({ story, game, update, award, onNext, onBack,
       {/* ── Part 2: pick your Nature Hero ── */}
       {allOpen && (
         <section data-testid="pick-partner" className="story-rise flex flex-col gap-3">
-          {/* With its own words under the title, PopAI's line would say the same thing twice. */}
+          {/* With its own words under the title, Popi's line would say the same thing twice. */}
           {!discoveryOf(story)?.choose_hero_text && <Popi text={t('partner_pick_popi', { hero: heroShort(story) })} />}
           <h2 className="font-display text-2xl text-challenge">{t('partner_pick_title')}</h2>
           {discoveryOf(story)?.choose_hero_text && (
             <p data-testid="choose-hero-text" className="font-body text-lg font-semibold leading-snug text-ink">
-              {discoveryOf(story)?.choose_hero_text}
+              <Inspired text={discoveryOf(story)?.choose_hero_text ?? ''} />
             </p>
           )}
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4" role="radiogroup" aria-label={t('partner_pick_title')}>
@@ -173,84 +164,43 @@ export default function StoryClues({ story, game, update, award, onNext, onBack,
         </section>
       )}
 
-      {/* ── Parts 3–4 for template challenges: the chosen hero in focus ── */}
-      {partner && lesson && game.partner !== null && game.partner !== undefined && (
-        <HeroFocus key={game.partner} card={partner} lesson={lesson} hero={heroShort(story)} game={game} update={update} />
+      {/* ── Part 3: the chosen hero's journey ── */}
+      {partner && game.partner !== null && game.partner !== undefined && (
+        <HeroJourney
+          key={game.partner}
+          story={story}
+          card={partner}
+          index={game.partner}
+          lesson={lesson}
+          companion={companion}
+          game={game}
+          update={update}
+          workKey={workKey}
+        />
       )}
 
-      {/* ── Part 3: think like your partner ── */}
-      {partner && !lesson && (
-        <section data-testid="partner-questions" className="story-rise flex flex-col gap-3 rounded-[20px] bg-white p-5 shadow-sm">
-          <h2 className="font-display text-2xl text-challenge">{t('partner_think_title', { name: partner.name })}</h2>
-          <Meter label={t('inspiration_meter')} value={answered.length} total={questions.length} icon="" />
-
-          {questions.filter((k) => game.partnerDone.includes(k)).map((k) => (
-            <div key={k} data-testid={`partner-q-${k}`} data-state="done" className="rounded-xl border border-[#BFE6C8] bg-[#F3FBF5] px-4 py-3">
-              <p className="font-body text-base font-bold text-ink">
-                {question(k)} <span aria-hidden="true">✓</span>
-              </p>
-              <p dir="auto" className="mt-1 font-body text-base font-semibold text-[#1d7a3a]">
-                {game.partnerAnswers[k]}
-              </p>
-              {/* The kid can always go back and change their own idea (also after a hint). */}
-              {k === 'inspired' && companion && (
-                <button
-                  type="button"
-                  data-testid="partner-revise"
-                  onClick={() => update((g) => ({ partnerDone: g.partnerDone.filter((x) => x !== 'inspired') }))}
-                  className={`${btnText} mt-1 !px-0`}
-                >
-                  {t('partner_revise')}
-                </button>
-              )}
-            </div>
-          ))}
-
-          {current && current !== 'inspired' && partner && game.partner !== null && (
-            // "What does it do?" and "How?" are tapped: the partner's own card words among two others'.
-            <div key={`${game.partner}-${current}`} className="story-rise flex flex-col gap-2 rounded-xl border-2 border-[#1A6FA6] bg-white p-4">
-              <p className="font-body text-base font-bold text-ink">{question(current)}</p>
-              <TapChoice
-                testId={`partner-choice-${current}`}
-                {...arrangeChoices(
-                  current === 'what' ? partner.does : partner.trick,
-                  cards
-                    .filter((_, i) => i !== game.partner)
-                    .map((c) => (current === 'what' ? c.does : c.trick)),
-                  game.partner + (current === 'what' ? 1 : 2),
-                )}
-                onCorrect={(v) =>
-                  update((g) => ({ partnerAnswers: { ...g.partnerAnswers, [current]: v }, partnerDone: [...g.partnerDone, current] }))
-                }
-                wrongHint={t('partner_wrong', { name: partner.name })}
-              />
-            </div>
-          )}
-
-          {current === 'inspired' && (
-            <PartnerQuestionBox
-              key={`${game.partner}-${current}`}
-              id={current}
-              question={question(current)}
-              value={game.partnerAnswers[current] ?? ''}
-              onChange={(v) => update((g) => ({ partnerAnswers: { ...g.partnerAnswers, [current]: v } }))}
-              onDone={() => update((g) => ({ partnerDone: [...g.partnerDone, current] }))}
-              peek={`${partner.trick} ${partner.does}`}
-              hint={companion?.hint ?? null}
-              turnLabel={lesson ? t('lesson_your_turn') : null}
-            />
-          )}
-
-          {allAnswered && <RewardPop text={t('inspiration_unlocked')} />}
-        </section>
-      )}
+      {allAnswered && !lesson && <RewardPop text={t('inspiration_unlocked')} />}
 
       {/* ── Part 4: what "inspired" means ── */}
+      {partner && allAnswered && lesson && (
+        <section data-testid="inspired-means" className="story-rise flex flex-col gap-3 rounded-[20px] bg-white p-5 shadow-sm">
+          <p className="font-display text-2xl text-challenge"><Inspired text={t('inspired_means_title')} /></p>
+          <p className="font-body text-base font-semibold text-ink"><Inspired text={t('inspired_quote')} /></p>
+          <ol className="flex flex-wrap items-center gap-2" aria-label={t('inspired_means_title')}>
+            {(['inspired_flow_1', 'inspired_flow_2', 'inspired_flow_3', 'inspired_flow_4'] as const).map((k, i) => (
+              <li key={k} className="flex items-center gap-2">
+                {i > 0 && <span aria-hidden="true" className="text-xl text-challenge">→</span>}
+                <span className="rounded-pill bg-[#EAF5FC] px-3 py-1.5 font-body text-sm font-extrabold text-[#135A85]">{t(k)}</span>
+              </li>
+            ))}
+          </ol>
+        </section>
+      )}
       {partner && allAnswered && !lesson && (
         <section data-testid="inspiration-tip" className="story-rise flex flex-col gap-3">
           {fullInspirationTip ? (
             <div className="flex flex-col gap-3 rounded-[20px] bg-gradient-to-br from-[#FFF7D6] to-[#FFE9A8] p-5">
-              <p className="font-display text-2xl leading-snug text-ink">“{t('inspired_quote')}”</p>
+              <p className="font-display text-2xl leading-snug text-ink">“<Inspired text={t('inspired_quote')} />”</p>
               <p className="font-body text-sm font-bold text-[#7A5A00]">{t('inspired_quote_by')}</p>
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                 <div className="rounded-xl bg-white p-3">
@@ -268,7 +218,7 @@ export default function StoryClues({ story, game, update, award, onNext, onBack,
           ) : (
             <details className="rounded-[16px] bg-[#FFF7D6] px-4 py-3">
               <summary className="cursor-pointer font-body text-base font-bold text-[#7A5A00]">{t('inspired_tip_small')}</summary>
-              <p className="mt-2 font-body text-base font-medium text-ink">“{t('inspired_quote')}”</p>
+              <p className="mt-2 font-body text-base font-medium text-ink">“<Inspired text={t('inspired_quote')} />”</p>
             </details>
           )}
         </section>
@@ -307,77 +257,5 @@ function Meter({ label, value, total, icon = '' }: { label: string; value: numbe
         {shown}/{total} {shown >= total ? icon : ''}
       </span>
     </div>
-  );
-}
-
-/** One "think like your partner" question: type, check, or peek at the partner's card. */
-function PartnerQuestionBox({
-  id,
-  question,
-  value,
-  onChange,
-  onDone,
-  peek,
-  hint = null,
-  turnLabel = null,
-}: {
-  id: PartnerQuestion;
-  question: string;
-  value: string;
-  onChange: (v: string) => void;
-  onDone: () => void;
-  peek: string;
-  /** The companion's own hint ("Need a hint?"), shown only when asked. Replaces the peek. */
-  hint?: string | null;
-  /** A heading over the question ("Your turn!"). */
-  turnLabel?: string | null;
-}) {
-  const t = useTranslations('story');
-  const [peeking, setPeeking] = useState(false);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
-  useEffect(() => {
-    inputRef.current?.focus({ preventScroll: true });
-  }, []);
-  const ready = value.trim().length >= 3;
-  return (
-    <form
-      data-testid={`partner-q-${id}`}
-      data-state="current"
-      className="story-rise flex flex-col gap-2 rounded-xl border-2 border-[#1A6FA6] bg-white p-4 shadow-[0_4px_14px_rgba(45,156,219,0.18)]"
-      onSubmit={(e) => {
-        e.preventDefault();
-        if (ready) onDone();
-      }}
-    >
-      {turnLabel && <p className="font-display text-xl text-challenge">{turnLabel}</p>}
-      <label htmlFor={`partner-input-${id}`} className="font-body text-base font-bold text-ink">
-        {question}
-      </label>
-      <textarea
-        autoComplete="off"
-        ref={inputRef}
-        id={`partner-input-${id}`}
-        rows={2}
-        maxLength={240}
-        dir="auto"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={t('partner_placeholder')}
-        className="min-w-0 resize-none rounded-lg border border-[#8FA3B8] px-3 py-2 font-body text-base text-ink placeholder:text-ink/40 focus:border-challenge focus:outline-none"
-      />
-      <div className="flex flex-wrap items-center gap-3">
-        <button type="submit" data-testid="partner-check" disabled={!ready} className={btnPrimary}>
-          {t('define_check')}
-        </button>
-        <button type="button" data-testid={hint ? 'partner-hint' : 'partner-peek'} onClick={() => setPeeking((v) => !v)} className={btnText}>
-          {hint ? t('subst_hint_btn') : t('partner_peek')}
-        </button>
-      </div>
-      {peeking && (
-        <p data-testid={hint ? 'partner-hint-text' : 'partner-peek-text'} className="rounded-xl bg-[#FFF7E0] px-3 py-2 font-body text-base text-[#5a4300]">
-          <AssetSlot id="CHALLENGE-UI-003" variant="dot" />{hint ?? peek}
-        </p>
-      )}
-    </form>
   );
 }

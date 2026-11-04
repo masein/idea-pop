@@ -100,5 +100,6 @@
     "question": "Which nature trick made your toy jump?",
     "options": ["🐕 Flea's springy pad", "🦘 Kangaroo tendons", "🪲 Click beetle snap", "🐸 Frog's long legs"]
   },
-  "sticker": { "name": "Super Jumper", "emoji": "🦗" }
+  "sticker": { "name": "Super Jumper", "emoji": "🦗" },
+  "discovery": { "heroes": [{"intro":"A tiny champion of the high jump!","feature":"Spring pad"},{"intro":"A bouncing giant that hops for miles!","feature":"Stretchy tendons"},{"intro":"A beetle that flips itself into the air!","feature":"Trigger peg"},{"intro":"A pond jumper with super long legs!","feature":"Folded legs"}] }
 }

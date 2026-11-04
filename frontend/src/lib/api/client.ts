@@ -489,7 +489,7 @@ export async function advanceStep(attemptId: string, step: number) {
  * Ask the scoped mission helper about the current step. Only the typed
  * question leaves the browser — the server owns the model key, moderation,
  * logging, and all gating. Throws Errors with a `code` of
- * 'rate_limited' | 'not_allowed' | 'unavailable' for UI-specific messages.
+ * 'rate_limited' | 'not_allowed' | 'not_ready' | 'unavailable' for UI-specific messages.
  */
 export async function askMissionHelper(
   challengeId: string,
@@ -508,7 +508,13 @@ export async function askMissionHelper(
     (e as Error & { code: string }).code = "rate_limited";
     throw e;
   }
-  if (response.status === 403 || response.status === 404) {
+  if (response.status === 404) {
+    // The helper is switched off on this server.
+    const e = new Error("not_ready");
+    (e as Error & { code: string }).code = "not_ready";
+    throw e;
+  }
+  if (response.status === 403) {
     const e = new Error("not_allowed");
     (e as Error & { code: string }).code = "not_allowed";
     throw e;

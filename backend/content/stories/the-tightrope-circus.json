@@ -101,5 +101,6 @@
     "question": "Which balance trick was the star of your act?",
     "options": ["🐈 Cat tail swing", "🦩 Flamingo weight over the foot", "🦎 Gecko mid-air tail", "🤹 Tightrope walker's low pole"]
   },
-  "sticker": {"name": "Balance Star", "emoji": "⭐"}
+  "sticker": {"name": "Balance Star", "emoji": "⭐"},
+  "discovery": { "heroes": [{"intro":"A balancing star that always lands on its feet!","feature":"Balancing tail"},{"intro":"A little lizard that steers in mid-air!","feature":"Steering tail"},{"intro":"A pink bird that sleeps on one leg!","feature":"Locking joints"},{"intro":"A brave performer high above the ground!","feature":"Long drooping pole"}] }
 }

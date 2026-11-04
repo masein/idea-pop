@@ -16,7 +16,8 @@ import GuideNameMessages from '@/components/challenge/story/GuideNameMessages';
 import { AssetScope } from '@/components/AssetSlot';
 import { assetSetFor } from '@/lib/assets/assetSets';
 import { MISSION_XP_MAX, badgeArt, badgeName, type MissionBadgeKey } from '@/components/challenge/story/missionBadges';
-import { discoveryOf } from '@/components/challenge/story/discovery';
+import { discoveryOf, heroExtra } from '@/components/challenge/story/discovery';
+import Inspired from '@/components/characters/Inspired';
 import { claimMissionBadge, claimPhotoBonus, claimStar, fetchChallengeProgress } from '@/lib/api/client';
 import { announceChallengeProgress, useChallengeProgress } from '@/lib/hooks/useChallengeProgress';
 import StarNotice from '@/components/challenge/StarNotice';
@@ -467,6 +468,7 @@ function ChallengePageInner({ onBadgeMode }: { onBadgeMode: (on: boolean) => voi
                   void giveBadge('clue').then((xp) => setReward((r) => (r && r.key === 'clue' ? { ...r, xp } : r)));
                 }}
                 onBack={() => goToStep(2)}
+                workKey={challenge.id}
                 fullInspirationTip={challenge.season === 1 && challenge.week_number <= 5}
               />
             ) : (
@@ -494,8 +496,10 @@ function ChallengePageInner({ onBadgeMode }: { onBadgeMode: (on: boolean) => voi
                       answers: {
                         0: game.partnerAnswers?.inspired ?? '',
                         2:
-                          game.partner !== null && game.partner !== undefined && story && game.partnerAnswers?.attention
-                            ? `${story.clue_cards[game.partner]?.name}: ${game.partnerAnswers.attention}`
+                          game.partner !== null && game.partner !== undefined && story
+                            ? `${story.clue_cards[game.partner]?.name}: ${
+                                game.partnerAnswers?.attention || (heroExtra(story, game.partner)?.feature ?? story.clue_cards[game.partner]?.trick ?? '')
+                              }`
                             : '',
                       },
                     }
@@ -790,7 +794,7 @@ function ChallengePageInner({ onBadgeMode }: { onBadgeMode: (on: boolean) => voi
                     ? tStory('popi_reading')
                     : solvedCelebration.popi.state === 'done'
                       ? solvedCelebration.popi.text
-                      : tStory('popi_offline')}
+                      : <Inspired text={tStory('popi_offline')} />}
                 </p>
               </div>
             </div>

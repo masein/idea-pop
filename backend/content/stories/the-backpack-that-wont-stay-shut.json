@@ -101,5 +101,6 @@
     "question": "Which nature trick did your closer copy?",
     "options": ["🌰 Burdock burr", "🪶 Bird feather", "🐙 Octopus", "🌱 Pea plant"]
   },
-  "sticker": { "name": "Grip Genius", "emoji": "🪝" }
+  "sticker": { "name": "Grip Genius", "emoji": "🪝" },
+  "discovery": { "heroes": [{"intro":"A prickly seed that hitches a ride!","feature":"Tiny hooks"},{"intro":"A feather that zips itself back up!","feature":"Barbule hooks"},{"intro":"An eight-armed master of holding on!","feature":"Sealing suckers"},{"intro":"A climbing plant that hangs on tight!","feature":"Curly tendrils"}] }
 }

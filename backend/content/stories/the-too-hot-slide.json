@@ -260,5 +260,6 @@
   "sticker": {
     "name": "Cool Keeper",
     "emoji": "😎"
-  }
+  },
+  "discovery": { "heroes": [{"intro":"The ant that dares to walk on burning sand!","feature":"Silver hairs"},{"intro":"A tiny traveller who stays cool in the hot desert!","feature":"Sun-reflecting shell"},{"intro":"A giant who stays cool with its ears!","feature":"Cooling ears"},{"intro":"A tree that gives the savanna shade!","feature":"Umbrella top"}] }
 }

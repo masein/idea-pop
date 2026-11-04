@@ -102,5 +102,6 @@
     "question": "Which nature trick helped your feeder most?",
     "options": ["🏺 Pitcher plant slippery rim", "🌳 Acacia guards", "🌺 Hummingbird flower tube", "🪺 Weaver bird door"]
   },
-  "sticker": {"name": "Fair Feeder", "emoji": "🐿️"}
+  "sticker": {"name": "Fair Feeder", "emoji": "🐿️"},
+  "discovery": { "heroes": [{"intro":"A plant with a very slippery trap!","feature":"Slippery rim"},{"intro":"A thorny tree with tiny bodyguards!","feature":"Thorns and ant guards"},{"intro":"A flower that saves its nectar for one guest!","feature":"Long, thin tube"},{"intro":"A bird that builds a home snakes can’t enter!","feature":"Hanging nest"}] }
 }

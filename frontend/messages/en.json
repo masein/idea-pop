@@ -737,7 +737,7 @@
     "idea_save": "Save to your profile",
     "idea_share": "Share",
     "noidea_lead": "If you don't have any idea,",
-    "noidea_body": "We can <b>find</b> amazing ideas to solve Max's problem by getting inspired by <g>nature</g>. Would you like to go on an adventure together into the depths of nature and discover creative solutions along the way? 🌿✨",
+    "noidea_body": "We can <b>find</b> amazing ideas to solve Max's problem by <i>getting inspired</i> by <g>nature</g>. Would you like to go on an adventure together into the depths of nature and discover creative solutions along the way? 🌿✨",
     "noidea_cta": "Start thinking process",
     "brainstorm_lead": "What's on your mind, Idea Pop Ai can help to <b>Brain storm...</b>",
     "brainstorm_placeholder": "Let's brain storm to help Max...",
@@ -1253,7 +1253,7 @@
   },
   "helper": {
     "toggle": "Ask Popi",
-    "intro": "Ask Popi the penguin about your mission — or anything about nature, science, and how things work.",
+    "intro": "Ask Popi anything about IDEA POP, your mission, nature, science, or how things work.",
     "privacy": "A grown-up can always read your questions and answers.",
     "input_label": "Your question for Popi",
     "placeholder": "e.g. Why does my bridge keep falling? Or: how do beavers build dams?",
@@ -1264,7 +1264,8 @@
     "rate_limited": "That's a lot of questions! Popi needs a little rest — try again soon.",
     "not_allowed": "Popi isn't switched on for you yet — ask a grown-up to turn it on.",
     "error": "Hmm, Popi couldn't answer right now. Try again in a moment!",
-    "ask_another": "Ask another question"
+    "ask_another": "Ask another question",
+    "not_ready": "Popi's chat isn't ready yet. Soon you can ask me anything here!"
   },
   "shell": {
     "account": "Account",
@@ -1642,13 +1643,13 @@
     "nature_reward_text": "You explored a strategy from nature and connected it to a design possibility.",
     "nature_reward_title": "You earned the Nature Hero badge!",
     "quizzy_reward_text": "You used WH Questions to understand the problem more clearly.",
-    "quizzy_reward_title": "You earned the Quizzy badge!",
+    "quizzy_reward_title": "You earned the Quizi badge!",
     "mission_badge_river": "River Explorer",
     "mission_badge_retry": "Second Try Hero",
     "mission_badge_tool": "SCAMPER Starter",
     "mission_badge_solved": "Idea Maker",
     "mission_badge_clue": "Nature Hero",
-    "mission_badge_define": "Quizzy",
+    "mission_badge_define": "Quizi",
     "puzzle_questions": "Questions",
     "subst_finish": "Save My New Idea",
     "subst_cel_title": "You've created a new version of your idea!",
@@ -1878,7 +1879,27 @@
     "inspired_flow_4": "Create something new",
     "hero_memory_feature": "What caught my attention:",
     "hero_memory_idea": "My first idea:",
-    "hero_next": "Next ›"
+    "hero_next": "Next ›",
+    "meet_character": "About {name}",
+    "clues_nature_inspires": "When we're looking for a new solution, nature can inspire us! Nature has discovered amazing ways to solve problems. Let's explore its secrets!",
+    "special_feature": "Special Feature: {feature}",
+    "conspy_title": "No idea is weird here!",
+    "conspy_message": "Dream big! Even if you can't build your idea with things at home, it can still be amazing. Get inspired by nature first. Later, we'll explore how to test a simpler version!",
+    "conspy_question": "Can we build every idea at home?",
+    "conspy_answer": "Not always! Some ideas need special tools or laboratories. For example, copying a water strider's legs might be difficult at home. That doesn't make your idea bad! You can imagine the big idea first, then try a simpler model.",
+    "popi_q_do": "What does this hero do?",
+    "popi_q_how": "How?",
+    "popi_q_use": "How could you use this trick to {goal}?",
+    "popi_goal_default": "help {hero}",
+    "hero_answer_label": "Your idea, in a sentence or two",
+    "voice_record": "Record my answer",
+    "voice_stop": "Stop recording",
+    "voice_again": "Record again",
+    "voice_delete": "Delete my recording",
+    "voice_listening": "I'm listening…",
+    "voice_denied": "The microphone isn't on, so you can type your idea instead.",
+    "voice_answer_text": "I recorded my idea.",
+    "clues_how_help": "How can we help {hero}?"
   },
   "thinking_tools": {
     "accordion_young": "Stuck? Try a thinking tool!",
@@ -2007,10 +2028,19 @@
       "badge_clue": "Nature Hero",
       "sketch_popi": "Now that you've explored ideas from nature, what ideas have you come up with to help {hero}?",
       "subst_p1_popi": "A problem can have more than one solution. If you saved an idea earlier, we can use it to create new possibilities.\nDon't have an idea yet? That's okay. We can also use our clay-boat experiment for this practice.",
-      "popi_ending": "PopAI tells the ending"
+      "popi_ending": "Popi tells the ending"
     },
     "mission": {
       "build_heading": "Build It & Test It!"
     }
+  },
+  "characters": {
+    "got_it": "Got it!",
+    "intro_popi": "Hi! I'm Popi. You can ask me any question you have about IDEA POP. I'm your guide in the world of IDEA POP!",
+    "intro_quizi": "Hi! I'm Quizi. I'll help you ask better questions and discover new things!",
+    "intro_scamper": "Hi! I'm Scamper. Let's change, combine, and transform ideas into something new!",
+    "intro_conspy": "Hi! I'm Conspy. I love unusual, creative ideas! Your idea doesn't have to be something you can build right away.",
+    "inspiration_title": "Inspiration",
+    "inspiration_text": "Inspiration means seeing something interesting and getting a new idea from it! For example, watching birds fly might inspire you to design something with wings. It's about learning from nature, not copying it!"
   }
 }

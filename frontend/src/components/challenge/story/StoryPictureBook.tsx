@@ -292,9 +292,9 @@ export default function StoryPictureBook({
 
       {last && define && puzzle && (
         <div className="flex flex-col gap-4">
-          {/* Popi introduces Quizzy, who explains WH Questions; then the puzzle. */}
+          {/* Popi introduces Quizi, who explains WH Questions; then the puzzle. */}
           <Popi text={wh?.popi ?? t('puzzle_popi')} grand talking={auto.phase === 'finale' && voice.speaking} />
-          {wh && <GuideCharacter testId="wh-character" name={wh.name} text={wh.says} image={wh.image ?? null} />}
+          {wh && <GuideCharacter testId="wh-character" text={wh.says} image={wh.image ?? null} />}
           <MissionPuzzle
             puzzle={puzzle}
             solved={allAnswered}

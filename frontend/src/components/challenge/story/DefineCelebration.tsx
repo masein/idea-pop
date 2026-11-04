@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslations } from 'next-intl';
+import Inspired from '@/components/characters/Inspired';
 import { btnPrimary, btnSecondary } from '@/components/challenge/buttons';
 import AssetSlot from '@/components/AssetSlot';
 
@@ -148,7 +149,7 @@ export default function DefineCelebration({ xp = 0, onClose, variant = 'define',
                   ? t('popi_reading')
                   : popi.state === 'done'
                     ? popi.text
-                    : t('popi_offline')}
+                    : <Inspired text={t('popi_offline')} />}
               </p>
             </div>
           </div>

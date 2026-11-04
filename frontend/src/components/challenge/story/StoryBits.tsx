@@ -8,6 +8,8 @@ import { usePopiVoice } from '@/lib/hooks/usePopiVoice';
 import type { MissionStory } from './types';
 import { btnIcon, btnPrimary, btnSecondary } from '@/components/challenge/buttons';
 import AssetSlot from '@/components/AssetSlot';
+import Inspired, { MeetCharacter } from '@/components/characters/Inspired';
+import { CHARACTER_NAMES, useFirstMeet } from '@/lib/characters';
 
 /**
  * Popi — the ONE penguin (same character as the Ask-Me mascot), here as the
@@ -59,12 +61,15 @@ export function Popi({
   }, [speaking]);
   // Each page's Popi arrives with his own move (spin, turn around, fade, swing…), picked
   // from his line so a page always gets the same one and neighbouring pages differ.
+  useFirstMeet('popi');
   const entrance = POPI_ENTRANCES[[...text].reduce((h, ch) => (h * 31 + ch.charCodeAt(0)) >>> 0, 7) % POPI_ENTRANCES.length];
   return (
     <div data-testid="story-popi" className="flex items-end gap-4">
       <span key={text} className={`shrink-0 ${entrance}`}>
         <span key={pulse} className={`block ${grand && pulse > 0 ? 'popi-grand' : ''}`}>
-          <PopiAvatar size={120} />
+          <MeetCharacter character="popi" label={t('meet_character', { name: CHARACTER_NAMES.popi })}>
+            <PopiAvatar size={120} />
+          </MeetCharacter>
         </span>
       </span>
       <div className="flex flex-1 items-center gap-3 rounded-[22px] bg-white px-5 py-4 shadow-[0_4px_14px_rgba(0,0,0,0.08)] ltr:rounded-bl-[6px] rtl:rounded-br-[6px]">
@@ -83,7 +88,7 @@ export function Popi({
               </span>
             )}
           </p>
-          <p className={`font-body text-lg font-semibold leading-snug text-ink sm:text-xl ${keepLines ? 'whitespace-pre-line' : ''}`}>{text}</p>
+          <p className={`font-body text-lg font-semibold leading-snug text-ink sm:text-xl ${keepLines ? 'whitespace-pre-line' : ''}`}><Inspired text={text} /></p>
         </div>
         {voice.available && (
           <button

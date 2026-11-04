@@ -1,0 +1,366 @@
+'use client';
+
+import { useContext, useEffect, useRef, useState } from 'react';
+import { useTranslations } from 'next-intl';
+import AssetSlot, { AssetScope } from '@/components/AssetSlot';
+import { CharacterArt } from '@/components/characters/CharacterDialogHost';
+import Inspired, { MeetCharacter } from '@/components/characters/Inspired';
+import { btnPrimary, btnText } from '@/components/challenge/buttons';
+import { CHARACTER_NAMES, useFirstMeet } from '@/lib/characters';
+import { deleteVoiceNote, loadVoiceNote, saveVoiceNote } from '@/lib/voiceNotes';
+import { Character3D, Popi } from './StoryBits';
+import { discoveryOf, heroExtra, heroShort, type CompanionData, type PartnerLesson } from './discovery';
+import type { MissionStory } from './types';
+import type { GameUpdate, MissionGame } from './useMissionGame';
+
+type ClueCard = MissionStory['clue_cards'][number];
+
+const MIN_ANSWER = 3;
+const MAX_RECORDING_MS = 60_000;
+
+const answered = (answers: Record<string, string> | undefined) => (answers?.inspired ?? '').trim().length >= MIN_ANSWER;
+
+/** The one answer is in. Earlier versions of this page marked it 'idea' or 'inspired'. */
+export function heroJourneyDone(game: MissionGame): boolean {
+  const done = game.partnerDone ?? [];
+  return answered(game.partnerAnswers) && (done.includes('inspired') || done.includes('idea'));
+}
+
+/**
+ * After a kid picks a Nature Hero, for every challenge: the hero grows into its video, Conspy
+ * says no idea is weird, Popi answers two short questions, and the kid answers the third.
+ */
+export default function HeroJourney({
+  story,
+  card,
+  index,
+  lesson,
+  companion,
+  game,
+  update,
+  workKey,
+}: {
+  story: MissionStory;
+  card: ClueCard;
+  /** Which of the story's heroes this is. */
+  index: number;
+  lesson: PartnerLesson | null;
+  companion: CompanionData | null;
+  game: MissionGame;
+  update: GameUpdate;
+  /** Names this challenge's saved work (the voice note). */
+  workKey: string;
+}) {
+  const t = useTranslations('story');
+  const extra = heroExtra(story, index);
+  const hero = heroShort(story);
+  const finished = heroJourneyDone(game);
+  const watched = finished || (game.partnerDone ?? []).includes('video');
+  const goal = discoveryOf(story)?.help_goal ?? t('popi_goal_default', { hero });
+  const lines = [
+    `${extra?.popi?.question ?? t('popi_q_do')} ${extra?.popi?.does ?? card.does}`,
+    `${t('popi_q_how')} ${extra?.popi?.how ?? card.trick}`,
+    t('popi_q_use', { goal }),
+  ];
+
+  return (
+    <div data-testid="hero-journey" className="story-rise flex flex-col gap-5">
+      <HeroVideo
+        card={card}
+        index={index}
+        videoUrl={extra?.video ?? null}
+        feature={extra?.feature ?? card.tagline}
+        showNext={!watched}
+        onNext={() => update((g) => ({ partnerDone: [...g.partnerDone, 'video'] }))}
+      />
+      {watched && (
+        <>
+          <ConspyCard />
+          <Popi text={lines.join('\n')} keepLines />
+          <HeroAnswer
+            key={`${workKey}-${index}`}
+            voiceKey={`${workKey}:${index}`}
+            label={t('hero_answer_label')}
+            value={game.partnerAnswers?.inspired ?? ''}
+            submitted={finished}
+            onChange={(v) => update((g) => ({ partnerAnswers: { ...g.partnerAnswers, inspired: v } }))}
+            onSubmit={() =>
+              update((g) => ({ partnerDone: g.partnerDone.includes('inspired') ? g.partnerDone : [...g.partnerDone, 'inspired'] }))
+            }
+            onRevise={() => update((g) => ({ partnerDone: g.partnerDone.filter((x) => x !== 'inspired' && x !== 'idea') }))}
+            hint={lesson?.hint ? `${lesson.hint.text} ${lesson.hint.ask}` : companion?.hint ?? null}
+            peek={`${card.trick} ${card.does}`}
+          />
+        </>
+      )}
+    </div>
+  );
+}
+
+/** The hero grows large as the opening picture, then its own video (or the spot waiting for it). */
+function HeroVideo({
+  card,
+  index,
+  videoUrl,
+  feature,
+  showNext,
+  onNext,
+}: {
+  card: ClueCard;
+  index: number;
+  videoUrl: string | null;
+  feature: string;
+  showNext: boolean;
+  onNext: () => void;
+}) {
+  const t = useTranslations('story');
+  const scope = useContext(AssetScope);
+  const assetId = `${scope ?? 'MAX'}-HERO-VIDEO-${String(index + 1).padStart(3, '0')}`;
+  const [opening, setOpening] = useState(true);
+  const [ended, setEnded] = useState(!videoUrl);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setOpening(false), 1500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  return (
+    <section data-testid="hero-video" className="flex flex-col items-center gap-3 rounded-[24px] bg-gradient-to-b from-[#EAF5FC] to-white p-5">
+      {opening ? (
+        <span data-testid="hero-video-opening" className="story-pop block">
+          <Character3D src={card.image ?? null} emoji={card.emoji} alt={card.name} size={260} />
+        </span>
+      ) : (
+        <div className="story-rise aspect-video w-full max-w-xl overflow-hidden rounded-[18px] bg-white">
+          {videoUrl ? (
+            <video
+              data-testid="hero-video-player"
+              src={videoUrl}
+              poster={card.image ?? undefined}
+              controls
+              playsInline
+              onEnded={() => setEnded(true)}
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            <AssetSlot id={assetId} />
+          )}
+        </div>
+      )}
+      {!opening && ended && (
+        <p data-testid="hero-special-feature" className="story-pop rounded-pill bg-[#1A6FA6] px-5 py-2 text-center font-body text-base font-extrabold text-white">
+          {t('special_feature', { feature })}
+        </p>
+      )}
+      {!opening && showNext && (
+        <button type="button" data-testid="hero-video-next" onClick={onNext} className={`${btnPrimary} self-end`}>
+          {t('hero_next')}
+        </button>
+      )}
+    </section>
+  );
+}
+
+/** Conspy: dream first; building comes later. */
+function ConspyCard() {
+  const t = useTranslations('story');
+  useFirstMeet('conspy');
+  return (
+    <section data-testid="conspy-card" className="story-rise flex flex-col gap-3 rounded-[20px] bg-[#F1D8FB] p-5 sm:flex-row sm:items-start">
+      <MeetCharacter character="conspy" label={t('meet_character', { name: CHARACTER_NAMES.conspy })} className="self-center sm:self-start">
+        <CharacterArt character="conspy" className="h-24 w-24" />
+      </MeetCharacter>
+      <div className="flex min-w-0 flex-1 flex-col gap-2">
+        <p className="font-body text-sm font-bold text-[#6A2C91]">{CHARACTER_NAMES.conspy}</p>
+        <h3 className="font-display text-2xl leading-tight text-ink">{t('conspy_title')}</h3>
+        <p className="font-body text-lg font-semibold leading-snug text-ink">
+          <Inspired text={t('conspy_message')} />
+        </p>
+        <details data-testid="conspy-more" className="rounded-[14px] bg-white px-4 py-3">
+          <summary className="cursor-pointer font-body text-base font-bold text-ink">{t('conspy_question')}</summary>
+          <p className="mt-2 font-body text-base font-medium leading-snug text-ink">{t('conspy_answer')}</p>
+        </details>
+      </div>
+    </section>
+  );
+}
+
+type Recording = 'idle' | 'recording' | 'denied';
+
+/** The kid's one answer: a sentence or two, typed or spoken. */
+function HeroAnswer({
+  voiceKey,
+  label,
+  value,
+  submitted,
+  onChange,
+  onSubmit,
+  onRevise,
+  hint,
+  peek,
+}: {
+  voiceKey: string;
+  label: string;
+  value: string;
+  submitted: boolean;
+  onChange: (v: string) => void;
+  onSubmit: () => void;
+  onRevise: () => void;
+  /** The hero's "Need a hint?", shown only when asked; otherwise a peek at its card. */
+  hint: string | null;
+  peek: string;
+}) {
+  const t = useTranslations('story');
+  const [hintOpen, setHintOpen] = useState(false);
+  const [recording, setRecording] = useState<Recording>('idle');
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const recorder = useRef<MediaRecorder | null>(null);
+  const canRecord = typeof window !== 'undefined' && !!navigator.mediaDevices?.getUserMedia && typeof MediaRecorder !== 'undefined';
+  const ready = value.trim().length >= MIN_ANSWER;
+
+  // A spoken answer made earlier is still here.
+  useEffect(() => {
+    let url: string | null = null;
+    let alive = true;
+    loadVoiceNote(voiceKey)
+      .then((blob) => {
+        if (blob && alive) {
+          url = URL.createObjectURL(blob);
+          setAudioUrl(url);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+      if (url) URL.revokeObjectURL(url);
+    };
+  }, [voiceKey]);
+
+  // Leaving the page ends a recording and lets go of the microphone.
+  useEffect(
+    () => () => {
+      if (recorder.current?.state === 'recording') recorder.current.stop();
+    },
+    [],
+  );
+
+  async function startRecording() {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const rec = new MediaRecorder(stream);
+      const chunks: Blob[] = [];
+      rec.ondataavailable = (e) => chunks.push(e.data);
+      rec.onstop = () => {
+        stream.getTracks().forEach((track) => track.stop());
+        setRecording('idle');
+        const blob = new Blob(chunks, { type: rec.mimeType });
+        setAudioUrl(URL.createObjectURL(blob));
+        saveVoiceNote(voiceKey, blob).catch(() => {});
+        // The next page starts from this answer; the kid's own words are never overwritten.
+        if (value.trim().length < MIN_ANSWER) onChange(t('voice_answer_text'));
+      };
+      recorder.current = rec;
+      rec.start();
+      setRecording('recording');
+      setTimeout(() => {
+        if (rec.state === 'recording') rec.stop();
+      }, MAX_RECORDING_MS);
+    } catch {
+      setRecording('denied');
+    }
+  }
+
+  function removeRecording() {
+    setAudioUrl(null);
+    deleteVoiceNote(voiceKey).catch(() => {});
+    if (value === t('voice_answer_text')) onChange('');
+  }
+
+  const player = audioUrl && (
+    // eslint-disable-next-line jsx-a11y/media-has-caption -- the kid's own voice note
+    <audio data-testid="hero-voice-player" src={audioUrl} controls className="w-full max-w-sm" />
+  );
+
+  if (submitted) {
+    return (
+      <section data-testid="hero-answer-saved" className="flex flex-col gap-2 rounded-xl border border-[#BFE6C8] bg-[#F3FBF5] px-4 py-3">
+        <p dir="auto" className="font-body text-base font-semibold text-[#1d7a3a]">
+          {value} <span aria-hidden="true">✓</span>
+        </p>
+        {player}
+        <button type="button" data-testid="hero-answer-revise" onClick={onRevise} className={`${btnText} self-start !px-0`}>
+          {t('partner_revise')}
+        </button>
+      </section>
+    );
+  }
+
+  return (
+    <form
+      data-testid="hero-answer"
+      className="flex flex-col gap-2 rounded-xl border-2 border-[#1A6FA6] bg-white p-4 shadow-[0_4px_14px_rgba(45,156,219,0.18)]"
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (ready) onSubmit();
+      }}
+    >
+      <label htmlFor="hero-answer-input" className="font-body text-base font-bold text-ink">
+        {label}
+      </label>
+      <textarea
+        autoComplete="off"
+        id="hero-answer-input"
+        data-testid="hero-answer-input"
+        rows={2}
+        maxLength={240}
+        dir="auto"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={t('partner_placeholder')}
+        className="min-w-0 resize-none rounded-lg border border-[#8FA3B8] px-3 py-2 font-body text-base text-ink placeholder:text-ink/40 focus:border-challenge focus:outline-none"
+      />
+      {player}
+      {audioUrl && (
+        <button type="button" data-testid="hero-voice-delete" onClick={removeRecording} className={`${btnText} self-start !px-0`}>
+          {t('voice_delete')}
+        </button>
+      )}
+      <div className="flex flex-wrap items-center gap-3">
+        <button type="submit" data-testid="hero-answer-submit" disabled={!ready || recording === 'recording'} className={btnPrimary}>
+          {t('define_check')}
+        </button>
+        {canRecord && (
+          <button
+            type="button"
+            data-testid="hero-voice-record"
+            aria-pressed={recording === 'recording'}
+            onClick={() => (recording === 'recording' ? recorder.current?.stop() : void startRecording())}
+            className={btnText}
+          >
+            {recording === 'recording' ? t('voice_stop') : audioUrl ? t('voice_again') : t('voice_record')}
+          </button>
+        )}
+        <button
+          type="button"
+          data-testid={hint ? 'partner-hint' : 'partner-peek'}
+          onClick={() => setHintOpen((v) => !v)}
+          className={btnText}
+        >
+          {hint ? t('subst_hint_btn') : t('partner_peek')}
+        </button>
+      </div>
+      {recording === 'recording' && (
+        <p role="status" className="font-body text-sm font-bold text-[#A4520B]">{t('voice_listening')}</p>
+      )}
+      {recording === 'denied' && (
+        <p role="status" className="rounded-xl bg-[#FFF7E0] px-3 py-2 font-body text-sm text-[#5a4300]">{t('voice_denied')}</p>
+      )}
+      {hintOpen && (
+        <p data-testid={hint ? 'partner-hint-text' : 'partner-peek-text'} className="rounded-xl bg-[#FFF7E0] px-3 py-2 font-body text-base text-[#5a4300]">
+          <AssetSlot id="CHALLENGE-UI-003" variant="dot" />
+          <Inspired text={hint ?? peek} />
+        </p>
+      )}
+    </form>
+  );
+}

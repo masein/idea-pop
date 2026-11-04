@@ -7,6 +7,7 @@ import { Link, usePathname, useRouter } from '@/i18n/routing';
 import { logout } from '@/lib/api/auth';
 import Logo from './Logo';
 import PenguinMascot from './PenguinMascot';
+import { hasMetCharacter, showCharacterIntro } from '@/lib/characters';
 import LocaleSwitcher from './marketing/LocaleSwitcher';
 import HelpPanel, { type HelpSection } from './HelpPanel';
 import { AVATARS } from '@/lib/avatars';
@@ -479,6 +480,7 @@ function AppShellInner({
   const items = NAV[persona];
   const theme = SECTION_THEME[activeSection];
   const showUpgrade = persona === 'kid' || persona === 'parent';
+  useFirstMeetIfKid(persona === 'kid');
 
   useEffect(() => {
     try {
@@ -643,16 +645,23 @@ function AppShellInner({
       </div>
       </div>
 
-      {/* Floating penguin mascot (flips to the left in RTL) — opens the help panel */}
+      {/* Floating Popi (flips to the left in RTL, away from the sidebar): opens the chat */}
       <div className="fixed bottom-6 z-40 ltr:right-6 rtl:left-6">
         <PenguinMascot onClick={() => setHelpOpen(true)} />
       </div>
 
       {helpOpen && (
-        <HelpPanel section={helpSectionFromPath(pathname)} onClose={() => setHelpOpen(false)} />
+        <HelpPanel section={helpSectionFromPath(pathname)} chat={persona === 'kid'} pathname={pathname} onClose={() => setHelpOpen(false)} />
       )}
     </div>
   );
+}
+
+/** Popi says hello the first time a kid opens the app. */
+function useFirstMeetIfKid(isKid: boolean) {
+  useEffect(() => {
+    if (isKid && !hasMetCharacter('popi')) showCharacterIntro('popi');
+  }, [isKid]);
 }
 
 // ── Public component (keeps the `section` prop for callers) ──────────────────────

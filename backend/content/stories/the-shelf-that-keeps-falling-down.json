@@ -105,5 +105,6 @@
     "question": "Which nature trick made your shelf strong?",
     "options": ["🐝 Honeycomb", "🦴 Bird bones", "🎋 Bamboo", "🪷 Water lily"]
   },
-  "sticker": { "name": "Honeycomb Engineer", "emoji": "🍯" }
+  "sticker": { "name": "Honeycomb Engineer", "emoji": "🍯" },
+  "discovery": { "heroes": [{"intro":"Tiny builders of the strongest wax shelves!","feature":"Six-sided cells"},{"intro":"Bones made for flying!","feature":"Cross-braces"},{"intro":"A super-tall grass that hardly ever bends too far!","feature":"Solid nodes"},{"intro":"An amazing plant with giant leaves that float on water!","feature":"Rib web"}] }
 }

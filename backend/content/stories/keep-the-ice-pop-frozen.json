@@ -103,5 +103,6 @@
     "question": "Which heat path was hardest to block?",
     "options": ["🤝 Touching (conduction)", "🌬️ Moving air (convection)", "☀️ Sunlight (radiation)"]
   },
-  "sticker": { "name": "Heat Blocker", "emoji": "🧊" }
+  "sticker": { "name": "Heat Blocker", "emoji": "🧊" },
+  "discovery": { "heroes": [{"intro":"The Arctic giant in a super-warm coat!","feature":"Hollow hairs"},{"intro":"Birds that stay warm by standing together!","feature":"The huddle"},{"intro":"A desert traveller in a heat-blocking coat!","feature":"Sun-blocking fur"},{"intro":"A snowy hunter with a blanket for a tail!","feature":"Blanket tail"}] }
 }

@@ -100,5 +100,6 @@
     "question": "Which nature trick made your ketchup slide?",
     "options": ["🌿 Pitcher plant's wet rim", "🐌 Snail slime", "🌾 Rice leaf grooves", "🐟 Eel's slimy skin"]
   },
-  "sticker": { "name": "Slide Master", "emoji": "🛝" }
+  "sticker": { "name": "Slide Master", "emoji": "🛝" },
+  "discovery": { "heroes": [{"intro":"A plant with a very slippery trap!","feature":"Wet ridges"},{"intro":"A slow traveller on a road of slime!","feature":"Slime layer"},{"intro":"A leaf that water just rolls off!","feature":"Waxy grooves"},{"intro":"The slipperiest swimmer in the river!","feature":"Slippery mucus"}] }
 }

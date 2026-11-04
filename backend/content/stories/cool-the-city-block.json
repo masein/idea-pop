@@ -271,5 +271,6 @@
   "sticker": {
     "name": "City Cooler",
     "emoji": "🏙️"
-  }
+  },
+  "discovery": { "heroes": [{"intro":"Nature's giant green umbrella!","feature":"Shady, misting leaves"},{"intro":"A tower that stays fresh with no fan!","feature":"Air tunnels"},{"intro":"The ant that dares to walk on burning sand!","feature":"Silver hairs"},{"intro":"A desert squirrel that brings its own shade!","feature":"Sunshade tail"}] }
 }

@@ -274,5 +274,6 @@
   "sticker": {
     "name": "Swarm Coder",
     "emoji": "🛸"
-  }
+  },
+  "discovery": { "heroes": [{"intro":"A little bird that dances in giant flocks!","feature":"Watching neighbours"},{"intro":"Thousands of fish swimming as one!","feature":"Side sensors"},{"intro":"A tiny walker who leaves messages on the ground!","feature":"Scent trails"},{"intro":"An insect that changes when the crowd grows!","feature":"Crowd switch"}] }
 }

@@ -99,5 +99,6 @@
     "question": "Which nature trick helped your barrier most?",
     "options": ["🌾 Marram grass", "🌳 Mangrove tree", "🦪 Oyster reef", "🦫 Beaver"]
   },
-  "sticker": { "name": "Beach Guardian", "emoji": "🏖️" }
+  "sticker": { "name": "Beach Guardian", "emoji": "🏖️" },
+  "discovery": { "heroes": [{"intro":"A tough grass that holds the dunes together!","feature":"Sand-binding roots"},{"intro":"A tree that stands up to the waves!","feature":"Stilt roots"},{"intro":"A bumpy wall built by tiny sea animals!","feature":"Bumpy mounds"},{"intro":"A busy builder who slows the river down!","feature":"Stick dam"}] }
 }

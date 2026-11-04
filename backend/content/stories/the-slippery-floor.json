@@ -103,5 +103,6 @@
     "question": "Which nature trick helped your sole grip?",
     "options": ["🐸 Frog channels", "🦎 Gecko hairs", "🐙 Octopus suckers", "🐈 Cat soft pads"]
   },
-  "sticker": { "name": "Grip Hero", "emoji": "🐸" }
+  "sticker": { "name": "Grip Hero", "emoji": "🐸" },
+  "discovery": { "heroes": [{"intro":"A little climber that never slips on wet leaves!","feature":"Channelled toe pads"},{"intro":"A lizard that walks up walls!","feature":"Tiny toe hairs"},{"intro":"An eight-armed master of holding on!","feature":"Sealing suckers"},{"intro":"A soft-footed champion of landing!","feature":"Squishy paw pads"}] }
 }

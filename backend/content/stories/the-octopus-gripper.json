@@ -281,5 +281,6 @@
   "sticker": {
     "name": "Soft Robotics Pro",
     "emoji": "🦾"
-  }
+  },
+  "discovery": { "heroes": [{"intro":"An eight-armed master of holding on!","feature":"Bendy suckered arms"},{"intro":"A fin that hugs whatever pushes it!","feature":"Curling fin"},{"intro":"A nose strong enough to lift a log!","feature":"Muscle trunk"},{"intro":"A plant that snaps shut like a mouth!","feature":"Flip-over leaf"}] }
 }

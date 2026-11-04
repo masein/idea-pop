@@ -103,5 +103,6 @@
     "question": "Which layer did the most cleaning in your filter?",
     "options": ["🪨 Gravel", "🏖️ Sand", "☁️ Cotton", "🧣 Cloth"]
   },
-  "sticker": { "name": "Pond Protector", "emoji": "💧" }
+  "sticker": { "name": "Pond Protector", "emoji": "💧" },
+  "discovery": { "heroes": [{"intro":"A little shell that cleans the sea all day!","feature":"Sticky gills"},{"intro":"The biggest eater with the finest strainer!","feature":"Baleen plates"},{"intro":"Trees that stand with their feet in the sea!","feature":"Tangled roots"},{"intro":"The quiet cleaners under your feet!","feature":"Trickling layers"}] }
 }

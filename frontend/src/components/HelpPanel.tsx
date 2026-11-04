@@ -1,8 +1,10 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useTranslations } from 'next-intl';
+import { useEffect, useState } from 'react';
+import { useLocale, useTranslations } from 'next-intl';
 import PopiAvatar from '@/components/PopiAvatar';
+import MissionHelper from '@/components/challenge/MissionHelper';
+import { fetchChallenges } from '@/lib/api/client';
 
 /** Which "how this works" blurb to show — chosen from the current route. */
 export type HelpSection =
@@ -27,15 +29,29 @@ const BODY_KEY: Record<HelpSection, string> = {
 export interface HelpPanelProps {
   section: HelpSection;
   onClose: () => void;
+  /** Kids can ask Popi here; the server keeps every gate, moderation and the parents' log. */
+  chat?: boolean;
+  pathname?: string;
 }
 
+const CHALLENGE_PATH = /\/challenges\/([0-9a-f-]{36})/;
+
 /**
- * Small "how this works" panel opened by the floating penguin. Content is
- * context-aware by section; on a mission it points to the step-scoped "Ask
- * Popi" helper (that helper is embedded per step and can't be opened globally).
+ * The panel opened by the floating Popi: Ask Popi for a kid, plus how this page works. Questions
+ * are anchored to the challenge on screen, or to the kid's first challenge anywhere else.
  */
-export default function HelpPanel({ section, onClose }: HelpPanelProps) {
+export default function HelpPanel({ section, onClose, chat = false, pathname = '' }: HelpPanelProps) {
   const t = useTranslations('help_panel');
+  const locale = useLocale();
+  const onChallenge = pathname.match(CHALLENGE_PATH)?.[1] ?? null;
+  const [challengeId, setChallengeId] = useState<string | null>(onChallenge);
+
+  useEffect(() => {
+    if (!chat || onChallenge) return;
+    fetchChallenges(locale)
+      .then((list) => setChallengeId((list ?? [])[0]?.id ?? null))
+      .catch(() => {});
+  }, [chat, onChallenge, locale]);
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -56,7 +72,7 @@ export default function HelpPanel({ section, onClose }: HelpPanelProps) {
         aria-label={t('title')}
         data-testid="help-panel"
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-sm rounded-[1.5rem] bg-white p-6 shadow-xl"
+        className="max-h-[85vh] w-full max-w-md overflow-y-auto rounded-[1.5rem] bg-white p-6 shadow-xl"
       >
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-2">
@@ -73,6 +89,11 @@ export default function HelpPanel({ section, onClose }: HelpPanelProps) {
             <span aria-hidden="true">✕</span>
           </button>
         </div>
+        {chat && challengeId && (
+          <div className="mt-3">
+            <MissionHelper challengeId={challengeId} step={1} defaultOpen />
+          </div>
+        )}
         <p className="mt-3 font-body text-sm leading-relaxed text-ink/80">
           {t(BODY_KEY[section])}
         </p>

@@ -263,5 +263,6 @@
   "sticker": {
     "name": "Helping Hand",
     "emoji": "🤝"
-  }
+  },
+  "discovery": { "heroes": [{"intro":"A giant with the gentlest grip in the wild!","feature":"Finger-like trunk"},{"intro":"A sea animal that can hold almost anything!","feature":"Gripping suckers"},{"intro":"A hunter with the fastest tongue around!","feature":"Sticky tongue"},{"intro":"A bright bird that grips like it has two hands!","feature":"Hook and grip"}] }
 }

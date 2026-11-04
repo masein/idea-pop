@@ -22,18 +22,23 @@ export default function PenguinMascot({
       type="button"
       onClick={onClick}
       aria-label={text}
+      data-testid="floating-popi"
       className={[
-        'flex items-center gap-2 rounded-full bg-challenge text-white shadow-lg',
-        'py-1.5 pe-4 ps-1.5 font-body font-semibold text-sm',
-        'hover:brightness-110 active:scale-95 transition-all duration-150',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-challenge focus-visible:ring-offset-2',
+        'relative flex h-14 w-14 items-end justify-center rounded-full bg-white shadow-lg ring-2 ring-challenge',
+        'hover:brightness-105 active:scale-95 transition-all duration-150',
+        'focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-[#0F3F63] focus-visible:ring-offset-2',
         className,
       ].join(' ')}
     >
-      <span className="flex h-11 w-11 items-end justify-center overflow-hidden rounded-full bg-white" aria-hidden="true">
-        <PopiAvatar size={44} />
+      <span className="flex h-full w-full items-end justify-center overflow-hidden rounded-full" aria-hidden="true">
+        <PopiAvatar size={48} />
       </span>
-      <span>{text}</span>
+      <span
+        aria-hidden="true"
+        className="absolute -top-1 flex h-6 w-6 items-center justify-center rounded-full bg-challenge font-body text-sm font-extrabold text-white shadow ltr:-right-1 rtl:-left-1"
+      >
+        ?
+      </span>
     </button>
   );
 }

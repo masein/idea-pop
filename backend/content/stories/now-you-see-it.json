@@ -100,5 +100,6 @@
     "question": "Which camouflage trick did your cover use most?",
     "options": ["🦑 Matching colours", "🦓 Breaking the outline", "🦌 Hiding the shadow", "🌿 Looking like a twig"]
   },
-  "sticker": { "name": "Master of Disguise", "emoji": "🫥" }
+  "sticker": { "name": "Master of Disguise", "emoji": "🫥" },
+  "discovery": { "heroes": [{"intro":"The quick-change master of the sea!","feature":"Colour-changing skin"},{"intro":"An insect that looks just like a twig!","feature":"Twig body"},{"intro":"A gentle forest animal that is hard to spot!","feature":"Shadow-hiding colours"},{"intro":"A stripy runner that confuses hunters!","feature":"Bold stripes"}] }
 }

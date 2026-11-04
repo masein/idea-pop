@@ -3,7 +3,7 @@
 import { useTranslations } from 'next-intl';
 import { Character3D, Popi, RewardPop, optionClass } from './StoryBits';
 import type { MissionStory } from './types';
-import { discoveryOf, heroShort } from './discovery';
+import { discoveryOf, heroExtra, heroShort } from './discovery';
 import type { MissionGame, GameUpdate } from './useMissionGame';
 import { btnIcon } from '@/components/challenge/buttons';
 
@@ -19,8 +19,8 @@ export function StorySketchTop({ story, game }: { story: MissionStory; game: Mis
       {partner && (
         <div data-testid="hero-memory" className="flex flex-col gap-1.5 self-stretch rounded-[18px] bg-[#EAF5FC] px-4 py-3 font-body text-base text-[#1F2A33]">
           <p className="font-bold text-[#1A6FA6]">{t('partner_reminder', { name: partner.name })}</p>
-          {(game.partnerAnswers?.attention ?? '').trim() && (
-            <p dir="auto"><b>{t('hero_memory_feature')}</b> {game.partnerAnswers.attention}</p>
+          {((game.partnerAnswers?.attention ?? '').trim() || heroExtra(story, game.partner ?? 0)?.feature) && (
+            <p dir="auto"><b>{t('hero_memory_feature')}</b> {game.partnerAnswers?.attention?.trim() || heroExtra(story, game.partner ?? 0)?.feature}</p>
           )}
           {(game.partnerAnswers?.inspired ?? '').trim() && (
             <p dir="auto"><b>{t('hero_memory_idea')}</b> {game.partnerAnswers.inspired}</p>

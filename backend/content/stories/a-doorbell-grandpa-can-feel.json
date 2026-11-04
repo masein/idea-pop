@@ -101,5 +101,6 @@
     "question": "Which nature trick helped your signal most?",
     "options": ["🐘 Elephant ground rumbles", "🕷️ Spider web shakes", "🦂 Scorpion sand ripples", "✨ Firefly flashes"]
   },
-  "sticker": {"name": "Signal Maker", "emoji": "📳"}
+  "sticker": {"name": "Signal Maker", "emoji": "📳"},
+  "discovery": { "heroes": [{"intro":"A giant who listens with its feet!","feature":"Rumble-feeling feet"},{"intro":"A night hunter who feels footsteps in the sand!","feature":"Ripple-feeling legs"},{"intro":"A patient hunter who reads every shake of its web!","feature":"Silk-reading legs"},{"intro":"A little insect that talks with flashes of light!","feature":"Flash code"}] }
 }

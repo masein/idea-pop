@@ -100,5 +100,6 @@
     "question": "Which nature trick slowed your flyer down?",
     "options": ["🍁 Maple seed", "🌼 Dandelion seed", "🐿️ Flying squirrel", "🪽 Javan cucumber seed"]
   },
-  "sticker": { "name": "Sky Messenger", "emoji": "📬" }
+  "sticker": { "name": "Sky Messenger", "emoji": "📬" },
+  "discovery": { "heroes": [{"intro":"A seed that flies like a helicopter!","feature":"Spinning wing"},{"intro":"A tiny seed that rides the wind!","feature":"Fluffy crown"},{"intro":"A squirrel that sails between the trees!","feature":"Skin sail"},{"intro":"A seed that glides like a tiny plane!","feature":"Paper-thin wing"}] }
 }

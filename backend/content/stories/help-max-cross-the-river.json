@@ -27,7 +27,7 @@
     { "step": "celebrate_and_share", "label": "Chapter 8", "beat": "And ever since then…", "title": "Max crosses the river", "line": "Max crosses in minutes and walks into school on time." }
   ],
   "guide": {
-    "brief": "I'm PopAI, your story guide. Max has started thinking about what he could do. What about you? Can you help him? Let's start!",
+    "brief": "I'm Popi, your story guide. Max has started thinking about what he could do. What about you? Can you help him? Let's start!",
     "your_idea": "Some engineers already have a spark of an idea. Do you?",
     "nature_clues": "Nature solved this millions of years ago. Tap each card to meet four nature heroes that are great at staying on top of water!",
     "design_secret": "Here's the secret all four heroes share…",
@@ -45,8 +45,8 @@
     "wrong": "Not quite. Try 3 hours take away 10 minutes."
   },
   "clue_cards": [
-    { "name": "Water strider", "emoji": "🦟", "image": "/challenge/max/clues/water-strider.webp", "tagline": "Pond skater", "trick": "Long legs covered in tiny waxy hairs.", "does": "Spreads its weight so it stands on the water's skin without breaking it.", "group": "weight" },
-    { "name": "Fire ants", "emoji": "🐜", "image": "/challenge/max/clues/fire-ants.webp", "tagline": "Flood survivors", "trick": "They link their bodies into a living raft.", "does": "Air trapped between them keeps the colony afloat for days.", "group": "air" },
+    { "name": "Water strider", "emoji": "🦟", "image": "/challenge/max/clues/water-strider.webp", "tagline": "Pond skater", "trick": "Long legs covered in tiny water-repellent hairs.", "does": "Helps it stay on the water without sinking.", "group": "weight" },
+    { "name": "Fire ants", "emoji": "🐜", "image": "/challenge/max/clues/fire-ants.webp", "tagline": "Flood survivors", "trick": "They connect their bodies to form a living raft.", "does": "Trapped air helps them float for days.", "group": "air" },
     { "name": "Giant water lily", "emoji": "🪷", "image": "/challenge/max/clues/giant-water-lily.webp", "tagline": "Amazon river", "trick": "A huge, wide leaf with a strong network of ribs underneath.", "does": "It floats even with a small child sitting on it.", "group": "rim" },
     { "name": "Coconut", "emoji": "🥥", "image": "/challenge/max/clues/coconut.webp", "tagline": "Ocean traveller", "trick": "A thick, hairy husk full of air.", "does": "Floats across oceans for months and keeps the seed dry.", "group": "air" }
   ],
@@ -189,8 +189,8 @@
     "example": "Aluminum foil",
     "model_material": "Clay"
   },
-  "discovery": {
-    "clues_top": { "question": "How can we help Max cross the river?", "intro": "Nature solved this problem millions of years ago. Meet four Nature Heroes who are masters at staying afloat!" },
+  "discovery": { "heroes": [{"intro":"A champion of walking on ponds and lakes!","feature":"Water-repellent hairs","popi":{"question":"What does a water strider do?","does":"It stands on water!","how":"Its tiny, hairy legs help it stay afloat!"}},{"intro":"When floods come, fire ants team up to survive!","feature":"Living raft","popi":{"question":"What do fire ants do?","does":"They float together like a raft!","how":"They hold on to each other, and trapped air keeps them up!"}},{"intro":"An amazing plant with giant leaves that float on water!","feature":"Ribbed floating leaf","popi":{"question":"What does a giant water lily do?","does":"Its huge leaf floats on the water!","how":"Strong ribs under the leaf hold it up!"}},{"intro":"A champion of long ocean journeys, protecting its seed along the way!","feature":"Air-filled husk","popi":{"question":"What does a coconut do?","does":"It floats across the ocean!","how":"Its hairy husk is full of air!"}}], "help_goal": "help Max cross the river",
+    "clues_top": { "question": "How can we help Max cross the river?", "intro": "Nature solved this problem millions of years ago! Meet four Nature Heroes who are masters at staying afloat!" },
     "choose_hero_text": "You've discovered some amazing ways nature stays on water. Now choose the hero you like most to help Max solve his problem.",
     "materials": [
       "Modelling clay",
@@ -262,7 +262,7 @@
     },
     "rewards": { "mode": "badges" },
     "predict_intro": "Before testing something, we can make a prediction using what we already know and observe. A prediction doesn't have to be correct—we compare it with the result to learn more.",
-    "wh": {"name":"Quizzy","image": "/characters/quizzy.png","popi":"Meet Quizzy, our question explorer! Quizzy will show you how to understand a problem.","says":"Want to understand a problem better? Start with the right questions. WH Questions help us explore who is involved, what is happening, where and when it happens, and why it matters. They help us understand exactly what problem we’re trying to solve."},
+    "wh": {"name":"Quizi","image": "/characters/quizzy.png","popi":"Meet Quizi, our question explorer! Quizi will show you how to understand a problem.","says":"Want to understand a problem better? Start with the right questions. WH Questions help us explore who is involved, what is happening, where and when it happens, and why it matters. They help us understand exactly what problem we’re trying to solve."},
     "puzzle": {
       "title": "Build the Mission",
       "intro": "Tap a question and then its matching clue, or tap a clue first and then find its question.",

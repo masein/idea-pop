@@ -100,5 +100,6 @@
     "question": "Which nature hero did your fog catcher copy?",
     "options": ["🪲 Desert beetle", "🦎 Thorny devil", "🕸️ Spider silk", "🌵 Cactus"]
   },
-  "sticker": { "name": "Fog Catcher", "emoji": "🌫️" }
+  "sticker": { "name": "Fog Catcher", "emoji": "🌫️" },
+  "discovery": { "heroes": [{"intro":"A desert beetle that drinks from the fog!","feature":"Fog-catching bumps"},{"intro":"A spiky lizard that drinks through its skin!","feature":"Skin channels"},{"intro":"A thread that collects sparkling drops!","feature":"Silk knots"},{"intro":"A prickly plant that catches the fog!","feature":"Grooved spines"}] }
 }

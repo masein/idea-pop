@@ -42,7 +42,7 @@ export default function MissionHelper({
   const [question, setQuestion] = useState('');
   const [phase, setPhase] = useState<Phase>('idle');
   const [answer, setAnswer] = useState('');
-  const [errorKey, setErrorKey] = useState<'rate_limited' | 'not_allowed' | 'error'>('error');
+  const [errorKey, setErrorKey] = useState<'rate_limited' | 'not_allowed' | 'not_ready' | 'error'>('error');
 
   async function handleAsk() {
     const q = question.trim();
@@ -54,7 +54,7 @@ export default function MissionHelper({
       setPhase(res.blocked ? 'blocked' : 'answered');
     } catch (e) {
       const code = (e as Error & { code?: string }).code;
-      setErrorKey(code === 'rate_limited' ? 'rate_limited' : code === 'not_allowed' ? 'not_allowed' : 'error');
+      setErrorKey(code === 'rate_limited' || code === 'not_allowed' || code === 'not_ready' ? code : 'error');
       setPhase('error');
     }
   }

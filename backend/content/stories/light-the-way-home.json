@@ -259,5 +259,6 @@
   "sticker": {
     "name": "Night Guide",
     "emoji": "🌙"
-  }
+  },
+  "discovery": { "heroes": [{"intro":"A little lantern that flies at night!","feature":"Cool glow"},{"intro":"A cave insect that shines like the stars!","feature":"Glowing lure"},{"intro":"A night walker with shining eyes!","feature":"Mirror eyes"},{"intro":"A silver fish that flashes in the sea!","feature":"Mirror scales"}] }
 }

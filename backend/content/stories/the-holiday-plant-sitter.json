@@ -102,5 +102,6 @@
     "question": "Which nature trick kept your plant watered?",
     "options": ["🌳 Tree's thin tubes", "🌵 Cactus water store", "🌿 Moss sponge", "🐪 Camel water saver"]
   },
-  "sticker": { "name": "Plant Sitter", "emoji": "🪴" }
+  "sticker": { "name": "Plant Sitter", "emoji": "🪴" },
+  "discovery": { "heroes": [{"intro":"A tall giant that drinks without a pump!","feature":"Thin water tubes"},{"intro":"A desert plant that saves water for later!","feature":"Stretchy pleats"},{"intro":"A soft green sponge on the forest floor!","feature":"Spongy leaves"},{"intro":"A desert traveller who never wastes a drop!","feature":"Water-saving nose"}] }
 }

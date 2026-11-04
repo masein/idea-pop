@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { useTranslations } from 'next-intl';
+import Inspired from '@/components/characters/Inspired';
 import { btnPrimary, btnSecondary } from '@/components/challenge/buttons';
 
 const card =
@@ -73,7 +74,7 @@ export default function StepIdeaFork({
               className="h-44 w-44 object-contain drop-shadow-[0_8px_10px_rgba(0,0,0,0.18)] transition-transform duration-[800ms] ease-out group-hover:-rotate-3 group-hover:scale-105 sm:h-52 sm:w-52"
             />
           </span>
-          <span className="font-display text-2xl text-ink">{t('fork_no_title')}</span>
+          <span className="font-display text-2xl text-ink"><Inspired text={t('fork_no_title')} /></span>
           <span className={`${btnPrimary} pointer-events-none`}>{t('fork_no_sub')}</span>
         </button>
       </div>

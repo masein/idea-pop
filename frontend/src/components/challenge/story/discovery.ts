@@ -21,7 +21,7 @@ export interface CompanionData {
   hint: string;
 }
 
-/** The WH Questions character (Quizzy) who explains the tool on the Mission Brief. */
+/** The WH Questions character (Quizi) who explains the tool on the Mission Brief. */
 export interface WhCharacter {
   name: string;
   popi: string;
@@ -43,15 +43,31 @@ export interface PartnerLesson {
   hint?: { text: string; ask: string };
 }
 
+/** What a Nature Hero's card and video add to its clue card (same order as the clue cards). */
+export interface HeroExtra {
+  /** One short sentence about the hero, on the front of its card. */
+  intro?: string;
+  /** The name after "Special Feature:" at the end of its video. */
+  feature?: string;
+  /** Its video, once it exists. Until then its Asset ID holds the spot. */
+  video?: string | null;
+  /** Popi's two answered questions; without them the card's own words are used. */
+  popi?: { question?: string; does?: string; how?: string };
+}
+
 export interface Discovery {
   /** This challenge's picture set in the Master Asset Manifest (e.g. CHALLENGE-SET-021). */
   asset_set?: string;
   /** The challenge card's cover picture (no text boxes in it). */
   cover?: string | null;
   /** Under "Choose Your Nature Hero": what the kid has just discovered. */
-  /** The top of Nature Clues: PopAI repeats the mission question, then the intro under it. */
+  /** The top of Nature Clues: Popi repeats the mission question, then the intro under it. */
   clues_top?: { question: string; intro: string };
   choose_hero_text?: string;
+  /** One per clue card, in the same order. */
+  heroes?: HeroExtra[];
+  /** Ends Popi's last question: "How could you use this trick to …?" */
+  help_goal?: string;
   /** What the build needs, shown on the challenge card's back. */
   materials?: string[];
   /** "Think like your partner": one lesson per clue card, in the same order. */
@@ -78,6 +94,10 @@ export interface Discovery {
 export function heroShort(story: MissionStory | null | undefined): string {
   const d = discoveryOf(story) as (Discovery & { hero_short?: string }) | null;
   return d?.hero_short ?? story?.hero.name ?? '';
+}
+
+export function heroExtra(story: MissionStory | null | undefined, index: number): HeroExtra | null {
+  return discoveryOf(story)?.heroes?.[index] ?? null;
 }
 
 export function discoveryOf(story: MissionStory | null | undefined): Discovery | null {

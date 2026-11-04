@@ -9,6 +9,7 @@ import riverScene from "../../../../../public/landing/try-mission-river.webp";
 import thinkingBoy from "../../../../../public/landing/thinking-tools-avatar.png";
 import robot from "../../../../../public/landing/robot.png";
 import scientistGirl from "../../../../../public/landing/start-free-girl.png";
+import { InspiredWord } from "@/components/characters/Inspired";
 
 const ACCENT = "#1B79B0"; // readable blue accent
 const BTN = "#2D9CDB"; // challenge blue
@@ -22,6 +23,7 @@ export default function ChallengeExperience() {
 
   // rich-text renderers for <b> (blue accent) and <g> (green accent)
   const rich = {
+    i: (chunks: React.ReactNode) => <InspiredWord>{chunks}</InspiredWord>,
     b: (chunks: React.ReactNode) => (
       <span className="font-bold" style={{ color: ACCENT }}>
         {chunks}

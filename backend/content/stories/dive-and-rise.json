@@ -103,5 +103,6 @@
     "question": "Which nature trick helped your diver?",
     "options": ["🐟 Fish swim bladder", "🐚 Nautilus chambers", "🪲 Diving beetle bubble", "🐋 Sperm whale oil"]
   },
-  "sticker": { "name": "Deep Diver", "emoji": "🤿" }
+  "sticker": { "name": "Deep Diver", "emoji": "🤿" },
+  "discovery": { "heroes": [{"intro":"A swimmer that can hover anywhere it likes!","feature":"Swim bladder"},{"intro":"An ancient sea animal with a spiral home!","feature":"Gas chambers"},{"intro":"A beetle that carries its own air bubble!","feature":"Air bubble"},{"intro":"A deep-sea diving champion!","feature":"Oil-filled head"}] }
 }

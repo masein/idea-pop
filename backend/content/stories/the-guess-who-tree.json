@@ -102,5 +102,6 @@
     "question": "AI check: what could go wrong if a tree like yours decided something important, and someone's answer didn't fit any branch?",
     "options": ["❌ They'd get the wrong answer", "🚧 The tree would get stuck", "🧑‍🏫 A person should double-check", "🌱 Add a new branch for them"]
   },
-  "sticker": { "name": "Question Master", "emoji": "🌳" }
+  "sticker": { "name": "Question Master", "emoji": "🌳" },
+  "discovery": { "heroes": [{"intro":"A detective for finding out what is wrong!","feature":"One question at a time"},{"intro":"A question game for naming any leaf!","feature":"Yes-or-no questions"},{"intro":"A guard that keeps junk out of your inbox!","feature":"Decision tree"},{"intro":"Game champions who ask the smartest questions!","feature":"Half-the-board questions"}] }
 }

@@ -5,11 +5,6 @@ import { NextIntlClientProvider, useLocale, useMessages, useNow, useTimeZone } f
 
 type Messages = { [key: string]: string | Messages };
 
-function rename(value: string | Messages): string | Messages {
-  if (typeof value === 'string') return value.replace(/Popi/g, 'PopAI').replace(/پاپی|پوپی/g, 'پاپ‌آی');
-  return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, rename(v)]));
-}
-
 function merge(base: Messages, extra: Messages): Messages {
   const out: Messages = { ...base };
   for (const [k, v] of Object.entries(extra)) {
@@ -20,8 +15,7 @@ function merge(base: Messages, extra: Messages): Messages {
 }
 
 /**
- * Template challenges call their guide PopAI (پاپ‌آی) everywhere — labels, messages, popups and
- * accessibility text — and uses a few lines of its own (messages.template_overrides). Only template
+ * Template challenges use a few lines of their own (messages.template_overrides). Only template
  * challenges' pages are wrapped, so the rest of the app keeps its wording.
  */
 export default function GuideNameMessages({ enabled, children }: { enabled: boolean; children: ReactNode }) {
@@ -33,7 +27,7 @@ export default function GuideNameMessages({ enabled, children }: { enabled: bool
   const swapped = useMemo(() => {
     if (!enabled) return messages;
     const overrides = (messages.template_overrides as Messages | undefined) ?? {};
-    return merge(rename(messages) as Messages, overrides);
+    return merge(messages, overrides);
   }, [enabled, messages]);
   return (
     <NextIntlClientProvider locale={locale} messages={swapped} now={now} timeZone={timeZone}>

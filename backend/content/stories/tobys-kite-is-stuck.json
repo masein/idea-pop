@@ -103,5 +103,6 @@
     "question": "Which nature trick helped your grabber grip?",
     "options": ["🦎 Gecko", "🐸 Tree frog", "👅 Chameleon", "🐘 Elephant"]
   },
-  "sticker": { "name": "Kite Rescuer", "emoji": "🪁" }
+  "sticker": { "name": "Kite Rescuer", "emoji": "🪁" },
+  "discovery": { "heroes": [{"intro":"A lizard that walks up walls!","feature":"Tiny toe hairs"},{"intro":"A little climber that never slips on wet leaves!","feature":"Soft toe pads"},{"intro":"A hunter with the fastest tongue around!","feature":"Sticky tongue tip"},{"intro":"A giant with the gentlest grip in the wild!","feature":"Finger-like trunk tip"}] }
 }

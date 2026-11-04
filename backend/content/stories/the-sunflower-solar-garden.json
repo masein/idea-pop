@@ -103,5 +103,6 @@
     "question": "Which nature trick caught the most light for you?",
     "options": ["🌻 Sunflower turning", "🌀 Golden angle spiral", "🍃 Ivy leaf mosaic", "🌳 Forest layers"]
   },
-  "sticker": {"name": "Sun Catcher", "emoji": "☀️"}
+  "sticker": {"name": "Sun Catcher", "emoji": "☀️"},
+  "discovery": { "heroes": [{"intro":"A tall flower that follows the sun!","feature":"Sun-tracking head"},{"intro":"Seeds packed in a perfect spiral!","feature":"Spiral pattern"},{"intro":"A climbing plant that shares the light!","feature":"Leaf mosaic"},{"intro":"A leafy city built in layers!","feature":"Layers of leaves"}] }
 }

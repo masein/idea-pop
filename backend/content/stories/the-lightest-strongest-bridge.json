@@ -295,5 +295,6 @@
   "sticker": {
     "name": "Load Master",
     "emoji": "🏋️"
-  }
+  },
+  "discovery": { "heroes": [{"intro":"A bone made for flying!","feature":"Inner struts"},{"intro":"The tiny struts hiding inside your bones!","feature":"Force-following struts"},{"intro":"An amazing plant with giant leaves that float on water!","feature":"Rib web"},{"intro":"A tiny bridge builder with super-strong thread!","feature":"Tight silk"}] }
 }

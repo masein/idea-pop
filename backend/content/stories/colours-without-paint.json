@@ -277,5 +277,6 @@
   "sticker": {
     "name": "Colour Scientist",
     "emoji": "🌈"
-  }
+  },
+  "discovery": { "heroes": [{"intro":"A butterfly that glows blue with no blue paint!","feature":"Wing ridges"},{"intro":"A bird famous for its shimmering tail!","feature":"Colour rods"},{"intro":"A beetle that shines like a jewel!","feature":"Thin shell layers"},{"intro":"A stone with a rainbow hiding inside!","feature":"Stacked spheres"}] }
 }

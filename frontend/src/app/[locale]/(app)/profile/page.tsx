@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
+import Inspired from '@/components/characters/Inspired';
 import { useAgeMode } from '@/lib/hooks/useAgeMode';
 import { fetchKidProgress, fetchMyProjects } from '@/lib/api/client';
 import { levelProgress } from '@/lib/progress';
@@ -193,7 +194,7 @@ export default function ProfilePage() {
             {t('xp_source_heading', { count: 3 })}
           </h2>
           <p className="font-body font-semibold text-ink/70">
-            {t('adventures_sub')}
+            <Inspired text={t('adventures_sub')} />
           </p>
 
           <button

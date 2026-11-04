@@ -104,5 +104,6 @@
     "question": "AI check: what could go wrong if you rewarded the wrong thing, like rewarding speed but not safety?",
     "options": ["💥 It rushes into traps", "🏃 It takes risky shortcuts", "🛡️ Reward safety too!", "🔍 Watch what it really learns"]
   },
-  "sticker": { "name": "Pet Trainer", "emoji": "🐭" }
+  "sticker": { "name": "Pet Trainer", "emoji": "🐭" },
+  "discovery": { "heroes": [{"intro":"A furry student who loves a treat!","feature":"Treat rewards"},{"intro":"Game masters that taught themselves!","feature":"Self-play"},{"intro":"Robots learning their first steps!","feature":"Trial and error"},{"intro":"Game players that learn as they go!","feature":"Points and lives"}] }
 }

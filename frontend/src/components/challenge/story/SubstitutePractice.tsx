@@ -9,6 +9,8 @@ import { EMPTY_SUBST } from './useMissionGame';
 import { createProject, getIdeaFeedback } from '@/lib/api/client';
 import { btnPrimary, btnSecondary, btnText } from '@/components/challenge/buttons';
 import AssetSlot from '@/components/AssetSlot';
+import Inspired, { MeetCharacter } from '@/components/characters/Inspired';
+import { CHARACTER_NAMES, useFirstMeet } from '@/lib/characters';
 
 interface Props {
   challengeId: string;
@@ -146,12 +148,15 @@ export default function SubstitutePractice({
  *  Scamper's picture. */
 function ScamperSays({ text }: { text: string }) {
   const t = useTranslations('story');
+  useFirstMeet('scamper');
   return (
     <div data-testid="scamper-says" className="flex items-end gap-3">
-      <span className="h-20 w-20 shrink-0"><AssetSlot id="SCAMPER-CHAR-001" className="!rounded-full" /></span>
+      <MeetCharacter character="scamper" label={t('meet_character', { name: CHARACTER_NAMES.scamper })} className="h-20 w-20">
+        <AssetSlot id="SCAMPER-CHAR-001" className="!rounded-full" />
+      </MeetCharacter>
       <div className="relative min-w-0 flex-1 rounded-[18px] bg-white px-4 py-3 shadow-sm">
         <p className="font-body text-sm font-bold text-challenge">{t('scamper_says')}</p>
-        <p className="font-body text-lg font-semibold leading-snug text-ink">{text}</p>
+        <p className="font-body text-lg font-semibold leading-snug text-ink"><Inspired text={text} /></p>
       </div>
     </div>
   );

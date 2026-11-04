@@ -99,5 +99,6 @@
     "question": "Which nature trick helped you find things in the dark?",
     "options": ["🦇 Bat clicks", "🐬 Dolphin sonar", "🐦 Oilbird cave clicks", "🦉 Owl ears"]
   },
-  "sticker": { "name": "Echo Finder", "emoji": "🦇" }
+  "sticker": { "name": "Echo Finder", "emoji": "🦇" },
+  "discovery": { "heroes": [{"intro":"A night flyer that sees with its ears!","feature":"Echo clicks"},{"intro":"A smart swimmer that hunts with sound!","feature":"Forehead clicks"},{"intro":"A cave bird that clicks its way through the dark!","feature":"Cave clicks"},{"intro":"A silent hunter with amazing hearing!","feature":"Uneven ears"}] }
 }

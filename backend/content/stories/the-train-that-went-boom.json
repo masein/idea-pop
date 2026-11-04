@@ -102,5 +102,6 @@
     "question": "Which nature hero inspired your train's nose?",
     "options": ["🐦 Kingfisher", "🐬 Dolphin", "🦉 Owl", "🦈 Shark"]
   },
-  "sticker": { "name": "Quiet Engineer", "emoji": "🚄" }
+  "sticker": { "name": "Quiet Engineer", "emoji": "🚄" },
+  "discovery": { "heroes": [{"intro":"A bird that dives with barely a splash!","feature":"Wedge-shaped beak"},{"intro":"A smooth swimmer built for speed!","feature":"Rounded head"},{"intro":"A hunter that flies in near silence!","feature":"Comb-edged wings"},{"intro":"A fast swimmer in super-smooth armour!","feature":"Tooth-like scales"}] }
 }

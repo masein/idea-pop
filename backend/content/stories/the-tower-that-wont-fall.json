@@ -295,5 +295,6 @@
   "sticker": {
     "name": "Wind Tamer",
     "emoji": "🌬️"
-  }
+  },
+  "discovery": { "heroes": [{"intro":"A super-tall grass that stays standing!","feature":"Solid rings"},{"intro":"A thin stem that springs back after every storm!","feature":"Springy stem"},{"intro":"A tall tree that dances in the storm!","feature":"Bendy trunk"},{"intro":"A tower built by tiny insects!","feature":"Wide, heavy base"}] }
 }

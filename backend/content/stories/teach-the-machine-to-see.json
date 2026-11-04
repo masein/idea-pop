@@ -102,5 +102,6 @@
     "question": "AI check: your classifier learned from your pictures. Would it still work on someone else's photos?",
     "options": ["✅ Yes, if my examples were varied", "🤔 Maybe, if their light is similar", "❌ Not if their photos look very different", "🧪 Let's test it and see"]
   },
-  "sticker": { "name": "Machine Teacher", "emoji": "👁️" }
+  "sticker": { "name": "Machine Teacher", "emoji": "👁️" },
+  "discovery": { "heroes": [{"intro":"Your own brain is a super spotter!","feature":"Lots of practice"},{"intro":"A little camera that knows a cat from a car!","feature":"Example photos"},{"intro":"Computers learning to help doctors!","feature":"Labelled X-rays"},{"intro":"An app that knows the names of flowers!","feature":"Petals and leaf edges"}] }
 }

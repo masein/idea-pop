@@ -103,5 +103,5 @@
     "options": ["🌲 Pine cone", "🌾 Wild wheat", "🌵 Ice plant", "🐸 Frog"]
   },
   "sticker": { "name": "Weather Watcher", "emoji": "🌸" },
-  "discovery": { "heroes": [{"intro":"A woody cone that knows when it is damp!","feature":"Two-layer scales"},{"intro":"A seed that rows itself into the ground!","feature":"Bending bristles"},{"intro":"A desert plant that waits for rain!","feature":"Rain-opened capsule"},{"intro":"A pond singer who loves damp air!","feature":"Thin skin"}] }
+  "discovery": { "heroes": [{"intro":"A woody cone that knows when it is damp!"},{"intro":"A seed that rows itself into the ground!"},{"intro":"A desert plant that waits for rain!"},{"intro":"A pond singer who loves damp air!"}] }
 }

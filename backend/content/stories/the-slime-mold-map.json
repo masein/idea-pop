@@ -275,5 +275,5 @@
     "name": "Network Architect",
     "emoji": "🕸️"
   },
-  "discovery": { "heroes": [{"intro":"A brainless blob that solves mazes!","feature":"Busy tubes"},{"intro":"Tiny roads carrying water through a leaf!","feature":"Looping veins"},{"intro":"A colony that always finds the short way!","feature":"Stronger scent"},{"intro":"A secret network under the forest!","feature":"Growing threads"}] }
+  "discovery": { "heroes": [{"intro":"A brainless blob that solves mazes!"},{"intro":"Tiny roads carrying water through a leaf!"},{"intro":"A colony that always finds the short way!"},{"intro":"A secret network under the forest!"}] }
 }

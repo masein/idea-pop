@@ -104,5 +104,5 @@
     "options": ["🪱 Earthworm soil maker", "🍄 Fungi wood melter", "🪲 Dung beetle roller", "🍂 Forest floor team"]
   },
   "sticker": { "name": "Loop Closer", "emoji": "♻️" },
-  "discovery": { "heroes": [{"intro":"A wiggly gardener under the ground!","feature":"Rich castings"},{"intro":"Nature’s quiet recyclers!","feature":"Tiny threads"},{"intro":"A strong little beetle that rolls big balls!","feature":"Rolling and burying"},{"intro":"A place where nothing goes to waste!","feature":"Sharing out food"}] }
+  "discovery": { "heroes": [{"intro":"A wiggly gardener under the ground!"},{"intro":"Nature’s quiet recyclers!"},{"intro":"A strong little beetle that rolls big balls!"},{"intro":"A place where nothing goes to waste!"}] }
 }

@@ -106,5 +106,5 @@
     "options": ["🍃 Hornbeam pleats", "🐞 Ladybird wing tuck", "🌺 Poppy crumple", "🦇 Bat wing frame"]
   },
   "sticker": {"name": "Fold Master", "emoji": "🪭"},
-  "discovery": { "heroes": [{"intro":"A leaf that opens like a paper fan!","feature":"Zigzag pleats"},{"intro":"A little beetle with big hidden wings!","feature":"Folding creases"},{"intro":"A flower that pops out of a tiny bud!","feature":"Crumpled petals"},{"intro":"A night flyer that folds up like an umbrella!","feature":"Finger-bone wings"}] }
+  "discovery": { "heroes": [{"intro":"A leaf that opens like a paper fan!"},{"intro":"A little beetle with big hidden wings!"},{"intro":"A flower that pops out of a tiny bud!"},{"intro":"A night flyer that folds up like an umbrella!"}] }
 }

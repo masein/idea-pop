@@ -104,5 +104,5 @@
     "options": ["🍁 Maple spin", "🌼 Dandelion parachute", "🍃 Zanonia glide", "🐿️ Squirrel sail"]
   },
   "sticker": { "name": "Seed Pilot", "emoji": "🍁" },
-  "discovery": { "heroes": [{"intro":"A seed that flies like a helicopter!","feature":"Spinning wing"},{"intro":"A tiny seed with its own parachute!","feature":"Fluffy parachute"},{"intro":"A seed that glides in big, slow circles!","feature":"Wide gliding wings"},{"intro":"A squirrel that sails between the trees!","feature":"Skin sail"}] }
+  "discovery": { "heroes": [{"intro":"A seed that flies like a helicopter!"},{"intro":"A tiny seed with its own parachute!"},{"intro":"A seed that glides in big, slow circles!"},{"intro":"A squirrel that sails between the trees!"}] }
 }

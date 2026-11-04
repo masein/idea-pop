@@ -1,13 +1,15 @@
 'use client';
 
 import { useContext, useEffect, useRef, useState } from 'react';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import AssetSlot, { AssetScope } from '@/components/AssetSlot';
 import { CharacterArt } from '@/components/characters/CharacterDialogHost';
 import Inspired, { MeetCharacter } from '@/components/characters/Inspired';
 import { btnPrimary, btnText } from '@/components/challenge/buttons';
 import { CHARACTER_NAMES, useFirstMeet } from '@/lib/characters';
 import { deleteVoiceNote, loadVoiceNote, saveVoiceNote } from '@/lib/voiceNotes';
+import { submitHeroIdea } from '@/lib/api/client';
+import IdeaReviewDialog, { type IdeaReviewState } from './IdeaReview';
 import { Character3D, Popi } from './StoryBits';
 import { discoveryOf, heroExtra, heroShort, type CompanionData, type PartnerLesson } from './discovery';
 import type { MissionStory } from './types';
@@ -69,7 +71,6 @@ export default function HeroJourney({
         card={card}
         index={index}
         videoUrl={extra?.video ?? null}
-        feature={extra?.feature ?? card.tagline}
         showNext={!watched}
         onNext={() => update((g) => ({ partnerDone: [...g.partnerDone, 'video'] }))}
       />
@@ -79,6 +80,8 @@ export default function HeroJourney({
           <Popi text={lines.join('\n')} keepLines />
           <HeroAnswer
             key={`${workKey}-${index}`}
+            challengeId={workKey}
+            heroIndex={index}
             voiceKey={`${workKey}:${index}`}
             label={t('hero_answer_label')}
             value={game.partnerAnswers?.inspired ?? ''}
@@ -102,14 +105,12 @@ function HeroVideo({
   card,
   index,
   videoUrl,
-  feature,
   showNext,
   onNext,
 }: {
   card: ClueCard;
   index: number;
   videoUrl: string | null;
-  feature: string;
   showNext: boolean;
   onNext: () => void;
 }) {
@@ -147,9 +148,10 @@ function HeroVideo({
           )}
         </div>
       )}
+      {/* Every hero's video ends on its card's own Trick sentence (one source for both). */}
       {!opening && ended && (
-        <p data-testid="hero-special-feature" className="story-pop rounded-pill bg-[#1A6FA6] px-5 py-2 text-center font-body text-base font-extrabold text-white">
-          {t('special_feature', { feature })}
+        <p data-testid="hero-video-ending" className="story-pop max-w-xl rounded-[16px] bg-[#1A6FA6] px-5 py-3 text-center font-body text-lg font-bold leading-snug text-white">
+          {card.trick}
         </p>
       )}
       {!opening && showNext && (
@@ -189,6 +191,8 @@ type Recording = 'idle' | 'recording' | 'denied';
 
 /** The kid's one answer: a sentence or two, typed or spoken. */
 function HeroAnswer({
+  challengeId,
+  heroIndex,
   voiceKey,
   label,
   value,
@@ -199,6 +203,8 @@ function HeroAnswer({
   hint,
   peek,
 }: {
+  challengeId: string;
+  heroIndex: number;
   voiceKey: string;
   label: string;
   value: string;
@@ -211,7 +217,10 @@ function HeroAnswer({
   peek: string;
 }) {
   const t = useTranslations('story');
+  const locale = useLocale();
   const [hintOpen, setHintOpen] = useState(false);
+  const [review, setReview] = useState<IdeaReviewState | null>(null);
+  const [reviewOpen, setReviewOpen] = useState(false);
   const [recording, setRecording] = useState<Recording>('idle');
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const recorder = useRef<MediaRecorder | null>(null);
@@ -276,6 +285,28 @@ function HeroAnswer({
     if (value === t('voice_answer_text')) onChange('');
   }
 
+  /** Saves the idea, as it stands, on the server, and shows Conspy's review. Progress never waits for this. */
+  async function sendForReview() {
+    setReview({ kind: 'saving' });
+    setReviewOpen(true);
+    const voiceOnly = value === t('voice_answer_text');
+    try {
+      const idea = await submitHeroIdea(challengeId, {
+        text: voiceOnly ? '' : value.trim(),
+        hero_index: heroIndex,
+        has_voice: !!audioUrl,
+        lang: locale,
+      });
+      setReview({ kind: 'saved', idea });
+    } catch {
+      setReview({ kind: 'failed' });
+    }
+  }
+
+  const dialog = review && reviewOpen && (
+    <IdeaReviewDialog state={review} onRetry={() => void sendForReview()} onClose={() => setReviewOpen(false)} />
+  );
+
   const player = audioUrl && (
     // eslint-disable-next-line jsx-a11y/media-has-caption -- the kid's own voice note
     <audio data-testid="hero-voice-player" src={audioUrl} controls className="w-full max-w-sm" />
@@ -291,6 +322,12 @@ function HeroAnswer({
         <button type="button" data-testid="hero-answer-revise" onClick={onRevise} className={`${btnText} self-start !px-0`}>
           {t('partner_revise')}
         </button>
+        {review && (
+          <button type="button" data-testid="idea-review-open" onClick={() => setReviewOpen(true)} className={`${btnText} self-start !px-0`}>
+            {t('review_open')}
+          </button>
+        )}
+        {dialog}
       </section>
     );
   }
@@ -301,7 +338,9 @@ function HeroAnswer({
       className="flex flex-col gap-2 rounded-xl border-2 border-[#1A6FA6] bg-white p-4 shadow-[0_4px_14px_rgba(45,156,219,0.18)]"
       onSubmit={(e) => {
         e.preventDefault();
-        if (ready) onSubmit();
+        if (!ready) return;
+        onSubmit();
+        void sendForReview();
       }}
     >
       <label htmlFor="hero-answer-input" className="font-body text-base font-bold text-ink">
@@ -327,7 +366,7 @@ function HeroAnswer({
       )}
       <div className="flex flex-wrap items-center gap-3">
         <button type="submit" data-testid="hero-answer-submit" disabled={!ready || recording === 'recording'} className={btnPrimary}>
-          {t('define_check')}
+          {t('hero_review')}
         </button>
         {canRecord && (
           <button

@@ -289,5 +289,5 @@
     "name": "Nature Inventor",
     "emoji": "🏅"
   },
-  "discovery": { "heroes": [{"intro":"A clever digger who found a way to get fresh air!","feature":"Two-height burrow"},{"intro":"A bird that dives with barely a splash!","feature":"Pointed beak"},{"intro":"A prickly plant that gave us a famous idea!","feature":"Tiny hooks"},{"intro":"A tower that keeps its builders cool!","feature":"Air tunnels"}] }
+  "discovery": { "heroes": [{"intro":"A clever digger who found a way to get fresh air!"},{"intro":"A bird that dives with barely a splash!"},{"intro":"A prickly plant that gave us a famous idea!"},{"intro":"A tower that keeps its builders cool!"}] }
 }

@@ -101,5 +101,5 @@
     "options": ["🐜 Ant step counting", "🐝 Bee landmarks", "🐢 Turtle compass", "🐟 Salmon smell trail"]
   },
   "sticker": { "name": "Pathfinder", "emoji": "🧭" },
-  "discovery": { "heroes": [{"intro":"A little walker that never gets lost!","feature":"Step counting"},{"intro":"A busy flyer with a great memory!","feature":"Landmark memory"},{"intro":"An ocean traveller who always finds home!","feature":"Magnet sense"},{"intro":"A fish that smells its way home!","feature":"Smell memory"}] }
+  "discovery": { "heroes": [{"intro":"A little walker that never gets lost!"},{"intro":"A busy flyer with a great memory!"},{"intro":"An ocean traveller who always finds home!"},{"intro":"A fish that smells its way home!"}] }
 }

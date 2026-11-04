@@ -17,33 +17,46 @@ export type CharacterDialog = { kind: 'intro'; character: CharacterKey } | { kin
 
 type Listener = (current: CharacterDialog | null) => void;
 
-// One dialog at a time for the whole app: anything asked for meanwhile waits its turn.
+// One dialog at a time for the whole app: anything asked for meanwhile waits its turn, and none
+// opens while Popi is speaking. One already open stays open.
 let queue: CharacterDialog[] = [];
+let current: CharacterDialog | null = null;
+let speaking = 0;
 const listeners = new Set<Listener>();
 
 const same = (a: CharacterDialog, b: CharacterDialog) =>
   a.kind === b.kind && (a.kind !== 'intro' || (b.kind === 'intro' && a.character === b.character));
 
 function emit() {
-  listeners.forEach((l) => l(queue[0] ?? null));
+  if (!current && speaking === 0 && queue.length > 0) {
+    [current] = queue;
+    queue = queue.slice(1);
+  }
+  listeners.forEach((l) => l(current));
+}
+
+/** Popi's voice reports here: audio started (true) or finished or stopped (false). */
+export function markSpeech(active: boolean) {
+  speaking = Math.max(0, speaking + (active ? 1 : -1));
+  emit();
 }
 
 function show(dialog: CharacterDialog) {
-  if (queue.some((d) => same(d, dialog))) return;
+  if ((current && same(current, dialog)) || queue.some((d) => same(d, dialog))) return;
   queue = [...queue, dialog];
   emit();
 }
 
 export function subscribeCharacterDialog(listener: Listener) {
   listeners.add(listener);
-  listener(queue[0] ?? null);
+  emit();
   return () => {
     listeners.delete(listener);
   };
 }
 
 export function closeCharacterDialog() {
-  queue = queue.slice(1);
+  current = null;
   emit();
 }
 
@@ -85,9 +98,10 @@ export function markCharacterMet(character: CharacterKey) {
   }
 }
 
-/** The first time this character appears for this kid, it introduces itself. */
-export function useFirstMeet(character: CharacterKey) {
+/** The first time this character appears for this kid, it introduces itself: once `ready`, when
+ *  the screen has something to finish saying first. */
+export function useFirstMeet(character: CharacterKey, ready = true) {
   useEffect(() => {
-    if (!hasMetCharacter(character)) showCharacterIntro(character);
-  }, [character]);
+    if (ready && !hasMetCharacter(character)) showCharacterIntro(character);
+  }, [character, ready]);
 }

@@ -264,5 +264,5 @@
     "name": "Whale Engineer",
     "emoji": "🐋"
   },
-  "discovery": { "heroes": [{"intro":"A huge swimmer with surprisingly bumpy flippers!","feature":"Flipper bumps"},{"intro":"A hunter that flies in near silence!","feature":"Comb-edged feathers"},{"intro":"A seed that flies like a helicopter!","feature":"Edge swirl"},{"intro":"An ancient flyer with amazing wings!","feature":"Pleated wings"}] }
+  "discovery": { "heroes": [{"intro":"A huge swimmer with surprisingly bumpy flippers!"},{"intro":"A hunter that flies in near silence!"},{"intro":"A seed that flies like a helicopter!"},{"intro":"An ancient flyer with amazing wings!"}] }
 }

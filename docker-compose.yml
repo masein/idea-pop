@@ -43,6 +43,7 @@ services:
       # root .env via compose substitution (never put the real METIS_API_KEY
       # in a tracked file). Empty = unset to the server. See docs/runbook §9.
       MISSION_HELPER_ENABLED: ${MISSION_HELPER_ENABLED:-false}
+      IDEA_REVIEW_OWNER: ${IDEA_REVIEW_OWNER:-ai}
       METIS_API_KEY: ${METIS_API_KEY:-}
       METIS_BASE_URL: ${METIS_BASE_URL:-}
       METIS_MODEL: ${METIS_MODEL:-}

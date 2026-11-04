@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { planNarration } from '@/lib/narration';
+import { markSpeech } from '@/lib/characters';
 
 /** Recorded lines (ElevenLabs, made by scripts/generate-popi-voice.mjs): lang → exact line → file. */
 type Manifest = Record<string, Record<string, string>>;
@@ -34,6 +35,13 @@ export function usePopiVoice(locale: string) {
   const run = useRef(0);
   const timer = useRef<number | null>(null);
   const audio = useRef<HTMLAudioElement | null>(null);
+
+  // Character dialogs wait while Popi is really speaking (from the audio's own end events).
+  useEffect(() => {
+    if (!speaking) return;
+    markSpeech(true);
+    return () => markSpeech(false);
+  }, [speaking]);
 
   useEffect(() => {
     let alive = true;

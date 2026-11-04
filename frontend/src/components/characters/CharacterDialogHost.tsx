@@ -69,7 +69,7 @@ export default function CharacterDialogHost() {
       >
         {dialog.kind === 'intro' && <CharacterArt character={dialog.character} className="h-36 w-36" />}
         <h2 dir="auto" className="font-display text-2xl text-challenge">{title}</h2>
-        <p className="font-body text-lg font-semibold leading-snug text-ink">
+        <p className="whitespace-pre-line font-body text-lg font-semibold leading-snug text-ink">
           {dialog.kind === 'intro' ? t(`intro_${dialog.character}`) : t('inspiration_text')}
         </p>
         <button ref={buttonRef} type="button" data-testid="character-got-it" onClick={close} className={btnPrimary}>

@@ -476,7 +476,7 @@ fn blocked_response() -> Response {
 }
 
 /// Append one exchange to the append-only transcript.
-async fn log_exchange(
+pub(crate) async fn log_exchange(
     state: &AppState,
     child_id: Uuid,
     challenge_id: Uuid,

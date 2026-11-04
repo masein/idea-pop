@@ -105,5 +105,5 @@
     "options": ["💥 It rushes into traps", "🏃 It takes risky shortcuts", "🛡️ Reward safety too!", "🔍 Watch what it really learns"]
   },
   "sticker": { "name": "Pet Trainer", "emoji": "🐭" },
-  "discovery": { "heroes": [{"intro":"A furry student who loves a treat!","feature":"Treat rewards"},{"intro":"Game masters that taught themselves!","feature":"Self-play"},{"intro":"Robots learning their first steps!","feature":"Trial and error"},{"intro":"Game players that learn as they go!","feature":"Points and lives"}] }
+  "discovery": { "heroes": [{"intro":"A furry student who loves a treat!"},{"intro":"Game masters that taught themselves!"},{"intro":"Robots learning their first steps!"},{"intro":"Game players that learn as they go!"}] }
 }

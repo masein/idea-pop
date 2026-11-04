@@ -269,6 +269,46 @@ export interface paths {
       };
     };
   };
+  "/api/challenges/{id}/hero-ideas": {
+    post: {
+      parameters: { path: { id: string } };
+      requestBody: {
+        content: {
+          "application/json": { text: string; hero_index?: number | null; has_voice?: boolean; lang?: string | null };
+        };
+      };
+      responses: {
+        200: {
+          content: {
+            "application/json": {
+              idea_id: string;
+              version: number;
+              status: string;
+              outcome: string | null;
+              feedback: string | null;
+              experiment: { materials: string[]; steps: string[] } | null;
+              review_available: boolean;
+            };
+          };
+        };
+      };
+    };
+  };
+  "/api/hero-ideas/{id}/references": {
+    get: {
+      parameters: { path: { id: string } };
+      responses: {
+        200: {
+          content: {
+            "application/json": {
+              available: boolean;
+              references: { title: string; url: string; source: string; summary: string; image_url: string | null }[];
+            };
+          };
+        };
+      };
+    };
+  };
   "/api/challenges/{id}/idea-feedback": {
     post: {
       parameters: { path: { id: string } };

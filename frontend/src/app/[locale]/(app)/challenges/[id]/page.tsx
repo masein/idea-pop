@@ -16,7 +16,7 @@ import GuideNameMessages from '@/components/challenge/story/GuideNameMessages';
 import { AssetScope } from '@/components/AssetSlot';
 import { assetSetFor } from '@/lib/assets/assetSets';
 import { MISSION_XP_MAX, badgeArt, badgeName, type MissionBadgeKey } from '@/components/challenge/story/missionBadges';
-import { discoveryOf, heroExtra } from '@/components/challenge/story/discovery';
+import { discoveryOf } from '@/components/challenge/story/discovery';
 import Inspired from '@/components/characters/Inspired';
 import { claimMissionBadge, claimPhotoBonus, claimStar, fetchChallengeProgress } from '@/lib/api/client';
 import { announceChallengeProgress, useChallengeProgress } from '@/lib/hooks/useChallengeProgress';
@@ -469,7 +469,6 @@ function ChallengePageInner({ onBadgeMode }: { onBadgeMode: (on: boolean) => voi
                 }}
                 onBack={() => goToStep(2)}
                 workKey={challenge.id}
-                fullInspirationTip={challenge.season === 1 && challenge.week_number <= 5}
               />
             ) : (
               <StepNatureClues
@@ -498,7 +497,7 @@ function ChallengePageInner({ onBadgeMode }: { onBadgeMode: (on: boolean) => voi
                         2:
                           game.partner !== null && game.partner !== undefined && story
                             ? `${story.clue_cards[game.partner]?.name}: ${
-                                game.partnerAnswers?.attention || (heroExtra(story, game.partner)?.feature ?? story.clue_cards[game.partner]?.trick ?? '')
+                                game.partnerAnswers?.attention || (story.clue_cards[game.partner]?.trick ?? '')
                               }`
                             : '',
                       },

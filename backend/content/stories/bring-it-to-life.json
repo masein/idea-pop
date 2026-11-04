@@ -103,5 +103,5 @@
     "options": ["🕵️ So fakes don't fool people", "⚠️ Because AI can make mistakes", "🤝 To be honest about who made it", "🏷️ So people can check before they trust it"]
   },
   "sticker": { "name": "Frame Predictor", "emoji": "🎬" },
-  "discovery": { "heroes": [{"intro":"The old trick that makes drawings move!","feature":"Fast frames"},{"intro":"A helper that fills in the missing moments!","feature":"In-between frames"},{"intro":"A program that guesses what comes next!","feature":"Word guessing"},{"intro":"A program that draws from what it has seen!","feature":"Picture patterns"}] }
+  "discovery": { "heroes": [{"intro":"The old trick that makes drawings move!"},{"intro":"A helper that fills in the missing moments!"},{"intro":"A program that guesses what comes next!"},{"intro":"A program that draws from what it has seen!"}] }
 }

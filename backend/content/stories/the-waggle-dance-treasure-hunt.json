@@ -282,5 +282,5 @@
     "name": "Code Dancer",
     "emoji": "🐝"
   },
-  "discovery": { "heroes": [{"intro":"A dancer that gives directions!","feature":"Waggle dance"},{"intro":"A tiny walker who leaves messages on the ground!","feature":"Scent trail"},{"intro":"A little insect that talks with flashes of light!","feature":"Flash pattern"},{"intro":"An ocean singer whose songs travel far!","feature":"Shared song"}] }
+  "discovery": { "heroes": [{"intro":"A dancer that gives directions!"},{"intro":"A tiny walker who leaves messages on the ground!"},{"intro":"A little insect that talks with flashes of light!"},{"intro":"An ocean singer whose songs travel far!"}] }
 }

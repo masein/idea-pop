@@ -17,6 +17,7 @@ mod classes;
 mod consents;
 pub mod explore;
 mod help;
+mod ideas;
 pub use help::purge_expired_help_messages;
 pub mod library;
 mod me;
@@ -247,6 +248,7 @@ pub struct CreateHealthLogRequest {
         library::list_studios, library::list_courses, library::list_quick_makes,
         library::get_course, library::get_creator,
         challenges::list_challenges, challenges::get_challenge,
+        ideas::submit_idea, ideas::idea_references,
         help::ask_helper, help::idea_feedback, help::parent_help_messages,
         help::teacher_help_messages, help::set_helper_enabled,
         progress::post_video_view, progress::post_lesson_complete, progress::post_define_bonus,
@@ -286,6 +288,8 @@ pub struct CreateHealthLogRequest {
         LessonResponse, CourseDetailResponse, CreatorResponse,
         ChallengeResponse, ChallengePageResponse, AgeTierVariantResponse, ToolResponse,
         NatureClueResponse,
+        ideas::SubmitIdeaRequest, ideas::SubmitIdeaResponse, ideas::IdeaExperimentResponse,
+        ideas::IdeaReference, ideas::IdeaReferencesResponse,
         HelpRequest, HelpResponse, HelpMessageResponse, IdeaFeedbackRequest, IdeaFeedbackResponse,
         UpdateHelperEnabledRequest, HelperEnabledResponse,
         VideoViewRequest, LessonCompleteRequest, XpAwardResponse, MissionRewardRequest, MissionRewardItem, MissionRewardsResponse,
@@ -615,6 +619,8 @@ pub fn router_with_metrics(
         // Scoped AI mission helper (kid-scoped; flag+consent+opt-in gated)
         .route("/challenges/:id/steps/:step/help", post(help::ask_helper))
         .route("/challenges/:id/idea-feedback", post(help::idea_feedback))
+        .route("/challenges/:id/hero-ideas", post(ideas::submit_idea))
+        .route("/hero-ideas/:id/references", get(ideas::idea_references))
         .route(
             "/parent/children/:id/help-messages",
             get(help::parent_help_messages),

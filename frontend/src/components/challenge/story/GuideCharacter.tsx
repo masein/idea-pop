@@ -11,15 +11,18 @@ export default function GuideCharacter({
   text,
   image = null,
   testId,
+  introReady = true,
 }: {
   character?: CharacterKey;
   text: string;
   image?: string | null;
   testId?: string;
+  /** False while narration or Popi's introduction of this character is still playing. */
+  introReady?: boolean;
 }) {
   const t = useTranslations('story');
   const name = CHARACTER_NAMES[character];
-  useFirstMeet(character);
+  useFirstMeet(character, introReady);
   return (
     <div data-testid={testId} className="flex flex-col items-start gap-2 sm:flex-row sm:items-end sm:gap-3">
       {image ? (

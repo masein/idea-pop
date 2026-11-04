@@ -268,5 +268,5 @@
     "name": "Self-Healer",
     "emoji": "🎈"
   },
-  "discovery": { "heroes": [{"intro":"A tree that patches its own cuts!","feature":"Milky latex"},{"intro":"Your own body’s repair team!","feature":"Clotting threads"},{"intro":"A shellfish with self-mending threads!","feature":"Re-joining threads"},{"intro":"A tree that seals itself with sticky resin!","feature":"Sealing resin"}] }
+  "discovery": { "heroes": [{"intro":"A tree that patches its own cuts!"},{"intro":"Your own body’s repair team!"},{"intro":"A shellfish with self-mending threads!"},{"intro":"A tree that seals itself with sticky resin!"}] }
 }

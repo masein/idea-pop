@@ -14,6 +14,7 @@ pub mod child;
 pub mod consent_service;
 pub mod content;
 pub mod help;
+pub mod idea_review;
 pub mod portfolio;
 pub mod ports;
 pub mod progress;
@@ -98,3 +99,8 @@ mod tests {
         );
     }
 }
+
+pub use idea_review::{
+    build_idea_review_prompt, parse_idea_review, IdeaExperiment, IdeaReview, IdeaReviewContext,
+    ReviewOwner, STATUS_LATER, STATUS_PENDING, STATUS_REVIEWED,
+};

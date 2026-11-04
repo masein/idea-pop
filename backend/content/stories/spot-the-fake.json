@@ -104,5 +104,5 @@
     "options": ["🗣️ A voice helper that misses accents", "🩺 A health checker", "📷 A camera that works worse for some people", "💭 I have another idea"]
   },
   "sticker": { "name": "Fairness Detective", "emoji": "⚖️" },
-  "discovery": { "heroes": [{"intro":"A machine that only learned from some faces!","feature":"Too few examples"},{"intro":"Helpers that find some voices harder to hear!","feature":"Missing accents"},{"intro":"A program that looked at the snow, not the animal!","feature":"The wrong clue"},{"intro":"People who check that AI works for everyone!","feature":"Testing on everyone"}] }
+  "discovery": { "heroes": [{"intro":"A machine that only learned from some faces!"},{"intro":"Helpers that find some voices harder to hear!"},{"intro":"A program that looked at the snow, not the animal!"},{"intro":"People who check that AI works for everyone!"}] }
 }

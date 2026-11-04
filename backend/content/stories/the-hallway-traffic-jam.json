@@ -102,5 +102,5 @@
     "options": ["🐜 Ant lanes", "🐟 Fish gaps", "🐦 Starling copying", "🐝 Bee doorways"]
   },
   "sticker": { "name": "Flow Master", "emoji": "🐜" },
-  "discovery": { "heroes": [{"intro":"Ants that never get stuck in traffic!","feature":"Traffic lanes"},{"intro":"A huge crowd that never bumps!","feature":"Small gaps"},{"intro":"Birds that fly like one big cloud!","feature":"Copying neighbours"},{"intro":"Busy workers with a smart way in and out!","feature":"Extra doorways"}] }
+  "discovery": { "heroes": [{"intro":"Ants that never get stuck in traffic!"},{"intro":"A huge crowd that never bumps!"},{"intro":"Birds that fly like one big cloud!"},{"intro":"Busy workers with a smart way in and out!"}] }
 }

@@ -643,6 +643,39 @@ export type ChallengeProgress = {
   improved_idea?: string | null;
 };
 
+export type IdeaReference = { title: string; url: string; source: string; summary: string; image_url: string | null };
+export type SubmittedIdea = {
+  idea_id: string;
+  version: number;
+  status: "pending_review" | "reviewed" | "later_guidance";
+  outcome: "related" | "unrelated" | "not_testable_yet" | null;
+  feedback: string | null;
+  experiment: { materials: string[]; steps: string[] } | null;
+  review_available: boolean;
+};
+
+/** Saves a kid's idea (always a new version) and returns Conspy's review, when one could run. */
+export async function submitHeroIdea(
+  challengeId: string,
+  body: { text: string; hero_index: number; has_voice: boolean; lang: string },
+): Promise<SubmittedIdea> {
+  const { data, error } = await apiClient.POST("/api/challenges/{id}/hero-ideas", {
+    params: { path: { id: challengeId } },
+    body,
+  });
+  if (error || !data) throw new Error("Failed to save the idea");
+  return data as SubmittedIdea;
+}
+
+/** Real-world references for an idea: `available` is false until a search provider is connected. */
+export async function fetchIdeaReferences(ideaId: string): Promise<{ available: boolean; references: IdeaReference[] }> {
+  const { data, error } = await apiClient.GET("/api/hero-ideas/{id}/references", {
+    params: { path: { id: ideaId } },
+  });
+  if (error || !data) throw new Error("Failed to load references");
+  return data;
+}
+
 /** Stars, badges and XP per challenge for this kid: the one shared state for cards and header. */
 export async function fetchChallengeProgress(ids: string[]): Promise<ChallengeProgress[]> {
   if (ids.length === 0) return [];

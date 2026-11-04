@@ -282,5 +282,5 @@
     "name": "Water Maker",
     "emoji": "💧"
   },
-  "discovery": { "heroes": [{"intro":"A tree that drinks from the salty sea!","feature":"Salt-blocking roots"},{"intro":"A great seabird that drinks sea water!","feature":"Salt glands"},{"intro":"Frozen sea that turns nearly fresh!","feature":"Salt-free crystals"},{"intro":"A little green water pump!","feature":"Tiny pores"}] }
+  "discovery": { "heroes": [{"intro":"A tree that drinks from the salty sea!"},{"intro":"A great seabird that drinks sea water!"},{"intro":"Frozen sea that turns nearly fresh!"},{"intro":"A little green water pump!"}] }
 }

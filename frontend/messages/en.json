@@ -1882,7 +1882,6 @@
     "hero_next": "Next ›",
     "meet_character": "About {name}",
     "clues_nature_inspires": "When we're looking for a new solution, nature can inspire us! Nature has discovered amazing ways to solve problems. Let's explore its secrets!",
-    "special_feature": "Special Feature: {feature}",
     "conspy_title": "No idea is weird here!",
     "conspy_message": "Dream big! Even if you can't build your idea with things at home, it can still be amazing. Get inspired by nature first. Later, we'll explore how to test a simpler version!",
     "conspy_question": "Can we build every idea at home?",
@@ -1899,7 +1898,23 @@
     "voice_listening": "I'm listening…",
     "voice_denied": "The microphone isn't on, so you can type your idea instead.",
     "voice_answer_text": "I recorded my idea.",
-    "clues_how_help": "How can we help {hero}?"
+    "clues_how_help": "How can we help {hero}?",
+    "hero_review": "Review",
+    "review_title": "Your idea",
+    "review_saving": "Saving your idea…",
+    "review_save_failed": "We couldn't save your idea just now. It's still in your answer box.",
+    "review_try_again": "Try again",
+    "review_close": "Got it!",
+    "review_saved_later": "Your idea is saved! We can explore it together later.",
+    "review_saved_develop": "Your idea is saved! We're still exploring how it might work. We can come back and develop it together!",
+    "review_unavailable": "Conspy's review isn't ready yet.",
+    "review_try_title": "Try it at home",
+    "review_search_question": "Has anyone built something like your idea?",
+    "review_search_loading": "Popi is looking…",
+    "review_search_unavailable": "Popi's search isn't ready yet, so there's nothing to show. We never make up results.",
+    "review_search_error": "Popi couldn't search just now. Try again in a moment!",
+    "review_search_none": "Popi didn't find anything like it yet. Your idea might be a new one!",
+    "review_open": "See Conspy's note"
   },
   "thinking_tools": {
     "accordion_young": "Stuck? Try a thinking tool!",
@@ -2039,8 +2054,8 @@
     "intro_popi": "Hi! I'm Popi. You can ask me any question you have about IDEA POP. I'm your guide in the world of IDEA POP!",
     "intro_quizi": "Hi! I'm Quizi. I'll help you ask better questions and discover new things!",
     "intro_scamper": "Hi! I'm Scamper. Let's change, combine, and transform ideas into something new!",
-    "intro_conspy": "Hi! I'm Conspy. I love unusual, creative ideas! Your idea doesn't have to be something you can build right away.",
+    "intro_conspy": "Hi! I'm Conspy. I love unusual and creative ideas!",
     "inspiration_title": "Inspiration",
-    "inspiration_text": "Inspiration means seeing something interesting and getting a new idea from it! For example, watching birds fly might inspire you to design something with wings. It's about learning from nature, not copying it!"
+    "inspiration_text": "Inspiration means noticing something interesting and getting a new idea from it! For example, watching birds fly might inspire you to design something that can fly.\nLearning from nature means understanding how nature works and creating your own idea, not copying it exactly!"
   }
 }

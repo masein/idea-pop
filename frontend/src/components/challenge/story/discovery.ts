@@ -47,8 +47,6 @@ export interface PartnerLesson {
 export interface HeroExtra {
   /** One short sentence about the hero, on the front of its card. */
   intro?: string;
-  /** The name after "Special Feature:" at the end of its video. */
-  feature?: string;
   /** Its video, once it exists. Until then its Asset ID holds the spot. */
   video?: string | null;
   /** Popi's two answered questions; without them the card's own words are used. */

@@ -104,5 +104,5 @@
     "options": ["🌬️ The high vent", "🪟 The low windows", "✨ The white or foil roof", "🤝 All of them together"]
   },
   "sticker": { "name": "Cool Architect", "emoji": "🌬️" },
-  "discovery": { "heroes": [{"intro":"Tiny builders of tall, breezy towers!","feature":"Air chimney"},{"intro":"Clever diggers who let the wind do the work!","feature":"Two-height burrow"},{"intro":"A giant who stays cool with its ears!","feature":"Cooling ears"},{"intro":"A tiny traveller who stays cool in the hot desert!","feature":"Sun-reflecting shell"}] }
+  "discovery": { "heroes": [{"intro":"Tiny builders of tall, breezy towers!"},{"intro":"Clever diggers who let the wind do the work!"},{"intro":"A giant who stays cool with its ears!"},{"intro":"A tiny traveller who stays cool in the hot desert!"}] }
 }

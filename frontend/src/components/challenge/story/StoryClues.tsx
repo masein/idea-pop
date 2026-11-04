@@ -17,8 +17,6 @@ interface Props {
   award: (b: BadgeKey) => void;
   onNext: () => void;
   onBack: () => void;
-  /** The first few challenges show the full "what does inspired mean?" tip; later ones a small one. */
-  fullInspirationTip?: boolean;
   /** The page awards the clue badge (Nature Hero) on Next, with its popup. */
   deferClueBadge?: boolean;
   /** Names this challenge's saved work (the kid's voice note). */
@@ -26,14 +24,13 @@ interface Props {
 }
 
 /**
- * Step 3, Nature clues, in four parts:
+ * Step 3, Nature clues, in three parts:
  * 1. Meet the heroes: turn every card (intro → trick → what it does). All met → Clue Detective badge.
  * 2. Pick your Nature Hero: the hero the kid likes best to help solve the problem.
- * 3. The hero's journey: its video, Conspy, Popi's questions, and the kid's one answer.
- * 4. What "inspired" means: take the trick, not the animal (in full on the first challenges).
+ * 3. The hero's journey: its video, Conspy, Popi's questions, the kid's one answer, Conspy's review.
  * We never suggest an answer: "peek at the card" only repeats what the card said.
  */
-export default function StoryClues({ story, game, update, award, onNext, onBack, fullInspirationTip = true, deferClueBadge = false, workKey }: Props) {
+export default function StoryClues({ story, game, update, award, onNext, onBack, deferClueBadge = false, workKey }: Props) {
   const t = useTranslations('story');
   // Which cards show their words right now; a card can be turned back to its photo.
   const [turned, setTurned] = useState<number[]>([]);
@@ -177,51 +174,6 @@ export default function StoryClues({ story, game, update, award, onNext, onBack,
           update={update}
           workKey={workKey}
         />
-      )}
-
-      {allAnswered && !lesson && <RewardPop text={t('inspiration_unlocked')} />}
-
-      {/* ── Part 4: what "inspired" means ── */}
-      {partner && allAnswered && lesson && (
-        <section data-testid="inspired-means" className="story-rise flex flex-col gap-3 rounded-[20px] bg-white p-5 shadow-sm">
-          <p className="font-display text-2xl text-challenge"><Inspired text={t('inspired_means_title')} /></p>
-          <p className="font-body text-base font-semibold text-ink"><Inspired text={t('inspired_quote')} /></p>
-          <ol className="flex flex-wrap items-center gap-2" aria-label={t('inspired_means_title')}>
-            {(['inspired_flow_1', 'inspired_flow_2', 'inspired_flow_3', 'inspired_flow_4'] as const).map((k, i) => (
-              <li key={k} className="flex items-center gap-2">
-                {i > 0 && <span aria-hidden="true" className="text-xl text-challenge">→</span>}
-                <span className="rounded-pill bg-[#EAF5FC] px-3 py-1.5 font-body text-sm font-extrabold text-[#135A85]">{t(k)}</span>
-              </li>
-            ))}
-          </ol>
-        </section>
-      )}
-      {partner && allAnswered && !lesson && (
-        <section data-testid="inspiration-tip" className="story-rise flex flex-col gap-3">
-          {fullInspirationTip ? (
-            <div className="flex flex-col gap-3 rounded-[20px] bg-gradient-to-br from-[#FFF7D6] to-[#FFE9A8] p-5">
-              <p className="font-display text-2xl leading-snug text-ink">“<Inspired text={t('inspired_quote')} />”</p>
-              <p className="font-body text-sm font-bold text-[#7A5A00]">{t('inspired_quote_by')}</p>
-              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                <div className="rounded-xl bg-white p-3">
-                  <p className="font-body text-xs font-extrabold uppercase tracking-wide text-[#1E7A44]">
-                    {t('inspired_trick', { name: partner.name })}
-                  </p>
-                  <p className="mt-1 font-body text-base font-medium text-ink">{partner.trick}</p>
-                </div>
-                <div className="rounded-xl bg-white p-3">
-                  <p className="font-body text-xs font-extrabold uppercase tracking-wide text-[#1A6FA6]">{t('inspired_yours')}</p>
-                  <p dir="auto" className="mt-1 font-body text-base font-medium text-ink">{game.partnerAnswers.inspired}</p>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <details className="rounded-[16px] bg-[#FFF7D6] px-4 py-3">
-              <summary className="cursor-pointer font-body text-base font-bold text-[#7A5A00]">{t('inspired_tip_small')}</summary>
-              <p className="mt-2 font-body text-base font-medium text-ink">“<Inspired text={t('inspired_quote')} />”</p>
-            </details>
-          )}
-        </section>
       )}
 
       <StepNav onBack={onBack} backLabel={t('back')}>

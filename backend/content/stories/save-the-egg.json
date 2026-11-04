@@ -101,5 +101,5 @@
     "options": ["🍈 Pomelo foam", "🐦 Woodpecker sponge", "🦔 Hedgehog springs", "🐏 Bighorn layers"]
   },
   "sticker": { "name": "Egg Guardian", "emoji": "🥚" },
-  "discovery": { "heroes": [{"intro":"A bird that hammers trees and never gets a headache!","feature":"Shock-soaking skull"},{"intro":"A huge fruit that survives big falls!","feature":"Foamy peel"},{"intro":"A prickly little ball that lands safely!","feature":"Springy spines"},{"intro":"A mountain sheep that wins head-bumping contests!","feature":"Layered horns"}] }
+  "discovery": { "heroes": [{"intro":"A bird that hammers trees and never gets a headache!"},{"intro":"A huge fruit that survives big falls!"},{"intro":"A prickly little ball that lands safely!"},{"intro":"A mountain sheep that wins head-bumping contests!"}] }
 }

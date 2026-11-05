@@ -7,7 +7,7 @@ import { getAccessToken } from '@/lib/api/auth';
 import { useLocale, useTranslations } from 'next-intl';
 import { useAgeMode } from '@/lib/hooks/useAgeMode';
 import { useXpToast } from '@/lib/hooks/useXpToast';
-import { fetchChallenge, startAttempt, advanceStep, claimSketchBonus, getIdeaFeedback, createProject, uploadProjectPhoto } from '@/lib/api/client';
+import { fetchChallenge, startAttempt, advanceStep, claimSketchBonus, getIdeaFeedback, createProject } from '@/lib/api/client';
 import LabCelebration from '@/components/challenge/story/LabCelebration';
 import SubstitutePractice from '@/components/challenge/story/SubstitutePractice';
 import SubstCelebration from '@/components/challenge/story/SubstCelebration';
@@ -18,6 +18,7 @@ import { assetSetFor } from '@/lib/assets/assetSets';
 import { MISSION_XP_MAX, badgeArt, badgeName, type MissionBadgeKey } from '@/components/challenge/story/missionBadges';
 import { discoveryOf } from '@/components/challenge/story/discovery';
 import Inspired from '@/components/characters/Inspired';
+import { uploadPhotoSafely } from '@/lib/photoUpload';
 import { claimMissionBadge, claimPhotoBonus, claimStar, fetchChallengeProgress } from '@/lib/api/client';
 import { announceChallengeProgress, useChallengeProgress } from '@/lib/hooks/useChallengeProgress';
 import StarNotice from '@/components/challenge/StarNotice';
@@ -854,10 +855,7 @@ function ChallengePageInner({ onBadgeMode }: { onBadgeMode: (on: boolean) => voi
           onPhoto={async (photo) => {
             setLabPhotoUrl(URL.createObjectURL(photo));
             if (!labCelebration.projectId) return null;
-            const ok = await uploadProjectPhoto(labCelebration.projectId, photo)
-              .then(() => true)
-              .catch(() => false);
-            if (!ok) return null;
+            if (!(await uploadPhotoSafely(labCelebration.projectId, photo))) return null;
             if (!badgeMode) return 0;
             const xp = (await givePhoto('build')) ?? 0;
             // Experiment finished and the prototype documented: the second star.

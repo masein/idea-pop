@@ -38,10 +38,12 @@ describe('StepSketch when the sketch photo fails', () => {
   it('shows the error and retries the photo on the same project', async () => {
     api.uploadProjectPhoto.mockRejectedValueOnce(new Error('no')).mockResolvedValueOnce({});
     const onNext = setup();
-    await screen.findByTestId('sketch-save-failed');
+    expect(await screen.findByText("Your photo couldn't be uploaded. Please try again.")).toBeTruthy();
     expect(onNext).not.toHaveBeenCalled();
+    expect((screen.getByTestId('field-title') as HTMLInputElement).value).toBe('Ant Raft');
+    expect(screen.getByTestId('photo-preview')).toBeTruthy();
 
-    fireEvent.click(screen.getByTestId('sketch-save-retry'));
+    fireEvent.click(screen.getByTestId('photo-upload-retry'));
     await waitFor(() => expect(onNext).toHaveBeenCalledTimes(1));
     expect(api.createProject).toHaveBeenCalledTimes(1);
     expect(api.uploadProjectPhoto).toHaveBeenCalledTimes(2);
@@ -51,7 +53,7 @@ describe('StepSketch when the sketch photo fails', () => {
   it('lets the kid carry on without the photo', async () => {
     api.uploadProjectPhoto.mockRejectedValue(new Error('no'));
     const onNext = setup();
-    fireEvent.click(await screen.findByTestId('sketch-save-continue'));
+    fireEvent.click(await screen.findByTestId('photo-upload-continue'));
     expect(onNext).toHaveBeenCalledTimes(1);
     expect(onNext.mock.calls[0][2].photo).toBeNull();
   });
@@ -60,10 +62,10 @@ describe('StepSketch when the sketch photo fails', () => {
     api.createProject.mockRejectedValueOnce(new Error('no'));
     api.uploadProjectPhoto.mockResolvedValue({});
     const onNext = setup();
-    await screen.findByTestId('sketch-save-failed');
+    await screen.findByTestId('photo-upload-failed');
     expect(onNext).not.toHaveBeenCalled();
     expect((screen.getByTestId('field-title') as HTMLInputElement).value).toBe('Ant Raft');
-    fireEvent.click(screen.getByTestId('sketch-save-retry'));
+    fireEvent.click(screen.getByTestId('photo-upload-retry'));
     await waitFor(() => expect(onNext).toHaveBeenCalledTimes(1));
     expect(api.createProject).toHaveBeenCalledTimes(2);
   });

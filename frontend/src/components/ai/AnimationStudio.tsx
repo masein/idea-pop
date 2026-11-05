@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import {
   addFrame,
@@ -24,9 +24,6 @@ import {
  * snapshots kept in memory, the GIF is encoded in the browser (gifenc, lazy-
  * loaded), and nothing is ever uploaded.
  */
-
-type CaptureMode = 'draw' | 'camera';
-type CameraState = 'off' | 'on' | 'error';
 
 const PEN_COLORS = ['#3b3b3b', '#cc3a3a', '#1a6fa6', '#1e7a44'] as const;
 
@@ -61,21 +58,6 @@ function fileToImage(file: File): Promise<HTMLImageElement> {
   });
 }
 
-/** Centre-crop (cover) the live video onto a frame-sized canvas. */
-function snapshotVideo(video: HTMLVideoElement): string {
-  const canvas = document.createElement('canvas');
-  canvas.width = FRAME_WIDTH;
-  canvas.height = FRAME_HEIGHT;
-  const ctx = canvas.getContext('2d')!;
-  const vw = video.videoWidth || FRAME_WIDTH;
-  const vh = video.videoHeight || FRAME_HEIGHT;
-  const scale = Math.max(FRAME_WIDTH / vw, FRAME_HEIGHT / vh);
-  const sw = FRAME_WIDTH / scale;
-  const sh = FRAME_HEIGHT / scale;
-  ctx.drawImage(video, (vw - sw) / 2, (vh - sh) / 2, sw, sh, 0, 0, FRAME_WIDTH, FRAME_HEIGHT);
-  return canvas.toDataURL('image/png');
-}
-
 export interface AnimationStudioProps {
   /** Hide the built-in title block (the standalone page renders its own). */
   hideIntro?: boolean;
@@ -86,11 +68,9 @@ export default function AnimationStudio({ hideIntro = false }: AnimationStudioPr
 
   const [open, setOpen] = useState(false);
   const [frames, setFrames] = useState<Frame[]>([]);
-  const [mode, setMode] = useState<CaptureMode>('draw');
   const [onionSkin, setOnionSkin] = useState(true);
   const [penColor, setPenColor] = useState<string>(PEN_COLORS[0]);
   const [hasStrokes, setHasStrokes] = useState(false);
-  const [cameraState, setCameraState] = useState<CameraState>('off');
   const [playing, setPlaying] = useState(false);
   const [playIndex, setPlayIndex] = useState(0);
   const [fps, setFps] = useState(FPS_DEFAULT);
@@ -98,47 +78,10 @@ export default function AnimationStudio({ hideIntro = false }: AnimationStudioPr
 
   const drawCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const drawingRef = useRef(false);
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-  const streamRef = useRef<MediaStream | null>(null);
   const uploadRef = useRef<HTMLInputElement | null>(null);
 
   const ready = readyToPlay(frames);
   const lastFrame = frames.length > 0 ? frames[frames.length - 1] : null;
-
-  // ── Camera lifecycle ─────────────────────────────────────────────────────────
-
-  const stopCamera = useCallback(() => {
-    streamRef.current?.getTracks().forEach((track) => track.stop());
-    streamRef.current = null;
-    setCameraState('off');
-  }, []);
-
-  useEffect(() => stopCamera, [stopCamera]); // release on unmount
-
-  async function startCamera() {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment' },
-        audio: false,
-      });
-      streamRef.current = stream;
-      setCameraState('on');
-      requestAnimationFrame(() => {
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-          videoRef.current.play().catch(() => {});
-        }
-      });
-    } catch {
-      setCameraState('error');
-    }
-  }
-
-  function switchMode(next: CaptureMode) {
-    setMode(next);
-    if (next === 'camera' && cameraState === 'off') void startCamera();
-    if (next === 'draw') stopCamera();
-  }
 
   // ── Drawing ──────────────────────────────────────────────────────────────────
 
@@ -200,12 +143,6 @@ export default function AnimationStudio({ hideIntro = false }: AnimationStudioPr
     ctx.drawImage(canvas, 0, 0);
     setFrames((prev) => addFrame(prev, out.toDataURL('image/png')));
     clearDrawing(); // onion skin now shows the frame just added
-  }
-
-  function snapCameraFrame() {
-    const video = videoRef.current;
-    if (!video) return;
-    setFrames((prev) => addFrame(prev, snapshotVideo(video)));
   }
 
   async function addUploadedFrames(files: FileList | null) {
@@ -325,28 +262,6 @@ export default function AnimationStudio({ hideIntro = false }: AnimationStudioPr
           </h3>
           <button
             type="button"
-            data-testid="animator-mode-draw"
-            onClick={() => switchMode('draw')}
-            aria-pressed={mode === 'draw'}
-            className={`rounded-pill px-4 py-1.5 font-body text-sm font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-challenge ${
-              mode === 'draw' ? 'bg-challenge text-white' : 'bg-tint-blue text-ink'
-            }`}
-          >
-            ✏️ {t('mode_draw')}
-          </button>
-          <button
-            type="button"
-            data-testid="animator-mode-camera"
-            onClick={() => switchMode('camera')}
-            aria-pressed={mode === 'camera'}
-            className={`rounded-pill px-4 py-1.5 font-body text-sm font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-challenge ${
-              mode === 'camera' ? 'bg-challenge text-white' : 'bg-tint-blue text-ink'
-            }`}
-          >
-            📷 {t('mode_camera')}
-          </button>
-          <button
-            type="button"
             data-testid="animator-upload"
             onClick={() => uploadRef.current?.click()}
             className="rounded-card border border-ink/20 bg-white px-3 py-1.5 font-body text-sm text-ink transition-colors hover:border-challenge/40 hover:bg-challenge/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-challenge"
@@ -379,7 +294,7 @@ export default function AnimationStudio({ hideIntro = false }: AnimationStudioPr
           {t('onion_label')}
         </label>
 
-        {mode === 'draw' && (
+        {(
           <div className="flex flex-col gap-2">
             <div
               className="relative w-full max-w-md overflow-hidden rounded-card border border-ink/20 bg-white"
@@ -442,52 +357,6 @@ export default function AnimationStudio({ hideIntro = false }: AnimationStudioPr
           </div>
         )}
 
-        {mode === 'camera' && (
-          <div className="flex flex-col gap-2">
-            {cameraState === 'error' ? (
-              <p
-                data-testid="animator-camera-error"
-                className="rounded-card bg-tint-blush px-3 py-2 font-body text-sm font-semibold text-ink/80"
-              >
-                {t('camera_error')}
-              </p>
-            ) : (
-              <>
-                <div
-                  className="relative w-full max-w-md overflow-hidden rounded-card border border-ink/20 bg-ink/90"
-                  style={{ aspectRatio: `${FRAME_WIDTH} / ${FRAME_HEIGHT}` }}
-                >
-                  <video
-                    ref={videoRef}
-                    data-testid="animator-video"
-                    playsInline
-                    muted
-                    aria-label={t('video_label')}
-                    className="absolute inset-0 h-full w-full object-cover"
-                  />
-                  {onionSkin && lastFrame && (
-                    // eslint-disable-next-line @next/next/no-img-element -- in-memory data URL
-                    <img
-                      src={lastFrame.dataUrl}
-                      alt=""
-                      aria-hidden="true"
-                      className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-30"
-                    />
-                  )}
-                </div>
-                <button
-                  type="button"
-                  data-testid="animator-snap"
-                  onClick={snapCameraFrame}
-                  disabled={cameraState !== 'on'}
-                  className="w-fit rounded-pill bg-challenge px-4 py-2 font-display text-sm font-bold text-white transition-all hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/40 disabled:opacity-50"
-                >
-                  📸 {t('snap')}
-                </button>
-              </>
-            )}
-          </div>
-        )}
       </section>
 
       {/* 2 · Filmstrip */}

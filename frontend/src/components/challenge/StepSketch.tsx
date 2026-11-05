@@ -4,15 +4,15 @@ import { useContext, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import CaptureCard, { type CaptureData } from './CaptureCard';
 import ToolSelector, { isToolKey } from './tool/ToolSelector';
-import { attachSketchToIdea, createProject, uploadProjectPhoto } from '@/lib/api/client';
+import { attachSketchToIdea, createProject } from '@/lib/api/client';
+import { uploadPhotoSafely } from '@/lib/photoUpload';
+import PhotoUploadError from './PhotoUploadError';
 import { showsSketchTutorial } from '@/lib/challenges/sketchTutorial';
 import { GAME_BY_SLUG } from './gameEmbeds';
 import { btnPrimary, btnText } from '@/components/challenge/buttons';
 import AssetSlot, { AssetScope } from '@/components/AssetSlot';
 
 type ChallengeDetail = import('@/lib/api/schema').components['schemas']['ChallengeDetail'];
-
-const PHOTO_WAIT_MS = 30_000;
 
 /** A save that didn't finish: what is needed to retry it or to carry on. */
 interface FailedSave {
@@ -52,20 +52,6 @@ export default function StepSketch({ challenge, ageMode, onNext, onBack, hideToo
   const [submitting, setSubmitting] = useState(false);
   const [failed, setFailed] = useState<FailedSave | null>(null);
 
-  /** The photo, given up on after PHOTO_WAIT_MS so a stuck upload can't hold the kid on "Saving…". */
-  async function sendPhoto(projectId: string, photo: File): Promise<boolean> {
-    const stop = new AbortController();
-    const timer = setTimeout(() => stop.abort(), PHOTO_WAIT_MS);
-    try {
-      await uploadProjectPhoto(projectId, photo, stop.signal);
-      return true;
-    } catch {
-      return false;
-    } finally {
-      clearTimeout(timer);
-    }
-  }
-
   async function handleSubmit(data: CaptureData) {
     setSubmitting(true);
     setFailed(null);
@@ -89,7 +75,7 @@ export default function StepSketch({ challenge, ageMode, onNext, onBack, hideToo
       if (challenge.story) await attachSketchToIdea(challenge.id, project.id, data.title).catch(() => {});
       // The photo is private and optional, but losing one is never silent: the kid can retry
       // or carry on without it.
-      if (data.photo && !(await sendPhoto(project.id, data.photo))) {
+      if (data.photo && !(await uploadPhotoSafely(project.id, data.photo))) {
         setFailed({ projectId: project.id, data, idea, saved });
         return;
       }
@@ -211,31 +197,13 @@ export default function StepSketch({ challenge, ageMode, onNext, onBack, hideToo
       )}
 
       {failed && (
-        <div role="alert" data-testid="sketch-save-failed" className="flex flex-col gap-2 rounded-xl bg-[#FFF7E0] px-4 py-3">
-          <p className="font-body text-base font-semibold text-[#5a4300]">
-            {failed.projectId ? t('sketch_photo_failed') : t('sketch_save_failed')}
-          </p>
-          <div className="flex flex-wrap gap-4">
-            <button
-              type="button"
-              data-testid="sketch-save-retry"
-              disabled={submitting}
-              onClick={() => void handleSubmit(failed.data)}
-              className={`${btnText} !px-0`}
-            >
-              {submitting ? t('saving') : t('sketch_try_again')}
-            </button>
-            <button
-              type="button"
-              data-testid="sketch-save-continue"
-              disabled={submitting}
-              onClick={() => onNext(failed.projectId, failed.idea, { ...failed.saved, photo: null })}
-              className={`${btnText} !px-0`}
-            >
-              {failed.data.photo ? t('sketch_continue_no_photo') : t('sketch_continue_anyway')}
-            </button>
-          </div>
-        </div>
+        <PhotoUploadError
+          message={failed.data.photo ? undefined : t('sketch_save_failed')}
+          busy={submitting}
+          onRetry={() => void handleSubmit(failed.data)}
+          onContinue={() => onNext(failed.projectId, failed.idea, { ...failed.saved, photo: null })}
+          continueLabel={failed.data.photo ? t('sketch_continue_no_photo') : t('sketch_continue_anyway')}
+        />
       )}
 
       <button

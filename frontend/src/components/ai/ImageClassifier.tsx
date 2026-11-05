@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import {
   accuracyPercent,
@@ -21,7 +21,6 @@ import {
 import type { ClassifierEngine, Prediction } from '@/lib/ai/tfClassifier';
 
 type EngineState = 'idle' | 'loading' | 'ready' | 'error';
-type CameraState = 'off' | 'on' | 'error';
 
 const CLASS_TINTS = ['bg-tint-lime', 'bg-tint-blue', 'bg-tint-blush'];
 
@@ -39,15 +38,6 @@ async function fileToImage(file: File): Promise<HTMLImageElement> {
   }
 }
 
-/** Grab the current webcam frame onto a canvas (never leaves the browser). */
-function snapshot(video: HTMLVideoElement): HTMLCanvasElement {
-  const canvas = document.createElement('canvas');
-  canvas.width = video.videoWidth || 224;
-  canvas.height = video.videoHeight || 224;
-  canvas.getContext('2d')?.drawImage(video, 0, 0, canvas.width, canvas.height);
-  return canvas;
-}
-
 interface ImageClassifierProps {
   /** Hide the internal title/subtitle when the host page already renders one. */
   hideIntro?: boolean;
@@ -60,9 +50,6 @@ export default function ImageClassifier({ hideIntro = false }: ImageClassifierPr
   const engineRef = useRef<ClassifierEngine | null>(null);
 
   const [classes, setClasses] = useState<ClassInfo[]>(() => initialClasses('', ''));
-  const [cameraState, setCameraState] = useState<CameraState>('off');
-  const streamRef = useRef<MediaStream | null>(null);
-  const videoRef = useRef<HTMLVideoElement | null>(null);
 
   const [prediction, setPrediction] = useState<Prediction | null>(null);
   const [awaitingTruth, setAwaitingTruth] = useState(false);
@@ -73,16 +60,9 @@ export default function ImageClassifier({ hideIntro = false }: ImageClassifierPr
   const exampleInputs = useRef<Record<string, HTMLInputElement | null>>({});
   const testInputRef = useRef<HTMLInputElement | null>(null);
 
-  const stopCamera = useCallback(() => {
-    streamRef.current?.getTracks().forEach((track) => track.stop());
-    streamRef.current = null;
-    setCameraState('off');
-  }, []);
-
-  // Release hardware + model memory when the kid navigates away.
+  // Release model memory when the kid navigates away.
   useEffect(() => {
     return () => {
-      streamRef.current?.getTracks().forEach((track) => track.stop());
       engineRef.current?.dispose();
       engineRef.current = null;
       if (previewUrl) URL.revokeObjectURL(previewUrl);
@@ -98,30 +78,6 @@ export default function ImageClassifier({ hideIntro = false }: ImageClassifierPr
       setEngineState('ready');
     } catch {
       setEngineState('error');
-    }
-  }
-
-  async function toggleCamera() {
-    if (cameraState === 'on') {
-      stopCamera();
-      return;
-    }
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment' },
-        audio: false,
-      });
-      streamRef.current = stream;
-      setCameraState('on');
-      // The video element renders on the next tick.
-      requestAnimationFrame(() => {
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-          videoRef.current.play().catch(() => {});
-        }
-      });
-    } catch {
-      setCameraState('error');
     }
   }
 
@@ -155,14 +111,6 @@ export default function ImageClassifier({ hideIntro = false }: ImageClassifierPr
     }
   }
 
-  function trainWithSnapshot(classId: string) {
-    const engine = engineRef.current;
-    const video = videoRef.current;
-    if (!engine || !video) return;
-    engine.addExample(snapshot(video), classId);
-    setClasses((prev) => addExamples(prev, classId));
-  }
-
   async function runPrediction(source: HTMLImageElement | HTMLCanvasElement) {
     const engine = engineRef.current;
     if (!engine) return;
@@ -188,14 +136,6 @@ export default function ImageClassifier({ hideIntro = false }: ImageClassifierPr
     } catch {
       /* unreadable file — ignore */
     }
-  }
-
-  async function quizWithSnapshot() {
-    const video = videoRef.current;
-    if (!video) return;
-    const canvas = snapshot(video);
-    showPreview(canvas);
-    await runPrediction(canvas);
   }
 
   function gradeTruth(actualId: string) {
@@ -358,17 +298,6 @@ export default function ImageClassifier({ hideIntro = false }: ImageClassifierPr
                     e.target.value = '';
                   }}
                 />
-                {cameraState === 'on' && (
-                  <button
-                    type="button"
-                    data-testid={`class-snap-${i}`}
-                    disabled={working}
-                    onClick={() => trainWithSnapshot(cls.id)}
-                    className="rounded-card border border-ink/20 bg-white px-3 py-1.5 font-body text-sm text-ink transition-colors hover:border-challenge/40 hover:bg-challenge/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-challenge disabled:opacity-50"
-                  >
-                    {t('snap_example', { name: nameOf(cls.id) })}
-                  </button>
-                )}
               </div>
             </div>
           ))}
@@ -382,36 +311,6 @@ export default function ImageClassifier({ hideIntro = false }: ImageClassifierPr
           >
             {t('add_class')}
           </button>
-        )}
-      </section>
-
-      {/* Camera (always optional) */}
-      <section aria-label={t('camera_heading')} className="flex flex-col gap-2">
-        <h3 className="font-display text-lg text-ink">{t('camera_heading')}</h3>
-        <div className="flex flex-wrap items-center gap-3">
-          <button
-            type="button"
-            data-testid="camera-toggle"
-            onClick={toggleCamera}
-            className="rounded-pill border-2 border-challenge px-4 py-2 font-display text-sm font-bold text-challenge transition-colors hover:bg-tint-blue focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/40"
-          >
-            {cameraState === 'on' ? t('camera_off') : t('camera_on')}
-          </button>
-          {cameraState === 'error' && (
-            <p data-testid="camera-error" className="font-body text-sm text-ink/70">
-              {t('camera_error')}
-            </p>
-          )}
-        </div>
-        {cameraState === 'on' && (
-          <video
-            ref={videoRef}
-            data-testid="camera-preview"
-            aria-label={t('video_label')}
-            playsInline
-            muted
-            className="h-48 w-64 rounded-card bg-ink/10 object-cover"
-          />
         )}
       </section>
 
@@ -458,17 +357,6 @@ export default function ImageClassifier({ hideIntro = false }: ImageClassifierPr
               e.target.value = '';
             }}
           />
-          {cameraState === 'on' && (
-            <button
-              type="button"
-              data-testid="test-snap"
-              disabled={!trained || working}
-              onClick={() => void quizWithSnapshot()}
-              className="rounded-pill bg-challenge px-4 py-2 font-display text-sm font-bold text-white transition-all hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/40 disabled:opacity-50"
-            >
-              {t('test_snap')}
-            </button>
-          )}
         </div>
         {working && (
           <p role="status" className="font-body text-sm text-ink/60">

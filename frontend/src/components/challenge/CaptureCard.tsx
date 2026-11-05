@@ -155,9 +155,6 @@ export default function CaptureCard({
             onClick={() => fileInputRef.current?.click()}
             className="flex w-full flex-col items-center justify-center py-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-challenge"
           >
-            <span className="text-4xl" aria-hidden="true">
-              📷
-            </span>
             <p className="font-body text-sm text-ink/50 text-center mt-2 px-4">{photoPrompt}</p>
           </button>
         )}

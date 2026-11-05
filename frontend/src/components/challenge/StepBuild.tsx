@@ -12,7 +12,9 @@ import { GAME_BY_SLUG } from './gameEmbeds';
 
 // Dark-launch flag for the scoped AI helper (server enforces the real gates).
 const HELPER_ON = process.env.NEXT_PUBLIC_MISSION_HELPER === 'true';
-import { createProject, uploadProjectPhoto } from '@/lib/api/client';
+import { createProject } from '@/lib/api/client';
+import { uploadPhotoSafely } from '@/lib/photoUpload';
+import PhotoUploadError from './PhotoUploadError';
 import { btnPrimary, btnText } from '@/components/challenge/buttons';
 
 type ChallengeDetail = import('@/lib/api/schema').components['schemas']['ChallengeDetail'];
@@ -55,6 +57,8 @@ export default function StepBuild({
   const [helperSignal, setHelperSignal] = useState(0);
   const helperRef = useRef<HTMLDivElement>(null);
   const [submitting, setSubmitting] = useState(false);
+  // A save that didn't finish: retrying reuses the project, so nothing is created twice.
+  const [failed, setFailed] = useState<{ projectId: string | null; data: CaptureData } | null>(null);
 
   function toggleCheck(index: number) {
     setChecked((prev) => {
@@ -70,8 +74,10 @@ export default function StepBuild({
 
   async function handleSubmit(data: CaptureData) {
     setSubmitting(true);
+    setFailed(null);
+    let projectId = failed?.projectId ?? null;
     try {
-      const project = await createProject({
+      const project = projectId ? { id: projectId } : await createProject({
         title: data.title || t('default_build_title'),
         what_i_made: data.what_i_made,
         what_i_used: data.what_i_used,
@@ -80,15 +86,19 @@ export default function StepBuild({
         challenge_id: challenge.id,
         step_type: 'build',
       });
+      projectId = project.id;
       if (data.photo) {
-        const ok = await uploadProjectPhoto(project.id, data.photo).then(() => true).catch(() => false);
-        if (ok) onPhotoSaved?.();
+        if (!(await uploadPhotoSafely(project.id, data.photo))) {
+          setFailed({ projectId, data });
+          return;
+        }
+        onPhotoSaved?.();
       }
+      onNext();
     } catch {
-      // never block progression
+      setFailed({ projectId, data });
     } finally {
       setSubmitting(false);
-      onNext();
     }
   }
 
@@ -239,6 +249,16 @@ export default function StepBuild({
             setHelperSignal((s) => s + 1);
             helperRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
           }}
+        />
+      )}
+
+      {failed && (
+        <PhotoUploadError
+          message={failed.data.photo ? undefined : t('build_save_failed')}
+          busy={submitting}
+          onRetry={() => void handleSubmit(failed.data)}
+          onContinue={onNext}
+          continueLabel={failed.data.photo ? t('sketch_continue_no_photo') : t('sketch_continue_anyway')}
         />
       )}
 

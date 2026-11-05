@@ -15,7 +15,7 @@ export type IdeaReviewState = { kind: 'saving' } | { kind: 'failed' } | { kind: 
 /**
  * Conspy's review, for every challenge. The idea is already saved when this opens. It never
  * grades, rejects or rewrites: related ideas hear specific feedback, and anything else hears
- * that it is saved. With no review or search available it says so and shows nothing made up.
+ * that it is saved. Features that aren't ready wear a Coming Soon label and show nothing made up.
  */
 export default function IdeaReviewDialog({
   state,
@@ -82,8 +82,6 @@ export default function IdeaReviewDialog({
 function SavedIdea({ idea }: { idea: SubmittedIdea }) {
   const t = useTranslations('story');
   const related = idea.outcome === 'related';
-  // Search belongs to related ideas, and to ideas no review has looked at yet.
-  const canSearch = related || !idea.review_available;
   return (
     <div className="flex flex-col gap-3">
       {related && idea.feedback && (
@@ -99,12 +97,23 @@ function SavedIdea({ idea }: { idea: SubmittedIdea }) {
         <p data-testid="idea-review-saved" className="font-body text-lg font-semibold leading-snug text-ink">{t('review_saved_later')}</p>
       )}
       {!idea.review_available && (
-        <p data-testid="idea-review-unavailable" className="rounded-xl bg-[#EAF5FC] px-3 py-2 font-body text-sm font-semibold text-[#135A85]">
-          {t('review_unavailable')}
-        </p>
+        <ul data-testid="idea-review-coming-soon" className="flex flex-col gap-1.5">
+          <ComingSoonRow label={t('review_feature')} />
+          <ComingSoonRow label={t('review_search_question')} />
+        </ul>
       )}
-      {canSearch && <RealWorldSearch ideaId={idea.idea_id} />}
+      {related && <RealWorldSearch ideaId={idea.idea_id} />}
     </div>
+  );
+}
+
+function ComingSoonRow({ label }: { label: string }) {
+  const t = useTranslations('story');
+  return (
+    <li className="flex items-center justify-between gap-3 rounded-xl bg-[#F4F8FC] px-3 py-2 font-body text-sm font-semibold text-[#4A5560]">
+      <span className="min-w-0">{label}</span>
+      <span className="shrink-0 rounded-pill bg-[#F1D8FB] px-2.5 py-0.5 text-xs font-extrabold text-[#6A2C91]">{t('coming_soon')}</span>
+    </li>
   );
 }
 

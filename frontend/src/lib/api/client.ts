@@ -578,6 +578,16 @@ export async function uploadProjectPhoto(projectId: string, photo: File) {
   return data;
 }
 
+/** A kid's own project photo as a Blob (photos are private, so an image link can't reach them). */
+export async function fetchProjectPhoto(projectId: string): Promise<Blob> {
+  const { data, error } = await apiClient.GET("/api/projects/{id}/photo", {
+    params: { path: { id: projectId } },
+    parseAs: "blob",
+  });
+  if (error || !data) throw new Error("Failed to load photo");
+  return data as unknown as Blob;
+}
+
 // ── Ideas Wall ────────────────────────────────────────────────────────────────
 
 export async function fetchIdeas(
@@ -657,7 +667,7 @@ export type SubmittedIdea = {
 /** Saves a kid's idea (always a new version) and returns Conspy's review, when one could run. */
 export async function submitHeroIdea(
   challengeId: string,
-  body: { text: string; hero_index: number; has_voice: boolean; lang: string },
+  body: { text: string; hero_index: number; lang: string },
 ): Promise<SubmittedIdea> {
   const { data, error } = await apiClient.POST("/api/challenges/{id}/hero-ideas", {
     params: { path: { id: challengeId } },
@@ -665,6 +675,35 @@ export async function submitHeroIdea(
   });
   if (error || !data) throw new Error("Failed to save the idea");
   return data as SubmittedIdea;
+}
+
+export type SavedHeroIdea = {
+  id: string;
+  challenge_id: string;
+  challenge_title: string;
+  hero_name: string | null;
+  text: string;
+  version: number;
+  project_id: string | null;
+  created_at: string;
+};
+
+/** Attaches a sketch's project to the kid's saved idea on this challenge. */
+export async function attachSketchToIdea(challengeId: string, projectId: string, name: string): Promise<void> {
+  const { error } = await apiClient.POST("/api/challenges/{id}/hero-ideas/sketch", {
+    params: { path: { id: challengeId } },
+    body: { project_id: projectId, name },
+  });
+  if (error) throw new Error("Failed to attach the sketch");
+}
+
+/** Every idea this kid has saved, newest first, for My Profile. */
+export async function fetchMyHeroIdeas(lang: string): Promise<SavedHeroIdea[]> {
+  const { data, error } = await apiClient.GET("/api/children/me/hero-ideas", {
+    params: { query: { lang } },
+  });
+  if (error || !data) throw new Error("Failed to load ideas");
+  return data;
 }
 
 /** Real-world references for an idea: `available` is false until a search provider is connected. */

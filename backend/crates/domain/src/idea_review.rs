@@ -7,23 +7,27 @@ use serde::{Deserialize, Serialize};
 /// Who reviews ideas. The final choice is still open, so it is configuration.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ReviewOwner {
+    /// Not decided yet: ideas wait, and no AI review runs.
+    Unassigned,
     Ai,
     Human,
     Hybrid,
 }
 
 impl ReviewOwner {
-    /// `IDEA_REVIEW_OWNER`: "ai" unless it names another owner.
+    /// `IDEA_REVIEW_OWNER`: unassigned unless it names an owner.
     pub fn from_config(value: Option<&str>) -> Self {
         match value.map(str::trim) {
+            Some("ai") => Self::Ai,
             Some("human") => Self::Human,
             Some("hybrid") => Self::Hybrid,
-            _ => Self::Ai,
+            _ => Self::Unassigned,
         }
     }
 
     pub fn as_str(self) -> &'static str {
         match self {
+            Self::Unassigned => "unassigned",
             Self::Ai => "ai",
             Self::Human => "human",
             Self::Hybrid => "hybrid",
@@ -160,8 +164,10 @@ mod tests {
     use super::*;
 
     #[test]
-    fn owner_is_configurable_and_defaults_to_ai() {
-        assert_eq!(ReviewOwner::from_config(None), ReviewOwner::Ai);
+    fn owner_is_configurable_and_ai_stays_off_by_default() {
+        assert_eq!(ReviewOwner::from_config(None), ReviewOwner::Unassigned);
+        assert!(!ReviewOwner::Unassigned.uses_ai());
+        assert_eq!(ReviewOwner::from_config(Some("ai")), ReviewOwner::Ai);
         assert_eq!(ReviewOwner::from_config(Some("human")), ReviewOwner::Human);
         assert_eq!(
             ReviewOwner::from_config(Some("hybrid")),

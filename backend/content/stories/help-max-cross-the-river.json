@@ -247,10 +247,10 @@
       }
     ],
     "idea_questions": [
-      "What are you planning to build to help Max?",
-      "How will your invention work?",
-      "Which idea from nature inspired your design?",
-      "What will keep your invention floating or help Max cross the river?",
+      "What would you build to help Max?",
+      "How will your creation work?",
+      "What idea from nature inspired your design?",
+      "What will help your design float or help Max cross the river?",
       "What materials might you use?"
     ],
     "idea_name_prompt": "Give your amazing idea a name!",

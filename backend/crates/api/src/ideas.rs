@@ -34,12 +34,9 @@ fn internal(e: sqlx::Error) -> DomainError {
 
 #[derive(serde::Deserialize, ToSchema)]
 pub struct SubmitIdeaRequest {
-    /// The kid's own words. Empty only when the idea is a voice note.
-    #[serde(default)]
+    /// The kid's own words.
     pub text: String,
     pub hero_index: Option<i16>,
-    #[serde(default)]
-    pub has_voice: bool,
     pub lang: Option<String>,
 }
 
@@ -262,15 +259,15 @@ pub async fn submit_idea(
     let child_id = kid.child_id;
     let lang = body.lang.as_deref().unwrap_or("en").to_owned();
     let idea: String = body.text.trim().chars().take(MAX_IDEA_CHARS).collect();
-    if idea.is_empty() && !body.has_voice {
-        return Err(DomainError::Validation("an idea needs words or a voice note".into()).into());
+    if idea.is_empty() {
+        return Err(DomainError::Validation("an idea needs words".into()).into());
     }
     let words = mission_words(&state, challenge_id, body.hero_index, &lang).await?;
 
     // Saved before anything else can go wrong. A changed idea is a new version, never an edit.
     let saved = sqlx::query(
-        "INSERT INTO idea_submissions (child_id, challenge_id, hero_index, hero_name, original_text, has_voice, version)
-         VALUES ($1, $2, $3, $4, $5, $6, COALESCE(
+        "INSERT INTO idea_submissions (child_id, challenge_id, hero_index, hero_name, original_text, version)
+         VALUES ($1, $2, $3, $4, $5, COALESCE(
              (SELECT MAX(version) FROM idea_submissions WHERE child_id = $1 AND challenge_id = $2), 0) + 1)
          RETURNING id, version",
     )
@@ -279,7 +276,6 @@ pub async fn submit_idea(
     .bind(body.hero_index)
     .bind(&words.hero_name)
     .bind(&idea)
-    .bind(body.has_voice)
     .fetch_one(&state.db)
     .await
     .map_err(internal)?;
@@ -338,6 +334,133 @@ pub async fn submit_idea(
         }),
         review_available: true,
     }))
+}
+
+#[derive(serde::Deserialize, ToSchema)]
+pub struct AttachSketchRequest {
+    pub project_id: Uuid,
+    /// The idea's name: its words if the kid went straight to sketching and saved none before.
+    pub name: String,
+}
+
+/// Attach a sketch to the kid's latest idea on this challenge. The idea's words don't change.
+#[utoipa::path(post, path = "/challenges/{id}/hero-ideas/sketch", tag = "challenges",
+    params(("id" = Uuid, Path, description = "Challenge UUID")),
+    request_body = AttachSketchRequest,
+    security(("bearer_auth" = [])),
+    responses(
+        (status = 204, description = "Attached"),
+        (status = 403, description = "Not a kid token", body = crate::ProblemDetail),
+        (status = 404, description = "Not this kid's project", body = crate::ProblemDetail),
+    ))]
+pub async fn attach_sketch(
+    kid: KidAuth,
+    State(state): State<AppState>,
+    Path(challenge_id): Path<Uuid>,
+    Json(body): Json<AttachSketchRequest>,
+) -> Result<axum::http::StatusCode, ApiError> {
+    let child_id = kid.child_id;
+    let own: Option<Uuid> =
+        sqlx::query_scalar("SELECT id FROM projects WHERE id = $1 AND child_id = $2")
+            .bind(body.project_id)
+            .bind(child_id)
+            .fetch_optional(&state.db)
+            .await
+            .map_err(internal)?;
+    own.ok_or(DomainError::NotFound)?;
+    let latest: Option<Uuid> = sqlx::query_scalar(
+        "SELECT id FROM idea_submissions WHERE child_id = $1 AND challenge_id = $2
+         ORDER BY version DESC LIMIT 1",
+    )
+    .bind(child_id)
+    .bind(challenge_id)
+    .fetch_optional(&state.db)
+    .await
+    .map_err(internal)?;
+    if let Some(idea_id) = latest {
+        sqlx::query("UPDATE idea_submissions SET project_id = $1 WHERE id = $2")
+            .bind(body.project_id)
+            .bind(idea_id)
+            .execute(&state.db)
+            .await
+            .map_err(internal)?;
+    } else {
+        let name: String = body.name.trim().chars().take(MAX_IDEA_CHARS).collect();
+        let idea_id: Uuid = sqlx::query_scalar(
+            "INSERT INTO idea_submissions (child_id, challenge_id, original_text, version, project_id)
+             VALUES ($1, $2, $3, 1, $4) RETURNING id",
+        )
+        .bind(child_id)
+        .bind(challenge_id)
+        .bind(&name)
+        .bind(body.project_id)
+        .fetch_one(&state.db)
+        .await
+        .map_err(internal)?;
+        let owner = ReviewOwner::from_config(std::env::var("IDEA_REVIEW_OWNER").ok().as_deref());
+        add_review(&state, idea_id, STATUS_PENDING, None, owner, None, None).await?;
+    }
+    Ok(axum::http::StatusCode::NO_CONTENT)
+}
+
+#[derive(serde::Deserialize, utoipa::IntoParams)]
+pub struct MyIdeasQuery {
+    pub lang: Option<String>,
+}
+
+#[derive(Serialize, ToSchema)]
+pub struct SavedIdea {
+    pub id: Uuid,
+    pub challenge_id: Uuid,
+    pub challenge_title: String,
+    pub hero_name: Option<String>,
+    pub text: String,
+    pub version: i32,
+    /// The project holding this idea's sketch, once it has one.
+    pub project_id: Option<Uuid>,
+    pub created_at: chrono::DateTime<chrono::Utc>,
+}
+
+/// Every idea this kid has saved, for My Profile: newest first, the words exactly as written.
+#[utoipa::path(get, path = "/children/me/hero-ideas", tag = "challenges",
+    params(MyIdeasQuery),
+    security(("bearer_auth" = [])),
+    responses(
+        (status = 200, description = "The kid's own ideas", body = Vec<SavedIdea>),
+        (status = 403, description = "Not a kid token", body = crate::ProblemDetail),
+    ))]
+pub async fn my_ideas(
+    kid: KidAuth,
+    State(state): State<AppState>,
+    axum::extract::Query(query): axum::extract::Query<MyIdeasQuery>,
+) -> Result<Json<Vec<SavedIdea>>, ApiError> {
+    let lang = query.lang.as_deref().unwrap_or("en");
+    let rows = sqlx::query(
+        "SELECT s.id, s.challenge_id, s.hero_name, s.original_text, s.version, s.project_id, s.created_at,
+                COALESCE(CASE WHEN $2 = 'en' THEN NULL ELSE c.translations -> $2 ->> 'title' END, c.title) AS title
+         FROM idea_submissions s JOIN challenges c ON c.id = s.challenge_id
+         WHERE s.child_id = $1 AND s.original_text <> ''
+         ORDER BY s.created_at DESC",
+    )
+    .bind(kid.child_id)
+    .bind(lang)
+    .fetch_all(&state.db)
+    .await
+    .map_err(internal)?;
+    Ok(Json(
+        rows.iter()
+            .map(|r| SavedIdea {
+                id: r.get("id"),
+                challenge_id: r.get("challenge_id"),
+                challenge_title: r.get("title"),
+                hero_name: r.get("hero_name"),
+                text: r.get("original_text"),
+                version: r.get("version"),
+                project_id: r.get("project_id"),
+                created_at: r.get("created_at"),
+            })
+            .collect(),
+    ))
 }
 
 /// The search provider's place. Must return only sources it has verified; never generated ones.

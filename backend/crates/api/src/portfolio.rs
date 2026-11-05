@@ -377,6 +377,53 @@ pub async fn add_project_photo(
     Ok((StatusCode::CREATED, Json(map_project(project))))
 }
 
+// ── GET /projects/:id/photo ───────────────────────────────────────────────────
+
+/// The newest photo on a kid's own project, for their profile. Photos stay private: this is the
+/// only way to read one, and only with the owner's own token.
+#[utoipa::path(
+    get, path = "/projects/{id}/photo", tag = "portfolio",
+    params(("id" = Uuid, Path, description = "Project ID")),
+    responses(
+        (status = 200, description = "The photo", content_type = "image/*"),
+        (status = 403, description = "Non-kid token, or not the owner", body = crate::ProblemDetail),
+        (status = 404, description = "No such project or photo", body = crate::ProblemDetail),
+    )
+)]
+pub async fn get_project_photo(
+    KidAuth { child_id, .. }: KidAuth,
+    State(state): State<AppState>,
+    Path(project_id): Path<Uuid>,
+) -> Result<axum::response::Response, ApiError> {
+    let project = state
+        .portfolio
+        .projects
+        .find_by_id(project_id)
+        .await?
+        .ok_or(ApiError::Domain(DomainError::NotFound))?;
+    if project.child_id != child_id {
+        return Err(ApiError::Domain(DomainError::Forbidden(
+            "Project belongs to another child".into(),
+        )));
+    }
+    let key = project
+        .photo_keys
+        .last()
+        .ok_or(ApiError::Domain(DomainError::NotFound))?;
+    let (bytes, content_type) = state.portfolio.photos.get(key).await?;
+    Ok((
+        [
+            (CONTENT_TYPE, content_type),
+            (
+                axum::http::header::CACHE_CONTROL,
+                "private, max-age=300".to_owned(),
+            ),
+        ],
+        bytes,
+    )
+        .into_response())
+}
+
 // ── PATCH /projects/:id/visibility ───────────────────────────────────────────
 
 #[utoipa::path(

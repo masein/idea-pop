@@ -248,6 +248,29 @@ impl PhotoStore for S3PhotoStore {
             .map_err(|e| domain_err(e.to_string()))?;
         Ok(())
     }
+
+    async fn get(&self, key: &str) -> Result<(Vec<u8>, String), DomainError> {
+        let object = self
+            .client
+            .get_object()
+            .bucket(&self.bucket)
+            .key(key)
+            .send()
+            .await
+            .map_err(|e| domain_err(e.to_string()))?;
+        let content_type = object
+            .content_type()
+            .unwrap_or("application/octet-stream")
+            .to_owned();
+        let bytes = object
+            .body
+            .collect()
+            .await
+            .map_err(|e| domain_err(e.to_string()))?
+            .into_bytes()
+            .to_vec();
+        Ok((bytes, content_type))
+    }
 }
 
 // ── SqlxModerationRepo ────────────────────────────────────────────────────────

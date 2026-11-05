@@ -248,7 +248,7 @@ pub struct CreateHealthLogRequest {
         library::list_studios, library::list_courses, library::list_quick_makes,
         library::get_course, library::get_creator,
         challenges::list_challenges, challenges::get_challenge,
-        ideas::submit_idea, ideas::idea_references,
+        ideas::submit_idea, ideas::idea_references, ideas::my_ideas, ideas::attach_sketch,
         help::ask_helper, help::idea_feedback, help::parent_help_messages,
         help::teacher_help_messages, help::set_helper_enabled,
         progress::post_video_view, progress::post_lesson_complete, progress::post_define_bonus,
@@ -260,7 +260,7 @@ pub struct CreateHealthLogRequest {
         progress::get_challenge_progress,
         progress::start_attempt, progress::advance_step,
         progress::get_me_progress,
-        portfolio::create_project, portfolio::list_my_projects,
+        portfolio::create_project, portfolio::list_my_projects, portfolio::get_project_photo,
         portfolio::presign_photo_upload, portfolio::add_project_photo, portfolio::update_project_visibility,
         portfolio::submit_idea, portfolio::list_ideas,
         portfolio::react_to_idea, portfolio::remix_idea,
@@ -289,7 +289,8 @@ pub struct CreateHealthLogRequest {
         ChallengeResponse, ChallengePageResponse, AgeTierVariantResponse, ToolResponse,
         NatureClueResponse,
         ideas::SubmitIdeaRequest, ideas::SubmitIdeaResponse, ideas::IdeaExperimentResponse,
-        ideas::IdeaReference, ideas::IdeaReferencesResponse,
+        ideas::IdeaReference, ideas::IdeaReferencesResponse, ideas::SavedIdea,
+        ideas::AttachSketchRequest,
         HelpRequest, HelpResponse, HelpMessageResponse, IdeaFeedbackRequest, IdeaFeedbackResponse,
         UpdateHelperEnabledRequest, HelperEnabledResponse,
         VideoViewRequest, LessonCompleteRequest, XpAwardResponse, MissionRewardRequest, MissionRewardItem, MissionRewardsResponse,
@@ -622,6 +623,11 @@ pub fn router_with_metrics(
         .route("/challenges/:id/hero-ideas", post(ideas::submit_idea))
         .route("/hero-ideas/:id/references", get(ideas::idea_references))
         .route(
+            "/challenges/:id/hero-ideas/sketch",
+            post(ideas::attach_sketch),
+        )
+        .route("/children/me/hero-ideas", get(ideas::my_ideas))
+        .route(
             "/parent/children/:id/help-messages",
             get(help::parent_help_messages),
         )
@@ -675,6 +681,7 @@ pub fn router_with_metrics(
             post(portfolio::add_project_photo)
                 .layer(axum::extract::DefaultBodyLimit::max(9 * 1024 * 1024)),
         )
+        .route("/projects/:id/photo", get(portfolio::get_project_photo))
         .route("/me/projects", get(portfolio::list_my_projects))
         .route(
             "/projects/:id/photos/presign",

@@ -36,11 +36,8 @@ interface CaptureCardProps {
   titleLabel?: string;
   /** Something above the card still needs doing (e.g. the first map label); the hint says what. */
   blockedHint?: string | null;
-  /** Guiding questions about the idea, asked one under another before its name (the
-   *  answers become the idea's description). At least one answer is needed. */
-  questions?: string[];
-  /** Answers already given earlier (by question index), so the kid doesn't write them twice. */
-  initialAnswers?: Record<number, string>;
+  /** The idea's name is the one thing asked (story challenges): shown large, nothing else needed. */
+  ideaName?: boolean;
 }
 
 export default function CaptureCard({
@@ -55,8 +52,7 @@ export default function CaptureCard({
   nameOnly = false,
   titleLabel,
   blockedHint = null,
-  questions = [],
-  initialAnswers = {},
+  ideaName: guided = false,
 }: CaptureCardProps) {
   const t = useTranslations('mission');
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
@@ -68,12 +64,8 @@ export default function CaptureCard({
   const [whatWasHard, setWhatWasHard] = useState('');
   const [whatIdImprove, setWhatIdImprove] = useState('');
   const [showPopi, setShowPopi] = useState(false);
-  const [answers, setAnswers] = useState<string[]>(() => questions.map((_, i) => initialAnswers[i] ?? ''));
-  const guided = questions.length > 0;
-  const answered = answers.some((a) => a.trim().length > 0);
-
   const canSubmit =
-    title.trim().length > 0 && (guided ? answered : whatIMade.trim().length > 0) && !blockedHint;
+    title.trim().length > 0 && (guided || whatIMade.trim().length > 0) && !blockedHint;
 
   // Revoke the object URL when it changes or the card unmounts, so previewing
   // a photo doesn't leak blob URLs.
@@ -99,13 +91,7 @@ export default function CaptureCard({
     if (!canSubmit || submitting) return;
     onSubmit({
       title: title.trim(),
-      // Guided: each answered question with its answer, one per line.
-      what_i_made: guided
-        ? questions
-            .map((q, i) => (answers[i]?.trim() ? `${q} ${answers[i].trim()}` : ''))
-            .filter(Boolean)
-            .join('\n')
-        : whatIMade.trim(),
+      what_i_made: whatIMade.trim(),
       what_i_used: whatIUsed.trim(),
       photo,
       ...(showExtendedFields && {
@@ -176,31 +162,6 @@ export default function CaptureCard({
           </button>
         )}
       </div>
-
-      {/* Guiding questions: a short, friendly conversation about the idea. */}
-      {guided && (
-        <ol data-testid="idea-questions" className="flex flex-col gap-3">
-          {questions.map((q, i) => (
-            <li key={q} className="flex flex-col gap-1 rounded-[16px] bg-white p-3 shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
-              <label htmlFor={`idea-q-${i}`} className="font-body text-base font-bold text-ink">
-                <span aria-hidden="true" className="me-1.5 text-challenge">{i + 1}.</span>
-                {q}
-              </label>
-              <textarea
-                id={`idea-q-${i}`}
-                data-testid={`idea-q-${i}`}
-                rows={2}
-                maxLength={400}
-                dir="auto"
-                value={answers[i] ?? ''}
-                onChange={(e) => setAnswers((a) => a.map((x, k) => (k === i ? e.target.value : x)))}
-                placeholder={t('idea_answer_placeholder')}
-                className={`${inputClass} resize-none text-base`}
-              />
-            </li>
-          ))}
-        </ol>
-      )}
 
       {/* Title / What did you make? */}
       <div className="flex flex-col gap-1">

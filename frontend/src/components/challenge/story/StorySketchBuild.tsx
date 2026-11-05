@@ -7,19 +7,21 @@ import { discoveryOf, heroShort } from './discovery';
 import type { MissionGame, GameUpdate } from './useMissionGame';
 import { btnIcon } from '@/components/challenge/buttons';
 
-/** Story top for the Sketch step (step 4, TEMP rule 37): Popi's question, the kid's nature
- *  partner as a reminder.
- *  The sketch capture sits below. We never name ideas for the kid. */
+/** Story top for the Sketch step: the kid's Nature Hero as a reminder. The sketch capture sits
+ *  below. We never name ideas for the kid. */
 export function StorySketchTop({ story, game }: { story: MissionStory; game: MissionGame; update?: GameUpdate }) {
   const t = useTranslations('story');
   const partner = game.partner !== null && game.partner !== undefined ? story.clue_cards[game.partner] : null;
   return (
     <div data-testid="story-sketch" className="flex flex-col gap-5 pt-4">
-      <Popi text={t('sketch_popi', { hero: heroShort(story) })} />
       {partner && (
         <div data-testid="hero-memory" className="flex flex-col gap-1.5 self-stretch rounded-[18px] bg-[#EAF5FC] px-4 py-3 font-body text-base text-[#1F2A33]">
           <p className="font-bold text-[#1A6FA6]">{t('partner_reminder', { name: partner.name })}</p>
-          <p dir="auto"><b>{t('hero_memory_feature')}</b> {game.partnerAnswers?.attention?.trim() || partner.trick}</p>
+          {game.partnerAnswers?.attention?.trim() ? (
+            <p dir="auto"><b>{t('hero_memory_feature')}</b> {game.partnerAnswers.attention}</p>
+          ) : (
+            <p dir="auto"><b>{t('its_trick')}:</b> {partner.trick}</p>
+          )}
           {(game.partnerAnswers?.inspired ?? '').trim() && (
             <p dir="auto"><b>{t('hero_memory_idea')}</b> {game.partnerAnswers.inspired}</p>
           )}

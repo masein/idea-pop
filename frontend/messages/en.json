@@ -975,7 +975,9 @@
     "xp_amount": "{xp, number} XP",
     "upgrade_heading": "Want more missions?",
     "adventure_count": "{count, number}",
-    "new_project": "new project"
+    "new_project": "new project",
+    "ideas_heading": "My ideas",
+    "ideas_empty": "Your ideas will show up here after you save one in a challenge."
   },
   "parent_dashboard": {
     "heading": "Your family dashboard",
@@ -1382,7 +1384,9 @@
     "default_sketch_title": "My sketch",
     "default_build_title": "My build",
     "idea_answer_placeholder": "Write your answer…",
-    "idea_name_placeholder": "My idea is called…"
+    "idea_name_placeholder": "My idea is called…",
+    "sketch_ready": "Let's turn your idea into a drawing so others can understand it! Ready to sketch?",
+    "sketch_upload_prompt": "Add a photo of your paper sketch (the project, not faces)"
   },
   "player": {
     "back": "Back",
@@ -1891,13 +1895,6 @@
     "popi_q_use": "How could you use this trick to {goal}?",
     "popi_goal_default": "help {hero}",
     "hero_answer_label": "Your idea, in a sentence or two",
-    "voice_record": "Record my answer",
-    "voice_stop": "Stop recording",
-    "voice_again": "Record again",
-    "voice_delete": "Delete my recording",
-    "voice_listening": "I'm listening…",
-    "voice_denied": "The microphone isn't on, so you can type your idea instead.",
-    "voice_answer_text": "I recorded my idea.",
     "clues_how_help": "How can we help {hero}?",
     "hero_review": "Review",
     "review_title": "Your idea",
@@ -1905,16 +1902,17 @@
     "review_save_failed": "We couldn't save your idea just now. It's still in your answer box.",
     "review_try_again": "Try again",
     "review_close": "Got it!",
-    "review_saved_later": "Your idea is saved! We can explore it together later.",
+    "review_saved_later": "Your idea is saved! You can find it any time in My Profile.",
     "review_saved_develop": "Your idea is saved! We're still exploring how it might work. We can come back and develop it together!",
-    "review_unavailable": "Conspy's review isn't ready yet.",
     "review_try_title": "Try it at home",
     "review_search_question": "Has anyone built something like your idea?",
     "review_search_loading": "Popi is looking…",
     "review_search_unavailable": "Popi's search isn't ready yet, so there's nothing to show. We never make up results.",
     "review_search_error": "Popi couldn't search just now. Try again in a moment!",
     "review_search_none": "Popi didn't find anything like it yet. Your idea might be a new one!",
-    "review_open": "See Conspy's note"
+    "review_open": "See Conspy's note",
+    "coming_soon": "Coming Soon",
+    "review_feature": "Conspy's review"
   },
   "thinking_tools": {
     "accordion_young": "Stuck? Try a thinking tool!",

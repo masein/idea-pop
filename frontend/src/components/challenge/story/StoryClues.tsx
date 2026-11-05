@@ -19,7 +19,7 @@ interface Props {
   onBack: () => void;
   /** The page awards the clue badge (Nature Hero) on Next, with its popup. */
   deferClueBadge?: boolean;
-  /** Names this challenge's saved work (the kid's voice note). */
+  /** The challenge the kid's idea is saved under. */
   workKey: string;
 }
 

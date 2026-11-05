@@ -294,6 +294,10 @@ pub trait PhotoStore: Send + Sync {
     async fn presign_upload(&self, key: &str, expires_in_secs: u64) -> Result<String, DomainError>;
     /// Stores a photo the server received (private; never served publicly).
     async fn put(&self, key: &str, bytes: Vec<u8>, content_type: &str) -> Result<(), DomainError>;
+    /// Reads a stored photo and its content type, for its owner only (checked by the caller).
+    async fn get(&self, _key: &str) -> Result<(Vec<u8>, String), DomainError> {
+        Err(DomainError::NotFound)
+    }
 }
 
 #[async_trait]

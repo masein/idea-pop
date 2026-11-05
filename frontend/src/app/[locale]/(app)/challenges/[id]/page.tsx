@@ -485,22 +485,12 @@ function ChallengePageInner({ onBadgeMode }: { onBadgeMode: (on: boolean) => voi
               {...sharedProps}
               hideTools={story !== null}
               guide={
-                badgeMode && disc?.idea_questions?.length
+                story
                   ? {
-                      questions: disc.idea_questions,
-                      nameLabel: disc.idea_name_prompt ?? tStory('name_idea_fallback'),
+                      nameLabel: disc?.idea_name_prompt ?? tStory('name_idea_fallback'),
                       submitLabel: tStory('submit_idea'),
-                      // From the Nature Hero flow: the first idea (question 1) and the hero's
-                      // feature that inspired it (question 3).
-                      answers: {
-                        0: game.partnerAnswers?.inspired ?? '',
-                        2:
-                          game.partner !== null && game.partner !== undefined && story
-                            ? `${story.clue_cards[game.partner]?.name}: ${
-                                game.partnerAnswers?.attention || (story.clue_cards[game.partner]?.trick ?? '')
-                              }`
-                            : '',
-                      },
+                      description: game.partnerAnswers?.inspired ?? '',
+                      videoUrl: disc?.sketch_video ?? null,
                     }
                   : null
               }

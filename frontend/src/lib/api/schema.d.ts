@@ -274,7 +274,7 @@ export interface paths {
       parameters: { path: { id: string } };
       requestBody: {
         content: {
-          "application/json": { text: string; hero_index?: number | null; has_voice?: boolean; lang?: string | null };
+          "application/json": { text: string; hero_index?: number | null; lang?: string | null };
         };
       };
       responses: {
@@ -289,6 +289,40 @@ export interface paths {
               experiment: { materials: string[]; steps: string[] } | null;
               review_available: boolean;
             };
+          };
+        };
+      };
+    };
+  };
+  "/api/challenges/{id}/hero-ideas/sketch": {
+    post: {
+      parameters: { path: { id: string } };
+      requestBody: { content: { "application/json": { project_id: string; name: string } } };
+      responses: { 204: { content: never } };
+    };
+  };
+  "/api/projects/{id}/photo": {
+    get: {
+      parameters: { path: { id: string } };
+      responses: { 200: { content: { "image/*": string } } };
+    };
+  };
+  "/api/children/me/hero-ideas": {
+    get: {
+      parameters: { query?: { lang?: string } };
+      responses: {
+        200: {
+          content: {
+            "application/json": {
+              id: string;
+              challenge_id: string;
+              challenge_title: string;
+              hero_name: string | null;
+              text: string;
+              version: number;
+              project_id: string | null;
+              created_at: string;
+            }[];
           };
         };
       };

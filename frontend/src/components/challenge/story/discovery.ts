@@ -70,8 +70,10 @@ export interface Discovery {
   materials?: string[];
   /** "Think like your partner": one lesson per clue card, in the same order. */
   partner_lessons?: PartnerLesson[];
-  /** The Initial Design's guiding questions, then the name prompt. */
+  /** The questions in the sketch tutorial video's script. */
   idea_questions?: string[];
+  /** The sketch tutorial video, once it exists. Until then its Asset ID holds the spot. */
+  sketch_video?: string | null;
   idea_name_prompt?: string;
   /** The words before "Build It & Test It!" on the build page. */
   checklist_intro?: string;

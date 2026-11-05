@@ -10,6 +10,7 @@ import { levelProgress } from '@/lib/progress';
 import { AVATARS } from '@/lib/avatars';
 import KidMedals from '@/components/profile/KidMedals';
 import KidProjectsGrid from '@/components/profile/KidProjectsGrid';
+import KidIdeas from '@/components/profile/KidIdeas';
 import type { components } from '@/lib/api/schema';
 import AssetSlot from '@/components/AssetSlot';
 
@@ -62,6 +63,8 @@ export default function ProfilePage() {
   const [avatarId, setAvatarId] = useState<string>('');
   const [showHandoff, setShowHandoff] = useState(false);
   const [projectsList, setProjectsList] = useState<KidProjectSummary[]>([]);
+  // Sketches shown with their idea below; the project list leaves them out.
+  const [attachedIds, setAttachedIds] = useState<string[] | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
 
   const EMPTY_PROGRESS: KidProgressResponse = {
@@ -236,13 +239,16 @@ export default function ProfilePage() {
         </section>
 
         {/* My projects */}
-        {!loading && (
+        {!loading && attachedIds && (
           <KidProjectsGrid
-            projects={projectsList}
+            projects={projectsList.filter((p) => !attachedIds.includes(p.id))}
             onVisibilityChanged={handleVisibilityChanged}
           />
         )}
         {loading && <div className="h-40 animate-pulse rounded-card bg-white" />}
+
+        {/* My ideas, by challenge */}
+        <KidIdeas projects={projectsList} onLoaded={setAttachedIds} onVisibilityChanged={handleVisibilityChanged} />
 
         {/* Upgrade → parent handoff (never checkout) */}
         <div

@@ -1,7 +1,8 @@
 'use client';
 
-import Image from 'next/image';
+import { useEffect, useState } from 'react';
 import AssetSlot from '@/components/AssetSlot';
+import { fetchProjectPhoto } from '@/lib/api/client';
 
 type KidProjectSummary = import('@/lib/api/schema').components['schemas']['KidProjectSummary'];
 
@@ -17,6 +18,26 @@ const VISIBILITY_LABELS: Record<string, string> = {
 };
 
 export default function KidProjectCard({ project, onShare }: KidProjectCardProps) {
+  // The list carries the photo's storage key, not a link: the photo comes with the kid's own token.
+  const hasPhoto = ((project as { photo_keys?: string[] }).photo_keys?.length ?? 0) > 0;
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  useEffect(() => {
+    if (!hasPhoto) return;
+    let url: string | null = null;
+    let alive = true;
+    fetchProjectPhoto(project.id)
+      .then((blob) => {
+        if (!alive) return;
+        url = URL.createObjectURL(blob);
+        setPhotoUrl(url);
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+      if (url) URL.revokeObjectURL(url);
+    };
+  }, [hasPhoto, project.id]);
+
   const visLabel = project.visibility_pending
     ? 'Pending review'
     : (VISIBILITY_LABELS[project.visibility] ?? 'Private');
@@ -27,14 +48,11 @@ export default function KidProjectCard({ project, onShare }: KidProjectCardProps
       className="bg-white rounded-card shadow-sm overflow-hidden flex flex-col border border-ink/10"
     >
       {/* Photo */}
-      {project.project_photo_url ? (
-        <div className="relative w-full h-36">
-          <Image
-            src={project.project_photo_url}
-            alt={`${project.title} photo`}
-            fill
-            className="object-cover"
-          />
+      {photoUrl ? (
+        <div className="relative h-36 w-full">
+          {/* A blob from the kid's own photo: next/image can't load these. */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={photoUrl} alt="" data-testid="project-photo" className="h-full w-full object-cover" />
         </div>
       ) : (
         <div className="h-36 w-full bg-tint-blue">

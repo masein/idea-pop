@@ -521,7 +521,7 @@ async fn hero_ideas_are_always_saved_and_reviewed_only_when_a_review_can_run() {
     let send = |text: &'static str| {
         post_json(
             &format!("/challenges/{challenge}/hero-ideas"),
-            json!({ "text": text, "has_voice": false, "lang": "en" }),
+            json!({ "text": text, "lang": "en" }),
             Some(&kid),
         )
     };
@@ -555,7 +555,48 @@ async fn hero_ideas_are_always_saved_and_reviewed_only_when_a_review_can_run() {
     assert_eq!(refs["available"], false);
     assert_eq!(refs["references"].as_array().unwrap().len(), 0);
 
-    // Helper on, with consent and the parent's opt-in: each kind of idea gets its own result.
+    // The profile list returns the kid's own words, newest first.
+    let res = app
+        .clone()
+        .oneshot(get_req("/children/me/hero-ideas?lang=en", &kid))
+        .await
+        .unwrap();
+    let mine = body_json(res).await;
+    assert_eq!(mine[0]["text"], "A bigger raft");
+    assert_eq!(mine[1]["text"], "A raft");
+    assert_eq!(mine[1]["challenge_id"], challenge.to_string());
+
+    // A sketch attaches to the latest idea: no new idea, and its words don't change.
+    let project: Uuid = sqlx::query_scalar(
+        "INSERT INTO projects (child_id, origin_type, origin_id, title) VALUES ($1, 'challenge', $2, 'Raft') RETURNING id",
+    )
+    .bind(child_id)
+    .bind(challenge)
+    .fetch_one(&pool)
+    .await
+    .unwrap();
+    let res = app
+        .clone()
+        .oneshot(post_json(
+            &format!("/challenges/{challenge}/hero-ideas/sketch"),
+            json!({ "project_id": project, "name": "Raft" }),
+            Some(&kid),
+        ))
+        .await
+        .unwrap();
+    assert_eq!(res.status(), StatusCode::NO_CONTENT);
+    let res = app
+        .clone()
+        .oneshot(get_req("/children/me/hero-ideas", &kid))
+        .await
+        .unwrap();
+    let mine = body_json(res).await;
+    assert_eq!(mine.as_array().unwrap().len(), 2, "still two ideas");
+    assert_eq!(mine[0]["project_id"], project.to_string());
+    assert_eq!(mine[0]["text"], "A bigger raft");
+    assert!(mine[1]["project_id"].is_null());
+
+    // Off by default: with no review owner set, helper on or not, no AI review runs.
     grant_consent(&pool, child_id).await;
     sqlx::query("UPDATE child_profiles SET helper_enabled = true WHERE id = $1")
         .bind(child_id)
@@ -563,6 +604,13 @@ async fn hero_ideas_are_always_saved_and_reviewed_only_when_a_review_can_run() {
         .await
         .unwrap();
     let app = router(helper_state(pool.clone(), 10), None);
+    let res = app.clone().oneshot(send("Still waiting")).await.unwrap();
+    let waiting = body_json(res).await;
+    assert_eq!(waiting["status"], "pending_review");
+    assert_eq!(waiting["review_available"], false);
+
+    // An owner that includes AI, plus consent and the opt-in: each idea gets its own result.
+    std::env::set_var("IDEA_REVIEW_OWNER", "ai");
     let res = app
         .clone()
         .oneshot(send("A raft that traps air"))
@@ -595,7 +643,7 @@ async fn hero_ideas_are_always_saved_and_reviewed_only_when_a_review_can_run() {
     .await
     .unwrap();
     assert_eq!(
-        reviews, 8,
-        "a pending row for all five ideas, plus three reviews"
+        reviews, 9,
+        "a pending row for all six ideas, plus three reviews"
     );
 }

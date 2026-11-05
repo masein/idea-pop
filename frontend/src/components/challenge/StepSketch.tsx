@@ -1,16 +1,18 @@
 'use client';
 
-import { useState } from 'react';
+import { useContext, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import CaptureCard, { type CaptureData } from './CaptureCard';
 import ToolSelector, { isToolKey } from './tool/ToolSelector';
-import { createProject, uploadProjectPhoto } from '@/lib/api/client';
+import { attachSketchToIdea, createProject, uploadProjectPhoto } from '@/lib/api/client';
+import { showsSketchTutorial } from '@/lib/challenges/sketchTutorial';
 import { GAME_BY_SLUG } from './gameEmbeds';
 import { btnPrimary, btnText } from '@/components/challenge/buttons';
-import { heroShort } from './story/discovery';
-import AssetSlot from '@/components/AssetSlot';
+import AssetSlot, { AssetScope } from '@/components/AssetSlot';
 
 type ChallengeDetail = import('@/lib/api/schema').components['schemas']['ChallengeDetail'];
+
+const PHOTO_WAIT_MS = 30_000;
 
 export interface SavedIdea {
   title: string;
@@ -29,12 +31,13 @@ interface StepSketchProps {
   hideTools?: boolean;
   /** Story sketch: what still needs doing before the idea can be saved (null when ready). */
   blockedHint?: string | null;
-  /** Guiding questions about the idea, then the idea's name and submit wording (Max). */
-  guide?: { questions: string[]; nameLabel: string; submitLabel: string; answers?: Record<number, string> } | null;
+  /** Story challenges: the idea's name and submit wording, and the words of the idea so far. */
+  guide?: { nameLabel: string; submitLabel: string; description: string; videoUrl?: string | null } | null;
 }
 
 export default function StepSketch({ challenge, ageMode, onNext, onBack, hideTools = false, blockedHint = null, guide = null }: StepSketchProps) {
   const t = useTranslations('mission');
+  const scope = useContext(AssetScope);
   const game = GAME_BY_SLUG[challenge.slug];
   // The hook must run unconditionally; the namespace is only read when a game exists.
   const tg = useTranslations(game?.i18nNs ?? 'qtree');
@@ -42,20 +45,29 @@ export default function StepSketch({ challenge, ageMode, onNext, onBack, hideToo
 
   async function handleSubmit(data: CaptureData) {
     setSubmitting(true);
-    const idea = [data.title, data.what_i_made, data.what_i_used].map((x) => x?.trim()).filter(Boolean).join('. ');
-    const saved: SavedIdea = { title: data.title, description: data.what_i_made, photo: data.photo ?? null };
+    const description = guide ? guide.description.trim() || data.title : data.what_i_made;
+    const idea = [data.title, description, data.what_i_used].map((x) => x?.trim()).filter(Boolean).join('. ');
+    const saved: SavedIdea = { title: data.title, description, photo: data.photo ?? null };
     try {
       const project = await createProject({
         title: data.title || t('default_sketch_title'),
-        what_i_made: data.what_i_made,
+        what_i_made: description,
         what_i_used: data.what_i_used,
         what_was_hard: '',
         what_id_improve: '',
         challenge_id: challenge.id,
         step_type: 'sketch',
       });
-      // The sketch photo is optional and private; the idea counts as saved without it.
-      if (data.photo) await uploadProjectPhoto(project.id, data.photo).catch(() => {});
+      // The sketch joins the kid's saved idea for this challenge: one record, no copy.
+      if (challenge.story) await attachSketchToIdea(challenge.id, project.id, data.title).catch(() => {});
+      // The sketch photo is optional and private; the idea counts as saved without it, and a
+      // slow or stuck upload never holds the kid back.
+      if (data.photo) {
+        await Promise.race([
+          uploadProjectPhoto(project.id, data.photo).catch(() => {}),
+          new Promise((resolve) => setTimeout(resolve, PHOTO_WAIT_MS)),
+        ]);
+      }
       onNext(project.id, idea, saved);
     } catch {
       onNext(null, idea, saved);
@@ -102,13 +114,10 @@ export default function StepSketch({ challenge, ageMode, onNext, onBack, hideToo
       <div>
         <h2 className="font-display text-2xl text-challenge">{t('sketch_heading')}</h2>
         <p className="mt-1 font-body text-lg font-semibold leading-snug text-ink">
-          {/* Story missions ask the kid for their own idea and never list answers (TEMP rule 36). */}
-          {challenge.story
-            ? t('sketch_prompt_story', { hero: heroShort(challenge.story) })
-            : challenge.sketch_prompt?.trim() || t('sketch_prompt_fallback')}
+          {challenge.story ? t('sketch_ready') : challenge.sketch_prompt?.trim() || t('sketch_prompt_fallback')}
         </p>
         {/* The paper-and-photo instruction contradicts the on-screen games. */}
-        {!game && (
+        {!game && !challenge.story && (
           <p
             data-testid="sketch-instruction"
             className="mt-2 rounded-card bg-tint-blue px-3 py-2 font-body text-sm text-ink/80"
@@ -125,6 +134,17 @@ export default function StepSketch({ challenge, ageMode, onNext, onBack, hideToo
           </p>
         )}
       </div>
+
+      {/* The tutorial, in the first few challenges: how to sketch on paper and add labels. */}
+      {challenge.story && !game && showsSketchTutorial(challenge) && (
+        <div data-testid="sketch-tutorial" className="aspect-video w-full max-w-xl self-center overflow-hidden rounded-[18px] bg-white">
+          {guide?.videoUrl ? (
+            <video src={guide.videoUrl} controls playsInline className="h-full w-full object-cover" />
+          ) : (
+            <AssetSlot id={`${scope ?? 'MAX'}-SKETCH-VIDEO-001`} />
+          )}
+        </div>
+      )}
 
       {/* Creativity tools accordion — only when challenge includes tools */}
       {!hideTools && toolKinds.length > 0 && (
@@ -152,7 +172,7 @@ export default function StepSketch({ challenge, ageMode, onNext, onBack, hideToo
       ) : (
         <CaptureCard
           showExtendedFields={false}
-          photoPrompt={t('sketch_photo_prompt')}
+          photoPrompt={challenge.story ? t('sketch_upload_prompt') : t('sketch_photo_prompt')}
           submitLabel={guide?.submitLabel ?? t('sketch_submit')}
           ageMode={ageMode}
           onSubmit={handleSubmit}
@@ -160,8 +180,7 @@ export default function StepSketch({ challenge, ageMode, onNext, onBack, hideToo
           helper={{ challengeId: challenge.id, step: 6 }}
           nameOnly={!!challenge.story}
           titleLabel={guide?.nameLabel ?? (challenge.story ? t('name_your_idea') : undefined)}
-          questions={guide?.questions}
-          initialAnswers={guide?.answers}
+          ideaName={!!guide}
           blockedHint={blockedHint}
         />
       )}

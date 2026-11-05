@@ -848,7 +848,9 @@
     "xp_amount": "{xp, number} XP",
     "upgrade_heading": "مأموریت‌های بیشتری می‌خوای؟",
     "adventure_count": "{count, number}",
-    "new_project": "پروژهٔ جدید"
+    "new_project": "پروژهٔ جدید",
+    "ideas_heading": "ایده‌های من",
+    "ideas_empty": "وقتی در یک چالش ایده‌ای ذخیره کنی، اینجا نشان داده می‌شود."
   },
   "parent_dashboard": {
     "heading": "داشبورد خانوادگی",
@@ -1382,7 +1384,9 @@
     "default_sketch_title": "طرح من",
     "default_build_title": "ساخته من",
     "idea_answer_placeholder": "جوابت را بنویس…",
-    "idea_name_placeholder": "اسم ایده‌ام…"
+    "idea_name_placeholder": "اسم ایده‌ام…",
+    "sketch_ready": "بیا ایده‌ات را به نقاشی تبدیل کنیم تا بقیه هم آن را بفهمند! آماده‌ای طرحش را بکشی؟",
+    "sketch_upload_prompt": "عکس طرح کاغذی‌ات را اضافه کن (خود طرح، نه چهره‌ها)"
   },
   "player": {
     "back": "بازگشت",
@@ -1891,13 +1895,6 @@
     "popi_q_use": "چطور می‌توانی از این ترفند استفاده کنی تا {goal}؟",
     "popi_goal_default": "به {hero} کمک کنی",
     "hero_answer_label": "ایده‌ات را در یکی دو جمله بگو",
-    "voice_record": "پاسخم را ضبط کن",
-    "voice_stop": "توقف ضبط",
-    "voice_again": "دوباره ضبط کن",
-    "voice_delete": "ضبطم را پاک کن",
-    "voice_listening": "دارم گوش می‌کنم…",
-    "voice_denied": "میکروفون روشن نیست، پس می‌توانی ایده‌ات را بنویسی.",
-    "voice_answer_text": "ایده‌ام را ضبط کردم.",
     "clues_how_help": "چطور می‌توانیم به {hero} کمک کنیم؟",
     "hero_review": "بررسی",
     "review_title": "ایدهٔ تو",
@@ -1905,16 +1902,17 @@
     "review_save_failed": "الان نتوانستیم ایده‌ات را ذخیره کنیم. ایده‌ات هنوز در کادر پاسخت هست.",
     "review_try_again": "دوباره امتحان کن",
     "review_close": "فهمیدم!",
-    "review_saved_later": "ایده‌ات ذخیره شد! بعداً می‌توانیم با هم بررسی‌اش کنیم.",
+    "review_saved_later": "ایده‌ات ذخیره شد! هر وقت خواستی می‌توانی آن را در پروفایلم ببینی.",
     "review_saved_develop": "ایده‌ات ذخیره شد! هنوز داریم بررسی می‌کنیم که چطور ممکن است کار کند. می‌توانیم برگردیم و با هم آن را پرورش بدهیم!",
-    "review_unavailable": "بررسی Conspy هنوز آماده نیست.",
     "review_try_title": "در خانه امتحانش کن",
     "review_search_question": "آیا کسی چیزی شبیه ایدهٔ تو ساخته است؟",
     "review_search_loading": "Popi دارد می‌گردد…",
     "review_search_unavailable": "جستجوی Popi هنوز آماده نیست، پس چیزی برای نشان دادن نداریم. ما هیچ‌وقت نتیجه از خودمان نمی‌سازیم.",
     "review_search_error": "Popi الان نتوانست جستجو کند. کمی بعد دوباره امتحان کن!",
     "review_search_none": "Popi هنوز چیزی شبیه آن پیدا نکرده. شاید ایدهٔ تو یک ایدهٔ تازه باشد!",
-    "review_open": "یادداشت Conspy را ببین"
+    "review_open": "یادداشت Conspy را ببین",
+    "coming_soon": "به‌زودی",
+    "review_feature": "بررسی Conspy"
   },
   "thinking_tools": {
     "accordion_young": "گیر کردی؟ یک ابزار فکر کردن امتحان کن!",

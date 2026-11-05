@@ -16,12 +16,10 @@ Character names stay in English: Popi, Quizi, Scamper, Conspy.
   - دوباره امتحان کن
 - Got it!
   - فهمیدم!
-- Your idea is saved! We can explore it together later.
-  - ایده‌ات ذخیره شد! بعداً می‌توانیم با هم بررسی‌اش کنیم.
+- Your idea is saved! You can find it any time in My Profile.
+  - ایده‌ات ذخیره شد! هر وقت خواستی می‌توانی آن را در پروفایلم ببینی.
 - Your idea is saved! We're still exploring how it might work. We can come back and develop it together!
   - ایده‌ات ذخیره شد! هنوز داریم بررسی می‌کنیم که چطور ممکن است کار کند. می‌توانیم برگردیم و با هم آن را پرورش بدهیم!
-- Conspy's review isn't ready yet.
-  - بررسی Conspy هنوز آماده نیست.
 - Try it at home
   - در خانه امتحانش کن
 - Has anyone built something like your idea?
@@ -36,6 +34,8 @@ Character names stay in English: Popi, Quizi, Scamper, Conspy.
   - Popi هنوز چیزی شبیه آن پیدا نکرده. شاید ایدهٔ تو یک ایدهٔ تازه باشد!
 - See Conspy's note
   - یادداشت Conspy را ببین
+- Conspy's review
+  - بررسی Conspy
 
 ## Screens
 
@@ -75,20 +75,10 @@ Learning from nature means understanding how nature works and creating your own 
   - چطور می‌توانی از این ترفند استفاده کنی تا {goal}؟
 - Your idea, in a sentence or two
   - ایده‌ات را در یکی دو جمله بگو
-- Record my answer
-  - پاسخم را ضبط کن
-- Stop recording
-  - توقف ضبط
-- Record again
-  - دوباره ضبط کن
-- Delete my recording
-  - ضبطم را پاک کن
-- I'm listening…
-  - دارم گوش می‌کنم…
-- The microphone isn't on, so you can type your idea instead.
-  - میکروفون روشن نیست، پس می‌توانی ایده‌ات را بنویسی.
-- I recorded my idea.
-  - ایده‌ام را ضبط کردم.
+- Coming Soon
+  - به‌زودی
+- Conspy's review
+  - بررسی Conspy
 - Popi's chat isn't ready yet. Soon you can ask me anything here!
   - گفتگوی Popi هنوز آماده نیست. به‌زودی می‌توانی هر سؤالی را اینجا از من بپرسی!
 

@@ -1,13 +1,12 @@
 'use client';
 
-import { useContext, useEffect, useRef, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import AssetSlot, { AssetScope } from '@/components/AssetSlot';
 import { CharacterArt } from '@/components/characters/CharacterDialogHost';
 import Inspired, { MeetCharacter } from '@/components/characters/Inspired';
 import { btnPrimary, btnText } from '@/components/challenge/buttons';
 import { CHARACTER_NAMES, useFirstMeet } from '@/lib/characters';
-import { deleteVoiceNote, loadVoiceNote, saveVoiceNote } from '@/lib/voiceNotes';
 import { submitHeroIdea } from '@/lib/api/client';
 import IdeaReviewDialog, { type IdeaReviewState } from './IdeaReview';
 import { Character3D, Popi } from './StoryBits';
@@ -18,7 +17,6 @@ import type { GameUpdate, MissionGame } from './useMissionGame';
 type ClueCard = MissionStory['clue_cards'][number];
 
 const MIN_ANSWER = 3;
-const MAX_RECORDING_MS = 60_000;
 
 const answered = (answers: Record<string, string> | undefined) => (answers?.inspired ?? '').trim().length >= MIN_ANSWER;
 
@@ -50,7 +48,7 @@ export default function HeroJourney({
   companion: CompanionData | null;
   game: MissionGame;
   update: GameUpdate;
-  /** Names this challenge's saved work (the voice note). */
+  /** The challenge this idea belongs to. */
   workKey: string;
 }) {
   const t = useTranslations('story');
@@ -82,7 +80,6 @@ export default function HeroJourney({
             key={`${workKey}-${index}`}
             challengeId={workKey}
             heroIndex={index}
-            voiceKey={`${workKey}:${index}`}
             label={t('hero_answer_label')}
             value={game.partnerAnswers?.inspired ?? ''}
             submitted={finished}
@@ -187,13 +184,10 @@ function ConspyCard() {
   );
 }
 
-type Recording = 'idle' | 'recording' | 'denied';
-
-/** The kid's one answer: a sentence or two, typed or spoken. */
+/** The kid's one answer: a sentence or two, typed. */
 function HeroAnswer({
   challengeId,
   heroIndex,
-  voiceKey,
   label,
   value,
   submitted,
@@ -205,7 +199,6 @@ function HeroAnswer({
 }: {
   challengeId: string;
   heroIndex: number;
-  voiceKey: string;
   label: string;
   value: string;
   submitted: boolean;
@@ -221,80 +214,16 @@ function HeroAnswer({
   const [hintOpen, setHintOpen] = useState(false);
   const [review, setReview] = useState<IdeaReviewState | null>(null);
   const [reviewOpen, setReviewOpen] = useState(false);
-  const [recording, setRecording] = useState<Recording>('idle');
-  const [audioUrl, setAudioUrl] = useState<string | null>(null);
-  const recorder = useRef<MediaRecorder | null>(null);
-  const canRecord = typeof window !== 'undefined' && !!navigator.mediaDevices?.getUserMedia && typeof MediaRecorder !== 'undefined';
   const ready = value.trim().length >= MIN_ANSWER;
-
-  // A spoken answer made earlier is still here.
-  useEffect(() => {
-    let url: string | null = null;
-    let alive = true;
-    loadVoiceNote(voiceKey)
-      .then((blob) => {
-        if (blob && alive) {
-          url = URL.createObjectURL(blob);
-          setAudioUrl(url);
-        }
-      })
-      .catch(() => {});
-    return () => {
-      alive = false;
-      if (url) URL.revokeObjectURL(url);
-    };
-  }, [voiceKey]);
-
-  // Leaving the page ends a recording and lets go of the microphone.
-  useEffect(
-    () => () => {
-      if (recorder.current?.state === 'recording') recorder.current.stop();
-    },
-    [],
-  );
-
-  async function startRecording() {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const rec = new MediaRecorder(stream);
-      const chunks: Blob[] = [];
-      rec.ondataavailable = (e) => chunks.push(e.data);
-      rec.onstop = () => {
-        stream.getTracks().forEach((track) => track.stop());
-        setRecording('idle');
-        const blob = new Blob(chunks, { type: rec.mimeType });
-        setAudioUrl(URL.createObjectURL(blob));
-        saveVoiceNote(voiceKey, blob).catch(() => {});
-        // The next page starts from this answer; the kid's own words are never overwritten.
-        if (value.trim().length < MIN_ANSWER) onChange(t('voice_answer_text'));
-      };
-      recorder.current = rec;
-      rec.start();
-      setRecording('recording');
-      setTimeout(() => {
-        if (rec.state === 'recording') rec.stop();
-      }, MAX_RECORDING_MS);
-    } catch {
-      setRecording('denied');
-    }
-  }
-
-  function removeRecording() {
-    setAudioUrl(null);
-    deleteVoiceNote(voiceKey).catch(() => {});
-    if (value === t('voice_answer_text')) onChange('');
-  }
 
   /** Saves the idea, as it stands, on the server, and shows Conspy's review. Progress never waits for this. */
   async function sendForReview() {
     setReview({ kind: 'saving' });
     setReviewOpen(true);
-    const voiceOnly = value === t('voice_answer_text');
     try {
       const idea = await submitHeroIdea(challengeId, {
-        text: voiceOnly ? '' : value.trim(),
+        text: value.trim(),
         hero_index: heroIndex,
-        has_voice: !!audioUrl,
         lang: locale,
       });
       setReview({ kind: 'saved', idea });
@@ -307,18 +236,12 @@ function HeroAnswer({
     <IdeaReviewDialog state={review} onRetry={() => void sendForReview()} onClose={() => setReviewOpen(false)} />
   );
 
-  const player = audioUrl && (
-    // eslint-disable-next-line jsx-a11y/media-has-caption -- the kid's own voice note
-    <audio data-testid="hero-voice-player" src={audioUrl} controls className="w-full max-w-sm" />
-  );
-
   if (submitted) {
     return (
       <section data-testid="hero-answer-saved" className="flex flex-col gap-2 rounded-xl border border-[#BFE6C8] bg-[#F3FBF5] px-4 py-3">
         <p dir="auto" className="font-body text-base font-semibold text-[#1d7a3a]">
           {value} <span aria-hidden="true">✓</span>
         </p>
-        {player}
         <button type="button" data-testid="hero-answer-revise" onClick={onRevise} className={`${btnText} self-start !px-0`}>
           {t('partner_revise')}
         </button>
@@ -358,27 +281,10 @@ function HeroAnswer({
         placeholder={t('partner_placeholder')}
         className="min-w-0 resize-none rounded-lg border border-[#8FA3B8] px-3 py-2 font-body text-base text-ink placeholder:text-ink/40 focus:border-challenge focus:outline-none"
       />
-      {player}
-      {audioUrl && (
-        <button type="button" data-testid="hero-voice-delete" onClick={removeRecording} className={`${btnText} self-start !px-0`}>
-          {t('voice_delete')}
-        </button>
-      )}
       <div className="flex flex-wrap items-center gap-3">
-        <button type="submit" data-testid="hero-answer-submit" disabled={!ready || recording === 'recording'} className={btnPrimary}>
+        <button type="submit" data-testid="hero-answer-submit" disabled={!ready} className={btnPrimary}>
           {t('hero_review')}
         </button>
-        {canRecord && (
-          <button
-            type="button"
-            data-testid="hero-voice-record"
-            aria-pressed={recording === 'recording'}
-            onClick={() => (recording === 'recording' ? recorder.current?.stop() : void startRecording())}
-            className={btnText}
-          >
-            {recording === 'recording' ? t('voice_stop') : audioUrl ? t('voice_again') : t('voice_record')}
-          </button>
-        )}
         <button
           type="button"
           data-testid={hint ? 'partner-hint' : 'partner-peek'}
@@ -388,12 +294,6 @@ function HeroAnswer({
           {hint ? t('subst_hint_btn') : t('partner_peek')}
         </button>
       </div>
-      {recording === 'recording' && (
-        <p role="status" className="font-body text-sm font-bold text-[#A4520B]">{t('voice_listening')}</p>
-      )}
-      {recording === 'denied' && (
-        <p role="status" className="rounded-xl bg-[#FFF7E0] px-3 py-2 font-body text-sm text-[#5a4300]">{t('voice_denied')}</p>
-      )}
       {hintOpen && (
         <p data-testid={hint ? 'partner-hint-text' : 'partner-peek-text'} className="rounded-xl bg-[#FFF7E0] px-3 py-2 font-body text-base text-[#5a4300]">
           <AssetSlot id="CHALLENGE-UI-003" variant="dot" />

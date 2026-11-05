@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl';
 import Inspired from '@/components/characters/Inspired';
 import { btnPrimary, btnSecondary } from '@/components/challenge/buttons';
 import AssetSlot from '@/components/AssetSlot';
+import ModalClose from '@/components/ModalClose';
 
 interface Props {
   /** XP the server just awarded (0 when it was already given before). Define variant only. */
@@ -23,6 +24,8 @@ interface Props {
   again?: boolean;
   /** Solved variant: stop for today (back to the Challenges page). */
   onEnough?: () => void;
+  /** The X, when it should do less than the main button (stay on the page). */
+  onDismiss?: () => void;
 }
 
 const CONFETTI_COLORS = ['#2D9CDB', '#FFD93D', '#6BCB77', '#FF6B6B', '#C77DFF', '#FF9F45'];
@@ -35,7 +38,7 @@ const CONFETTI = Array.from({ length: 22 }, (_, i) => ({
 
 /** The reward for defining the problem with the 5W1H questions: the floating jellyfish,
  *  reward chips that bob around it, falling confetti, and a way back to the mission. */
-export default function DefineCelebration({ xp = 0, onClose, variant = 'define', popi, onImprove, again = false, onEnough }: Props) {
+export default function DefineCelebration({ xp = 0, onClose, variant = 'define', popi, onImprove, again = false, onEnough, onDismiss }: Props) {
   const solved = variant === 'solved';
   const t = useTranslations('story');
   const goRef = useRef<HTMLButtonElement>(null);
@@ -62,8 +65,9 @@ export default function DefineCelebration({ xp = 0, onClose, variant = 'define',
         aria-labelledby="define-celebration-title"
         data-testid="define-celebration"
         onClick={(e) => e.stopPropagation()}
-        className="celebrate-pop relative my-auto w-full max-w-[440px] overflow-hidden rounded-[32px] bg-white px-6 pb-6 pt-5 text-center shadow-[0_24px_60px_rgba(0,0,0,0.3)]"
+        className="celebrate-pop relative my-auto w-full max-w-[440px] overflow-hidden rounded-[32px] bg-white px-6 pb-6 pt-16 text-center shadow-[0_24px_60px_rgba(0,0,0,0.3)]"
       >
+        <ModalClose onClose={onDismiss ?? onClose} testId="define-celebration-close" />
         {solved && !again && (
           <p data-testid="solved-points" className="relative mb-1 rounded-[18px] bg-gradient-to-br from-[#FFF7D6] to-[#FFE9A8] px-4 py-3 font-body text-base font-bold leading-relaxed text-ink">
             {t('solved_points_1')}

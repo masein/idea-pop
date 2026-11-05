@@ -1324,6 +1324,7 @@ export interface components {
     };
     ProjectCreateRequest: {
       origin_type: "challenge" | "lesson" | "quick_make";
+      step_type?: string | null;
       origin_id: string;
       title: string;
       description?: string;
@@ -1341,6 +1342,7 @@ export interface components {
       what_was_hard: string;
       what_to_improve: string;
       photo_keys: string[];
+      step_type?: string | null;
       requested_visibility: string;
       effective_visibility: string;
       created_at: string;

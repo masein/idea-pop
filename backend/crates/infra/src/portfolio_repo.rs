@@ -64,6 +64,7 @@ fn project_from_row(row: &sqlx::postgres::PgRow) -> Result<Project, DomainError>
         what_was_hard: row.try_get("what_was_hard").map_err(db_err)?,
         what_to_improve: row.try_get("what_to_improve").map_err(db_err)?,
         photo_keys,
+        step_type: row.try_get("step_type").map_err(db_err)?,
         requested_visibility,
         effective_visibility,
         created_at: row.try_get("created_at").map_err(db_err)?,
@@ -77,9 +78,9 @@ impl ProjectRepo for SqlxProjectRepo {
         sqlx::query(
             "INSERT INTO projects
                (id, child_id, origin_type, origin_id, title, description, materials,
-                what_was_hard, what_to_improve, photo_keys,
+                what_was_hard, what_to_improve, photo_keys, step_type,
                 requested_visibility, effective_visibility, created_at, updated_at)
-             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)",
+             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)",
         )
         .bind(project.id)
         .bind(project.child_id)
@@ -91,6 +92,7 @@ impl ProjectRepo for SqlxProjectRepo {
         .bind(&project.what_was_hard)
         .bind(&project.what_to_improve)
         .bind(&project.photo_keys)
+        .bind(&project.step_type)
         .bind(project.requested_visibility.as_str())
         .bind(project.effective_visibility.as_str())
         .bind(project.created_at)
@@ -104,7 +106,7 @@ impl ProjectRepo for SqlxProjectRepo {
     async fn find_by_id(&self, id: Uuid) -> Result<Option<Project>, DomainError> {
         let row = sqlx::query(
             "SELECT id, child_id, origin_type, origin_id, title, description, materials,
-                    what_was_hard, what_to_improve, photo_keys,
+                    what_was_hard, what_to_improve, photo_keys, step_type,
                     requested_visibility, effective_visibility, created_at, updated_at
              FROM projects WHERE id = $1",
         )
@@ -119,7 +121,7 @@ impl ProjectRepo for SqlxProjectRepo {
     async fn list_by_child(&self, child_id: Uuid) -> Result<Vec<Project>, DomainError> {
         let rows = sqlx::query(
             "SELECT id, child_id, origin_type, origin_id, title, description, materials,
-                    what_was_hard, what_to_improve, photo_keys,
+                    what_was_hard, what_to_improve, photo_keys, step_type,
                     requested_visibility, effective_visibility, created_at, updated_at
              FROM projects WHERE child_id = $1 ORDER BY created_at DESC",
         )

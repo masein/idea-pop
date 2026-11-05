@@ -75,6 +75,10 @@ export interface Discovery {
   /** The sketch tutorial video, once it exists. Until then its Asset ID holds the spot. */
   sketch_video?: string | null;
   idea_name_prompt?: string;
+  /** Nature Clues: what the kid's idea box asks for. */
+  idea_label?: string;
+  /** Build and Test: what to photograph, in this challenge's words. */
+  build_photo_desc?: string;
   /** The words before "Build It & Test It!" on the build page. */
   checklist_intro?: string;
   /** The last page's improved-idea box (the third star). */

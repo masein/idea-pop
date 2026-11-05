@@ -1,11 +1,12 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import MissionHelper from './MissionHelper';
 import PopiAvatar from '@/components/PopiAvatar';
-import { btnPrimary, btnText } from '@/components/challenge/buttons';
+import { btnPrimary } from '@/components/challenge/buttons';
 import AssetSlot from '@/components/AssetSlot';
+import ImageUploadArea from './ImageUploadArea';
 
 // Dark-launch flag for the scoped AI helper (server enforces the real gates).
 const HELPER_ON = process.env.NEXT_PUBLIC_MISSION_HELPER === 'true';
@@ -57,7 +58,6 @@ export default function CaptureCard({
   const t = useTranslations('mission');
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [photo, setPhoto] = useState<File | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const [title, setTitle] = useState('');
   const [whatIMade, setWhatIMade] = useState('');
   const [whatIUsed, setWhatIUsed] = useState('');
@@ -74,9 +74,7 @@ export default function CaptureCard({
     return () => URL.revokeObjectURL(photoUrl);
   }, [photoUrl]);
 
-  function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  function handlePhotoChange(file: File) {
     setPhoto(file);
     setPhotoUrl(URL.createObjectURL(file));
   }
@@ -84,7 +82,6 @@ export default function CaptureCard({
   function removePhoto() {
     setPhotoUrl(null);
     setPhoto(null);
-    if (fileInputRef.current) fileInputRef.current.value = '';
   }
 
   function handleSubmit() {
@@ -106,59 +103,8 @@ export default function CaptureCard({
 
   return (
     <div data-testid="capture-card" className="flex flex-col gap-4">
-      {/* Photo upload area — a real file picker with a live preview. Optional:
-          nothing is submitted if no photo is chosen. */}
-      <div
-        data-testid="photo-area"
-        className="bg-tint-blue rounded-card border-2 border-dashed border-challenge/30"
-      >
-        <input
-          autoComplete="off"
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          aria-label={photoPrompt}
-          data-testid="photo-input"
-          onChange={handlePhotoChange}
-          className="sr-only"
-        />
-        {photoUrl ? (
-          <div className="flex flex-col items-center gap-3 p-4">
-            {/* Blob preview of the chosen image — next/image can't size a blob. */}
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={photoUrl}
-              alt=""
-              data-testid="photo-preview"
-              className="max-h-56 w-full rounded-card object-contain"
-            />
-            <div className="flex gap-5">
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className={btnText}
-              >
-                {t('change_photo')}
-              </button>
-              <button
-                type="button"
-                onClick={removePhoto}
-                className={btnText}
-              >
-                {t('remove_photo')}
-              </button>
-            </div>
-          </div>
-        ) : (
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            className="flex w-full flex-col items-center justify-center py-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-challenge"
-          >
-            <p className="font-body text-sm text-ink/50 text-center mt-2 px-4">{photoPrompt}</p>
-          </button>
-        )}
-      </div>
+      {/* The photo is optional: nothing is sent if no picture is chosen. */}
+      <ImageUploadArea prompt={photoPrompt} previewUrl={photoUrl} onSelect={handlePhotoChange} onRemove={removePhoto} />
 
       {/* Title / What did you make? */}
       <div className="flex flex-col gap-1">

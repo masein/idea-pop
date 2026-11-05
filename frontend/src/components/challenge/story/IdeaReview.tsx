@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslations } from 'next-intl';
+import ModalClose from '@/components/ModalClose';
 import { CharacterArt } from '@/components/characters/CharacterDialogHost';
 import Inspired, { MeetCharacter } from '@/components/characters/Inspired';
 import { btnPrimary, btnText } from '@/components/challenge/buttons';
@@ -43,8 +44,9 @@ export default function IdeaReviewDialog({
         role="dialog"
         aria-modal="true"
         aria-label={t('review_title')}
-        className="story-pop flex max-h-[90vh] w-full max-w-md flex-col gap-3 overflow-y-auto rounded-[1.5rem] bg-white p-6 shadow-xl"
+        className="story-pop relative flex max-h-[90vh] w-full max-w-md flex-col gap-3 overflow-y-auto rounded-[1.5rem] bg-white p-6 pt-14 shadow-xl"
       >
+        <ModalClose onClose={onClose} testId="idea-review-x" />
         <div className="flex items-center gap-3">
           <MeetCharacter character="conspy" label={t('meet_character', { name: CHARACTER_NAMES.conspy })}>
             <CharacterArt character="conspy" className="h-20 w-20" />

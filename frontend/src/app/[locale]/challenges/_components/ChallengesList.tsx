@@ -17,6 +17,7 @@ import { BADGE_ART, badgeArt, badgeName, type MissionBadgeKey } from '@/componen
 import type { MissionStory } from '@/components/challenge/story/types';
 import BadgeIcon from '@/components/challenge/story/BadgeIcon';
 import AssetSlot from '@/components/AssetSlot';
+import ModalClose from '@/components/ModalClose';
 
 type ChallengeDetail = components['schemas']['ChallengeDetail'];
 
@@ -42,7 +43,8 @@ function UpgradeHandoffModal({ onDismiss }: { onDismiss: () => void }) {
         if (e.target === e.currentTarget) onDismiss();
       }}
     >
-      <div className="w-full max-w-sm rounded-2xl bg-white p-8 text-center shadow-xl">
+      <div className="relative w-full max-w-sm rounded-2xl bg-white p-8 pt-14 text-center shadow-xl">
+        <ModalClose onClose={onDismiss} />
         <div className="mx-auto mb-4 h-16 w-16"><AssetSlot id="DASHBOARD-001" /></div>
         <h2 className="mb-2 font-display text-xl font-bold text-ink">{t('upgrade_modal_title')}</h2>
         <p className="mb-5 font-body text-sm text-ink/70">{t('upgrade_modal_body')}</p>

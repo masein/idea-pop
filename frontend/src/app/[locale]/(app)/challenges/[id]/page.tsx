@@ -16,13 +16,15 @@ import GuideNameMessages from '@/components/challenge/story/GuideNameMessages';
 import { AssetScope } from '@/components/AssetSlot';
 import { assetSetFor } from '@/lib/assets/assetSets';
 import { BADGE_CHARACTER, MISSION_XP_MAX, badgeArt, badgeName, type MissionBadgeKey } from '@/components/challenge/story/missionBadges';
-import { discoveryOf } from '@/components/challenge/story/discovery';
+import { discoveryOf, heroShort } from '@/components/challenge/story/discovery';
 import Inspired from '@/components/characters/Inspired';
 import { uploadPhotoSafely } from '@/lib/photoUpload';
-import { claimMissionBadge, claimPhotoBonus, claimStar, fetchChallengeProgress } from '@/lib/api/client';
+import { claimMissionBadge, claimPhotoBonus, claimStar, fetchChallengeProgress, fetchMissionRewards } from '@/lib/api/client';
 import { announceChallengeProgress, useChallengeProgress } from '@/lib/hooks/useChallengeProgress';
 import StarNotice from '@/components/challenge/StarNotice';
-import { ImprovedIdeaBox, ThreeStarCelebration } from '@/components/challenge/story/ImprovedIdea';
+import { ThreeStarCelebration } from '@/components/challenge/story/ImprovedIdea';
+import BuildAgain from '@/components/challenge/story/BuildAgain';
+import { useMissionJourney } from '@/components/challenge/story/useMissionJourney';
 import MissionHUD from '@/components/challenge/MissionHUD';
 import StepBrief from '@/components/challenge/StepBrief';
 import StepIdeaFork from '@/components/challenge/StepIdeaFork';
@@ -120,8 +122,14 @@ function ChallengePageInner({ onBadgeMode }: { onBadgeMode: (on: boolean) => voi
   const [toolReached, setToolReached] = useState(false);
   // Coming back later: carry on where the kid left off (restored once, then kept up to date).
   const restoredRef = useRef(false);
-  // The lab is done: "What Did You Build?" with an optional photo (the lab project it goes on).
-  const [labCelebration, setLabCelebration] = useState<{ projectId: string | null } | null>(null);
+  // The lab is done: the popup, with the XP already earned for this section (null: none to show).
+  const [labCelebration, setLabCelebration] = useState<{ xp: number | null } | null>(null);
+  // This visit's saved records for the lab, so finishing again never makes a copy.
+  const labModelRef = useRef<string | null>(null);
+  const labResultsRef = useRef<{ words: string; id: string | null } | null>(null);
+  const labDocumentedRef = useRef(false);
+  // The newest version's words, for the third star.
+  const versionNoteRef = useRef<string | null>(null);
   // The Substitute practice is done (Skills): celebrate, then Build and Test or stop for today.
   const [substCelebration, setSubstCelebration] = useState<false | 'subst' | 'tool'>(false);
   // Max's badge popups (Quizzy after the puzzle, Nature Hero after Nature Clues) and
@@ -137,6 +145,15 @@ function ChallengePageInner({ onBadgeMode }: { onBadgeMode: (on: boolean) => voi
 
   const locale = useLocale();
   const router = useRouter();
+  // The kid's saved work on this challenge, read from their account on the later pages.
+  const missionWithBadges = discoveryOf(challenge?.story)?.rewards?.mode === 'badges';
+  const { journey, refresh: refreshJourney } = useMissionJourney(
+    params.id,
+    locale,
+    challenge?.story?.lab.title ?? null,
+    missionWithBadges && currentStep >= 6,
+    `${currentStep}-${skillPhase}`,
+  );
 
   // Load challenge data
   // Every visit opens the mission fresh, so Popi reads the story again too.
@@ -573,6 +590,41 @@ function ChallengePageInner({ onBadgeMode }: { onBadgeMode: (on: boolean) => voi
                   story={story}
                   {...gameProps}
                   experiment={split}
+                  onPhoto={async (photo) => {
+                    setLabPhotoUrl(URL.createObjectURL(photo));
+                    let id = labModelRef.current;
+                    if (!id) {
+                      try {
+                        const p = await createProject({
+                          title: tStory('lab_model_title'),
+                          what_i_made: '',
+                          what_i_used: '',
+                          what_was_hard: '',
+                          what_id_improve: '',
+                          challenge_id: challenge.id,
+                          step_type: 'model',
+                        });
+                        id = p.id;
+                        labModelRef.current = id;
+                      } catch {
+                        return false;
+                      }
+                    }
+                    if (!(await uploadPhotoSafely(id, photo))) return false;
+                    labDocumentedRef.current = true;
+                    if (badgeMode) await givePhoto('build');
+                    return true;
+                  }}
+                  onDescribe={
+                    badgeMode
+                      ? async (text) => {
+                          // No photo: the kid's own description documents the model instead (kept with the star).
+                          const r = await giveStar(2, text);
+                          if (r?.is_new) setLabStars(r.stars);
+                          return !!r && r.stars.includes(2);
+                        }
+                      : undefined
+                  }
                   onNext={() => {
                     if (split) void goToStep(6, 'tool');
                     else setSkillPhase('tool');
@@ -586,24 +638,45 @@ function ChallengePageInner({ onBadgeMode }: { onBadgeMode: (on: boolean) => voi
                     const prediction = game.labPick !== null ? lab.options[game.labPick] : '';
                     const results = lab.options.map((o, i) => `${o}: ${values[i]}`).join(', ');
                     const words = `${tStory('my_prediction')} ${prediction}\n${tStory('my_results')}: ${results} (${lab.measure})`;
-                    setLabCelebration({ projectId: null });
-                    createProject({
-                      title: lab.title,
-                      what_i_made: words,
-                      what_i_used: '',
-                      what_was_hard: '',
-                      what_id_improve: '',
-                      challenge_id: challenge.id,
-                      step_type: 'lab',
-                    })
-                      .then((p) => p.id)
-                      .catch(() => null)
-                      .then((projectId) => {
-                        updateGame({
-                          savedLab: { prediction, results, best: lab.options[bestAt], bestValue: values[bestAt], measure: lab.measure, projectId },
-                        });
-                        setLabCelebration((c) => (c ? { projectId } : c));
+                    setLabCelebration({ xp: null });
+                    const last = labResultsRef.current;
+                    const saveResults =
+                      last && last.words === words
+                        ? Promise.resolve(last.id)
+                        : createProject({
+                            title: lab.title,
+                            what_i_made: words,
+                            what_i_used: '',
+                            what_was_hard: '',
+                            what_id_improve: '',
+                            challenge_id: challenge.id,
+                            step_type: 'lab',
+                          })
+                            .then((p) => {
+                              labResultsRef.current = { words, id: p.id };
+                              return p.id;
+                            })
+                            .catch(() => null);
+                    void saveResults.then((projectId) => {
+                      updateGame({
+                        savedLab: { prediction, results, best: lab.options[bestAt], bestValue: values[bestAt], measure: lab.measure, projectId },
                       });
+                    });
+                    if (badgeMode) {
+                      // Experiment finished and the model documented: the second star.
+                      if (labDocumentedRef.current) {
+                        void giveStar(2).then((r) => {
+                          if (r?.is_new) setLabStars(r.stars);
+                        });
+                      }
+                      // Shows what the photo already earned; reading it gives nothing.
+                      void fetchMissionRewards(challenge.id)
+                        .then((rewards) => {
+                          const earned = rewards.photos.find((p) => p.key === 'build')?.xp ?? 0;
+                          setLabCelebration((c) => (c ? { xp: earned > 0 ? earned : null } : c));
+                        })
+                        .catch(() => {});
+                    }
                   }}
                   onBack={() => goToStep(5)}
                 />
@@ -613,6 +686,7 @@ function ChallengePageInner({ onBadgeMode }: { onBadgeMode: (on: boolean) => voi
                   story={story}
                   {...gameProps}
                   award={awardBadge}
+                  journey={journey}
                   ideaPhotoUrl={ideaPhotoUrl}
                   labPhotoUrl={labPhotoUrl}
                   onDone={() => {
@@ -646,22 +720,55 @@ function ChallengePageInner({ onBadgeMode }: { onBadgeMode: (on: boolean) => voi
               />
             ))}
 
-          {currentStep === 7 && !hiddenSteps.includes(7) && story && <StoryFairTest story={story} {...gameProps} />}
+          {currentStep === 7 && !hiddenSteps.includes(7) && story && badgeMode && (
+            <BuildAgain
+              challenge={challenge}
+              story={story}
+              partner={game.partner}
+              journey={journey}
+              improvedNote={myProgress?.improved_idea ?? null}
+              blobUrls={{ model: labPhotoUrl, sketch: ideaPhotoUrl }}
+              onVersionSaved={(note, withPhoto) => {
+                versionNoteRef.current = note;
+                // Building and testing again is what Second Try Hero is for.
+                awardBadge('retry');
+                if (withPhoto) void givePhoto('build');
+                refreshJourney();
+              }}
+              onContinue={async () => {
+                // The final badge, given before the last page shows the totals; the third star
+                // needs it, and a new version.
+                await giveBadge('river');
+                const last = journey.versions[journey.versions.length - 1];
+                const note = versionNoteRef.current ?? (last ? `${last.title}: ${last.text}` : null);
+                if (note) {
+                  const r = await giveStar(3, note);
+                  if (r?.is_new) {
+                    if ([1, 2, 3].every((n) => r.stars.includes(n))) {
+                      // Every requirement met: the three-star celebration, with this challenge's XP and
+                      // badges (the same numbers as the challenge card).
+                      const [now] = await fetchChallengeProgress([challenge.id]).catch(() => []);
+                      setThreeStar({ xp: now?.xp ?? myProgress?.xp ?? null, badges: now?.badges ?? myProgress?.badges ?? [] });
+                    } else {
+                      setLastStar(r.stars);
+                    }
+                  }
+                }
+                await goToStep(8);
+              }}
+              onBack={() => goToStep(6, 'tool')}
+            />
+          )}
 
-          {currentStep === 7 && !hiddenSteps.includes(7) && (
+          {currentStep === 7 && !hiddenSteps.includes(7) && story && !badgeMode && <StoryFairTest story={story} {...gameProps} />}
+
+          {currentStep === 7 && !hiddenSteps.includes(7) && !(story && badgeMode) && (
             <StepBuild
               {...sharedProps}
               intro={badgeMode ? disc?.checklist_intro ?? null : null}
               hideTestQuestion={story !== null}
               sketchProjectId={sketchProjectId}
-              onPhotoSaved={badgeMode ? () => void givePhoto('build') : undefined}
               onNext={async () => {
-                if (badgeMode) {
-                  // The final badge, given before the last page shows the totals.
-                  await giveBadge('river');
-                  goToStep(8);
-                  return;
-                }
                 show({
                   xp_earned: challenge.completion_xp,
                   xp_total: 0,
@@ -676,30 +783,20 @@ function ChallengePageInner({ onBadgeMode }: { onBadgeMode: (on: boolean) => voi
             />
           )}
 
-          {currentStep === 8 && story && <StoryEnding story={story} {...gameProps} hiddenSteps={hiddenSteps} badgeMode={badgeMode} />}
+          {currentStep === 8 && story && (
+            <StoryEnding
+              story={story}
+              {...gameProps}
+              hiddenSteps={hiddenSteps}
+              badgeMode={badgeMode}
+              journey={journey}
+              improvedNote={myProgress?.improved_idea ?? null}
+            />
+          )}
 
-          {currentStep === 8 && badgeMode && disc?.improved_idea && (
-            <div className="mt-4 flex flex-col gap-3">
-              <ImprovedIdeaBox
-                key={myProgress?.improved_idea ? 'saved' : 'open'}
-                box={disc.improved_idea}
-                reference={game.substSaved}
-                submitted={myProgress?.improved_idea ?? null}
-                onSubmit={async (text) => {
-                  const r = await giveStar(3, text);
-                  if (!r) return false;
-                  if ([1, 2, 3].every((n) => r.stars.includes(n))) {
-                    // Every requirement met: the three-star celebration, with this challenge's XP and
-                    // badges (the same numbers as the challenge card).
-                    const [now] = await fetchChallengeProgress([challenge.id]).catch(() => []);
-                    setThreeStar({ xp: now?.xp ?? myProgress?.xp ?? null, badges: now?.badges ?? myProgress?.badges ?? [] });
-                  } else if (r.is_new) {
-                    setLastStar(r.stars);
-                  }
-                  return true;
-                }}
-              />
-              {lastStar && <StarNotice star={3} stars={lastStar} />}
+          {currentStep === 8 && badgeMode && lastStar && (
+            <div className="mt-4">
+              <StarNotice star={3} stars={lastStar} />
             </div>
           )}
 
@@ -740,17 +837,10 @@ function ChallengePageInner({ onBadgeMode }: { onBadgeMode: (on: boolean) => voi
         <RewardPopup
           testId="define-celebration"
           badge={badgeOf('solved')}
-          lead={
-            <>
-              {tStory('solved_points_1')}
-              <br />
-              {tStory('solved_points_2')}
-              <br />
-              {tStory('solved_points_3')}
-            </>
-          }
-          title={`${tStory('solved_title_1')} ${tStory('solved_title_2')}`}
-          text={tStory.rich('solved_text', { b: (chunks) => <b className="font-extrabold text-ink">{chunks}</b> })}
+          lead={tStory('solved_lead', { hero: heroShort(story) })}
+          title={tStory('solved_heading')}
+          text={tStory('solved_support')}
+          onClose={() => setSolvedCelebration(null)}
           xp={solvedCelebration.xp}
           primary={{
             label: tStory('solved_go'),
@@ -768,6 +858,9 @@ function ChallengePageInner({ onBadgeMode }: { onBadgeMode: (on: boolean) => voi
             },
           }}
         >
+          <p data-testid="solved-saved" className="mb-3 rounded-xl bg-[#F3FBF5] px-3 py-2 font-body text-base font-bold text-[#1E7A44]">
+            ✓ {tStory('solved_saved_line')}
+          </p>
           {solvedCelebration.stars && (
             <div className="mb-3">
               <StarNotice star={1} stars={solvedCelebration.stars} />
@@ -799,6 +892,7 @@ function ChallengePageInner({ onBadgeMode }: { onBadgeMode: (on: boolean) => voi
           title={tStory(reward.key === 'define' ? 'quizzy_reward_title' : 'nature_reward_title')}
           text={tStory(reward.key === 'define' ? 'quizzy_reward_text' : 'nature_reward_text')}
           xp={reward.xp}
+          onClose={() => setReward(null)}
           primary={{
             label: tStory('reward_continue'),
             onClick: () => {
@@ -816,6 +910,7 @@ function ChallengePageInner({ onBadgeMode }: { onBadgeMode: (on: boolean) => voi
           xp={solvedCelebration.xp}
           popi={solvedCelebration.popi}
           again={solvedCelebration.again}
+          onDismiss={() => setSolvedCelebration(null)}
           // Back to the sketch to make the idea better (the XP is already theirs).
           onImprove={() => setSolvedCelebration(null)}
           // "That's Enough for Today": the idea is already saved; back to the Challenges page.
@@ -842,6 +937,7 @@ function ChallengePageInner({ onBadgeMode }: { onBadgeMode: (on: boolean) => voi
             setSubstCelebration(false);
             void goToStep(after(6));
           }}
+          onClose={() => setSubstCelebration(false)}
           onEnough={() => {
             setSubstCelebration(false);
             resumeLater();
@@ -852,27 +948,8 @@ function ChallengePageInner({ onBadgeMode }: { onBadgeMode: (on: boolean) => voi
 
       {labCelebration && (
         <LabCelebration
-          onPhoto={async (photo) => {
-            setLabPhotoUrl(URL.createObjectURL(photo));
-            if (!labCelebration.projectId) return null;
-            if (!(await uploadPhotoSafely(labCelebration.projectId, photo))) return null;
-            if (!badgeMode) return 0;
-            const xp = (await givePhoto('build')) ?? 0;
-            // Experiment finished and the prototype documented: the second star.
-            const r = await giveStar(2);
-            if (r?.is_new) setLabStars(r.stars);
-            return xp;
-          }}
-          onDescribe={
-            badgeMode
-              ? async (text) => {
-                  // No photo: the kid's own description documents the model instead (kept with the star).
-                  const r = await giveStar(2, text);
-                  if (r?.is_new) setLabStars(r.stars);
-                  return !!r && r.stars.includes(2);
-                }
-              : undefined
-          }
+          hero={heroShort(story)}
+          xp={labCelebration.xp}
           star={labStars ? <StarNotice star={2} stars={labStars} /> : null}
           onKeepExploring={() => {
             setLabCelebration(null);
@@ -886,6 +963,7 @@ function ChallengePageInner({ onBadgeMode }: { onBadgeMode: (on: boolean) => voi
             resumeLater();
             router.push('/challenges');
           }}
+          onClose={() => setLabCelebration(null)}
         />
       )}
 

@@ -2,7 +2,9 @@
 
 import { useRef, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
-import { Popi, StepNav, optionClass, pillCtaClass } from './StoryBits';
+import { Confetti, Popi, StepNav, optionClass, pillCtaClass } from './StoryBits';
+import { HeroReminder, SavedPhoto } from './JourneyParts';
+import type { MissionJourney } from './useMissionJourney';
 import type { MissionStory } from './types';
 import type { BadgeKey, GameUpdate, MissionGame, SubstState } from './useMissionGame';
 import { EMPTY_SUBST } from './useMissionGame';
@@ -19,7 +21,9 @@ interface Props {
   game: MissionGame;
   update: GameUpdate;
   award: (badge: BadgeKey) => void;
-  /** This visit's photos of the saved idea and the lab model (they aren't kept on the device). */
+  /** The kid's saved work, read from their account. */
+  journey: MissionJourney;
+  /** This visit's photos of the saved idea and the lab model, already on the device. */
   ideaPhotoUrl: string | null;
   labPhotoUrl: string | null;
   /** On to the next step (Celebrate & share in Max's challenge). */
@@ -27,6 +31,9 @@ interface Props {
   onBack: () => void;
 }
 
+
+/** A saved picture: on the kid's account, or chosen on this visit. */
+type PhotoRef = { project: MissionJourney['sketch']; blobUrl: string | null };
 
 const fieldClass =
   'w-full min-w-0 rounded-xl border border-[#8FA3B8] bg-white px-3 py-2 font-body text-base text-ink placeholder:text-ink/40 focus:border-challenge focus:outline-none';
@@ -44,6 +51,7 @@ export default function SubstitutePractice({
   game,
   update,
   award,
+  journey,
   ideaPhotoUrl,
   labPhotoUrl,
   onDone,
@@ -65,10 +73,17 @@ export default function SubstitutePractice({
     requestAnimationFrame(() => requestAnimationFrame(toTop));
   };
 
-  const idea = game.savedIdea;
+  // The kid's saved idea, read from their account (or this visit's, while that loads).
+  const local = game.savedIdea;
+  const idea = journey.idea ?? (local ? { name: local.title, text: local.description, heroName: null } : null);
   // A one-box sketch saves the name as its words too: show it once.
   const ideaWords =
-    s.ideaText ?? [idea?.title, idea?.description !== idea?.title ? idea?.description : null].filter(Boolean).join('. ');
+    s.ideaText ?? [idea?.name, idea?.text !== idea?.name ? idea?.text : null].filter(Boolean).join('. ');
+  // The picture for this idea: its sketch, or else the saved model.
+  const ideaPhoto = journey.sketch?.hasPhoto || ideaPhotoUrl
+    ? { project: journey.sketch, blobUrl: ideaPhotoUrl }
+    : { project: journey.model, blobUrl: labPhotoUrl };
+  const modelPhoto = { project: journey.model, blobUrl: labPhotoUrl };
   const lab = game.savedLab;
   const onIdea = s.start === 'idea';
   const startName = onIdea ? ideaWords : sub.model_name;
@@ -93,8 +108,11 @@ export default function SubstitutePractice({
         <PageOne
           s={s}
           set={set}
-          idea={idea ? { words: ideaWords, photo: ideaPhotoUrl } : null}
-          model={{ name: sub.model_name, lab: lab ? labLine(t, lab) : null, photo: labPhotoUrl }}
+          story={story}
+          partner={game.partner}
+          heroName={idea?.heroName ?? null}
+          idea={idea ? { name: idea.name, text: idea.text, words: ideaWords, photo: ideaPhoto } : null}
+          model={{ name: sub.model_name, lab: lab ? labLine(t, lab) : null, photo: modelPhoto }}
           onBack={onBack}
           onNext={() => go(2)}
         />
@@ -106,7 +124,7 @@ export default function SubstitutePractice({
           set={set}
           challengeId={challengeId}
           locale={locale}
-          start={{ onIdea, name: startName, detail: !onIdea && lab ? labLine(t, lab) : null, photo: onIdea ? ideaPhotoUrl : labPhotoUrl, question: onIdea ? t('subst_idea_question') : sub.model_question }}
+          start={{ onIdea, name: startName, detail: !onIdea && lab ? labLine(t, lab) : null, photo: onIdea ? ideaPhoto : modelPhoto, question: onIdea ? t('subst_idea_question') : sub.model_question }}
           hint={onIdea ? t('subst_idea_hint') : sub.hint}
           example={onIdea ? null : sub.example}
           modelMaterial={sub.model_material}
@@ -122,7 +140,8 @@ export default function SubstitutePractice({
               .filter(Boolean)
               .join('\n');
             try {
-              await createProject({
+              // Closing the popup and finishing again doesn't save the same words twice.
+              if (game.substSaved !== summary) await createProject({
                 title: t('subst_project_title'),
                 what_i_made: summary,
                 what_i_used: `${s.replace} → ${s.withWhat}`,
@@ -172,6 +191,9 @@ function labLine(t: ReturnType<typeof useTranslations>, lab: NonNullable<Mission
 function PageOne({
   s,
   set,
+  story,
+  partner,
+  heroName,
   idea,
   model,
   onBack,
@@ -179,8 +201,11 @@ function PageOne({
 }: {
   s: SubstState;
   set: (p: Partial<SubstState>) => void;
-  idea: { words: string; photo: string | null } | null;
-  model: { name: string; lab: string | null; photo: string | null };
+  story: MissionStory;
+  partner: number | null | undefined;
+  heroName: string | null;
+  idea: { name: string | null; text: string; words: string; photo: PhotoRef } | null;
+  model: { name: string; lab: string | null; photo: PhotoRef };
   onBack: () => void;
   onNext: () => void;
 }) {
@@ -189,15 +214,18 @@ function PageOne({
   const [draft, setDraft] = useState(idea?.words ?? '');
   return (
     <>
+      {/* A milestone: the kid has reached the Master level. */}
+      <section data-testid="master-milestone" className="story-pop rounded-[20px] bg-gradient-to-br from-[#FFF7D6] to-[#FFE9A8] p-4 shadow-[0_6px_18px_rgba(0,0,0,0.12)]">
+        <Confetti pieces={40} />
+        <Popi text={t('master_milestone')} />
+      </section>
+
       <Popi text={t('subst_p1_popi')} keepLines />
 
       {idea ? (
         <section data-testid="subst-saved-idea" className="flex flex-col gap-3 rounded-[20px] bg-white p-5 shadow-sm">
           <h2 className="font-display text-2xl text-challenge">{t('subst_your_idea')}</h2>
-          {idea.photo && (
-            // eslint-disable-next-line @next/next/no-img-element -- the kid's own sketch, a blob URL
-            <img src={idea.photo} alt={t('subst_sketch_alt')} className="max-h-56 w-full rounded-xl object-contain" />
-          )}
+          <SavedPhoto project={idea.photo.project} blobUrl={idea.photo.blobUrl} alt={t('subst_sketch_alt')} emptyAsset="CHALLENGE-UI-EMPTY-RECALL-001" fit="max-h-56" />
           {editing ? (
             <>
               <label htmlFor="subst-idea-edit" className="sr-only">{t('subst_your_idea')}</label>
@@ -219,7 +247,15 @@ function PageOne({
             </>
           ) : (
             <>
-              <p dir="auto" className="font-body text-lg font-semibold leading-snug text-ink">{idea.words}</p>
+              {s.ideaText ? (
+                <p dir="auto" data-testid="subst-idea-words" className="font-body text-lg font-semibold leading-snug text-ink">{s.ideaText}</p>
+              ) : (
+                <div data-testid="subst-idea-words" className="flex flex-col gap-1">
+                  {idea.name && <p dir="auto" className="font-body text-xl font-extrabold leading-snug text-ink">{idea.name}</p>}
+                  {idea.text.trim() && idea.text.trim() !== idea.name && <p dir="auto" className="font-body text-lg font-semibold leading-snug text-ink">{idea.text}</p>}
+                </div>
+              )}
+              <HeroReminder story={story} partner={partner} heroName={heroName} />
               <div className="flex flex-wrap gap-3">
                 <button
                   type="button"
@@ -248,6 +284,7 @@ function PageOne({
         </section>
       ) : (
         <section className="flex flex-col gap-3">
+          <HeroReminder story={story} partner={partner} heroName={heroName} />
           <button
             type="button"
             data-testid="subst-no-idea"
@@ -263,10 +300,7 @@ function PageOne({
       {s.start === 'boat' && (
         <section data-testid="subst-model" className="story-rise flex flex-col gap-2 rounded-[20px] bg-white p-5 shadow-sm">
           <h2 className="font-display text-2xl text-challenge">{model.name}</h2>
-          {model.photo && (
-            // eslint-disable-next-line @next/next/no-img-element -- the kid's own model photo, a blob URL
-            <img src={model.photo} alt="" className="max-h-56 w-full rounded-xl object-contain" />
-          )}
+          <SavedPhoto project={model.photo.project} blobUrl={model.photo.blobUrl} alt="" fit="max-h-56" />
           <p className="font-body text-base font-semibold text-ink">{model.lab ?? t('subst_model_no_lab')}</p>
         </section>
       )}
@@ -274,12 +308,7 @@ function PageOne({
       {s.start && (
         <section className="story-rise flex flex-col gap-3">
           <div className="flex items-center gap-4">
-            {/* A clean spot for Scamper's picture (still to come). */}
-            <span
-              data-testid="scamper-spot"
-              aria-hidden="true"
-              className="h-24 w-24 shrink-0 rounded-full border-2 border-dashed border-[#9CC9E6] bg-white/60"
-            />
+            <CharacterArt character="scamper" className="h-24 w-24 shrink-0" />
             <div className="min-w-0 flex-1">
               <Popi text={t('subst_scamper_popi')} />
             </div>
@@ -314,7 +343,7 @@ function PageTwo({
   set: (p: Partial<SubstState>) => void;
   challengeId: string;
   locale: string;
-  start: { onIdea: boolean; name: string; detail: string | null; photo: string | null; question: string };
+  start: { onIdea: boolean; name: string; detail: string | null; photo: PhotoRef; question: string };
   hint: string;
   example: string | null;
   modelMaterial: string;
@@ -350,10 +379,7 @@ function PageTwo({
         <p className="font-body text-xs font-extrabold uppercase tracking-wide text-[#1E7A44]">
           {start.onIdea ? t('subst_your_idea') : t('subst_starting_model')}
         </p>
-        {start.photo && (
-          // eslint-disable-next-line @next/next/no-img-element -- the kid's own photo, a blob URL
-          <img src={start.photo} alt="" className="max-h-44 w-full rounded-xl object-contain" />
-        )}
+        <SavedPhoto project={start.photo.project} blobUrl={start.photo.blobUrl} alt="" fit="max-h-44" />
         <p dir="auto" className="font-body text-base font-semibold text-ink">{start.name}</p>
         {start.detail && <p className="font-body text-base text-ink">{start.detail}</p>}
         <h2 className="mt-1 font-display text-2xl text-challenge">{start.question}</h2>

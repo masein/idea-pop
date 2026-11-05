@@ -13,6 +13,7 @@ import KidProjectsGrid from '@/components/profile/KidProjectsGrid';
 import KidIdeas from '@/components/profile/KidIdeas';
 import type { components } from '@/lib/api/schema';
 import AssetSlot from '@/components/AssetSlot';
+import ModalClose from '@/components/ModalClose';
 
 type KidProgressResponse = components['schemas']['KidProgressResponse'];
 type KidProjectSummary = components['schemas']['KidProjectSummary'];
@@ -30,7 +31,8 @@ function ParentHandoffModal({ onDismiss }: { onDismiss: () => void }) {
       aria-modal="true"
       data-testid="parent-handoff-modal"
     >
-      <div className="mx-4 w-full max-w-sm rounded-2xl bg-white p-8 shadow-xl">
+      <div className="relative mx-4 w-full max-w-sm rounded-2xl bg-white p-8 pt-14 shadow-xl">
+        <ModalClose onClose={onDismiss} />
         <div className="mx-auto mb-4 h-16 w-16"><AssetSlot id="DASHBOARD-001" /></div>
         <h2 className="mb-2 text-center font-display text-xl font-bold text-ink">
           {t('handoff_heading')}

@@ -253,6 +253,8 @@
       "What will help your design float or help Max cross the river?",
       "What materials might you use?"
     ],
+    "idea_label": "Describe your idea for helping Max cross the river in 1–2 sentences.",
+    "build_photo_desc": "Upload a photo of your boat, model, or whatever you built.",
     "idea_name_prompt": "Give your amazing idea a name!",
     "checklist_intro": "Before we build something, it's helpful to make a checklist! Think about the tools and materials you'll need, gather everything together, and get ready to bring your idea to life.",
     "improved_idea": {

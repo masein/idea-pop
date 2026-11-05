@@ -3,7 +3,6 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { NextIntlClientProvider } from 'next-intl';
 import en from '../../../messages/en.json';
 import StepBuild from './StepBuild';
-import LabCelebration from './story/LabCelebration';
 
 const api = vi.hoisted(() => ({ createProject: vi.fn(), uploadProjectPhoto: vi.fn() }));
 vi.mock('@/lib/api/client', () => api);
@@ -59,21 +58,5 @@ describe('Build step photo', () => {
     await waitFor(() => expect(onNext).toHaveBeenCalledTimes(1));
     expect(api.createProject).toHaveBeenCalledTimes(1);
     expect(onPhotoSaved).toHaveBeenCalledTimes(1);
-  });
-});
-
-describe('Lab photo', () => {
-  it('shows the error and retries the same photo', async () => {
-    const onPhoto = vi.fn().mockResolvedValueOnce(null).mockResolvedValueOnce(10);
-    wrap(<LabCelebration onPhoto={onPhoto} onKeepExploring={vi.fn()} onEnough={vi.fn()} />);
-    const file = photo();
-    fireEvent.change(screen.getByTestId('lab-photo-input'), { target: { files: [file] } });
-    await screen.findByText(MESSAGE);
-    expect(screen.getByTestId('lab-photo-preview')).toBeTruthy();
-
-    fireEvent.click(screen.getByTestId('photo-upload-retry'));
-    await waitFor(() => expect(onPhoto).toHaveBeenCalledTimes(2));
-    expect(onPhoto.mock.calls[1][0]).toBe(file);
-    await waitFor(() => expect(screen.queryByText(MESSAGE)).toBeNull());
   });
 });

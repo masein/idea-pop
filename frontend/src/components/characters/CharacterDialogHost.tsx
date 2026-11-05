@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import AssetSlot from '@/components/AssetSlot';
+import ModalClose from '@/components/ModalClose';
 import { btnPrimary } from '@/components/challenge/buttons';
 import {
   CHARACTER_NAMES,
@@ -65,8 +66,9 @@ export default function CharacterDialogHost() {
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className="story-pop flex w-full max-w-sm flex-col items-center gap-3 rounded-[1.5rem] bg-white p-6 text-center shadow-xl"
+        className="story-pop relative flex w-full max-w-sm flex-col items-center gap-3 rounded-[1.5rem] bg-white p-6 pt-14 text-center shadow-xl"
       >
+        <ModalClose onClose={close} testId="character-x" />
         {dialog.kind === 'intro' && <CharacterArt character={dialog.character} className="h-36 w-36" />}
         <h2 dir="auto" className="font-display text-2xl text-challenge">{title}</h2>
         <p className="whitespace-pre-line font-body text-lg font-semibold leading-snug text-ink">

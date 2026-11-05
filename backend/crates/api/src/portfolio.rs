@@ -51,6 +51,9 @@ pub struct CreateProjectRequest {
     pub what_was_hard: String,
     #[serde(default)]
     pub what_to_improve: String,
+    /// What this is within its challenge: sketch, model, lab, practice or build.
+    #[serde(default)]
+    pub step_type: Option<String>,
 }
 
 #[derive(Debug, Serialize, ToSchema)]
@@ -64,6 +67,7 @@ pub struct ProjectResponse {
     pub what_was_hard: String,
     pub what_to_improve: String,
     pub photo_keys: Vec<String>,
+    pub step_type: Option<String>,
     pub requested_visibility: String,
     pub effective_visibility: String,
     pub created_at: String,
@@ -188,6 +192,7 @@ fn map_project(p: Project) -> ProjectResponse {
         what_was_hard: p.what_was_hard,
         what_to_improve: p.what_to_improve,
         photo_keys: p.photo_keys,
+        step_type: p.step_type,
         requested_visibility: p.requested_visibility.as_str().to_owned(),
         effective_visibility: p.effective_visibility.as_str().to_owned(),
         created_at: p.created_at.to_rfc3339(),
@@ -246,8 +251,17 @@ pub async fn create_project(
         ))
     })?;
 
+    if let Some(kind) = body.step_type.as_deref() {
+        if !["sketch", "model", "lab", "practice", "build"].contains(&kind) {
+            return Err(ApiError::Domain(DomainError::Validation(
+                "step_type must be sketch, model, lab, practice or build".into(),
+            )));
+        }
+    }
+
     let now = Utc::now();
     let mut project = Project::new(child_id, origin_type, body.origin_id, title, now);
+    project.step_type = body.step_type;
     project.description = clean_project_text(&body.description);
     project.materials = clean_project_text(&body.materials);
     project.what_was_hard = clean_project_text(&body.what_was_hard);

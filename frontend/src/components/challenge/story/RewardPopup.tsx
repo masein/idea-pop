@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 import { useTranslations } from 'next-intl';
 import { btnPrimary, btnSecondary } from '@/components/challenge/buttons';
 import AssetSlot from '@/components/AssetSlot';
+import ModalClose from '@/components/ModalClose';
 
 const CONFETTI_COLORS = ['#2D9CDB', '#FFD93D', '#6BCB77', '#FF6B6B', '#C77DFF', '#FF9F45'];
 // Fixed positions and delays (no randomness), so every render looks the same.
@@ -37,6 +38,7 @@ export default function RewardPopup({
   children,
   primary,
   secondary,
+  onClose,
   testId = 'reward-popup',
 }: {
   badge?: RewardBadge | null;
@@ -52,6 +54,8 @@ export default function RewardPopup({
   children?: ReactNode;
   primary: { label: string; onClick: () => void; disabled?: boolean };
   secondary?: { label: string; onClick: () => void; disabled?: boolean };
+  /** The X: hides the popup and leaves the kid where they were. Whatever was earned stays. */
+  onClose: () => void;
   testId?: string;
 }) {
   const t = useTranslations('story');
@@ -80,7 +84,7 @@ export default function RewardPopup({
         aria-modal="true"
         aria-labelledby={`${testId}-title`}
         data-testid={testId}
-        className="celebrate-pop relative my-auto flex w-full max-w-[460px] sm:w-[460px] flex-col items-center gap-3 overflow-hidden rounded-[32px] bg-white px-6 pb-6 pt-6 text-center shadow-[0_24px_60px_rgba(0,0,0,0.3)]"
+        className="celebrate-pop relative my-auto flex w-full max-w-[460px] sm:w-[460px] flex-col items-center gap-3 overflow-hidden rounded-[32px] bg-white px-6 pb-6 pt-16 text-center shadow-[0_24px_60px_rgba(0,0,0,0.3)]"
       >
         {CONFETTI.map((c, i) => (
           <span
@@ -90,6 +94,8 @@ export default function RewardPopup({
             style={{ left: `${c.left}%`, background: c.color, animationDelay: `${c.delay}s` }}
           />
         ))}
+
+        <ModalClose onClose={onClose} testId={`${testId}-close`} />
 
         {lead && (
           <div data-testid={`${testId}-lead`} className="relative w-full rounded-[18px] bg-gradient-to-br from-[#FFF7D6] to-[#FFE9A8] px-4 py-3 font-body text-base font-bold leading-relaxed text-ink">

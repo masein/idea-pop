@@ -40,7 +40,7 @@ describe('CaptureCard photo picker', () => {
     renderCard();
     const input = screen.getByTestId('photo-input') as HTMLInputElement;
     expect(input).toHaveAttribute('type', 'file');
-    expect(input).toHaveAttribute('accept', 'image/*');
+    expect(input).toHaveAttribute('accept', 'image/jpeg,image/png,image/webp');
     // Must have an accessible name (axe: form elements must have labels).
     expect(screen.getByLabelText('Sketch or photo — projects, not faces')).toBe(input);
     // Nothing selected yet → prompt is shown, no preview.

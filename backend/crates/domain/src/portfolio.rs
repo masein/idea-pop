@@ -95,6 +95,8 @@ pub struct Project {
     pub what_was_hard: String,
     pub what_to_improve: String,
     pub photo_keys: Vec<String>,
+    /// What this project is within its challenge: sketch, model, lab, practice or build.
+    pub step_type: Option<String>,
     /// What the child is requesting (may differ from effective while pending).
     pub requested_visibility: Visibility,
     /// The actually-visible level: Private until a moderation Approval lands.
@@ -123,6 +125,7 @@ impl Project {
             what_was_hard: String::new(),
             what_to_improve: String::new(),
             photo_keys: Vec::new(),
+            step_type: None,
             requested_visibility: Visibility::Private,
             effective_visibility: Visibility::Private,
             created_at: now,

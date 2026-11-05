@@ -1,6 +1,6 @@
 'use client';
 
-import { useContext, useState } from 'react';
+import { useContext, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import CaptureCard, { type CaptureData } from './CaptureCard';
 import ToolSelector, { isToolKey } from './tool/ToolSelector';
@@ -51,8 +51,15 @@ export default function StepSketch({ challenge, ageMode, onNext, onBack, hideToo
   const tg = useTranslations(game?.i18nNs ?? 'qtree');
   const [submitting, setSubmitting] = useState(false);
   const [failed, setFailed] = useState<FailedSave | null>(null);
+  // What was just saved: closing the popup and pressing Submit again doesn't save it twice.
+  const lastSaved = useRef<{ title: string; photo: File | null; projectId: string; idea: string; saved: SavedIdea } | null>(null);
 
   async function handleSubmit(data: CaptureData) {
+    const again = lastSaved.current;
+    if (again && again.title === data.title && again.photo === (data.photo ?? null)) {
+      onNext(again.projectId, again.idea, again.saved);
+      return;
+    }
     setSubmitting(true);
     setFailed(null);
     const description = guide ? guide.description.trim() || data.title : data.what_i_made;
@@ -79,6 +86,7 @@ export default function StepSketch({ challenge, ageMode, onNext, onBack, hideToo
         setFailed({ projectId: project.id, data, idea, saved });
         return;
       }
+      lastSaved.current = { title: data.title, photo: data.photo ?? null, projectId: project.id, idea, saved };
       onNext(project.id, idea, saved);
     } catch {
       setFailed({ projectId, data, idea, saved });

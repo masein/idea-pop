@@ -1,11 +1,14 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import MissionHints from '../MissionHints';
+import ImageUploadArea from '../ImageUploadArea';
+import PhotoUploadError from '../PhotoUploadError';
 import { Popi, StepNav, optionClass, pillCtaClass } from './StoryBits';
 import type { ChallengeDetail, MissionStory } from './types';
 import type { MissionGame, GameUpdate } from './useMissionGame';
-import { btnText } from '@/components/challenge/buttons';
+import { btnSecondary, btnText } from '@/components/challenge/buttons';
 import { discoveryOf } from './discovery';
 import AssetSlot from '@/components/AssetSlot';
 
@@ -20,6 +23,111 @@ interface Props {
   onFinished?: () => void;
   /** Max's challenge: this page is the Experiment (its own step, before Skills). */
   experiment?: boolean;
+  /** Saves a picture of the model; resolves false when it couldn't be saved. */
+  onPhoto: (photo: File) => Promise<boolean>;
+  /** No photo? The kid describes the model in words instead (resolves true when saved). */
+  onDescribe?: (text: string) => Promise<boolean>;
+}
+
+/** "What did you build?": a picture of the model, or words instead. Optional, private, and saved
+ *  as soon as it is chosen; a failed upload keeps the picture ready for Try Again. */
+export function BuildPhoto({
+  description,
+  onPhoto,
+  onDescribe,
+  onBusy,
+}: {
+  description: string;
+  onPhoto: (photo: File) => Promise<boolean>;
+  onDescribe?: (text: string) => Promise<boolean>;
+  onBusy: (busy: boolean) => void;
+}) {
+  const t = useTranslations('story');
+  const [photo, setPhoto] = useState<File | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
+  const [state, setState] = useState<'none' | 'saving' | 'saved' | 'failed'>('none');
+  const [describing, setDescribing] = useState(false);
+  const [words, setWords] = useState('');
+  const [wordsState, setWordsState] = useState<'none' | 'saving' | 'saved' | 'failed'>('none');
+
+  useEffect(() => {
+    if (!preview) return;
+    return () => URL.revokeObjectURL(preview);
+  }, [preview]);
+
+  async function send(f: File) {
+    setState('saving');
+    onBusy(true);
+    const ok = await onPhoto(f);
+    setState(ok ? 'saved' : 'failed');
+    onBusy(false);
+  }
+
+  return (
+    <ImageUploadArea
+      testId="lab-photo"
+      heading={t('lab_build_heading')}
+      description={description}
+      prompt={t('lab_build_prompt')}
+      previewUrl={preview}
+      busy={state === 'saving'}
+      onSelect={(f) => {
+        setPhoto(f);
+        setPreview(URL.createObjectURL(f));
+        void send(f);
+      }}
+    >
+      {preview && state !== 'failed' && (
+        <p aria-live="polite" data-testid="lab-photo-status" className="text-center font-body text-base font-semibold text-[#1E7A44]">
+          {state === 'saving' ? t('lab_photo_saving') : state === 'saved' ? `✓ ${t('lab_photo_saved')}` : ''}
+        </p>
+      )}
+      {state === 'failed' && photo && <PhotoUploadError onRetry={() => void send(photo)} />}
+      {onDescribe && !preview && wordsState !== 'saved' && (
+        describing ? (
+          <form
+            data-testid="lab-describe"
+            className="flex w-full flex-col gap-2"
+            onSubmit={async (e) => {
+              e.preventDefault();
+              if (words.trim().length < 3) return;
+              setWordsState('saving');
+              setWordsState((await onDescribe(words.trim())) ? 'saved' : 'failed');
+            }}
+          >
+            <label htmlFor="lab-describe-input" className="font-body text-base font-bold text-ink">
+              {t('lab_describe_label')}
+            </label>
+            <textarea
+              id="lab-describe-input"
+              rows={3}
+              maxLength={600}
+              dir="auto"
+              value={words}
+              onChange={(e) => setWords(e.target.value)}
+              placeholder={t('lab_describe_placeholder')}
+              className="w-full resize-none rounded-lg border border-[#8FA3B8] bg-white px-3 py-2 font-body text-base text-ink focus:border-challenge focus:outline-none"
+            />
+            <button type="submit" data-testid="lab-describe-save" disabled={words.trim().length < 3 || wordsState === 'saving'} className={`${btnSecondary} self-start`}>
+              {wordsState === 'saving' ? t('lab_photo_saving') : t('lab_describe_save')}
+            </button>
+            {wordsState === 'failed' && <p role="alert" className="font-body text-base font-semibold text-[#9A3328]">{t('lab_describe_failed')}</p>}
+          </form>
+        ) : (
+          <button type="button" data-testid="lab-describe-open" onClick={() => setDescribing(true)} className={`${btnText} self-start !px-0`}>
+            {t('lab_no_photo')}
+          </button>
+        )
+      )}
+      {wordsState === 'saved' && (
+        <p data-testid="lab-describe-saved" aria-live="polite" className="font-body text-base font-semibold text-[#1E7A44]">
+          ✓ {t('lab_describe_saved')}
+        </p>
+      )}
+      <p className="font-body text-sm text-[#4A5560]">{t('photo_private_note')}</p>
+      <p className="font-body text-sm font-semibold text-[#4A5560]">{t('photo_bonus_note')}</p>
+    </ImageUploadArea>
+  );
 }
 
 /** Winner index for a set of lab numbers, or null until every row is filled. */
@@ -34,7 +142,8 @@ export function labWinner(values: (number | null)[], higherIsBetter: boolean): n
 /** Step 5 as a story: predict which option wins, run the experiment, record
  *  one number per option. The best row gets a crown and Popi says whether the
  *  prediction was right — either way is a win ("surprises teach"). */
-export default function StoryLab({ challenge, story, game, update, onNext, onBack, onFinished, experiment = false }: Props) {
+export default function StoryLab({ challenge, story, game, update, onNext, onBack, onFinished, experiment = false, onPhoto, onDescribe }: Props) {
+  const [photoBusy, setPhotoBusy] = useState(false);
   const refs = experiment ? discoveryOf(story)?.experiment ?? null : null;
   const t = useTranslations('story');
   const lab = story.lab;
@@ -142,6 +251,13 @@ export default function StoryLab({ challenge, story, game, update, onNext, onBac
 
       <MissionHints hints={challenge.skill_hints ?? []} />
 
+      <BuildPhoto
+        description={discoveryOf(story)?.build_photo_desc ?? t('lab_build_desc')}
+        onPhoto={onPhoto}
+        onDescribe={onDescribe}
+        onBusy={setPhotoBusy}
+      />
+
       <StepNav onBack={onBack} backLabel={t('back')}>
         <button type="button" data-testid="lab-skip" onClick={onNext} className={btnText}>
           {t('lab_skip')}
@@ -149,7 +265,7 @@ export default function StoryLab({ challenge, story, game, update, onNext, onBac
         <button
           type="button"
           data-testid="lab-done"
-          disabled={!ready}
+          disabled={!ready || photoBusy}
           onClick={() => {
             update({ labDone: true });
             (onFinished ?? onNext)();

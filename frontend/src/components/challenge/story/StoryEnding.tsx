@@ -8,6 +8,8 @@ import { MISSION_BADGES, badgeArt, badgeName } from './missionBadges';
 import { heroShort } from './discovery';
 import BadgeIcon from './BadgeIcon';
 import AssetSlot from '@/components/AssetSlot';
+import { JourneySummary } from './JourneyParts';
+import type { MissionJourney } from './useMissionJourney';
 
 interface Props {
   story: MissionStory;
@@ -16,6 +18,9 @@ interface Props {
   hiddenSteps?: number[];
   /** Max's challenge: River Explorer and the full list of badges earned. */
   badgeMode?: boolean;
+  /** The kid's saved journey, shown on the page instead of asking anything. */
+  journey?: MissionJourney | null;
+  improvedNote?: string | null;
 }
 
 const BADGES: BadgeKey[] = ['define', 'clue', 'tool', 'retry'];
@@ -23,7 +28,7 @@ const BADGES: BadgeKey[] = ['define', 'clue', 'tool', 'retry'];
 /** Story top for step 8 — "And ever since then…": the hero in the scene,
  *  confetti, the mission sticker, the bonus badges and a one-tap reflection.
  *  The existing celebrate step (XP summary + Ideas Wall) sits below it. */
-export default function StoryEnding({ story, game, update, hiddenSteps = [], badgeMode = false }: Props) {
+export default function StoryEnding({ story, game, update, hiddenSteps = [], badgeMode = false, journey = null, improvedNote = null }: Props) {
   const t = useTranslations('story');
   return (
     <div data-testid="story-ending" className="flex flex-col gap-5 pt-4">
@@ -75,6 +80,9 @@ export default function StoryEnding({ story, game, update, hiddenSteps = [], bad
         )}
       </div>
 
+      {badgeMode && journey && <JourneySummary journey={journey} story={story} partner={game.partner} improvedNote={improvedNote} />}
+
+      {!badgeMode && (
       <div className="flex flex-col gap-3 rounded-card bg-white p-5">
         <p className="font-display text-2xl text-challenge">{t('tell_your_part')}</p>
         <p className="font-body text-sm font-semibold text-ink">{story.reflection.question}</p>
@@ -104,6 +112,7 @@ export default function StoryEnding({ story, game, update, hiddenSteps = [], bad
           ))}
         </div>
       </div>
+      )}
     </div>
   );
 }

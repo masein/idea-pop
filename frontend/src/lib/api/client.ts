@@ -545,7 +545,7 @@ export async function createProject(body: {
   what_was_hard: string;
   what_id_improve: string;
   challenge_id: string | null;
-  step_type: "sketch" | "build" | "lab" | "practice";
+  step_type: "sketch" | "build" | "lab" | "practice" | "model";
 }) {
   // The server files a project under what it came from (here, the challenge) and keeps the
   // kid's own words in its text fields. Every project starts private.
@@ -559,6 +559,7 @@ export async function createProject(body: {
       materials: body.what_i_used,
       what_was_hard: body.what_was_hard,
       what_to_improve: body.what_id_improve,
+      step_type: body.step_type,
     },
   });
   if (error) throw new Error("Failed to create project");

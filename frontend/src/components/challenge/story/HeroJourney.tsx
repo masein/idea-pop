@@ -80,7 +80,7 @@ export default function HeroJourney({
             key={`${workKey}-${index}`}
             challengeId={workKey}
             heroIndex={index}
-            label={t('hero_answer_label')}
+            label={discoveryOf(story)?.idea_label ?? t('hero_answer_label')}
             value={game.partnerAnswers?.inspired ?? ''}
             submitted={finished}
             onChange={(v) => update((g) => ({ partnerAnswers: { ...g.partnerAnswers, inspired: v } }))}

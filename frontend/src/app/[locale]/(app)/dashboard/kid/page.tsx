@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button';
 import { fetchClassMission } from '@/lib/api/client';
 import PopiAvatar from '@/components/PopiAvatar';
 import AssetSlot from '@/components/AssetSlot';
+import ModalClose from '@/components/ModalClose';
 
 // ─── ParentHandoffModal ───────────────────────────────────────────────────────
 // Safety rule: kids MUST see this modal when tapping any paid-plan CTA.
@@ -23,7 +24,8 @@ function ParentHandoffModal({ onDismiss }: { onDismiss: () => void }) {
       aria-label={t('parent_handoff_heading')}
       data-testid="parent-handoff-modal"
     >
-      <div className="bg-white rounded-2xl shadow-xl p-8 max-w-sm w-full mx-4">
+      <div className="relative bg-white rounded-2xl shadow-xl p-8 pt-14 max-w-sm w-full mx-4">
+        <ModalClose onClose={onDismiss} />
         <div className="mx-auto mb-4 h-16 w-16"><AssetSlot id="DASHBOARD-001" /></div>
         <h2 className="font-display text-xl font-bold text-ink text-center mb-2">
           {t('parent_handoff_heading')}

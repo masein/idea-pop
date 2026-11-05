@@ -17,8 +17,8 @@ import {
 const CHARACTER_ART: Record<CharacterKey, { image: string } | { asset: string }> = {
   popi: { image: '/popi/popi.png' },
   quizi: { image: '/characters/quizzy.png' },
-  scamper: { asset: 'SCAMPER-CHAR-001' },
-  conspy: { asset: 'CONSPY-CHAR-001' },
+  scamper: { image: '/characters/scamper.webp' },
+  conspy: { image: '/characters/conspy.webp' },
 };
 
 export function CharacterArt({ character, className = '' }: { character: CharacterKey; className?: string }) {

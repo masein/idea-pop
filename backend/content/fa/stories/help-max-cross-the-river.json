@@ -387,17 +387,17 @@
         {
           "label": "پهن و کم‌عمق، با کف صاف",
           "asset": "MAX-EXP-001",
-          "image": null
+          "image": "/challenge/max/experiment/MAX-EXP-001.webp"
         },
         {
           "label": "گود و باریک",
           "asset": "MAX-EXP-002",
-          "image": null
+          "image": "/challenge/max/experiment/MAX-EXP-002.webp"
         },
         {
           "label": "قایق لبه‌بلند",
           "asset": "MAX-EXP-003",
-          "image": null
+          "image": "/challenge/max/experiment/MAX-EXP-003.webp"
         }
       ]
     }

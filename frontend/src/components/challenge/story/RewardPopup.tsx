@@ -15,8 +15,10 @@ const CONFETTI = Array.from({ length: 22 }, (_, i) => ({
 }));
 
 export interface RewardBadge {
-  /** Badge artwork: an image path, or an emoji until the artwork exists. */
+  /** Badge artwork: an image path, or "asset:<ID>" until the artwork exists. */
   art: string;
+  /** A character standing beside the popup, whole. */
+  character?: string;
   name: string;
 }
 
@@ -63,10 +65,10 @@ export default function RewardPopup({
     <div className="app-typography fixed inset-0 z-[90] flex items-center justify-center overflow-y-auto bg-[rgba(15,40,70,0.45)] p-4">
       {/* The character (when there is one) and the popup, side by side; stacked on phones. */}
       <div className="my-auto flex w-full max-w-[460px] flex-col items-center sm:w-auto sm:max-w-none sm:flex-row">
-      {isImage && badge && (
+      {badge?.character && (
         // eslint-disable-next-line @next/next/no-img-element -- the character, whole
         <img
-          src={badge.art}
+          src={badge.character}
           alt=""
           aria-hidden="true"
           data-testid={`${testId}-character`}
@@ -95,8 +97,12 @@ export default function RewardPopup({
           </div>
         )}
 
-        {/* Badge artwork: always the same size and place. A character (e.g. Quizzy) stands
-            beside the popup instead, whole, never cropped. */}
+        {/* Badge artwork: always the same size and place. A character (e.g. Quizi) stands
+            beside the popup, whole, never cropped. */}
+        {isImage && badge && (
+          // eslint-disable-next-line @next/next/no-img-element -- the badge's own medal
+          <img src={badge.art} alt="" aria-hidden="true" data-testid={`${testId}-medal`} className="relative h-28 w-28 object-contain sm:h-32 sm:w-32" />
+        )}
         {!isImage && (
         <span
           aria-hidden="true"

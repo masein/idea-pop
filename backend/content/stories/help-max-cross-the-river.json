@@ -385,17 +385,17 @@
         {
           "label": "Wide and shallow, with a flat base",
           "asset": "MAX-EXP-001",
-          "image": null
+          "image": "/challenge/max/experiment/MAX-EXP-001.webp"
         },
         {
           "label": "Deep and narrow",
           "asset": "MAX-EXP-002",
-          "image": null
+          "image": "/challenge/max/experiment/MAX-EXP-002.webp"
         },
         {
           "label": "Raised-rim boat",
           "asset": "MAX-EXP-003",
-          "image": null
+          "image": "/challenge/max/experiment/MAX-EXP-003.webp"
         }
       ]
     }

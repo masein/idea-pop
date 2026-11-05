@@ -15,7 +15,7 @@ import RewardPopup from '@/components/challenge/story/RewardPopup';
 import GuideNameMessages from '@/components/challenge/story/GuideNameMessages';
 import { AssetScope } from '@/components/AssetSlot';
 import { assetSetFor } from '@/lib/assets/assetSets';
-import { MISSION_XP_MAX, badgeArt, badgeName, type MissionBadgeKey } from '@/components/challenge/story/missionBadges';
+import { BADGE_CHARACTER, MISSION_XP_MAX, badgeArt, badgeName, type MissionBadgeKey } from '@/components/challenge/story/missionBadges';
 import { discoveryOf } from '@/components/challenge/story/discovery';
 import Inspired from '@/components/characters/Inspired';
 import { uploadPhotoSafely } from '@/lib/photoUpload';
@@ -362,7 +362,7 @@ function ChallengePageInner({ onBadgeMode }: { onBadgeMode: (on: boolean) => voi
     return claimMissionBadge(challenge.id, key).catch(() => 0);
   };
   const givePhoto = (key: 'design' | 'build') => claimPhotoBonus(challenge.id, key).catch(() => null);
-  const badgeOf = (key: MissionBadgeKey) => ({ art: badgeArt(story, key), name: badgeName(story, key, tStory) });
+  const badgeOf = (key: MissionBadgeKey) => ({ character: BADGE_CHARACTER[key], art: badgeArt(story, key), name: badgeName(story, key, tStory) });
   const disc = discoveryOf(story);
   // Give a star once; the server checks the work behind it. Every screen hears about it.
   const giveStar = (star: 1 | 2 | 3, note?: string) =>

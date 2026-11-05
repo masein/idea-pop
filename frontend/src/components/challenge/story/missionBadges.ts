@@ -4,8 +4,13 @@ export const MISSION_BADGES = ['define', 'clue', 'solved', 'tool', 'retry', 'riv
 export type MissionBadgeKey = (typeof MISSION_BADGES)[number];
 
 /** Badge artwork: an approved picture's path, or "asset:<ID>" while its picture is pending. */
-export const BADGE_ART: Record<MissionBadgeKey, string> = {
+/** A character who stands beside a badge's popup. */
+export const BADGE_CHARACTER: Partial<Record<MissionBadgeKey, string>> = {
   define: '/characters/quizzy.png',
+};
+
+export const BADGE_ART: Record<MissionBadgeKey, string> = {
+  define: '/challenge/max/badges/MAX-BADGE-001.webp',
   clue: 'asset:MAX-BADGE-002',
   solved: 'asset:MAX-BADGE-003',
   tool: 'asset:MAX-BADGE-004',

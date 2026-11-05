@@ -14,6 +14,14 @@ type ChallengeDetail = import('@/lib/api/schema').components['schemas']['Challen
 
 const PHOTO_WAIT_MS = 30_000;
 
+/** A save that didn't finish: what is needed to retry it or to carry on. */
+interface FailedSave {
+  projectId: string | null;
+  data: CaptureData;
+  idea: string;
+  saved: SavedIdea;
+}
+
 export interface SavedIdea {
   title: string;
   description: string;
@@ -42,14 +50,32 @@ export default function StepSketch({ challenge, ageMode, onNext, onBack, hideToo
   // The hook must run unconditionally; the namespace is only read when a game exists.
   const tg = useTranslations(game?.i18nNs ?? 'qtree');
   const [submitting, setSubmitting] = useState(false);
+  const [failed, setFailed] = useState<FailedSave | null>(null);
+
+  /** The photo, given up on after PHOTO_WAIT_MS so a stuck upload can't hold the kid on "Saving…". */
+  async function sendPhoto(projectId: string, photo: File): Promise<boolean> {
+    const stop = new AbortController();
+    const timer = setTimeout(() => stop.abort(), PHOTO_WAIT_MS);
+    try {
+      await uploadProjectPhoto(projectId, photo, stop.signal);
+      return true;
+    } catch {
+      return false;
+    } finally {
+      clearTimeout(timer);
+    }
+  }
 
   async function handleSubmit(data: CaptureData) {
     setSubmitting(true);
+    setFailed(null);
     const description = guide ? guide.description.trim() || data.title : data.what_i_made;
     const idea = [data.title, description, data.what_i_used].map((x) => x?.trim()).filter(Boolean).join('. ');
     const saved: SavedIdea = { title: data.title, description, photo: data.photo ?? null };
+    let projectId = failed?.projectId ?? null;
     try {
-      const project = await createProject({
+      // A retry reuses what already saved, so nothing is created twice.
+      const project = projectId ? { id: projectId } : await createProject({
         title: data.title || t('default_sketch_title'),
         what_i_made: description,
         what_i_used: data.what_i_used,
@@ -58,19 +84,18 @@ export default function StepSketch({ challenge, ageMode, onNext, onBack, hideToo
         challenge_id: challenge.id,
         step_type: 'sketch',
       });
+      projectId = project.id;
       // The sketch joins the kid's saved idea for this challenge: one record, no copy.
       if (challenge.story) await attachSketchToIdea(challenge.id, project.id, data.title).catch(() => {});
-      // The sketch photo is optional and private; the idea counts as saved without it, and a
-      // slow or stuck upload never holds the kid back.
-      if (data.photo) {
-        await Promise.race([
-          uploadProjectPhoto(project.id, data.photo).catch(() => {}),
-          new Promise((resolve) => setTimeout(resolve, PHOTO_WAIT_MS)),
-        ]);
+      // The photo is private and optional, but losing one is never silent: the kid can retry
+      // or carry on without it.
+      if (data.photo && !(await sendPhoto(project.id, data.photo))) {
+        setFailed({ projectId: project.id, data, idea, saved });
+        return;
       }
       onNext(project.id, idea, saved);
     } catch {
-      onNext(null, idea, saved);
+      setFailed({ projectId, data, idea, saved });
     } finally {
       setSubmitting(false);
     }
@@ -183,6 +208,34 @@ export default function StepSketch({ challenge, ageMode, onNext, onBack, hideToo
           ideaName={!!guide}
           blockedHint={blockedHint}
         />
+      )}
+
+      {failed && (
+        <div role="alert" data-testid="sketch-save-failed" className="flex flex-col gap-2 rounded-xl bg-[#FFF7E0] px-4 py-3">
+          <p className="font-body text-base font-semibold text-[#5a4300]">
+            {failed.projectId ? t('sketch_photo_failed') : t('sketch_save_failed')}
+          </p>
+          <div className="flex flex-wrap gap-4">
+            <button
+              type="button"
+              data-testid="sketch-save-retry"
+              disabled={submitting}
+              onClick={() => void handleSubmit(failed.data)}
+              className={`${btnText} !px-0`}
+            >
+              {submitting ? t('saving') : t('sketch_try_again')}
+            </button>
+            <button
+              type="button"
+              data-testid="sketch-save-continue"
+              disabled={submitting}
+              onClick={() => onNext(failed.projectId, failed.idea, { ...failed.saved, photo: null })}
+              className={`${btnText} !px-0`}
+            >
+              {failed.data.photo ? t('sketch_continue_no_photo') : t('sketch_continue_anyway')}
+            </button>
+          </div>
+        </div>
       )}
 
       <button

@@ -1386,7 +1386,12 @@
     "idea_answer_placeholder": "Write your answer…",
     "idea_name_placeholder": "My idea is called…",
     "sketch_ready": "Let's turn your idea into a drawing so others can understand it! Ready to sketch?",
-    "sketch_upload_prompt": "Add a photo of your paper sketch (the project, not faces)"
+    "sketch_upload_prompt": "Add a photo of your paper sketch (the project, not faces)",
+    "sketch_photo_failed": "Your idea is saved, but your sketch photo didn't upload. Your photo is still here.",
+    "sketch_save_failed": "We couldn't save your sketch just now. Your idea and photo are still here.",
+    "sketch_try_again": "Try again",
+    "sketch_continue_no_photo": "Continue without the photo",
+    "sketch_continue_anyway": "Continue for now"
   },
   "player": {
     "back": "Back",

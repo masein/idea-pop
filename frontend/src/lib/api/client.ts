@@ -567,12 +567,13 @@ export async function createProject(body: {
 
 /** Adds a photo to one of the kid's projects. It stays private, like the project:
  *  adding a photo never shares or publishes anything. */
-export async function uploadProjectPhoto(projectId: string, photo: File) {
+export async function uploadProjectPhoto(projectId: string, photo: File, signal?: AbortSignal) {
   const { data, error } = await apiClient.POST("/api/projects/{id}/photos", {
     params: { path: { id: projectId } },
     body: photo,
     bodySerializer: (b) => b as Blob,
     headers: { "Content-Type": photo.type || "image/jpeg" },
+    signal,
   });
   if (error) throw new Error("Failed to save photo");
   return data;

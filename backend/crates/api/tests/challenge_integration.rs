@@ -840,7 +840,7 @@ async fn challenge_detail_includes_the_story_layer() {
     assert_eq!(s["chapters"][5]["step"], "tool");
     assert_eq!(s["tool"]["kind"], "scamper");
     assert_eq!(s["tool"]["parts"].as_array().unwrap().len(), 3);
-    assert_eq!(s["sticker"]["name"], "River Crosser");
+    assert_eq!(s["sticker"]["name"], "River Explorer");
     // The header emoji comes from the story's hero.
     assert_eq!(body["emoji"], "🎒");
 }

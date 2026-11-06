@@ -10,13 +10,17 @@ import { useEffect, useRef, useState } from "react";
    this page itself: the hero artwork ([data-art-*], or the phone hero's [data-bird-*]), the girl's painting
    ([data-bird-canvas], --painted-reveal), and the boy's paper ([data-bird-mission], --mission-reveal), which it holds
    briefly on screen while the bird shrinks and dissolves into the drawing. This component only renders the bird rig,
-   loads the three scripts in order and mounts / destroys the controller. The bird's large pictures and scripts wait until
-   the hero scene is ready (it appears after the scene anyway), so they never hold up the first thing people see. */
+   loads the three scripts in order and mounts / destroys the controller. Its pictures are fetched once the hero scene
+   is ready, but decoded, turned into wing textures and started only after the hero's camera move has finished
+   (data-camera="done"): starting up during the move froze it for up to 1.6s (susan, 2026-11-06: the loading "jump"). The
+   bird appears after the move anyway, so it looks the same. */
 
 const BASE = "/ideapop-motion/";
 const BIRD = "/landing/bird/";
 const REV = "motion-2026-10-21";
 const SCRIPTS = ["wing-flight.js", "motion-core.js", "motion.js"];
+const PARTS = ["bird-wing-far", "bird-tail", "bird-body", "bird-wing-near"];
+const partSrc = (file: string) => `${BIRD}${file}.webp?v=bird-2026-10-15c`;
 
 type Controller = { destroy: () => void };
 declare global {
@@ -49,15 +53,20 @@ export default function FlyingBird() {
 
   useEffect(() => {
     const hero = document.querySelector<HTMLElement>(".hero-viewport");
-    const settled = () => !hero || hero.dataset.state !== "preparing";
-    if (settled()) {
-      setHeroReady(true);
-      return;
-    }
-    const observer = new MutationObserver(() => {
-      if (settled()) setHeroReady(true);
-    });
-    observer.observe(hero!, { attributes: true, attributeFilter: ["data-state"] });
+    let fetched = false;
+    const check = () => {
+      if (!hero) return setHeroReady(true);
+      // fetch the pictures (network only, nothing decoded) as soon as the scene is ready
+      if (!fetched && hero.dataset.state !== "preparing") {
+        fetched = true;
+        for (const f of PARTS) new Image().src = partSrc(f);
+      }
+      if (hero.dataset.state === "fallback" || hero.dataset.camera === "done") setHeroReady(true);
+    };
+    check();
+    if (!hero) return;
+    const observer = new MutationObserver(check);
+    observer.observe(hero, { attributes: true, attributeFilter: ["data-state", "data-camera"] });
     return () => observer.disconnect();
   }, []);
 
@@ -86,7 +95,7 @@ export default function FlyingBird() {
   }, [heroReady]);
 
   const part = (cls: string, file: string) => (
-    <img className={`part ${cls}`} src={`${BIRD}${file}.webp?v=bird-2026-10-15c`} width={1659} height={1348} alt="" />
+    <img className={`part ${cls}`} src={partSrc(file)} width={1659} height={1348} alt="" />
   );
   return (
     <div ref={birdRef} className="flying-bird" aria-hidden="true">

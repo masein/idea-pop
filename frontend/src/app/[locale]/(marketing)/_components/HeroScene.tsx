@@ -310,6 +310,8 @@ export default function HeroScene() {
         set(scenery, "transform", `translate3d(${textureLeft - 780}px, ${textureTop - 110}px, 0) scale(${textureScale})`);
         set(nature, "transform", `translate3d(${textureLeft}px, ${textureTop}px, 0) scale(${textureScale})`);
         lastQ = q;
+        // the camera has settled: the flying bird may start up now (FlyingBird.tsx waits for this)
+        if (q >= 1 && viewport.dataset.camera !== "done") viewport.dataset.camera = "done";
       }
       for (const [id, start, end] of T.fades) {
         const el = layerRefs.current[id];
@@ -420,6 +422,7 @@ export default function HeroScene() {
         if (cancelled) return;
         setState("fallback");
         viewport.dataset.birdIn = "1";
+        viewport.dataset.camera = "done";
         showCopy(1);
         showNav(1);
       });

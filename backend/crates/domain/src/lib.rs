@@ -78,6 +78,11 @@ pub enum DomainError {
     Internal(String),
 }
 
+pub use idea_review::{
+    build_idea_review_prompt, parse_idea_review, IdeaExperiment, IdeaReview, IdeaReviewContext,
+    ReviewOwner, STATUS_LATER, STATUS_PENDING, STATUS_REVIEWED,
+};
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -99,8 +104,3 @@ mod tests {
         );
     }
 }
-
-pub use idea_review::{
-    build_idea_review_prompt, parse_idea_review, IdeaExperiment, IdeaReview, IdeaReviewContext,
-    ReviewOwner, STATUS_LATER, STATUS_PENDING, STATUS_REVIEWED,
-};

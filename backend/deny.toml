@@ -41,6 +41,18 @@ reason = "tokio-tar: PAX header smuggling. Transitive via testcontainers; dev-on
 id = "RUSTSEC-2026-0258"
 reason = "h2 0.3 empty-DATA-frame DoS: server-side attack; our h2 0.3 is only the AWS S3 CLIENT path (aws-smithy-http-client 1.1.13 still pins it — no patched 0.3 exists). The h2 0.4 line used by our own server is updated past the fix (>=0.4.16). Drop when aws-smithy-http-client moves off h2 0.3."
 
+[[advisories.ignore]]
+id = "RUSTSEC-2026-0346"
+reason = "rustls 0.21: Debug impls expose TLS secrets. Only the AWS S3 CLIENT path (aws-smithy-http-client 1.5.2 still pins rustls 0.21 / webpki 0.101, no patched 0.21 exists). Our own TLS uses rustls 0.23.46, which is past the fix. Drop when aws-smithy-http-client moves off rustls 0.21."
+
+[[advisories.ignore]]
+id = "RUSTSEC-2026-0349"
+reason = "rustls 0.21: ServerHello key-exchange downgrade. Only the AWS S3 CLIENT path (aws-smithy-http-client 1.5.2 still pins rustls 0.21 / webpki 0.101, no patched 0.21 exists). Our own TLS uses rustls 0.23.46, which is past the fix. Drop when aws-smithy-http-client moves off rustls 0.21."
+
+[[advisories.ignore]]
+id = "RUSTSEC-2026-0382"
+reason = "rustls-webpki 0.101: distrusted intermediates. Only the AWS S3 CLIENT path (aws-smithy-http-client 1.5.2 still pins rustls 0.21 / webpki 0.101, no patched 0.21 exists). Our own TLS uses rustls 0.23.46, which is past the fix. Drop when aws-smithy-http-client moves off rustls 0.21."
+
 [licenses]
 version = 2
 # Skip license checks for our own private workspace crates (publish = false).

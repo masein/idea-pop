@@ -53,6 +53,13 @@
   transform-origin: 0 0;
   will-change: transform;
 }
+/* After the camera move the scene is still: drop the per-layer compositing so the browser keeps one flat picture
+   instead of re-drawing many large layers while the page scrolls (susan, 2026-11-07). */
+.hero-viewport[data-camera="done"] .hero-world,
+.hero-viewport[data-camera="done"] .hero-nature,
+.hero-viewport[data-camera="done"] .hero-scenery-image {
+  will-change: auto;
+}
 /* Nothing shows until every layer has decoded, so no partial scene flashes. */
 .hero-world {
   transition: opacity 450ms ease-out;
@@ -135,16 +142,17 @@
     visibility: hidden;
   }
 }
-/* Depth (HeroScene.tsx; susan, 2026-11-02). The veil is larger than any viewport so it always covers the scene. The two
+/* Depth (HeroScene.tsx; susan, 2026-11-02). The veil covers exactly the artwork (the hero box never shows anything
+   outside it); an earlier oversized veil made every frame paint a huge white layer (susan, 2026-11-07: the lag). The two
    masks pick her groups out of the full-canvas layers, with soft edges so no line shows where the treatment changes:
    the left side (shelves, globe, their objects, the left leaves), and the front (leaves, pine cone, the books and the part
    of the desk where the girl works, and the leaf in the far corner). */
 .hero-veil {
   position: absolute;
-  left: -3000px;
-  top: -3000px;
-  width: 8000px;
-  height: 8000px;
+  left: 0;
+  top: 0;
+  width: 1670px;
+  height: 942px;
   background: #fff;
   pointer-events: none;
 }
@@ -196,6 +204,9 @@
   height: 1348px;
   pointer-events: none;
   transform-origin: 738px 644px;
+  /* each part on its own compositor layer: the wing beat then only moves textures instead of re-drawing the bird
+     (2026-11-07: the bird made scrolling lag on computers without graphics acceleration) */
+  will-change: transform;
 }
 .flying-bird .far-wing {
   z-index: 0;

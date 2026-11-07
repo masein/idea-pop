@@ -219,11 +219,16 @@
       this.gl = this.canvas.getContext('webgl', {
         alpha: true, antialias: true, depth: false, stencil: false,
         premultipliedAlpha: true, preserveDrawingBuffer: false,
-        powerPreference: 'low-power', desynchronized: true
+        powerPreference: 'low-power', desynchronized: true,
+        // Idea Pop site (2026-11-07): no WebGL on software-only graphics (no GPU, blocked drivers, remote desktops),
+        // where two large canvases per frame froze the page; the wings then use the light image-transform fallback.
+        failIfMajorPerformanceCaveat: true
       });
-      if (!this.gl) {
+      const info = this.gl && this.gl.getExtension('WEBGL_debug_renderer_info');
+      const renderer = this.gl ? String(info ? this.gl.getParameter(info.UNMASKED_RENDERER_WEBGL) : this.gl.getParameter(this.gl.RENDERER)) : '';
+      if (!this.gl || /swiftshader|llvmpipe|softpipe|software|basic render/i.test(renderer)) {
         this.canvas.remove();
-        throw new Error('WebGL is unavailable.');
+        throw new Error('WebGL is unavailable or software-only.');
       }
       this.resolution = -1;
       this.lost = false;

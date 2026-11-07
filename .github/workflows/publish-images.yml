@@ -106,6 +106,18 @@ jobs:
           realm=$(echo "$hdr" | sed -n 's/.*realm="\([^"]*\)".*/\1/p')
           service=$(echo "$hdr" | sed -n 's/.*service="\([^"]*\)".*/\1/p')
           echo "realm=$realm service=$service"
+          for sc in "pull" "push" "pull,push" "push,pull" "*"; do
+            echo "== token scope repository:idea-pop-frontend:$sc"
+            curl -s -o /tmp/t2 -w 'status %{http_code}\n' -u "$REG_USER:$REG_PASS" --get --data-urlencode "service=$service" --data-urlencode "scope=repository:idea-pop-frontend:$sc" "$realm"
+            t=$(jq -r '.token // .access_token // empty' /tmp/t2)
+            p=$(echo "$t" | cut -d. -f2 | tr '_-' '/+'); while [ $(( ${#p} % 4 )) -ne 0 ]; do p="$p="; done
+            echo "$p" | base64 -d 2>/dev/null | jq -c '.access' 2>/dev/null
+          done
+          echo "== two scope params"
+          curl -s -o /tmp/t2 -u "$REG_USER:$REG_PASS" --get --data-urlencode "service=$service" --data-urlencode "scope=repository:idea-pop-frontend:pull" --data-urlencode "scope=repository:idea-pop-frontend:push" "$realm"
+          t=$(jq -r '.token // .access_token // empty' /tmp/t2)
+          p=$(echo "$t" | cut -d. -f2 | tr '_-' '/+'); while [ $(( ${#p} % 4 )) -ne 0 ]; do p="$p="; done
+          echo "$p" | base64 -d 2>/dev/null | jq -c '.access' 2>/dev/null
           for repo in idea-pop-frontend idea-pop-backend; do
             echo "== upload start for $repo (basic auth)"
             curl -s -D - -o /tmp/body -X POST -u "$REG_USER:$REG_PASS" "https://$REGISTRY/v2/$repo/blobs/uploads/" | grep -iE '^(HTTP|www-authenticate|location)'

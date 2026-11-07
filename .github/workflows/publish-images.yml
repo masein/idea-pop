@@ -112,7 +112,7 @@ jobs:
             head -c 300 /tmp/body; echo
             if [ -n "$realm" ]; then
               echo "== token for $repo push"
-              curl -s -o /tmp/tok -w 'status %{http_code}\n' -u "$REG_USER:$REG_PASS" "$realm?service=$service&scope=repository:$repo:pull,push"
+              curl -s -o /tmp/tok -w 'status %{http_code}\n' -u "$REG_USER:$REG_PASS" --get --data-urlencode "service=$service" --data-urlencode "scope=repository:$repo:pull,push" "$realm"
               tok=$(jq -r '.token // .access_token // empty' /tmp/tok)
               if [ -n "$tok" ]; then
                 p=$(echo "$tok" | cut -d. -f2 | tr '_-' '/+'); while [ $(( ${#p} % 4 )) -ne 0 ]; do p="$p="; done

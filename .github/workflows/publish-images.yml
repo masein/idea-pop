@@ -92,7 +92,7 @@ jobs:
           set -u
           push_with_retry() {
             local tag="$1"
-            for attempt in 1 2 3 4 5; do
+            for attempt in 1 2 3; do
               if docker push "$tag"; then
                 echo "pushed $tag"
                 return 0
@@ -100,10 +100,17 @@ jobs:
               echo "push failed for $tag (attempt $attempt) — retrying in $((attempt * 15))s"
               sleep $((attempt * 15))
             done
-            echo "::error::giving up pushing $tag after 5 attempts"
+            echo "::error::giving up pushing $tag after 3 attempts"
             return 1
           }
-          push_with_retry "$BACKEND_IMAGE:latest"
-          push_with_retry "$BACKEND_IMAGE:sha-${{ steps.sha.outputs.short }}"
-          push_with_retry "$FRONTEND_IMAGE:latest"
-          push_with_retry "$FRONTEND_IMAGE:sha-${{ steps.sha.outputs.short }}"
+          # Try every tag even if one fails, so the log shows exactly which
+          # repository the registry refuses; fail the job at the end.
+          failed=0
+          for tag in \
+            "$FRONTEND_IMAGE:latest" \
+            "$FRONTEND_IMAGE:sha-${{ steps.sha.outputs.short }}" \
+            "$BACKEND_IMAGE:latest" \
+            "$BACKEND_IMAGE:sha-${{ steps.sha.outputs.short }}"; do
+            push_with_retry "$tag" || failed=1
+          done
+          exit $failed

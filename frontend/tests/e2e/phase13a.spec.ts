@@ -14,20 +14,36 @@
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
+// Every character says hello once per kid; these walkthroughs start after the hellos, so the
+// first-meet dialog never covers the screen under test.
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript(() => {
+    for (const c of ['popi', 'quizi', 'scamper', 'conspy']) localStorage.setItem('ideapop:met:kid:' + c, '1');
+  });
+});
+
 // ── Shared helpers ────────────────────────────────────────────────────────────
+
+/** After the sketch is saved: the "you solved it" celebration, Design secret and Skill, to Build & test. */
+async function walkFromSolvedToBuild(page: import('@playwright/test').Page) {
+  await page.getByTestId('define-celebration-go').click();
+  await page.getByTestId('step-design-secret').getByRole('button').first().click();
+  await page.getByTestId('step-skill').getByRole('button', { name: /continue/i }).click();
+  await page.getByTestId('step-build').waitFor();
+}
 
 async function setCookie(page: import('@playwright/test').Page, name: string, value: string) {
   await page.context().addCookies([{ name, value, domain: 'localhost', path: '/' }]);
 }
 
 function mockChallengeAPIs(page: import('@playwright/test').Page) {
-  page.route('**/api/challenges', (r) =>
+  page.route(/\/api\/challenges(\?.*)?$/, (r) =>
     r.fulfill({
       json: [{ id: 'ch-1', title: 'Build a bridge', emoji: '🌉', tools: ['five_whys'], difficulty: 'easy', time_minutes: 30, xp_reward: 20, mess_level: 1 }],
     })
   );
   // Mirrors the REAL ChallengeDetail contract (flattened step fields).
-  page.route('**/api/challenges/ch-1', (r) =>
+  page.route(/\/api\/challenges\/ch-1(\?.*)?$/, (r) =>
     r.fulfill({
       json: {
         id: 'ch-1', title: 'Build a bridge', slug: 'build-a-bridge',
@@ -147,7 +163,7 @@ function mockTeacherAPIs(page: import('@playwright/test').Page) {
       json: { id: 'cls-1', name: 'Room 7', class_code: 'XYZ999', student_count: 14, assigned_challenge_id: null, assigned_challenge_title: null },
     })
   );
-  page.route('**/api/challenges', (r) =>
+  page.route(/\/api\/challenges(\?.*)?$/, (r) =>
     r.fulfill({ json: [{ id: 'ch-1', title: 'Build a bridge', emoji: '🌉', tools: [] }] })
   );
   page.route('**/api/teacher/class/gallery', (r) =>
@@ -305,7 +321,9 @@ test.describe('axe — app pages', () => {
     const nav = page.locator('nav[aria-label="Main navigation"]:visible').first();
     await expect(nav.getByRole('link', { name: 'Library' })).toBeVisible();
     const labels = await nav.locator('ul[role="list"] a > span:first-child').allTextContents();
-    expect(labels).toEqual(['My profile', 'Exploring', 'Library', 'Challenges', 'Account']);
+    // Account is a menu button at the end of the list, not a link.
+    expect(labels).toEqual(['My profile', 'Exploring', 'Library', 'Challenges']);
+    await expect(nav.getByRole('button', { name: /account/i })).toBeVisible();
   });
 
   test('library tool card opens the Machine Trainer', async ({ page }) => {
@@ -352,7 +370,7 @@ test.describe('axe — app pages', () => {
 
   test('challenges list page passes axe', async ({ page }) => {
     await setCookie(page, 'ideapop_persona', 'kid');
-    page.route('**/api/challenges', (r) =>
+    page.route(/\/api\/challenges(\?.*)?$/, (r) =>
       r.fulfill({
         json: [
           {
@@ -401,7 +419,7 @@ test.describe('axe — app pages', () => {
     await page.getByTestId('field-title').fill('My bridge');
     await page.getByTestId('field-used').fill('Sticks and tape');
     await page.getByRole('button', { name: /save my idea/i }).click();
-    await page.getByTestId('step-build').waitFor();
+    await walkFromSolvedToBuild(page);
 
     await expect(page.getByTestId('mission-hints')).toBeVisible();
     await page.getByTestId('hints-toggle').click();
@@ -428,7 +446,7 @@ test.describe('axe — app pages', () => {
     await page.getByTestId('field-title').fill('My bridge');
     await page.getByTestId('field-used').fill('Sticks and tape');
     await page.getByRole('button', { name: /save my idea/i }).click();
-    await page.getByTestId('step-build').waitFor();
+    await walkFromSolvedToBuild(page);
 
     await expect(page.getByTestId('mission-helper')).toBeVisible();
     // The helper IS Popi — same penguin as the floating Ask-Me mascot.
@@ -469,16 +487,8 @@ test.describe('axe — app pages', () => {
     await expect(page.getByTestId('step-nature-clues')).toBeVisible();
     await expect(page.getByTestId('nature-clue-0')).toContainText('Spider webs are stronger');
     await expect(page.getByTestId('nature-clue-1')).toContainText('From the ocean');
-    await page.getByTestId('step-nature-clues').getByRole('button', { name: /secret/i }).click();
-    // 4 · Design secret
-    await expect(page.getByTestId('step-design-secret')).toBeVisible();
-    await expect(page.getByTestId('step-design-secret')).toContainText('Triangles distribute weight');
-    await page.getByTestId('step-design-secret').getByRole('button').first().click();
-    // 5 · Skill (+hints ladder present)
-    await expect(page.getByTestId('step-skill')).toBeVisible();
-    await expect(page.getByTestId('mission-hints')).toBeVisible();
-    await page.getByTestId('step-skill').getByRole('button', { name: /continue/i }).click();
-    // 6 · Sketch (+ thinking tools from the real {kind, age_mode} objects)
+    await page.getByTestId('step-nature-clues').getByRole('button', { name: /sketch my idea/i }).click();
+    // 4 · Sketch (+ thinking tools from the real {kind, age_mode} objects)
     await expect(page.getByTestId('step-sketch')).toBeVisible();
     // The mission's OWN sketch prompt — never the stale Help-Max copy.
     await expect(page.getByTestId('step-sketch')).toContainText('Draw the bridge that saves the day.');
@@ -488,6 +498,17 @@ test.describe('axe — app pages', () => {
     await page.getByTestId('field-title').fill('My bridge');
     await page.getByTestId('field-used').fill('Sticks');
     await page.getByRole('button', { name: /save my idea/i }).click();
+    // The idea is saved: the celebration, then on to find more ideas.
+    await expect(page.getByTestId('define-celebration')).toBeVisible();
+    await page.getByTestId('define-celebration-go').click();
+    // 5 · Design secret
+    await expect(page.getByTestId('step-design-secret')).toBeVisible();
+    await expect(page.getByTestId('step-design-secret')).toContainText('Triangles distribute weight');
+    await page.getByTestId('step-design-secret').getByRole('button').first().click();
+    // 6 · Skill (+hints ladder present)
+    await expect(page.getByTestId('step-skill')).toBeVisible();
+    await expect(page.getByTestId('mission-hints')).toBeVisible();
+    await page.getByTestId('step-skill').getByRole('button', { name: /continue/i }).click();
     // 7 · Build & test (+hints)
     await expect(page.getByTestId('step-build')).toBeVisible();
     await expect(page.getByTestId('mission-hints')).toBeVisible();

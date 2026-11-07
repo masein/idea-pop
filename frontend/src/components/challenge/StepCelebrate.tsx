@@ -5,6 +5,10 @@ import { useTranslations, useFormatter } from 'next-intl';
 import Link from 'next/link';
 import AudiencePicker from './AudiencePicker';
 import { submitIdea } from '@/lib/api/client';
+import { btnPrimary, btnSecondary } from '@/components/challenge/buttons';
+import MissionRewards from './story/MissionRewards';
+import ShareForApproval from './story/ShareForApproval';
+import AssetSlot from '@/components/AssetSlot';
 
 type ChallengeDetail = import('@/lib/api/schema').components['schemas']['ChallengeDetail'];
 
@@ -12,27 +16,27 @@ interface StepCelebrateProps {
   challenge: ChallengeDetail;
   ageMode: 'young' | 'older';
   completionXp: number;
+  /** XP for defining the problem (+5) and for solving it with a sketch (+10), when earned. */
+  defineXp?: number;
+  sketchXp?: number;
   sketchProjectId: string | null;
   wallAlreadySubmitted: boolean;
   onWallSubmitted: () => void;
   onRestart: () => void;
+  /** Max's challenge: the itemized badge/photo XP and sharing with adult approval. */
+  badgeMode?: boolean;
 }
-
-const XP_BREAKDOWN = [
-  { labelKey: 'xp_watched_clue', xp: 5 },
-  { labelKey: 'xp_learned_skill', xp: 10 },
-  { labelKey: 'xp_built_tested', xp: 20 },
-  { labelKey: 'xp_cycle_bonus', xp: 15 },
-] as const;
 
 export default function StepCelebrate({
   challenge,
-  ageMode,
   completionXp,
+  defineXp = 0,
+  sketchXp = 0,
   sketchProjectId,
   wallAlreadySubmitted,
   onWallSubmitted,
   onRestart,
+  badgeMode = false,
 }: StepCelebrateProps) {
   const t = useTranslations('mission');
   const format = useFormatter();
@@ -65,35 +69,47 @@ export default function StepCelebrate({
     <div data-testid="step-celebrate" className="flex flex-col gap-6 px-4 py-6">
       {/* Celebration header */}
       <div className="text-center py-8">
-        <div className="text-6xl">🎉</div>
+        <div className="mx-auto h-20 w-20"><AssetSlot id="CHALLENGE-UI-001" className="!rounded-full" /></div>
         <h2 className="font-display text-3xl text-challenge mt-3">{t('celebrate_heading')}</h2>
       </div>
 
+      {badgeMode && <MissionRewards challengeId={challenge.id} story={challenge.story ?? null} />}
+      {badgeMode && <ShareForApproval challengeId={challenge.id} projectId={sketchProjectId} onSubmitted={onWallSubmitted} />}
+
       {/* XP card */}
+      {!badgeMode && (
       <div data-testid="celebrate-xp" className="bg-challenge text-white rounded-card p-6 text-center mb-6">
-        <p dir="ltr" className="font-display text-4xl">{t('xp_chip', { xp: completionXp })}</p>
-        {ageMode === 'older' && (
-          <div className="mt-3 flex flex-col items-center gap-1">
-            {XP_BREAKDOWN.map(({ labelKey, xp }) => (
-              <p key={labelKey} className="font-body text-sm text-white/80">
-                {t(labelKey)}:{' '}
-                <span dir="ltr">+{format.number(xp)}</span>
-              </p>
-            ))}
-          </div>
-        )}
+        <p className="font-body text-base font-bold text-white/90">{t('total_xp_heading')}</p>
+        <p dir="ltr" className="font-display text-5xl">{t('xp_chip', { xp: completionXp + defineXp + sketchXp })}</p>
+        <div className="mt-3 flex flex-col items-center gap-1">
+          <p className="font-body text-base text-white/90">
+            {t('xp_mission_complete')}: <span dir="ltr">+{format.number(completionXp)}</span>
+          </p>
+          {defineXp > 0 && (
+            <p className="font-body text-base text-white/90">
+              {t('xp_problem_defined')}: <span dir="ltr">+{format.number(defineXp)}</span>
+            </p>
+          )}
+          {sketchXp > 0 && (
+            <p className="font-body text-base text-white/90">
+              {t('xp_problem_solved')}: <span dir="ltr">+{format.number(sketchXp)}</span>
+            </p>
+          )}
+        </div>
       </div>
+
+      )}
 
       {/* Audience picker — real API integration */}
       <AudiencePicker projectId={sketchProjectId} onDone={() => {}} />
 
       {/* Ideas Wall submission */}
-      {!wallDone ? (
+      {badgeMode ? null : !wallDone ? (
         <div
           data-testid="wall-submit-section"
           className="bg-white rounded-card shadow-sm p-4 flex flex-col gap-3"
         >
-          <p className="font-display text-base text-ink">{t('wall_post_heading')}</p>
+          <p className="font-body font-bold text-base text-ink">{t('wall_post_heading')}</p>
           <p className="font-body text-sm text-ink/50">
             {t('wall_post_note')}
           </p>
@@ -118,7 +134,7 @@ export default function StepCelebrate({
             data-testid="wall-submit-btn"
             onClick={handleWallSubmit}
             disabled={sending || !sketchProjectId}
-            className="bg-challenge text-white font-display text-base px-5 py-2.5 rounded-card disabled:opacity-40"
+            className={btnPrimary}
           >
             {sending ? tWall('submit_sending') : t('wall_share_button')}
           </button>
@@ -137,6 +153,9 @@ export default function StepCelebrate({
       )}
 
       {/* Action buttons */}
+      <button type="button" data-testid="play-again" onClick={onRestart} className={`${btnSecondary} w-full`}>
+        🔄 {t('play_again')}
+      </button>
       <Link
         href="/challenges"
         className="bg-challenge text-white font-display text-lg px-6 py-3 rounded-card w-full text-center block"

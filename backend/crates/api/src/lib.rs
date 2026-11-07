@@ -17,6 +17,7 @@ mod classes;
 mod consents;
 pub mod explore;
 mod help;
+mod ideas;
 pub use help::purge_expired_help_messages;
 pub mod library;
 mod me;
@@ -64,15 +65,18 @@ use crate::{
         AgeTierVariantResponse, ChallengePageResponse, ChallengeResponse, NatureClueResponse,
         ToolResponse,
     },
-    children::{CreateChildRequest, CreateChildResponse, UpgradeRequestResponse},
+    children::{
+        ChildLoginRequest, ChildLoginResponse, CreateChildRequest, CreateChildResponse,
+        UpgradeRequestResponse,
+    },
     classes::{
         ClassLoginRequest, ClassLoginResponse, ClassRosterItem, CreateClassRequest,
         CreateClassResponse, JoinClassResponse,
     },
     explore::{ExplorePageResponse, ExploreVideoResponse},
     help::{
-        HelpMessageResponse, HelpRequest, HelpResponse, HelperEnabledResponse,
-        UpdateHelperEnabledRequest,
+        HelpMessageResponse, HelpRequest, HelpResponse, HelperEnabledResponse, IdeaFeedbackRequest,
+        IdeaFeedbackResponse, UpdateHelperEnabledRequest,
     },
     library::{
         CourseDetailResponse, CourseSummaryResponse, CreatorResponse, LessonResponse,
@@ -81,8 +85,8 @@ use crate::{
     me::{ClassMissionResponse, MeResponse},
     parent::{
         ChildReportResponse, DisplayModeResponse, ParentApprovalResponse, ParentChildResponse,
-        ParentProjectSummary, ResolveApprovalRequest, ResolveApprovalResponse,
-        UpdateDisplayModeRequest,
+        ParentProjectSummary, ResetChildPinResponse, ResolveApprovalRequest,
+        ResolveApprovalResponse, UpdateDisplayModeRequest,
     },
     portfolio::{
         CreateProjectRequest, CreateReportRequest, IdeaListResponse, IdeaResponse,
@@ -92,8 +96,10 @@ use crate::{
         UpdateVisibilityResponse,
     },
     progress::{
-        AdvanceStepRequest, AdvanceStepResponse, BadgeResponse, LessonCompleteRequest,
-        MedalsResponse, ProgressResponse, StartAttemptResponse, VideoViewRequest, XpAwardResponse,
+        AdvanceStepRequest, AdvanceStepResponse, BadgeResponse, ChallengeProgressItem,
+        LessonCompleteRequest, MedalsResponse, MissionRewardItem, MissionRewardRequest,
+        MissionRewardsResponse, ProgressResponse, StarRequest, StarsResponse, StartAttemptResponse,
+        VideoViewRequest, XpAwardResponse,
     },
     teacher::{
         AssignMissionRequest, ClassGalleryItemResponse, ClassReportQuery, ClassReportResponse,
@@ -227,8 +233,8 @@ pub struct CreateHealthLogRequest {
         auth::register, auth::login, auth::refresh, auth::logout, auth::verify_email,
         me::me, me::class_mission,
         account::get_email_preferences, account::put_email_preferences,
-        children::create_child, children::request_premium_unlock,
-        parent::list_children, parent::child_report,
+        children::create_child, children::child_login, children::request_premium_unlock,
+        parent::list_children, parent::reset_child_pin, parent::child_report,
         parent::set_display_mode, parent::list_approvals,
         parent::approve_approval, parent::dismiss_approval,
         consents::grant_consent, consents::revoke_consent,
@@ -242,13 +248,20 @@ pub struct CreateHealthLogRequest {
         library::list_studios, library::list_courses, library::list_quick_makes,
         library::get_course, library::get_creator,
         challenges::list_challenges, challenges::get_challenge,
-        help::ask_helper, help::parent_help_messages,
+        ideas::submit_idea, ideas::idea_references, ideas::my_ideas, ideas::attach_sketch,
+        help::ask_helper, help::idea_feedback, help::parent_help_messages,
         help::teacher_help_messages, help::set_helper_enabled,
-        progress::post_video_view, progress::post_lesson_complete,
+        progress::post_video_view, progress::post_lesson_complete, progress::post_define_bonus,
+        progress::post_sketch_bonus,
+        progress::post_mission_badge,
+        progress::post_photo_bonus,
+        progress::get_mission_rewards,
+        progress::post_challenge_star,
+        progress::get_challenge_progress,
         progress::start_attempt, progress::advance_step,
         progress::get_me_progress,
-        portfolio::create_project, portfolio::list_my_projects,
-        portfolio::presign_photo_upload, portfolio::update_project_visibility,
+        portfolio::create_project, portfolio::list_my_projects, portfolio::get_project_photo,
+        portfolio::presign_photo_upload, portfolio::add_project_photo, portfolio::update_project_visibility,
         portfolio::submit_idea, portfolio::list_ideas,
         portfolio::react_to_idea, portfolio::remix_idea,
         portfolio::list_moderation_queue, portfolio::approve_item, portfolio::reject_item,
@@ -260,6 +273,7 @@ pub struct CreateHealthLogRequest {
         AuthResponse, TokenResponse, MeResponse, ClassMissionResponse,
         EmailPreferencesResponse, UpdateEmailPreferencesRequest,
         CreateChildRequest, CreateChildResponse, UpgradeRequestResponse,
+        ChildLoginRequest, ChildLoginResponse, ResetChildPinResponse,
         ParentChildResponse, ChildReportResponse, ParentProjectSummary,
         UpdateDisplayModeRequest, DisplayModeResponse,
         ParentApprovalResponse, ResolveApprovalRequest, ResolveApprovalResponse,
@@ -274,9 +288,13 @@ pub struct CreateHealthLogRequest {
         LessonResponse, CourseDetailResponse, CreatorResponse,
         ChallengeResponse, ChallengePageResponse, AgeTierVariantResponse, ToolResponse,
         NatureClueResponse,
-        HelpRequest, HelpResponse, HelpMessageResponse,
+        ideas::SubmitIdeaRequest, ideas::SubmitIdeaResponse, ideas::IdeaExperimentResponse,
+        ideas::IdeaReference, ideas::IdeaReferencesResponse, ideas::SavedIdea,
+        ideas::AttachSketchRequest,
+        HelpRequest, HelpResponse, HelpMessageResponse, IdeaFeedbackRequest, IdeaFeedbackResponse,
         UpdateHelperEnabledRequest, HelperEnabledResponse,
-        VideoViewRequest, LessonCompleteRequest, XpAwardResponse,
+        VideoViewRequest, LessonCompleteRequest, XpAwardResponse, MissionRewardRequest, MissionRewardItem, MissionRewardsResponse,
+        StarRequest, StarsResponse, ChallengeProgressItem,
         StartAttemptResponse, AdvanceStepRequest, AdvanceStepResponse,
         ProgressResponse, MedalsResponse, BadgeResponse,
         CreateProjectRequest, ProjectResponse, ProjectListResponse,
@@ -532,12 +550,21 @@ pub fn router_with_metrics(
         )
         // Child profiles & consent
         .route("/children", post(children::create_child))
+        .route("/children/login", post(children::child_login))
+        .route(
+            "/children/me/approval-email",
+            post(children::request_approval_email),
+        )
         // Kid asks parent to unlock premium (kid-scoped; NO billing capability)
         .route(
             "/me/upgrade-request",
             post(children::request_premium_unlock),
         )
         .route("/parent/children", get(parent::list_children))
+        .route(
+            "/parent/children/:id/reset-pin",
+            post(parent::reset_child_pin),
+        )
         .route("/parent/children/:id/report", get(parent::child_report))
         .route(
             "/parent/children/:id/display-mode",
@@ -592,6 +619,14 @@ pub fn router_with_metrics(
         .route("/challenges/:id", get(challenges::get_challenge))
         // Scoped AI mission helper (kid-scoped; flag+consent+opt-in gated)
         .route("/challenges/:id/steps/:step/help", post(help::ask_helper))
+        .route("/challenges/:id/idea-feedback", post(help::idea_feedback))
+        .route("/challenges/:id/hero-ideas", post(ideas::submit_idea))
+        .route("/hero-ideas/:id/references", get(ideas::idea_references))
+        .route(
+            "/challenges/:id/hero-ideas/sketch",
+            post(ideas::attach_sketch),
+        )
+        .route("/children/me/hero-ideas", get(ideas::my_ideas))
         .route(
             "/parent/children/:id/help-messages",
             get(help::parent_help_messages),
@@ -604,6 +639,31 @@ pub fn router_with_metrics(
         // Progress (kid-scoped tokens only — child_id derived from JWT)
         .route("/progress/video-view", post(progress::post_video_view))
         .route(
+            "/challenges/:id/define-bonus",
+            post(progress::post_define_bonus),
+        )
+        .route(
+            "/challenges/:id/sketch-bonus",
+            post(progress::post_sketch_bonus),
+        )
+        .route(
+            "/challenges/:id/mission-badge",
+            post(progress::post_mission_badge),
+        )
+        .route(
+            "/challenges/:id/photo-bonus",
+            post(progress::post_photo_bonus),
+        )
+        .route(
+            "/challenges/:id/mission-rewards",
+            get(progress::get_mission_rewards),
+        )
+        .route("/challenges/:id/star", post(progress::post_challenge_star))
+        .route(
+            "/children/me/challenge-progress",
+            get(progress::get_challenge_progress),
+        )
+        .route(
             "/progress/lesson-complete",
             post(progress::post_lesson_complete),
         )
@@ -615,6 +675,13 @@ pub fn router_with_metrics(
         .route("/me/progress", get(progress::get_me_progress))
         // Portfolio (kid-owned; child_id from JWT)
         .route("/projects", post(portfolio::create_project))
+        // A project photo comes in as the request body: allow up to 8 MB (+ headroom).
+        .route(
+            "/projects/:id/photos",
+            post(portfolio::add_project_photo)
+                .layer(axum::extract::DefaultBodyLimit::max(9 * 1024 * 1024)),
+        )
+        .route("/projects/:id/photo", get(portfolio::get_project_photo))
         .route("/me/projects", get(portfolio::list_my_projects))
         .route(
             "/projects/:id/photos/presign",
@@ -757,6 +824,9 @@ impl EmailSender for NullEmail {
 pub struct NullConsentEmail;
 #[async_trait]
 impl ConsentEmailSender for NullConsentEmail {
+    fn is_live(&self) -> bool {
+        false
+    }
     async fn send_consent_request(&self, _: &str, _: &str, _: &str) -> Result<(), DomainError> {
         Ok(())
     }
@@ -1003,6 +1073,9 @@ impl ProjectRepo for NullProjectRepo {
     ) -> Result<(), DomainError> {
         Ok(())
     }
+    async fn add_photo_key(&self, _: Uuid, _: &str, _: DateTime<Utc>) -> Result<(), DomainError> {
+        Ok(())
+    }
 }
 
 pub struct NullPhotoStore;
@@ -1010,6 +1083,9 @@ pub struct NullPhotoStore;
 impl PhotoStore for NullPhotoStore {
     async fn presign_upload(&self, key: &str, _: u64) -> Result<String, DomainError> {
         Ok(format!("https://null-storage.test/{key}"))
+    }
+    async fn put(&self, _: &str, _: Vec<u8>, _: &str) -> Result<(), DomainError> {
+        Ok(())
     }
 }
 

@@ -1,0 +1,405 @@
+{
+  "function_question": "How does nature stay on top of water?",
+  "hero": { "name": "Max", "role": "a student", "image": "/landing/hero/measure-boy.webp", "emoji": "🎒" },
+  "scene_image": "/challenge/max/story-3.jpg",
+  "opening": [
+    {"beat":"Once upon a time…","emoji":"🏡","text":"There was a boy called Max who lived in a small village at the edge of a thick jungle.","image":"/challenge/max/story-1.jpg","layout":{"text":[2.3,5.3,40,17.4]}},
+    {"beat":"Every day…","emoji":"🥾","text":"Max walked 3 hours to school, because a huge river cut right across his path and the only way was the long way round.","image":"/challenge/max/story-2.jpg","badge":"3 hours","layout":{"text":[2.4,3.6,72.1,20.4],"badge":[85.6,6.4,12,9.1]}},
+    {"beat":"Until one day…","emoji":"💡","text":"Max stopped on the riverbank and thought:","image":"/challenge/max/story-3.jpg","thought":{"big":"What if I could cross right here?","small":"School would be minutes away, not hours!"},"layout":{"text":[2.2,3.6,65.7,19.8]}}
+  ],
+  "card": {
+    "hero": "Max, a student",
+    "place": "A huge river in the jungle",
+    "problem": "A 3-hour walk to school",
+    "goal": "Cross the river safely",
+    "rules": "Light things Max can carry",
+    "helpers": "You and nature's heroes"
+  },
+  "chapters": [
+    { "step": "brief", "label": "Chapter 1", "beat": "Until one day…", "title": "A big idea on the riverbank", "line": "Max stops at the water and wonders: what if I could cross right here?" },
+    { "step": "your_idea", "label": "Chapter 2", "beat": "Because of that…", "title": "Max asks for help", "line": "Max has lots of questions, and he needs a teammate. What about you?" },
+    { "step": "nature_clues", "label": "Chapter 3", "beat": "Because of that…", "title": "The nature heroes", "line": "You and Max go down to the water to meet animals and plants that are great at staying afloat." },
+    { "step": "design_secret", "label": "Chapter 4", "beat": "Because of that…", "title": "The secret of floating", "line": "The heroes share the secret they all use." },
+    { "step": "skill", "label": "Chapter 5", "beat": "Because of that…", "title": "Training in the clay lab", "line": "Every hero needs training. Max hands you a lump of clay." },
+    { "step": "tool", "label": "Chapter 5½", "beat": "Because of that…", "title": "The idea storm", "line": "Ideas start swirling like leaves on the wind!" },
+    { "step": "sketch", "label": "Chapter 6", "beat": "Because of that…", "title": "The plan", "line": "Every great crossing starts as a drawing." },
+    { "step": "build_and_test", "label": "Chapter 7", "beat": "Until finally…", "title": "The big test", "line": "The first try wobbles. You fix it, and try again." },
+    { "step": "celebrate_and_share", "label": "Chapter 8", "beat": "And ever since then…", "title": "Max crosses the river", "line": "Max crosses in minutes and walks into school on time." }
+  ],
+  "guide": {
+    "brief": "I'm Popi, your story guide. Max has started thinking about what he could do. What about you? Can you help him? Let's start!",
+    "your_idea": "Some engineers already have a spark of an idea. Do you?",
+    "nature_clues": "Nature solved this millions of years ago. Tap each card to meet four nature heroes that are great at staying on top of water!",
+    "design_secret": "Here's the secret all four heroes share…",
+    "skill": "Scientists predict before they test. Which boat shape will hold the most coins?",
+    "sketch": "Time to draw your crossing like a real engineer!",
+    "build_and_test": "You started with a first idea. You may have sketched it, built it, or both.\nNow you have another possibility—or an improved version of your original idea. You can build and test this version too.\nEngineers repeat this cycle: develop an idea, build, test, learn, and improve.",
+    "retry_tip": "Engineers don't stop after the first round. When they want to understand the effect of a change, they change one thing and test again.",
+    "ending": "From that day on, Max uses your solution to cross the river and reaches school in just a few minutes. Other people in the village need a solution like this too."
+  },
+  "quick_check": {
+    "question": "Crossing the river takes 10 minutes. How much time does Max save each morning?",
+    "options": ["50 min", "2 h 50 min", "3 h 10 min"],
+    "answer": 1,
+    "right": "Right! That's almost 6 hours a day there and back: time for football, reading or sleep!",
+    "wrong": "Not quite. Try 3 hours take away 10 minutes."
+  },
+  "clue_cards": [
+    { "name": "Water strider", "emoji": "🦟", "image": "/challenge/max/clues/water-strider.webp", "tagline": "Pond skater", "trick": "Its long legs are covered with tiny water-repellent hairs.", "does": "Helps it stay on the water without sinking.", "group": "weight" },
+    { "name": "Fire ants", "emoji": "🐜", "image": "/challenge/max/clues/fire-ants.webp", "tagline": "Flood survivors", "trick": "They connect their bodies to form a living raft.", "does": "Trapped air helps them float for days.", "group": "air" },
+    { "name": "Giant water lily", "emoji": "🪷", "image": "/challenge/max/clues/giant-water-lily.webp", "tagline": "Amazon river", "trick": "A huge, wide leaf with a strong network of ribs underneath.", "does": "It floats even with a small child sitting on it.", "group": "rim" },
+    { "name": "Coconut", "emoji": "🥥", "image": "/challenge/max/clues/coconut.webp", "tagline": "Ocean traveller", "trick": "A thick, hairy husk full of air.", "does": "Floats across oceans for months and keeps the seed dry.", "group": "air" }
+  ],
+  "match_groups": [
+    { "key": "weight", "label": "🦶 Spreads the weight" },
+    { "key": "air", "label": "🫧 Traps air" },
+    { "key": "rim", "label": "🛶 Wide shape with a rim" }
+  ],
+  "predict": {
+    "prompt": "Sink or float? Predict first!",
+    "choices": ["Sink", "Float"],
+    "items": [
+      { "emoji": "⚙️", "image": "/challenge/max/predict/metal-nut.webp", "label": "Metal nut", "answer": 0 },
+      { "emoji": "🚢", "image": "/challenge/max/predict/boat.webp", "label": "Steel boat", "answer": 1 },
+      { "emoji": "🟤", "image": "/challenge/max/predict/clay-ball.webp", "label": "Ball of clay", "answer": 0 }
+    ],
+    "explain": "Same steel, different shape. The ship is wide and hollow, so it pushes aside lots of water."
+  },
+  "lab": {
+    "title": "The clay boat lab",
+    "predict": "Looking at these clay-boat shapes, which one do you predict will hold the most coins?",
+    "options": ["Wide and shallow, with a flat base", "Deep and narrow", "Raised-rim boat"],
+    "measure": "coins before it sinks",
+    "higher_is_better": true
+  },
+  "tool": {
+    "kind": "scamper",
+    "name": "SCAMPER",
+    "intro": "SCAMPER is a set of magic question words. Each letter is a different way to change an idea. Today you'll learn the first 3 letters.",
+    "example_object": "an umbrella",
+    "parts": [
+      { "key": "S", "name": "Substitute", "what": "Swap one thing for another.", "example": "☂️ Swap the cloth for a giant leaf.", "starter": "Instead of heavy wood, Max could use…" },
+      { "key": "C", "name": "Combine", "what": "Join two things into one.", "example": "☂️ Umbrella + torch = a walk home in the dark.", "starter": "What if the crossing was a bridge AND a…" },
+      { "key": "A", "name": "Adapt", "what": "Borrow an idea from somewhere else.", "example": "☂️ Copy the lotus leaf so rain rolls off.", "starter": "Max could copy the fire ants' trick by…" }
+    ],
+    "locked": ["M", "P", "E", "R"],
+    "badge": "SCAMPER Starter"
+  },
+  "sketch_checklist": [
+    "I labelled the materials.",
+    "I showed where air or a wide surface keeps it up.",
+    "I added measurements."
+  ],
+  "test": {
+    "measure": "coins before it sinks",
+    "higher_is_better": true,
+    "check_question": "Wave test: does it stay stable when you make small waves?",
+    "check_options": ["Steady", "Wobbly", "Tipped over"],
+    "change_prompt": "The ONE thing I changed"
+  },
+  "reflection": {
+    "question": "Which nature trick kept your crossing afloat?",
+    "options": ["🦟 Water strider", "🐜 Fire ants", "🪷 Water lily", "🥥 Coconut"]
+  },
+  "sticker": { "name": "River Explorer", "emoji": "🌉" },
+  "define_problem": {
+    "popi": "Let's be problem detectives! Answer the 5 big questions, Who, What, Where, When and Why, to define Max's problem.",
+    "title": "The big question",
+    "question": "What exactly is the problem?",
+    "hint": "Answer each question in a few words.",
+    "image": "/challenge/max/river-2.jpg",
+    "prompts": [
+      {
+        "key": "who",
+        "label": "Who",
+        "question": "Who has a problem in our story?",
+        "example": "Max",
+        "keywords": [
+          "max"
+        ],
+        "hint": "Look at the pictures: who is the boy with the backpack?"
+      },
+      {
+        "key": "what",
+        "label": "What",
+        "question": "What does Max need to do?",
+        "example": "Cross the river",
+        "keywords": [
+          "cross",
+          "river",
+          "across",
+          "other side"
+        ],
+        "hint": "Max wants to get to the other side of something big… what is it?"
+      },
+      {
+        "key": "where",
+        "label": "Where",
+        "question": "Where does Max need to cross?",
+        "example": "The big river in the jungle",
+        "keywords": [
+          "river",
+          "jungle",
+          "water"
+        ],
+        "hint": "Look at picture 3: what is Max sitting next to?"
+      },
+      {
+        "key": "when",
+        "label": "When",
+        "question": "When does Max have this problem?",
+        "example": "Every day, on his way to school",
+        "keywords": [
+          "every day",
+          "day",
+          "morning",
+          "school"
+        ],
+        "hint": "Look at picture 2: how often does Max walk to school?"
+      },
+      {
+        "key": "why",
+        "label": "Why",
+        "question": "Why is this a big problem for Max?",
+        "example": "The long way round takes 3 hours",
+        "keywords": [
+          "3",
+          "three",
+          "hour",
+          "long",
+          "far",
+          "time"
+        ],
+        "hint": "How long does Max walk to school the long way?"
+      },
+      {
+        "key": "how",
+        "label": "How",
+        "question": "How can we help Max cross the river?",
+        "example": "Build a light raft or a bridge",
+        "keywords": [],
+        "hint": ""
+      }
+    ]
+  },
+  "substitute": {
+    "model_name": "Our clay boat",
+    "model_question": "What could you replace in the boat we built?",
+    "hint": "What material could you try instead of clay?",
+    "example": "Aluminum foil",
+    "model_material": "Clay"
+  },
+  "discovery": { "heroes": [{"intro":"A champion of walking on ponds and lakes!","popi":{"question":"What does a water strider do?","does":"It stands on water!","how":"Its tiny, hairy legs help it stay afloat!"}},{"intro":"When floods come, fire ants team up to survive!","popi":{"question":"What do fire ants do?","does":"They float together like a raft!","how":"They hold on to each other, and trapped air keeps them up!"}},{"intro":"An amazing plant with giant leaves that float on water!","popi":{"question":"What does a giant water lily do?","does":"Its huge leaf floats on the water!","how":"Strong ribs under the leaf hold it up!"}},{"intro":"A champion of long ocean journeys, protecting its seed along the way!","popi":{"question":"What does a coconut do?","does":"It floats across the ocean!","how":"Its hairy husk is full of air!"}}], "help_goal": "help Max cross the river",
+    "clues_top": { "question": "How can we help Max cross the river?", "intro": "Nature solved this problem millions of years ago! Meet four Nature Heroes who are masters at staying afloat!" },
+    "choose_hero_text": "You've discovered some amazing ways nature stays on water. Now choose the hero you like most to help Max solve his problem.",
+    "materials": [
+      "Modelling clay",
+      "Coins",
+      "A tray of water",
+      "Foil",
+      "Straws",
+      "Corks",
+      "Card",
+      "Sticks",
+      "Tape"
+    ],
+    "partner_lessons": [
+      {
+        "secret": "A water strider can stand and run on top of a pond without sinking.",
+        "how": "Its legs are covered in very fine, water-repellent hairs. Together with the surface tension of water (the surface acts like a thin, stretchy skin) and its weight spread out over long legs, the water bends under each leg but does not break. This only works because the insect is tiny and light.",
+        "inspiration": [
+          "What if Max designed a lightweight object with special water-repellent supports that spread its weight across the water?"
+        ],
+        "your_turn": "What could you design for Max using the water strider's idea? What would it look like, and what would you make it from?",
+        "hint": {"text":"Look closely at the water strider’s legs. They are long, light and water-repellent, so its weight is spread out and the water’s surface only bends under them.","ask":"What could you create that spreads weight out over the water in a similar way?"},
+        "diagram": "/challenge/max/diagrams/water-strider-leg.svg",
+        "diagram_alt": "A close-up of a water strider leg: tiny water-repellent hairs dent the water surface without breaking it."
+      },
+      {
+        "secret": "When a flood comes, fire ants hold on to each other and float together as a living raft.",
+        "how": "They connect their legs and bodies into one group. Their bodies repel water, and air gets trapped between them, so the whole group stays afloat. One ant on its own could not do this for long.",
+        "inspiration": [
+          "What if Max built a raft from many small pieces that connect together, just like fire ants forming a floating group?"
+        ],
+        "your_turn": "Which small pieces could you connect for Max, and how would you join them? Try a pattern of your own.",
+        "hint": {"text":"Look closely at how the ants connect. When many ants join together, small spaces between their bodies can trap air and their connected structure helps them stay on the water.","ask":"What could you create that uses lots of connected parts or trapped air in a similar way?"},
+        "diagram": "/challenge/max/diagrams/fire-ant-raft.svg",
+        "diagram_alt": "One fire ant alone on the water, then many ants linked into a floating raft with air between them."
+      },
+      {
+        "secret": "The giant water lily has a huge, wide leaf that lies flat on the river and can hold a surprising load.",
+        "how": "Under the leaf is a strong network of ribs that branch out like a web. The ribs reinforce the leaf and spread the weight across its wide surface, while the leaf stays lightweight.",
+        "inspiration": [
+          "What if Max designed a wide floating platform with a network of lightweight supporting ribs underneath, just like the giant water lily?"
+        ],
+        "your_turn": "What shape would your platform be, how would you arrange its supports, and what would you build it from?",
+        "hint": {"text":"Look under the giant water lily’s leaf. A network of strong ribs supports the wide, light leaf and spreads the load across it.","ask":"What could you create that uses a wide surface with a light supporting network in a similar way?"}
+      },
+      {
+        "secret": "A coconut can float across the sea for months and still grow into a new palm tree.",
+        "how": "Its thick, fibrous husk is full of tiny spaces that trap air. That trapped air helps it float, and the husk cushions and protects the seed inside.",
+        "inspiration": [
+          "What if Max designed a floating platform with lightweight, air-filled spaces inside it, inspired by the coconut's fibrous husk?",
+          "It could become a raft, a floating shoe, or a protective floating structure."
+        ],
+        "your_turn": "Imagine your own structure for Max. Where would the air go, and which materials would you use?",
+        "hint": {"text":"Look inside the coconut’s husk. Its fibres hold many tiny air spaces, which help it float and protect what is inside.","ask":"What could you create that holds lots of small air spaces inside in a similar way?"}
+      }
+    ],
+    "idea_questions": [
+      "What would you build to help Max?",
+      "How will your creation work?",
+      "What idea from nature inspired your design?",
+      "What will help your design float or help Max cross the river?",
+      "What materials might you use?"
+    ],
+    "idea_label": "Describe your idea for helping Max cross the river in 1–2 sentences.",
+    "build_photo_desc": "Upload a photo of your boat, model, or whatever you built.",
+    "idea_name_prompt": "Give your amazing idea a name!",
+    "checklist_intro": "Before we build something, it's helpful to make a checklist! Think about the tools and materials you'll need, gather everything together, and get ready to bring your idea to life.",
+    "improved_idea": {
+      "title": "Your improved idea",
+      "prompt": "You tested your idea and made it better. Describe your improved idea for Max: what did you change, and why is it better?",
+      "placeholder": "My improved idea is… I changed… because…"
+    },
+    "rewards": { "mode": "badges" },
+    "predict_intro": "Before testing something, we can make a prediction using what we already know and observe. A prediction doesn't have to be correct—we compare it with the result to learn more.",
+    "wh": {"name":"Quizi","image": "/characters/quizzy.png","popi":"Meet Quizi, our question explorer! Quizi will show you how to understand a problem.","says":"Want to understand a problem better? Start with the right questions. WH Questions help us explore who is involved, what is happening, where and when it happens, and why it matters. They help us understand exactly what problem we’re trying to solve."},
+    "puzzle": {
+      "title": "Build the Mission",
+      "intro": "Tap a question and then its matching clue, or tap a clue first and then find its question.",
+      "summary_lead": "Mission complete!",
+      "summary": "How can we help Max reach school without taking the long route around the river?",
+      "map": {
+        "village": "Max's village",
+        "river": "River",
+        "school": "School",
+        "route": "The long way round"
+      },
+      "questions": [
+        {
+          "key": "who",
+          "text": "Who needs help?",
+          "clue": "max",
+          "part": "village",
+          "wrong": "Look for a person. Who is the story about?"
+        },
+        {
+          "key": "where",
+          "text": "Where does Max need to go?",
+          "clue": "school",
+          "part": "school",
+          "wrong": "Think about where Max walks to every day."
+        },
+        {
+          "key": "what",
+          "text": "What blocks the direct route?",
+          "clue": "river",
+          "part": "river",
+          "wrong": "What is in the way between the village and the school?"
+        },
+        {
+          "key": "why",
+          "text": "Why does this matter?",
+          "clue": "time",
+          "part": "route",
+          "wrong": "Why is the long way a problem for Max? Think about time."
+        }
+      ],
+      "clues": [
+        {
+          "key": "time",
+          "asset": "MAX-PUZZLE-001",
+          "emoji": "🕒",
+          "text": "The long way round takes 3 hours"
+        },
+        {
+          "key": "max",
+          "asset": "MAX-PUZZLE-002",
+          "emoji": "🎒",
+          "text": "Max, a student from the village"
+        },
+        {
+          "key": "river",
+          "asset": "MAX-PUZZLE-003",
+          "emoji": "🌊",
+          "text": "A wide, fast river"
+        },
+        {
+          "key": "school",
+          "asset": "MAX-PUZZLE-004",
+          "emoji": "🏫",
+          "text": "The school on the other side"
+        }
+      ]
+    },
+    "companions": [
+      {
+        "activity": "strider",
+        "title": "Zoom in on a leg",
+        "steps": [
+          "A water strider's long legs rest on top of the water.",
+          "Closer: each leg presses a small dent into the water's surface, but doesn't break through.",
+          "Closer still: thousands of tiny hairs trap air and repel water."
+        ],
+        "action": "Zoom in",
+        "takeaway": "Water striders use surface tension: the water's surface acts like a thin, stretchy skin. Their light bodies and water-repellent leg hairs dent that skin without breaking it. This only works because they are tiny and light; it would not hold up something as heavy as a person.",
+        "hint": "Look closely at its legs and how they meet the water. Which feature might be useful? Remember: what works for a tiny insect may not work at human size."
+      },
+      {
+        "activity": "ants",
+        "title": "Link the ants",
+        "steps": [
+          "Tap each ant to link it to the group."
+        ],
+        "action": "Link",
+        "takeaway": "Fire ants link their bodies together. As a group they trap air and spread out on the water, which helps the colony stay afloat during a flood. One ant on its own cannot do this for long.",
+        "hint": "Look at how the ants connect. What becomes possible when small parts work together?"
+      },
+      {
+        "activity": "lily",
+        "title": "Look under the leaf",
+        "steps": [
+          "Flip the leaf to see underneath.",
+          "Tap each rib to trace the network."
+        ],
+        "action": "Flip the leaf",
+        "takeaway": "This is the Victoria water lily, also called the giant water lily. Under its huge leaf, a network of strong ribs reinforces it and spreads the weight across its wide surface, so the leaf stays flat on the water while staying light. Most water lilies are much smaller and cannot hold large loads.",
+        "hint": "Look underneath the leaf. How does its supporting network help it hold its shape? Where could your idea need support?"
+      },
+      {
+        "activity": "coconut",
+        "title": "Peel back the layers",
+        "steps": [
+          "Smooth outer skin: it keeps water out.",
+          "Thick, fibrous husk: full of air spaces, it helps the coconut float and cushions it.",
+          "Hard shell: it protects the seed inside.",
+          "The seed: after a long journey, it can grow into a new palm tree."
+        ],
+        "action": "Peel back a layer",
+        "takeaway": "An intact coconut's thick, fibrous husk holds lots of air. It helps the coconut float and protects the seed on long journeys across the sea.",
+        "hint": "Look at the intact coconut's outer layers. How do they help protect it during a journey on water? Which of those functions could matter for Max?"
+      }
+    ],
+    "experiment": {
+      "refs_caption": "Need a starting point? You can try one of these shapes—or design your own.",
+      "refs": [
+        {
+          "label": "Wide and shallow, with a flat base",
+          "asset": "MAX-EXP-001",
+          "image": "/challenge/max/experiment/MAX-EXP-001.webp"
+        },
+        {
+          "label": "Deep and narrow",
+          "asset": "MAX-EXP-002",
+          "image": "/challenge/max/experiment/MAX-EXP-002.webp"
+        },
+        {
+          "label": "Raised-rim boat",
+          "asset": "MAX-EXP-003",
+          "image": "/challenge/max/experiment/MAX-EXP-003.webp"
+        }
+      ]
+    }
+  }
+}

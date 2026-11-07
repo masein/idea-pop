@@ -64,6 +64,7 @@ fn project_from_row(row: &sqlx::postgres::PgRow) -> Result<Project, DomainError>
         what_was_hard: row.try_get("what_was_hard").map_err(db_err)?,
         what_to_improve: row.try_get("what_to_improve").map_err(db_err)?,
         photo_keys,
+        step_type: row.try_get("step_type").map_err(db_err)?,
         requested_visibility,
         effective_visibility,
         created_at: row.try_get("created_at").map_err(db_err)?,
@@ -77,9 +78,9 @@ impl ProjectRepo for SqlxProjectRepo {
         sqlx::query(
             "INSERT INTO projects
                (id, child_id, origin_type, origin_id, title, description, materials,
-                what_was_hard, what_to_improve, photo_keys,
+                what_was_hard, what_to_improve, photo_keys, step_type,
                 requested_visibility, effective_visibility, created_at, updated_at)
-             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)",
+             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)",
         )
         .bind(project.id)
         .bind(project.child_id)
@@ -91,6 +92,7 @@ impl ProjectRepo for SqlxProjectRepo {
         .bind(&project.what_was_hard)
         .bind(&project.what_to_improve)
         .bind(&project.photo_keys)
+        .bind(&project.step_type)
         .bind(project.requested_visibility.as_str())
         .bind(project.effective_visibility.as_str())
         .bind(project.created_at)
@@ -104,7 +106,7 @@ impl ProjectRepo for SqlxProjectRepo {
     async fn find_by_id(&self, id: Uuid) -> Result<Option<Project>, DomainError> {
         let row = sqlx::query(
             "SELECT id, child_id, origin_type, origin_id, title, description, materials,
-                    what_was_hard, what_to_improve, photo_keys,
+                    what_was_hard, what_to_improve, photo_keys, step_type,
                     requested_visibility, effective_visibility, created_at, updated_at
              FROM projects WHERE id = $1",
         )
@@ -119,7 +121,7 @@ impl ProjectRepo for SqlxProjectRepo {
     async fn list_by_child(&self, child_id: Uuid) -> Result<Vec<Project>, DomainError> {
         let rows = sqlx::query(
             "SELECT id, child_id, origin_type, origin_id, title, description, materials,
-                    what_was_hard, what_to_improve, photo_keys,
+                    what_was_hard, what_to_improve, photo_keys, step_type,
                     requested_visibility, effective_visibility, created_at, updated_at
              FROM projects WHERE child_id = $1 ORDER BY created_at DESC",
         )
@@ -145,6 +147,25 @@ impl ProjectRepo for SqlxProjectRepo {
         .bind(id)
         .bind(requested.as_str())
         .bind(effective.as_str())
+        .bind(now)
+        .execute(&self.pool)
+        .await
+        .map_err(db_err)?;
+        Ok(())
+    }
+
+    async fn add_photo_key(
+        &self,
+        id: Uuid,
+        key: &str,
+        now: DateTime<Utc>,
+    ) -> Result<(), DomainError> {
+        sqlx::query(
+            "UPDATE projects SET photo_keys = array_append(photo_keys, $2), updated_at = $3
+             WHERE id = $1",
+        )
+        .bind(id)
+        .bind(key)
         .bind(now)
         .execute(&self.pool)
         .await
@@ -199,6 +220,58 @@ impl PhotoStore for S3PhotoStore {
             .map_err(|e| domain_err(e.to_string()))?;
 
         Ok(presigned.uri().to_string())
+    }
+
+    async fn put(&self, key: &str, bytes: Vec<u8>, content_type: &str) -> Result<(), DomainError> {
+        // A fresh dev MinIO has no bucket yet: make it the first time (an existing one is fine).
+        if self
+            .client
+            .head_bucket()
+            .bucket(&self.bucket)
+            .send()
+            .await
+            .is_err()
+        {
+            let _ = self
+                .client
+                .create_bucket()
+                .bucket(&self.bucket)
+                .send()
+                .await;
+        }
+        self.client
+            .put_object()
+            .bucket(&self.bucket)
+            .key(key)
+            .content_type(content_type)
+            .body(bytes.into())
+            .send()
+            .await
+            .map_err(|e| domain_err(e.to_string()))?;
+        Ok(())
+    }
+
+    async fn get(&self, key: &str) -> Result<(Vec<u8>, String), DomainError> {
+        let object = self
+            .client
+            .get_object()
+            .bucket(&self.bucket)
+            .key(key)
+            .send()
+            .await
+            .map_err(|e| domain_err(e.to_string()))?;
+        let content_type = object
+            .content_type()
+            .unwrap_or("application/octet-stream")
+            .to_owned();
+        let bytes = object
+            .body
+            .collect()
+            .await
+            .map_err(|e| domain_err(e.to_string()))?
+            .into_bytes()
+            .to_vec();
+        Ok((bytes, content_type))
     }
 }
 

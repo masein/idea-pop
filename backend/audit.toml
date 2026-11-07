@@ -20,4 +20,12 @@ ignore = [
     "RUSTSEC-2026-0099",
     # rustls-webpki: CRL parsing panic — transitive via rustls
     "RUSTSEC-2026-0104",
+    # rustls 0.21: Debug impls expose TLS secrets — AWS S3 client path only (aws-smithy-http-client pins rustls 0.21); our rustls 0.23 is fixed
+    # h2 0.3 empty-DATA-frame DoS — AWS S3 client path only (same as deny.toml)
+    "RUSTSEC-2026-0258",
+    "RUSTSEC-2026-0346",
+    # rustls 0.21: ServerHello key-exchange downgrade — AWS S3 client path only (aws-smithy-http-client pins rustls 0.21); our rustls 0.23 is fixed
+    "RUSTSEC-2026-0349",
+    # rustls-webpki 0.101: distrusted intermediates — AWS S3 client path only (aws-smithy-http-client pins rustls 0.21); our rustls 0.23 is fixed
+    "RUSTSEC-2026-0382",
 ]

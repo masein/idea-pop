@@ -10,7 +10,7 @@ use idea_pop_domain::{
         AnalyticsEvent, AttemptStatus, BadgeCriteria, BadgeDefinition, ChallengeAttempt,
         ChildBadge, CycleActivityResult, XpEvent, XpSourceType,
     },
-    AnalyticsSink, BadgeRepo, DomainError, ProgressRepo, XpRepo,
+    AnalyticsSink, BadgeRepo, ChallengeStar, DomainError, ProgressRepo, XpRepo,
 };
 
 // ── helpers ───────────────────────────────────────────────────────────────────
@@ -127,6 +127,42 @@ impl XpRepo for SqlxXpRepo {
         .await
         .map_err(db_err)?;
         Ok(())
+    }
+    async fn award_star(&self, star: &ChallengeStar) -> Result<bool, DomainError> {
+        let done = sqlx::query(
+            "INSERT INTO challenge_stars (child_id, challenge_id, star, note)
+             VALUES ($1, $2, $3, $4)
+             ON CONFLICT (child_id, challenge_id, star) DO NOTHING",
+        )
+        .bind(star.child_id)
+        .bind(star.challenge_id)
+        .bind(star.star)
+        .bind(star.note.as_deref())
+        .execute(&self.pool)
+        .await
+        .map_err(db_err)?;
+        Ok(done.rows_affected() > 0)
+    }
+
+    async fn list_stars(&self, child_id: Uuid) -> Result<Vec<ChallengeStar>, DomainError> {
+        let rows = sqlx::query(
+            "SELECT child_id, challenge_id, star, note FROM challenge_stars
+             WHERE child_id = $1 ORDER BY challenge_id, star",
+        )
+        .bind(child_id)
+        .fetch_all(&self.pool)
+        .await
+        .map_err(db_err)?;
+        rows.iter()
+            .map(|row| {
+                Ok(ChallengeStar {
+                    child_id: row.try_get("child_id").map_err(db_err)?,
+                    challenge_id: row.try_get("challenge_id").map_err(db_err)?,
+                    star: row.try_get("star").map_err(db_err)?,
+                    note: row.try_get("note").map_err(db_err)?,
+                })
+            })
+            .collect()
     }
 }
 
@@ -348,7 +384,11 @@ impl ProgressRepo for SqlxProgressRepo {
             XpSourceType::Explore => (true, false, false),
             XpSourceType::Learn => (false, true, false),
             XpSourceType::Solve => (false, false, true),
-            XpSourceType::CycleBonus => return Ok(CycleActivityResult::NoChange),
+            XpSourceType::CycleBonus
+            | XpSourceType::DefineBonus
+            | XpSourceType::SketchBonus
+            | XpSourceType::MissionBadge
+            | XpSourceType::PhotoBonus => return Ok(CycleActivityResult::NoChange),
         };
 
         let row = sqlx::query(

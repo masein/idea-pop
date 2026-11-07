@@ -14,6 +14,8 @@ vi.mock('@/lib/api/client', () => ({
   }),
 }));
 
+vi.mock('next-intl', () => ({ useTranslations: () => (key: string) => key }));
+
 type ExploreVideo = components['schemas']['ExploreVideo'];
 
 const mockVideo: ExploreVideo = {

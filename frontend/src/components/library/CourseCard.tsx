@@ -1,4 +1,5 @@
 import type { components } from '@/lib/api/schema';
+import AssetSlot from '@/components/AssetSlot';
 
 type CourseDetailResponse = components['schemas']['CourseDetailResponse'];
 
@@ -30,7 +31,7 @@ export default function CourseCard({ course, progress, onClick }: CourseCardProp
     >
       {/* Top area */}
       <div className="h-28 bg-tint-cream flex items-center justify-center flex-shrink-0">
-        <span className="text-5xl select-none" aria-hidden="true">{emoji}</span>
+        <AssetSlot id="LIBRARY-001" />
       </div>
 
       {/* Bottom content */}

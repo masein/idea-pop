@@ -5,6 +5,9 @@ import { useTranslations, useFormatter } from 'next-intl';
 import { Link } from '@/i18n/routing';
 import { Button } from '@/components/ui/Button';
 import { fetchClassMission } from '@/lib/api/client';
+import PopiAvatar from '@/components/PopiAvatar';
+import AssetSlot from '@/components/AssetSlot';
+import ModalClose from '@/components/ModalClose';
 
 // ─── ParentHandoffModal ───────────────────────────────────────────────────────
 // Safety rule: kids MUST see this modal when tapping any paid-plan CTA.
@@ -21,8 +24,9 @@ function ParentHandoffModal({ onDismiss }: { onDismiss: () => void }) {
       aria-label={t('parent_handoff_heading')}
       data-testid="parent-handoff-modal"
     >
-      <div className="bg-white rounded-2xl shadow-xl p-8 max-w-sm w-full mx-4">
-        <div className="text-5xl text-center mb-4">🤝</div>
+      <div className="relative bg-white rounded-2xl shadow-xl p-8 pt-14 max-w-sm w-full mx-4">
+        <ModalClose onClose={onDismiss} />
+        <div className="mx-auto mb-4 h-16 w-16"><AssetSlot id="DASHBOARD-001" /></div>
         <h2 className="font-display text-xl font-bold text-ink text-center mb-2">
           {t('parent_handoff_heading')}
         </h2>
@@ -102,7 +106,7 @@ export default function KidDashboardPage() {
       <div className="px-4 pb-12">
         {/* ── XP / level strip ──────────────────────────────────────── */}
         <div className="flex items-center gap-3 mt-6 mb-8">
-          <span className="text-3xl" aria-hidden="true">🐧</span>
+          <PopiAvatar size={52} />
           <div>
             <p className="font-display font-bold text-ink text-lg leading-none">
               {t('welcome', { nickname: displayName })}
@@ -129,7 +133,7 @@ export default function KidDashboardPage() {
                   className="bg-white rounded-card overflow-hidden shadow-sm transition-shadow hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-explore focus-visible:ring-offset-2"
                 >
                   <div className="h-20 bg-ink/5 flex items-center justify-center text-4xl">
-                    {v.emoji}
+                    <AssetSlot id="DASHBOARD-002" />
                   </div>
                   <div className="p-3 flex items-center justify-between">
                     <p className="font-body text-xs text-ink font-semibold leading-snug">
@@ -153,7 +157,7 @@ export default function KidDashboardPage() {
               {libraryCards.map((c) => (
                 <div key={c.titleKey} className="relative bg-white rounded-card overflow-hidden shadow-sm">
                   <div className="h-24 bg-ink/5 flex items-center justify-center text-4xl">
-                    {c.emoji}
+                    <AssetSlot id="DASHBOARD-002" />
                   </div>
                   <div className="p-3">
                     <p className="font-body text-sm text-ink font-semibold">{t(c.titleKey)}</p>

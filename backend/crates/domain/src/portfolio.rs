@@ -12,6 +12,8 @@ use chrono::{DateTime, Duration, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
+use crate::DomainError;
+
 // ── OriginType ────────────────────────────────────────────────────────────────
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -93,6 +95,8 @@ pub struct Project {
     pub what_was_hard: String,
     pub what_to_improve: String,
     pub photo_keys: Vec<String>,
+    /// What this project is within its challenge: sketch, model, lab, practice or build.
+    pub step_type: Option<String>,
     /// What the child is requesting (may differ from effective while pending).
     pub requested_visibility: Visibility,
     /// The actually-visible level: Private until a moderation Approval lands.
@@ -121,6 +125,7 @@ impl Project {
             what_was_hard: String::new(),
             what_to_improve: String::new(),
             photo_keys: Vec::new(),
+            step_type: None,
             requested_visibility: Visibility::Private,
             effective_visibility: Visibility::Private,
             created_at: now,
@@ -377,12 +382,72 @@ impl Report {
     }
 }
 
+// ── Project photos ────────────────────────────────────────────────────────────
+
+/// Largest project photo a child can add (8 MB).
+pub const MAX_PHOTO_BYTES: usize = 8 * 1024 * 1024;
+/// Photos kept per project.
+pub const MAX_PHOTOS_PER_PROJECT: usize = 5;
+/// Longest text kept in one project field (what I made, what I used, …).
+pub const MAX_PROJECT_TEXT: usize = 2000;
+
+/// Checks a project photo before it is stored, and returns its file extension.
+/// Photos are "project, not face": they stay as private as the project they belong to.
+pub fn check_project_photo(
+    content_type: &str,
+    size: usize,
+    photos_already: usize,
+) -> Result<&'static str, DomainError> {
+    let ext = match content_type {
+        "image/jpeg" | "image/jpg" => "jpg",
+        "image/png" => "png",
+        "image/webp" => "webp",
+        _ => {
+            return Err(DomainError::Validation(
+                "photo must be a JPEG, PNG or WebP image".into(),
+            ))
+        }
+    };
+    if size == 0 || size > MAX_PHOTO_BYTES {
+        return Err(DomainError::Validation("photo must be under 8 MB".into()));
+    }
+    if photos_already >= MAX_PHOTOS_PER_PROJECT {
+        return Err(DomainError::Validation(
+            "this project already has the most photos it can hold".into(),
+        ));
+    }
+    Ok(ext)
+}
+
+/// Trims a child's project text and caps its length (by characters, so Persian is safe).
+pub fn clean_project_text(text: &str) -> String {
+    text.trim().chars().take(MAX_PROJECT_TEXT).collect()
+}
+
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use chrono::Utc;
+
+    #[test]
+    fn photo_types_and_sizes_are_checked() {
+        assert_eq!(check_project_photo("image/jpeg", 10, 0).unwrap(), "jpg");
+        assert_eq!(check_project_photo("image/png", 10, 0).unwrap(), "png");
+        assert_eq!(check_project_photo("image/webp", 10, 4).unwrap(), "webp");
+        assert!(check_project_photo("image/gif", 10, 0).is_err());
+        assert!(check_project_photo("image/jpeg", 0, 0).is_err());
+        assert!(check_project_photo("image/jpeg", MAX_PHOTO_BYTES + 1, 0).is_err());
+        assert!(check_project_photo("image/jpeg", 10, MAX_PHOTOS_PER_PROJECT).is_err());
+    }
+
+    #[test]
+    fn project_text_is_trimmed_and_capped() {
+        assert_eq!(clean_project_text("  raft  "), "raft");
+        let long = "ب".repeat(MAX_PROJECT_TEXT + 50);
+        assert_eq!(clean_project_text(&long).chars().count(), MAX_PROJECT_TEXT);
+    }
 
     #[test]
     fn project_starts_private_by_default() {

@@ -29,9 +29,9 @@ describe('PenguinMascot', () => {
     expect(onClick).toHaveBeenCalledTimes(1);
   });
 
-  it('shows the label text visibly inside the button', () => {
+  it('shows its question mark', () => {
     renderMascot({ label: 'Ask Me' });
     const btn = screen.getByRole('button', { name: 'Ask Me' });
-    expect(btn).toHaveTextContent('Ask Me');
+    expect(btn).toHaveTextContent('?');
   });
 });

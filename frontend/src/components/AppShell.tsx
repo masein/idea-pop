@@ -3,9 +3,11 @@
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
-import { usePathname } from '@/i18n/routing';
+import { Link, usePathname, useRouter } from '@/i18n/routing';
+import { logout } from '@/lib/api/auth';
 import Logo from './Logo';
 import PenguinMascot from './PenguinMascot';
+import { hasMetCharacter, showCharacterIntro } from '@/lib/characters';
 import LocaleSwitcher from './marketing/LocaleSwitcher';
 import HelpPanel, { type HelpSection } from './HelpPanel';
 import { AVATARS } from '@/lib/avatars';
@@ -45,8 +47,9 @@ interface NavItem {
   href: string;
 }
 
-// The active item is always coral (the sidebar's own accent) — the chameleon
-// section colours live in the content-area tint, not the nav labels.
+// Each section paints the whole shell in its own colour (TEMP rule 28): the page
+// background, the sidebar outline, the active nav item and its notch, the dotted
+// frame around the content, and the Upgrade card. See SECTION_THEME below.
 const KID_NAV: NavItem[] = [
   { id: 'profile', labelKey: 'nav.profile', href: '/profile' },
   { id: 'explore', labelKey: 'nav.explore', href: '/explore' },
@@ -72,12 +75,21 @@ const TEACHER_NAV: NavItem[] = [
 
 const NAV: Record<Persona, NavItem[]> = { kid: KID_NAV, parent: PARENT_NAV, teacher: TEACHER_NAV };
 
-const sectionTint: Record<Section, string> = {
-  profile: 'bg-tint-lime',
-  explore: 'bg-tint-lime',
-  library: 'bg-tint-cream',
-  challenge: 'bg-tint-blue',
-  studio: 'bg-tint-lavender',
+/**
+ * Section colours, from the designer's four page designs (TEMP rule 28).
+ * tint: the page background. line: outlines, the dotted frame, the notch.
+ * text: the active nav label and icon (≥4.5:1 on white). strong: filled buttons
+ * with white text (≥4.5:1 with white), so a few are a shade deeper than the mockups.
+ * upBg/upText: the Upgrade button, from the designer's Upgrade cards (text darkened
+ * where the mockup's grey would not pass AA on that colour).
+ */
+const SECTION_THEME: Record<Section, { tint: string; line: string; text: string; strong: string; frame?: string; upBg: string; upText: string }> = {
+  // Sampled from the My profile Figma frame: lime outline, deep green text and dotted frame.
+  profile: { tint: '#F3FFC2', line: '#D2EB6E', text: '#18785A', strong: '#18785A', frame: '#18785A', upBg: '#D1EF5A', upText: '#194D3D' },
+  explore: { tint: '#F9DED7', line: '#E5484D', text: '#C4363C', strong: '#C4363C', upBg: '#F9A88E', upText: '#4A1C14' },
+  library: { tint: '#FBF7D5', line: '#F2994A', text: '#A8550B', strong: '#A8550B', upBg: '#F1984A', upText: '#2D2D2D' },
+  challenge: { tint: '#C0F0FF', line: '#2D9CDB', text: '#1A6FA6', strong: '#1A6FA6', upBg: '#2D9CDB', upText: '#14202A' },
+  studio: { tint: '#F1D8FB', line: '#B57BD9', text: '#7B3FA8', strong: '#7B3FA8', upBg: '#D7B4F0', upText: '#3B1A55' },
 };
 
 // ── Nav icons (from the designer's Figma export; stroke inherits currentColor
@@ -153,13 +165,30 @@ function NavIcon({ id, className }: { id: NavItem['id']; className?: string }) {
 // background showing through the cut) with the coral border sweeping around
 // it; the circle floats in the notch with a thin crescent gap, crossing the
 // dashed seam into the content area. In RTL the whole thing mirrors.
-function ActiveNotch({ id }: { id: NavItem['id'] }) {
+// The sidebar's link style and motion follow the landing page's navigation bar: ADLaM
+// Display labels that grow a little on hover, the current page set heavier, and the
+// docked circle that slides to the new page while its icon fades out and back in.
+const NAV_LABEL =
+  'flex items-center justify-between gap-3 rounded-card px-4 py-3.5 text-[16px] [font-family:var(--font-adlam)] transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1';
+const NAV_IDLE = 'font-normal text-[#4F4F4F] hover:scale-[1.08] hover:bg-ink/5 hover:text-ink focus-visible:ring-ink/20';
+const NAV_CURRENT = 'font-bold text-[color:var(--sec-text)] focus-visible:ring-[color:var(--sec-text)]';
+// The docked circle and its icon, drawn bigger than the Figma frame at her request.
+const NOTCH_SCALE = 1.3;
+const SLIDE = { ms: 420, out: 180, in: 240, ease: 'cubic-bezier(.65,0,.35,1)' }; // the top bar's timings
+
+function ActiveNotch({ id, y, animate, iconOn }: { id: NavItem['id'] | null; y: number; animate: boolean; iconOn: boolean }) {
   return (
     <span
       aria-hidden="true"
-      className="pointer-events-none absolute top-1/2 z-20 hidden -translate-y-1/2 md:block ltr:left-full ltr:-ml-7 rtl:right-full rtl:-mr-7 rtl:-scale-x-100"
+      className="pointer-events-none absolute top-0 z-20 hidden md:block ltr:left-full ltr:-ml-7 rtl:right-full rtl:-mr-7"
+      style={{
+        transform: `translateY(${y - 60}px)`,
+        transition: animate ? `transform ${SLIDE.ms}ms ${SLIDE.ease}` : 'none',
+      }}
     >
-      <span className="relative block h-[120px] w-[120px]">
+      <span className="relative block h-[120px] w-[120px] rtl:-scale-x-100">
+        {/* Everything in the notch is drawn 1.3x, grown from the panel edge so it still docks there. */}
+        <span className="absolute inset-0 block" style={{ transform: `scale(${NOTCH_SCALE})`, transformOrigin: '40px 60px' }}>
         <svg
           width="120"
           height="120"
@@ -167,26 +196,267 @@ function ActiveNotch({ id }: { id: NavItem['id'] }) {
           fill="none"
           className="absolute inset-0 overflow-visible"
         >
-          {/* the notch: a blush lens cut into the panel (x=40 is the panel's
+          {/* the notch: a lens cut into the panel in the page colour (x=40 is the panel's
               edge; the fill overlaps to x=42 to cover the straight border) */}
           <path
             d="M40 16 C40 24 35 28 30.1 34 A34 34 0 0 0 30.1 86 C35 92 40 96 40 104 L42 104 L42 16 Z"
-            fill="var(--color-tint-blush)"
+            fill="var(--sec-tint)"
           />
-          {/* coral hairline: the panel border sweeping around the notch */}
+          {/* the panel border sweeping around the notch */}
           <path
             d="M40 16 C40 24 35 28 30.1 34 A34 34 0 0 0 30.1 86 C35 92 40 96 40 104"
-            stroke="var(--color-coral-faint)"
-            strokeWidth="1"
+            stroke="var(--sec-line)"
+            strokeWidth="1.5"
+            vectorEffect="non-scaling-stroke"
             fill="none"
           />
         </svg>
         {/* the docked circle floating in the notch */}
-        <span className="absolute left-[52px] top-[60px] flex h-[60px] w-[60px] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white text-coral shadow-[0_2px_8px_rgba(0,0,0,0.14)] rtl:-scale-x-100">
-          <NavIcon id={id} className="h-6 w-6" />
+        <span className="absolute left-[52px] top-[60px] flex h-[60px] w-[60px] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white text-[color:var(--sec-text)] shadow-[0_2px_8px_rgba(0,0,0,0.14)] rtl:-scale-x-100">
+          <span
+            className="flex"
+            style={{
+              opacity: iconOn ? 1 : 0,
+              transition: animate ? `opacity ${iconOn ? SLIDE.in : SLIDE.out}ms cubic-bezier(.37,0,.63,1)` : 'none',
+            }}
+          >
+            {id && <NavIcon id={id} className="h-7 w-7" />}
+          </span>
+        </span>
         </span>
       </span>
     </span>
+  );
+}
+
+/** The nav list with the sliding circle. Each copy (desktop panel, phone drawer) measures itself. */
+function NavList({
+  items,
+  activeSection,
+  persona,
+  kid,
+  avatar,
+}: {
+  items: NavItem[];
+  activeSection: Section;
+  persona: Persona;
+  kid: { nickname: string; avatar_id: string } | null;
+  avatar: (typeof AVATARS)[number] | undefined;
+}) {
+  const t = useTranslations();
+  const activeId = items.find((i) => i.id !== 'account' && i.id === activeSection)?.id ?? null;
+  const itemRefs = React.useRef<Record<string, HTMLLIElement | null>>({});
+  const listRef = React.useRef<HTMLUListElement>(null);
+  const [y, setY] = useState<number | null>(null);
+  const [animate, setAnimate] = useState(false);
+  const [shownIcon, setShownIcon] = useState(activeId);
+  const [iconOn, setIconOn] = useState(true);
+  const [reduced] = useState(
+    () => typeof window !== 'undefined' && typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+  );
+
+  // Where the current item's middle is; re-measured when the panel changes size.
+  React.useLayoutEffect(() => {
+    const li = activeId ? itemRefs.current[activeId] : null;
+    const list = listRef.current;
+    if (!li || !list) {
+      setY(null);
+      return;
+    }
+    const measure = () => setY(li.offsetTop + li.offsetHeight / 2);
+    measure();
+    if (typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(measure);
+    ro.observe(list);
+    return () => ro.disconnect();
+  }, [activeId]);
+
+  // The first position is drawn in place; from then on the circle slides.
+  useEffect(() => {
+    if (y === null || animate || reduced) return;
+    const id = window.setTimeout(() => setAnimate(true), 50);
+    return () => window.clearTimeout(id);
+  }, [y, animate, reduced]);
+
+  // A new page: the old icon finishes fading, the new one takes its place and fades in.
+  useEffect(() => {
+    if (activeId === shownIcon) return;
+    if (reduced) {
+      setShownIcon(activeId);
+      setIconOn(true);
+      return;
+    }
+    setIconOn(false);
+    const timer = window.setTimeout(() => {
+      setShownIcon(activeId);
+      setIconOn(true);
+    }, SLIDE.out);
+    return () => window.clearTimeout(timer);
+  }, [activeId, shownIcon, reduced]);
+
+  return (
+    <ul ref={listRef} className="relative flex flex-1 flex-col gap-3" role="list">
+      {items.map((item) => {
+        const isActive = item.id === activeId;
+        if (item.id === 'account') {
+          return (
+            <li key="account" className="relative">
+              <AccountMenu persona={persona} kid={kid} avatar={avatar} label={t(item.labelKey)} />
+            </li>
+          );
+        }
+        return (
+          <li
+            key={`${item.id}-${item.href}`}
+            ref={(el) => {
+              itemRefs.current[item.id] = el;
+            }}
+            className="relative"
+          >
+            <Link
+              href={item.href}
+              aria-current={isActive ? 'page' : undefined}
+              // Like the top bar, a click starts the circle's icon fading at once.
+              onClick={isActive || reduced ? undefined : () => setIconOn(false)}
+              className={`${NAV_LABEL} ${isActive ? NAV_CURRENT : NAV_IDLE}`}
+            >
+              <span>{t(item.labelKey)}</span>
+              {/* The docked circle IS the active icon on md+, so the inline one hides there. */}
+              <NavIcon id={item.id} className={isActive ? 'shrink-0 md:opacity-0' : 'shrink-0'} />
+            </Link>
+          </li>
+        );
+      })}
+      {y !== null && <ActiveNotch id={shownIcon} y={y} animate={animate} iconOn={iconOn} />}
+    </ul>
+  );
+}
+
+// ── Account menu (designer's "Account" popover) ─────────────────────────────────
+// Parent portal (controls + subscription), the kid's own profile, add another
+// child, and sign out. Kids can't add children or pay themselves: those rows go
+// to the parent portal, which asks for the grown-up's own sign-in.
+
+function AccountMenu({
+  persona,
+  kid,
+  avatar,
+  label,
+}: {
+  persona: Persona;
+  kid: { nickname: string; avatar_id: string } | null;
+  avatar: (typeof AVATARS)[number] | undefined;
+  label: string;
+}) {
+  const t = useTranslations('shell');
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const boxRef = React.useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: MouseEvent) => {
+      if (!boxRef.current?.contains(e.target as Node)) setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false);
+    document.addEventListener('mousedown', onDown);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onDown);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [open]);
+
+  async function signOut() {
+    setOpen(false);
+    try {
+      localStorage.removeItem('kidProfile');
+    } catch {
+      /* ignore */
+    }
+    await logout();
+    router.push('/login');
+  }
+
+  const row =
+    'flex items-center gap-3 rounded-xl px-3 py-2.5 text-start transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#18785A]';
+  const iconCircle = 'flex h-11 w-11 shrink-0 items-center justify-center rounded-full';
+
+  return (
+    <div ref={boxRef}>
+      <button
+        type="button"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        onClick={() => setOpen((v) => !v)}
+        className={`w-full ${NAV_LABEL} ${NAV_IDLE}`}
+      >
+        <span>{label}</span>
+        <NavIcon id="account" className="shrink-0" />
+      </button>
+      {open && (
+        <div
+          role="menu"
+          aria-label={label}
+          className="absolute top-full z-50 mt-2 flex w-[17.5rem] flex-col gap-1 rounded-[1.25rem] bg-white p-2 shadow-[0_8px_28px_rgba(0,0,0,0.22)] ltr:left-0 rtl:right-0"
+        >
+          <Link role="menuitem" href="/dashboard/parent" onClick={() => setOpen(false)} className={`${row} bg-[#E3F8EC] hover:bg-[#D3F2E0]`}>
+            <span className={`${iconCircle} bg-[#D9D9D9] text-[#18785A]`} aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="9" cy="8" r="4" />
+                <path d="M2 21c0-3.9 3.1-7 7-7 1.3 0 2.5.3 3.5.9" />
+                <rect x="15" y="15" width="7" height="6" rx="1.2" />
+                <path d="M16.5 15v-1.5a2 2 0 0 1 4 0V15" />
+              </svg>
+            </span>
+            <span className="flex flex-col">
+              <span className="font-display text-lg leading-tight text-[#111]">{t('account_parent_portal')}</span>
+              <span className="font-body text-xs font-semibold text-ink/70">{t('account_parent_portal_sub')}</span>
+            </span>
+          </Link>
+
+          {persona === 'kid' && (
+            <Link role="menuitem" href="/profile" onClick={() => setOpen(false)} className={`${row} hover:bg-ink/5`}>
+              <span
+                className={`${iconCircle} overflow-hidden text-xl`}
+                style={{ backgroundColor: avatar?.bg ?? '#FBF7D5' }}
+                aria-hidden="true"
+              >
+                {avatar?.img ? (
+                  <Image src={avatar.img} alt="" width={44} height={44} className="h-full w-full object-contain" />
+                ) : (
+                  <span>{avatar?.emoji ?? '🐧'}</span>
+                )}
+              </span>
+              <span className="flex flex-col">
+                <span className="font-display text-lg leading-tight text-[#111]">{kid?.nickname ?? t('default_kid_name')}</span>
+                <span className="font-body text-xs font-semibold text-ink/70">{t('account_edit_profile')}</span>
+              </span>
+            </Link>
+          )}
+
+          <p className="px-3 pt-2 font-body text-sm font-bold text-ink/70">{t('account_other')}</p>
+          <Link role="menuitem" href="/dashboard/parent#add-child" onClick={() => setOpen(false)} className={`${row} hover:bg-ink/5`}>
+            <span className={`${iconCircle} bg-[#D9D9D9] text-2xl text-ink/70`} aria-hidden="true">
+              +
+            </span>
+            <span className="font-display text-lg leading-tight text-[#111]">{t('account_add_child')}</span>
+          </Link>
+
+          <hr className="my-1 border-ink/10" />
+          <button type="button" role="menuitem" onClick={signOut} className={`${row} hover:bg-[#FFF5F5]`}>
+            <span className={`${iconCircle} bg-[#FFEBEC] text-[#E5484D]`} aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4" />
+                <path d="M10 8l-4 4 4 4" />
+                <path d="M6 12h9" />
+              </svg>
+            </span>
+            <span className="font-display text-lg text-[#D92D32]">{t('account_sign_out')}</span>
+          </button>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -208,8 +478,9 @@ function AppShellInner({
   const persona = personaFromPath(pathname);
   const activeSection = sectionFromPath(pathname) ?? section;
   const items = NAV[persona];
-  const tint = sectionTint[activeSection];
+  const theme = SECTION_THEME[activeSection];
   const showUpgrade = persona === 'kid' || persona === 'parent';
+  useFirstMeetIfKid(persona === 'kid');
 
   useEffect(() => {
     try {
@@ -234,7 +505,7 @@ function AppShellInner({
   const sidebar = (
     <nav
       aria-label={t('shell.main_nav')}
-      className="flex h-full flex-col gap-6 rounded-[1.75rem] border border-coral-faint bg-white px-3 py-6 shadow-md"
+      className="flex h-full flex-col gap-6 rounded-[1.75rem] border-[1.5px] border-[color:var(--sec-line)] bg-white px-3 py-6 shadow-md"
     >
       {/* Avatar — slim, gently-shimmering gradient ring around the avatar */}
       <div className="flex flex-col items-center gap-2.5 px-3">
@@ -256,49 +527,30 @@ function AppShellInner({
       </div>
 
       {/* Nav */}
-      <ul className="flex flex-1 flex-col gap-3" role="list">
-        {items.map((item) => {
-          const isActive = item.id !== 'account' && activeSection === item.id;
-          return (
-            <li key={`${item.id}-${item.href}`} className="relative">
-              <a
-                href={item.href}
-                aria-current={isActive ? 'page' : undefined}
-                className={[
-                  'flex items-center justify-between gap-3 rounded-card px-4 py-3.5 font-body text-[15px] font-bold transition-colors duration-150',
-                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1',
-                  isActive
-                    ? 'text-coral focus-visible:ring-coral'
-                    : 'text-ink/70 hover:bg-tint-blush hover:text-ink focus-visible:ring-ink/20',
-                ].join(' ')}
-              >
-                <span>{t(item.labelKey)}</span>
-                {/* The scoop circle IS the active icon on md+ — hide the
-                    inline one there so they don't overlap at the row edge. */}
-                <NavIcon id={item.id} className={isActive ? 'shrink-0 md:opacity-0' : 'shrink-0'} />
-              </a>
-              {/* Active indicator: a circle cradled by a concave scoop carved
-                  into the panel's right edge (the designer's signature curve). */}
-              {isActive && <ActiveNotch id={item.id} />}
-            </li>
-          );
-        })}
-      </ul>
+      <NavList items={items} activeSection={activeSection} persona={persona} kid={kid} avatar={avatar} />
 
       {/* Upgrade card (kid + parent) */}
       {showUpgrade && (
-        <a
+        <Link
           href={persona === 'parent' ? '/dashboard/parent#account' : '/profile'}
-          className={`flex flex-col items-center gap-2 rounded-[1.25rem] p-3 text-center transition-shadow hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-coral ${tint}`}
+          className="group mt-14 flex flex-col items-center gap-3 rounded-[0.75rem] bg-[var(--sec-tint)] px-3 pb-4 text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--sec-text)]"
         >
-          <Image src="/kid/upgrade-girl.png" alt="" width={72} height={72} className="h-16 w-auto" aria-hidden="true" />
-          <span className="font-body text-sm font-semibold text-ink/80">
+          {/* The girl stands up out of the card, as in the design. */}
+          <Image
+            src="/kid/upgrade-girl.png"
+            alt=""
+            width={140}
+            height={140}
+            className="-mt-16 h-[7.5rem] w-auto drop-shadow-[0_4px_6px_rgba(0,0,0,0.15)]"
+            aria-hidden="true"
+          />
+          <span className="font-body text-[15px] font-semibold leading-snug text-[#2D2D2D]">
             {t('shell.upgrade_body')}
           </span>
-          <span className="rounded-pill bg-coral px-5 py-2 font-display text-sm font-bold text-white">
+          <span className="inline-flex min-h-12 items-center rounded-pill bg-[var(--sec-up-bg)] px-8 font-body text-lg font-extrabold text-[color:var(--sec-up-text)] shadow-[inset_0_0_0_1px_rgba(0,0,0,0.18),0_4px_4px_rgba(0,0,0,0.25)] transition-transform group-hover:scale-105 group-active:scale-[0.97]">
             {t('shell.upgrade_cta')}
           </span>
-        </a>
+        </Link>
       )}
 
       {/* In-app language switch (all personas) — quiet footer, off the design
@@ -310,7 +562,20 @@ function AppShellInner({
   );
 
   return (
-    <div className="app-typography h-screen overflow-hidden bg-tint-blush font-body">
+    <div
+      className="app-typography h-screen overflow-hidden bg-[var(--sec-tint)] font-body"
+      style={
+        {
+          '--sec-tint': theme.tint,
+          '--sec-line': theme.line,
+          '--sec-frame': theme.frame ?? theme.line,
+          '--sec-text': theme.text,
+          '--sec-strong': theme.strong,
+          '--sec-up-bg': theme.upBg,
+          '--sec-up-text': theme.upText,
+        } as React.CSSProperties
+      }
+    >
       {/* Canonical desktop frame: the shell is capped at 1440px and centred, so
           content never stretches on wide monitors (only the blush background
           fills the overflow). Sidebar 256px + content ≈ 1150px at the cap. */}
@@ -330,7 +595,7 @@ function AppShellInner({
       {/* Mobile drawer */}
       <aside
         className={[
-          'fixed inset-y-0 z-30 flex w-64 flex-col bg-tint-blush px-3 pb-3 transition-transform duration-200 ltr:left-0 rtl:right-0 md:hidden',
+          'fixed inset-y-0 z-30 flex w-64 flex-col bg-[var(--sec-tint)] px-3 pb-3 transition-transform duration-200 ltr:left-0 rtl:right-0 md:hidden',
           drawerOpen ? 'translate-x-0' : 'ltr:-translate-x-full rtl:translate-x-full',
         ].join(' ')}
         aria-label={t('shell.main_nav')}
@@ -348,8 +613,8 @@ function AppShellInner({
         {sidebar}
       </aside>
 
-      {/* Main content area — dashed coral seam against the sidebar */}
-      <div className="flex min-w-0 flex-1 flex-col overflow-hidden border-dashed border-coral-soft md:ltr:border-l md:rtl:border-r">
+      {/* Main content area */}
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         {/* Mobile top bar */}
         <header className="flex shrink-0 items-center gap-3 border-b border-ink/10 bg-white px-4 py-3 md:hidden">
           <button
@@ -365,14 +630,14 @@ function AppShellInner({
           <Logo size="sm" showWordmark />
         </header>
 
-        {/* Scrollable content — rounded card with the section tint + top-right logo */}
+        {/* Scrollable content — a dotted frame in the section colour + top-right logo */}
         <main
           id="main-content"
-          className={`relative m-2 flex-1 overflow-y-auto rounded-[1.75rem] pb-20 md:m-3 ${tint}`}
+          className="relative m-2 flex-1 overflow-y-auto rounded-[1.75rem] border-[1.5px] border-dotted border-[color:var(--sec-frame)] bg-[var(--sec-tint)] pb-20 md:m-3"
         >
           <div className="pointer-events-none absolute right-5 top-4 z-10 hidden md:block">
             <span className="pointer-events-auto">
-              <Logo size="sm" showWordmark />
+              <Logo size="md" showWordmark showBadge={false} />
             </span>
           </div>
           {children}
@@ -380,16 +645,23 @@ function AppShellInner({
       </div>
       </div>
 
-      {/* Floating penguin mascot (flips to the left in RTL) — opens the help panel */}
+      {/* Floating Popi (flips to the left in RTL, away from the sidebar): opens the chat */}
       <div className="fixed bottom-6 z-40 ltr:right-6 rtl:left-6">
         <PenguinMascot onClick={() => setHelpOpen(true)} />
       </div>
 
       {helpOpen && (
-        <HelpPanel section={helpSectionFromPath(pathname)} onClose={() => setHelpOpen(false)} />
+        <HelpPanel section={helpSectionFromPath(pathname)} chat={persona === 'kid'} pathname={pathname} onClose={() => setHelpOpen(false)} />
       )}
     </div>
   );
+}
+
+/** Popi says hello the first time a kid opens the app. */
+function useFirstMeetIfKid(isKid: boolean) {
+  useEffect(() => {
+    if (isKid && !hasMetCharacter('popi')) showCharacterIntro('popi');
+  }, [isKid]);
 }
 
 // ── Public component (keeps the `section` prop for callers) ──────────────────────

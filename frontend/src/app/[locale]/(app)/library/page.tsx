@@ -2,10 +2,11 @@
 
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { useRouter } from '@/i18n/routing';
 import { fetchStudios, fetchQuickMakes, fetchCourses } from '@/lib/api/client';
 import type { components } from '@/lib/api/schema';
+import AssetSlot from '@/components/AssetSlot';
 
 type StudioCountResponse = components['schemas']['StudioCountResponse'];
 type QuickMakePageResponse = components['schemas']['QuickMakePageResponse'];
@@ -28,9 +29,6 @@ const STUDIOS: Array<{ slug: string; emoji: string }> = [
   { slug: 'nature', emoji: '🌿' },
 ];
 
-const STUDIO_EMOJI: Record<string, string> = Object.fromEntries(
-  STUDIOS.map((s) => [s.slug, s.emoji]),
-);
 
 // Contextual makes tied to the active mission (no per-mission endpoint yet).
 const MISSION_MAKE_KEYS = [
@@ -57,6 +55,7 @@ function studioLabel(t: LibraryTranslator, slug: string): string {
 
 export default function LibraryPage() {
   const t = useTranslations('library');
+  const locale = useLocale();
   const router = useRouter();
 
   const [loading, setLoading] = useState(true);
@@ -127,10 +126,15 @@ export default function LibraryPage() {
               className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-tint-cream text-3xl"
               aria-hidden="true"
             >
-              {STUDIO_EMOJI[featured.studio] ?? '📚'}
+              <AssetSlot id="LIBRARY-001" />
             </span>
             <div className="min-w-0 flex-1">
               <p className="font-display text-lg font-bold text-ink">{featured.title}</p>
+              {featured.price_toman != null && (
+                <p className="w-fit rounded-pill bg-tint-lavender px-2.5 py-0.5 font-body text-xs font-bold text-[#7A3D8A]">
+                  {t('special_price', { price: new Intl.NumberFormat(locale).format(featured.price_toman) })}
+                </p>
+              )}
               <p className="font-body text-sm text-ink/60">
                 {t('with_creator', {
                   name: featured.creator_name,
@@ -181,7 +185,7 @@ export default function LibraryPage() {
                 />
                 <p className="font-display text-sm font-bold leading-snug text-ink">{t(key)}</p>
                 <span className="inline-flex w-fit items-center gap-1 rounded-pill bg-white px-2.5 py-0.5 font-body text-xs font-semibold text-[#135A85]">
-                  ⭐ {t('helps_challenge')}
+                  {t('helps_challenge')}
                 </span>
               </div>
             ))}
@@ -206,12 +210,13 @@ export default function LibraryPage() {
                   data-testid="studio-card"
                   onClick={() => router.push(`/library?studio=${s.slug}`)}
                   aria-label={t('studio_card_aria', { label, makes, courses: courseN })}
-                  className="flex min-h-[6.5rem] flex-col justify-center gap-1 rounded-[1.25rem] px-5 py-4 text-left text-white shadow-sm transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
-                  style={{ backgroundColor: ORANGE, ['--tw-ring-color' as string]: ORANGE }}
+                  className="flex min-h-[6.5rem] flex-col justify-center gap-1 rounded-[1.25rem] px-5 py-4 text-left text-[#5A2405] shadow-sm transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+                  // The design's light orange tile with dark brown text (6:1, easy to read).
+                  style={{ backgroundColor: '#F2994A', ['--tw-ring-color' as string]: '#5A2405' }}
                 >
                   <span className="font-display text-xl font-bold leading-tight">{label}</span>
-                  <span className="flex items-center gap-1.5 font-body text-sm font-semibold text-white">
-                    <span aria-hidden="true">{s.emoji}</span>
+                  <span className="flex items-center gap-1.5 font-body text-sm font-semibold text-[#3D1A04]">
+                    <AssetSlot id="LIBRARY-001" variant="dot" />
                     {makes > 0 || courseN > 0 ? (
                       <span>
                         {t('makes_count', { count: makes })}
@@ -240,7 +245,7 @@ export default function LibraryPage() {
                 {t('machine_trainer')}
               </span>
               <span className="flex items-center gap-1.5 font-body text-sm font-semibold text-white">
-                <span aria-hidden="true">🤖</span>
+                <AssetSlot id="LIBRARY-002" />
                 <span>{t('machine_trainer_tagline')}</span>
               </span>
             </button>
@@ -258,7 +263,7 @@ export default function LibraryPage() {
                 {t('animation_studio')}
               </span>
               <span className="flex items-center gap-1.5 font-body text-sm font-semibold text-white">
-                <span aria-hidden="true">🎬</span>
+                <AssetSlot id="LIBRARY-002" />
                 <span>{t('animation_studio_tagline')}</span>
               </span>
             </button>
@@ -275,7 +280,7 @@ export default function LibraryPage() {
                 {t('question_tree')}
               </span>
               <span className="flex items-center gap-1.5 font-body text-sm font-semibold text-white">
-                <span aria-hidden="true">🌳</span>
+                <AssetSlot id="LIBRARY-002" />
                 <span>{t('question_tree_tagline')}</span>
               </span>
             </button>
@@ -292,7 +297,7 @@ export default function LibraryPage() {
                 {t('reward_maze')}
               </span>
               <span className="flex items-center gap-1.5 font-body text-sm font-semibold text-white">
-                <span aria-hidden="true">🐭</span>
+                <AssetSlot id="LIBRARY-002" />
                 <span>{t('reward_maze_tagline')}</span>
               </span>
             </button>
@@ -335,7 +340,6 @@ export default function LibraryPage() {
 
 function QuickMakeTile({ make }: { make: QuickMakeResponse }) {
   const t = useTranslations('library');
-  const emoji = STUDIO_EMOJI[make.studio] ?? '📚';
   return (
     <div
       data-testid="quick-make-tile"
@@ -347,11 +351,11 @@ function QuickMakeTile({ make }: { make: QuickMakeResponse }) {
         className="absolute -top-8 flex h-24 w-24 items-center justify-center rounded-full bg-tint-cream text-4xl shadow-md ring-4 ring-white"
         aria-hidden="true"
       >
-        {emoji}
+        <AssetSlot id="LIBRARY-001" />
       </span>
 
       <span className="inline-flex items-center gap-1 rounded-pill bg-black/20 px-2.5 py-0.5 font-body text-xs font-bold">
-        {emoji} {studioLabel(t, make.studio)}{' '}
+        {studioLabel(t, make.studio)}{' '}
         <span dir="ltr">{t('xp_reward', { xp: make.xp_reward })}</span>
       </span>
       <p className="font-display text-base font-bold leading-tight">{make.title}</p>

@@ -191,6 +191,11 @@
       animation-timeline: --zoom-frame;
       animation-range: entry 0% cover 50%;
     }
+    /* The boy's photo is held on screen by the bird controller (public/ideapop-motion) while the bird enters its
+       paper; it stays at its natural size there so the drawing lines up with the bird. */
+    [data-mission-pin-track] [data-scroll="zoom-out"] {
+      animation: none;
+    }
     @keyframes motion-zoom-out {
       from {
         scale: 1.25;
@@ -240,4 +245,30 @@
     rotate: none !important;
     animation: none !important;
   }
+}
+
+/* "hands" in the hero (susan, 2026-11-01): Cherry Bomb One's lowercase a has a tiny counter that the 0.17em dark green
+   outline fills. It is given the d's opening, measured from the d itself: a dark green ring 0.125em across with a hollow
+   0.035em centre that shows the wall through it (a real hole, cut with a mask), at the a's own counter. The span is
+   widened by 0.12em a side (and pulled back with margins) so the mask never clips the outline. */
+.hands-a {
+  position: relative;
+  display: inline-block;
+  padding: 0 0.12em;
+  margin: 0 -0.12em;
+  -webkit-mask: radial-gradient(circle at 0.35em 1.04em, transparent 0.0175em, #000 0.023em);
+  mask: radial-gradient(circle at 0.35em 1.04em, transparent 0.0175em, #000 0.023em);
+}
+.hands-a::after {
+  content: "";
+  position: absolute;
+  left: 0.35em;
+  top: 1.04em;
+  width: 0.125em;
+  height: 0.125em;
+  box-sizing: border-box;
+  border: 0.045em solid #194d3d;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
 }

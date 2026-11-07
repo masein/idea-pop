@@ -50,7 +50,8 @@ function walkTsx(dir: string): string[] {
 
 // A JSX text node between tags that contains a run of ≥3 letters.
 // {expr}, emoji, digits and symbols are ignored — only real words trip it.
-const JSX_TEXT = />[ \t]*([A-Za-z][A-Za-z ,.'!?&:;/()-]{2,})[ \t]*</g;
+// The lookbehind skips an arrow's ">", so a type like `() => Promise<void>` isn't taken for text.
+const JSX_TEXT = /(?<!=)>[ \t]*([A-Za-z][A-Za-z ,.'!?&:;/()-]{2,})[ \t]*</g;
 
 function leaks(src: string): string[] {
   // Drop JSX/TS comments so commented prose doesn't false-positive.
@@ -72,6 +73,11 @@ describe('kid-app i18n — no hardcoded JSX text', () => {
     ...GUARDED_FILES.map((f) => path.join(ROOT, f)),
     ...GUARDED_DIRS.flatMap((d) => walkTsx(path.join(ROOT, d))),
   ].filter((f) => !f.endsWith('.test.tsx') && !f.endsWith('.stories.tsx'));
+
+  it('flags real text and ignores code types', () => {
+    expect(leaks('<p>Save my idea</p>')).toEqual(['Save my idea']);
+    expect(leaks('type P = { onNext: () => Promise<void> };')).toEqual([]);
+  });
 
   it('resolves the guarded file set', () => {
     expect(files.length).toBeGreaterThan(15);

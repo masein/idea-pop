@@ -25,6 +25,9 @@ export interface paths {
   "/api/children": {
     post: operations["createChild"];
   };
+  "/api/children/login": {
+    post: operations["childLogin"];
+  };
   "/api/children/{id}": {
     get: operations["getChild"];
   };
@@ -266,6 +269,186 @@ export interface paths {
       };
     };
   };
+  "/api/challenges/{id}/hero-ideas": {
+    post: {
+      parameters: { path: { id: string } };
+      requestBody: {
+        content: {
+          "application/json": { text: string; hero_index?: number | null; lang?: string | null };
+        };
+      };
+      responses: {
+        200: {
+          content: {
+            "application/json": {
+              idea_id: string;
+              version: number;
+              status: string;
+              outcome: string | null;
+              feedback: string | null;
+              experiment: { materials: string[]; steps: string[] } | null;
+              review_available: boolean;
+            };
+          };
+        };
+      };
+    };
+  };
+  "/api/challenges/{id}/hero-ideas/sketch": {
+    post: {
+      parameters: { path: { id: string } };
+      requestBody: { content: { "application/json": { project_id: string; name: string } } };
+      responses: { 204: { content: never } };
+    };
+  };
+  "/api/projects/{id}/photo": {
+    get: {
+      parameters: { path: { id: string } };
+      responses: { 200: { content: { "image/*": string } } };
+    };
+  };
+  "/api/children/me/hero-ideas": {
+    get: {
+      parameters: { query?: { lang?: string } };
+      responses: {
+        200: {
+          content: {
+            "application/json": {
+              id: string;
+              challenge_id: string;
+              challenge_title: string;
+              hero_name: string | null;
+              text: string;
+              version: number;
+              project_id: string | null;
+              created_at: string;
+            }[];
+          };
+        };
+      };
+    };
+  };
+  "/api/hero-ideas/{id}/references": {
+    get: {
+      parameters: { path: { id: string } };
+      responses: {
+        200: {
+          content: {
+            "application/json": {
+              available: boolean;
+              references: { title: string; url: string; source: string; summary: string; image_url: string | null }[];
+            };
+          };
+        };
+      };
+    };
+  };
+  "/api/challenges/{id}/idea-feedback": {
+    post: {
+      parameters: { path: { id: string } };
+      requestBody: {
+        content: {
+          "application/json": { idea: string; lang?: string | null; kind?: "substitute" };
+        };
+      };
+      responses: {
+        200: {
+          content: {
+            "application/json": { message: string; fits: boolean; blocked: boolean };
+          };
+        };
+      };
+    };
+  };
+  "/api/challenges/{id}/sketch-bonus": {
+    post: {
+      parameters: { path: { id: string } };
+      responses: {
+        200: {
+          content: {
+            "application/json": components["schemas"]["XpAwardResponse"];
+          };
+        };
+      };
+    };
+  };
+  "/api/challenges/{id}/mission-badge": {
+    post: {
+      parameters: { path: { id: string } };
+      requestBody: { content: { "application/json": { key: string } } };
+      responses: { 200: { content: { "application/json": components["schemas"]["XpAwardResponse"] } } };
+    };
+  };
+  "/api/challenges/{id}/photo-bonus": {
+    post: {
+      parameters: { path: { id: string } };
+      requestBody: { content: { "application/json": { key: string } } };
+      responses: { 200: { content: { "application/json": components["schemas"]["XpAwardResponse"] } } };
+    };
+  };
+  "/api/challenges/{id}/mission-rewards": {
+    get: {
+      parameters: { path: { id: string } };
+      responses: {
+        200: {
+          content: {
+            "application/json": {
+              badges: { key: string; xp: number; available: number }[];
+              photos: { key: string; xp: number; available: number }[];
+              xp_earned: number;
+              xp_max: number;
+            };
+          };
+        };
+      };
+    };
+  };
+  "/api/challenges/{id}/star": {
+    post: {
+      parameters: { path: { id: string } };
+      requestBody: { content: { "application/json": { star: number; note?: string | null } } };
+      responses: {
+        200: { content: { "application/json": { stars: number[]; is_new: boolean } } };
+      };
+    };
+  };
+  "/api/children/me/challenge-progress": {
+    get: {
+      parameters: { query: { ids: string } };
+      responses: {
+        200: {
+          content: {
+            "application/json": {
+              challenge_id: string;
+              stars: number[];
+              badges: string[];
+              xp: number;
+              improved_idea?: string | null;
+            }[];
+          };
+        };
+      };
+    };
+  };
+  "/api/children/me/approval-email": {
+    post: {
+      responses: {
+        200: { content: { "application/json": { status: "sent" | "already_approved" | "no_contact" | "not_sent" } } };
+      };
+    };
+  };
+  "/api/challenges/{id}/define-bonus": {
+    post: {
+      parameters: { path: { id: string } };
+      responses: {
+        200: {
+          content: {
+            "application/json": components["schemas"]["XpAwardResponse"];
+          };
+        };
+      };
+    };
+  };
   "/api/progress/video-view": {
     post: {
       requestBody: {
@@ -376,6 +559,7 @@ export interface paths {
   };
   "/api/challenges": {
     get: {
+      parameters: { query?: { lang?: string; per_page?: number; page?: number } };
       responses: {
         200: {
           content: {
@@ -392,7 +576,7 @@ export interface paths {
   };
   "/api/challenges/{id}": {
     get: {
-      parameters: { path: { id: string } };
+      parameters: { path: { id: string }; query?: { lang?: string } };
       responses: {
         200: {
           content: {
@@ -458,6 +642,19 @@ export interface paths {
           "application/json": components["schemas"]["ProjectCreateRequest"];
         };
       };
+      responses: {
+        201: {
+          content: {
+            "application/json": components["schemas"]["ProjectResponse"];
+          };
+        };
+      };
+    };
+  };
+  "/api/projects/{id}/photos": {
+    post: {
+      parameters: { path: { id: string } };
+      requestBody: { content: { "image/jpeg": Blob } };
       responses: {
         201: {
           content: {
@@ -583,6 +780,9 @@ export interface paths {
         200: { content: never };
       };
     };
+  };
+  "/api/parent/children/{id}/reset-pin": {
+    post: operations["resetChildPin"];
   };
   "/api/parent/children": {
     get: {
@@ -768,6 +968,22 @@ export interface components {
       avatar_id: string;
       birth_year: number;
       parent_email: string;
+      /** The four digits the child signs back in with on another device. */
+      login_pin?: string;
+    };
+    ChildLoginRequest: {
+      parent_email: string;
+      nickname: string;
+      pin: string;
+    };
+    ChildLoginResponse: {
+      child_id: string;
+      nickname: string;
+      access_token: string;
+    };
+    ResetChildPinResponse: {
+      child_id: string;
+      login_pin: string;
     };
     CreateChildResponse: {
       id: string;
@@ -851,6 +1067,11 @@ export interface components {
       /** Format: int16 */
       age_min: number;
       materials: string[];
+      /**
+       * Format: int32
+       * @description Own price in Toman for a special expert course sold one by one; null = included in Plus / Family.
+       */
+      price_toman?: number | null;
       created_at: string;
       lessons: components["schemas"]["LessonResponse"][];
     };
@@ -884,6 +1105,11 @@ export interface components {
       difficulty: number;
       /** Format: int16 */
       age_min: number;
+      /**
+       * Format: int32
+       * @description Own price in Toman for a special expert course sold one by one; null = included in Plus / Family.
+       */
+      price_toman?: number | null;
       /** Format: int64 */
       lesson_count: number;
     };
@@ -925,13 +1151,15 @@ export interface components {
       /** The Sketch step's own prompt/guidance (empty string when absent). */
       sketch_prompt?: string;
       sketch_guidance?: string;
+      /** The Build & test step's instructions: the challenge card's materials. */
+      build_instructions?: string;
       nature_clues: components["schemas"]["NatureClue"][];
       skill_lesson_id: string | null;
       /** The Skill step's authored instructions text, if any. */
       skill_instructions?: string | null;
       related_explore_ids: string[];
       tools: {
-        kind: "five_whys" | "scamper" | "mind_map";
+        kind: "five_whys" | "scamper" | "mind_map" | "brainstorm" | "empathy_map" | "how_might_we" | "like_wish_what_if" | "nature_translator" | "design_spiral";
         age_mode: "young" | "older";
       }[];
       age_tier_variants: {
@@ -944,7 +1172,116 @@ export interface components {
       is_premium: boolean;
       /** True when premium and the caller's family has no active subscription. */
       locked: boolean;
+      /** The mission's story layer (Story Spine chapters, Popi's lines, the
+       * per-step games, the sticker). Null for missions without a story. */
+      story?: components["schemas"]["MissionStory"] | null;
       created_at: string;
+    };
+    // Mirrors the backend domain MissionStory (crates/domain/src/story.rs).
+    MissionStory: {
+      /** "How does nature…?" — heads the Nature clues step. */
+      function_question: string;
+      hero: { name: string; role: string; image: string | null; emoji: string };
+      scene_image: string | null;
+      /** Exactly 3: Once upon a time / Every day / Until one day. */
+      opening: {
+        beat: string;
+        emoji: string;
+        text: string;
+        /** Full illustration; when present the Brief is a picture book. */
+        image?: string | null;
+        /** Label in the picture's top corner, e.g. "3 hours". */
+        badge?: string | null;
+        /** Where it happens, labelled in the picture's bottom corner. */
+        place?: string | null;
+        thought?: { big: string; small: string } | null;
+        /** Boxes on the picture for the words, [left, top, width, height] in %. */
+        layout?: {
+          text: [number, number, number, number];
+          badge?: [number, number, number, number] | null;
+          thought?: [number, number, number, number] | null;
+        } | null;
+      }[];
+      card: { hero: string; place: string; problem: string; goal: string; rules: string; helpers: string };
+      /** One per step in play order: brief, your_idea, nature_clues,
+       * design_secret, skill, tool, sketch, build_and_test, celebrate_and_share. */
+      chapters: { step: string; label: string; beat: string; title: string; line: string }[];
+      guide: {
+        brief: string;
+        your_idea: string;
+        nature_clues: string;
+        design_secret: string;
+        skill: string;
+        sketch: string;
+        build_and_test: string;
+        retry_tip: string;
+        ending: string;
+      };
+      quick_check: { question: string; options: string[]; answer: number; right: string; wrong: string };
+      clue_cards: {
+        name: string;
+        emoji: string;
+        image: string | null;
+        tagline: string;
+        trick: string;
+        does: string;
+        group: string;
+      }[];
+      match_groups: { key: string; label: string }[];
+      predict: {
+        prompt: string;
+        choices: string[];
+        items: { emoji: string; image?: string | null; label: string; answer: number }[];
+        explain: string;
+      };
+      lab: { title: string; predict: string; options: string[]; measure: string; higher_is_better: boolean };
+      tool: {
+        kind: "scamper" | "mind_map" | "five_whys" | "brainstorm" | "empathy_map" | "how_might_we" | "like_wish_what_if" | "nature_translator" | "design_spiral";
+        name: string;
+        intro: string;
+        example_object: string;
+        parts: { key: string; name: string; what: string; example: string; starter: string }[];
+        locked: string[];
+        badge: string;
+      };
+      sketch_checklist: string[];
+      test: {
+        measure: string;
+        higher_is_better: boolean;
+        check_question: string;
+        check_options: string[];
+        change_prompt: string;
+      };
+      reflection: { question: string; options: string[] };
+      sticker: { name: string; emoji: string };
+      /** Steps this mission leaves out (e.g. [7] = no Build & test); the rest renumber. */
+      hidden_steps?: number[];
+      /** The S — Substitute practice's mission words (Skill step). */
+      substitute?: {
+        model_name: string;
+        model_question: string;
+        hint: string;
+        example: string;
+        model_material: string;
+      } | null;
+      /** 5W1H problem definition shown with Popi under the last opening picture. */
+      define_problem?: {
+        popi: string;
+        title: string;
+        question: string;
+        hint: string;
+        image: string | null;
+        prompts: {
+          key: string;
+          label: string;
+          question: string;
+          example: string;
+          /** Any one of these words means the answer found the key idea; empty = any answer. */
+          keywords?: string[];
+          /** Popi's nudge when the answer misses. */
+          hint?: string;
+        }[];
+      } | null;
     };
     IdeaWallEntry: {
       id: string;
@@ -986,18 +1323,28 @@ export interface components {
       cycle_bonus_earned: boolean;
     };
     ProjectCreateRequest: {
+      origin_type: "challenge" | "lesson" | "quick_make";
+      step_type?: string | null;
+      origin_id: string;
       title: string;
-      what_i_made: string;
-      what_i_used: string;
-      what_was_hard: string;
-      what_id_improve: string;
-      challenge_id: string | null;
-      step_type: "sketch" | "build";
+      description?: string;
+      materials?: string;
+      what_was_hard?: string;
+      what_to_improve?: string;
     };
     ProjectResponse: {
       id: string;
+      origin_type: string;
+      origin_id: string;
       title: string;
-      visibility: "private" | "class" | "public";
+      description: string;
+      materials: string;
+      what_was_hard: string;
+      what_to_improve: string;
+      photo_keys: string[];
+      step_type?: string | null;
+      requested_visibility: string;
+      effective_visibility: string;
       created_at: string;
     };
     SubscriptionResponse: {
@@ -1181,6 +1528,30 @@ export interface operations {
       201: {
         content: {
           "application/json": components["schemas"]["CreateChildResponse"];
+        };
+      };
+    };
+  };
+  childLogin: {
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ChildLoginRequest"];
+      };
+    };
+    responses: {
+      200: {
+        content: {
+          "application/json": components["schemas"]["ChildLoginResponse"];
+        };
+      };
+    };
+  };
+  resetChildPin: {
+    parameters: { path: { id: string } };
+    responses: {
+      200: {
+        content: {
+          "application/json": components["schemas"]["ResetChildPinResponse"];
         };
       };
     };

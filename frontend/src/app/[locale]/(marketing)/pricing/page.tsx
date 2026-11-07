@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { getTranslations } from "next-intl/server";
 import PricingPlans from "../_components/PricingPlans";
 import ClosingBand from "../_components/ClosingBand";
@@ -96,8 +97,47 @@ export default async function PricingPage({ params }: Props) {
               ],
               ctaFamily: tm("cta_family"),
               badgeValue: tm("badge_value"),
+              freeUntil: tm("free_until"),
+              wasPrice: tm("was_price"),
             }}
           />
+        </div>
+      </section>
+
+      {/* 1b. Special expert courses: bought one by one, outside every plan. A course gets its own price through
+             courses.price_toman (NULL = included in Plus / Family); the Library shows that price on the course. */}
+      <section aria-label={t("special_heading")} className="px-4 pb-8 md:pb-12">
+        {/* The plan cards' own frame (white card, 3px green border) so the page reads as one system; the heading and
+            intro on one side, the three facts as a list on the other, each with a 3D icon (Microsoft Fluent Emoji 3D,
+            MIT licence, in public/pricing). */}
+        <div
+          className="mx-auto max-w-4xl rounded-card border-[3px] border-[#18785A] bg-white p-6 md:p-10 grid gap-6 md:grid-cols-[2fr_3fr] md:gap-10"
+          data-reveal="grow"
+        >
+          <div>
+            <Image src="/pricing/sparkles.png" alt="" width={64} height={64} className="mb-3 h-16 w-16" />
+            <h2 className="[font-family:var(--font-cherry)] font-normal text-[clamp(1.5rem,1.25rem+1vw,2rem)] leading-[1.15] text-[#4F4F4F] mb-3">
+              {keepTogether(t("special_heading"))}
+            </h2>
+            <p className={`${body} text-[#4F4F4F]`}>{t("special_intro")}</p>
+          </div>
+          <ul className="flex flex-col divide-y divide-[#18785A]/20" role="list">
+            {(
+              [
+                ["p1", "/pricing/puzzle.png"],
+                ["p2", "/pricing/tag.png"],
+                ["p3", "/pricing/key.png"],
+              ] as const
+            ).map(([k, icon]) => (
+              <li key={k} className="flex items-start gap-4 py-4 first:pt-0 last:pb-0">
+                <Image src={icon} alt="" width={48} height={48} className="h-12 w-12 shrink-0" />
+                <div>
+                  <p className="font-display font-bold text-lg text-ink">{t(`special_${k}_title`)}</p>
+                  <p className={`${body} text-sm text-[#4F4F4F]`}>{t(`special_${k}`)}</p>
+                </div>
+              </li>
+            ))}
+          </ul>
         </div>
       </section>
 

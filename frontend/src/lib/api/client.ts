@@ -93,6 +93,8 @@ export async function createChild(data: {
   avatar_id: string;
   birth_year: number;
   parent_email: string;
+  /** The four digits they sign back in with; a kid signing up alone always sets one. */
+  login_pin?: string;
 }): Promise<{ id: string; access_token: string }> {
   const { data: res, error } = await apiClient.POST("/api/children", {
     body: data,
@@ -100,6 +102,35 @@ export async function createChild(data: {
   if (error || !res) throw new Error("Could not create profile");
   setAccessToken(res.access_token);
   return res;
+}
+
+/**
+ * Sign a child back in on another device: their parent's email, their name and
+ * their PIN. A child never has a password, so this is their way in, next to the
+ * class code a student uses at school.
+ */
+export async function childLogin(
+  parentEmail: string,
+  nickname: string,
+  pin: string,
+): Promise<{ child_id: string; nickname: string; access_token: string }> {
+  const { data, error } = await apiClient.POST("/api/children/login", {
+    body: { parent_email: parentEmail, nickname, pin },
+  });
+  if (error || !data) throw new Error("Wrong email, name, or PIN");
+  setAccessToken(data.access_token);
+  return data;
+}
+
+/** Give a child a new PIN when they have forgotten it. Returns it once. */
+export async function resetChildPin(
+  childId: string,
+): Promise<{ child_id: string; login_pin: string }> {
+  const { data, error } = await apiClient.POST("/api/parent/children/{id}/reset-pin", {
+    params: { path: { id: childId } },
+  });
+  if (error || !data) throw new Error("Could not make a new PIN");
+  return data;
 }
 
 /**
@@ -380,6 +411,40 @@ export async function fetchProgressSummary() {
   return data;
 }
 
+/** +5 XP, once per mission, for defining its problem with the 5W1H questions. */
+export async function claimDefineBonus(challengeId: string) {
+  const { data, error } = await apiClient.POST("/api/challenges/{id}/define-bonus", {
+    params: { path: { id: challengeId } },
+  });
+  if (error) throw new Error("Failed to claim the bonus");
+  return data;
+}
+
+/** Popi checks a sketched idea with the AI helper. Null when the helper is off for this
+ *  child (feature flag, consent or the parent's switch) or anything else goes wrong, so the
+ *  page can fall back to a friendly fixed tip. */
+export async function getIdeaFeedback(challengeId: string, idea: string, lang: string, kind?: "substitute") {
+  try {
+    const { data, error } = await apiClient.POST("/api/challenges/{id}/idea-feedback", {
+      params: { path: { id: challengeId } },
+      body: { idea, lang, kind },
+    });
+    if (error || !data) return null;
+    return data;
+  } catch {
+    return null;
+  }
+}
+
+/** +10 XP, once per mission, for solving the problem with a first sketched idea. */
+export async function claimSketchBonus(challengeId: string) {
+  const { data, error } = await apiClient.POST("/api/challenges/{id}/sketch-bonus", {
+    params: { path: { id: challengeId } },
+  });
+  if (error) throw new Error("Failed to claim the bonus");
+  return data;
+}
+
 export async function fetchKidProgress() {
   const { data, error } = await apiClient.GET("/api/me/progress");
   if (error) throw new Error("Failed to load progress");
@@ -394,9 +459,10 @@ export async function fetchMyProjects() {
 
 // ── Challenges ────────────────────────────────────────────────────────────────
 
-export async function fetchChallenge(id: string) {
+/** `lang` is the UI locale; the mission comes back translated when it can be. */
+export async function fetchChallenge(id: string, lang?: string) {
   const { data, error } = await apiClient.GET("/api/challenges/{id}", {
-    params: { path: { id } },
+    params: { path: { id }, query: lang ? { lang } : {} },
   });
   if (error) throw new Error("Failed to load challenge");
   return data;
@@ -423,7 +489,7 @@ export async function advanceStep(attemptId: string, step: number) {
  * Ask the scoped mission helper about the current step. Only the typed
  * question leaves the browser — the server owns the model key, moderation,
  * logging, and all gating. Throws Errors with a `code` of
- * 'rate_limited' | 'not_allowed' | 'unavailable' for UI-specific messages.
+ * 'rate_limited' | 'not_allowed' | 'not_ready' | 'unavailable' for UI-specific messages.
  */
 export async function askMissionHelper(
   challengeId: string,
@@ -442,7 +508,13 @@ export async function askMissionHelper(
     (e as Error & { code: string }).code = "rate_limited";
     throw e;
   }
-  if (response.status === 403 || response.status === 404) {
+  if (response.status === 404) {
+    // The helper is switched off on this server.
+    const e = new Error("not_ready");
+    (e as Error & { code: string }).code = "not_ready";
+    throw e;
+  }
+  if (response.status === 403) {
     const e = new Error("not_allowed");
     (e as Error & { code: string }).code = "not_allowed";
     throw e;
@@ -473,11 +545,49 @@ export async function createProject(body: {
   what_was_hard: string;
   what_id_improve: string;
   challenge_id: string | null;
-  step_type: "sketch" | "build";
+  step_type: "sketch" | "build" | "lab" | "practice" | "model";
 }) {
-  const { data, error } = await apiClient.POST("/api/projects", { body });
+  // The server files a project under what it came from (here, the challenge) and keeps the
+  // kid's own words in its text fields. Every project starts private.
+  if (!body.challenge_id) throw new Error("Failed to create project");
+  const { data, error } = await apiClient.POST("/api/projects", {
+    body: {
+      origin_type: "challenge",
+      origin_id: body.challenge_id,
+      title: body.title,
+      description: body.what_i_made,
+      materials: body.what_i_used,
+      what_was_hard: body.what_was_hard,
+      what_to_improve: body.what_id_improve,
+      step_type: body.step_type,
+    },
+  });
   if (error) throw new Error("Failed to create project");
   return data;
+}
+
+/** Adds a photo to one of the kid's projects. It stays private, like the project:
+ *  adding a photo never shares or publishes anything. */
+export async function uploadProjectPhoto(projectId: string, photo: File, signal?: AbortSignal) {
+  const { data, error } = await apiClient.POST("/api/projects/{id}/photos", {
+    params: { path: { id: projectId } },
+    body: photo,
+    bodySerializer: (b) => b as Blob,
+    headers: { "Content-Type": photo.type || "image/jpeg" },
+    signal,
+  });
+  if (error) throw new Error("Failed to save photo");
+  return data;
+}
+
+/** A kid's own project photo as a Blob (photos are private, so an image link can't reach them). */
+export async function fetchProjectPhoto(projectId: string): Promise<Blob> {
+  const { data, error } = await apiClient.GET("/api/projects/{id}/photo", {
+    params: { path: { id: projectId } },
+    parseAs: "blob",
+  });
+  if (error || !data) throw new Error("Failed to load photo");
+  return data as unknown as Blob;
 }
 
 // ── Ideas Wall ────────────────────────────────────────────────────────────────
@@ -494,6 +604,140 @@ export async function fetchIdeas(
 }
 
 /** Returns the new idea id. Throws with code 'restricted' on 403. */
+/** +5 XP for a mission badge (badge-reward missions), once per kid; returns the XP given now. */
+export async function claimMissionBadge(challengeId: string, key: string): Promise<number> {
+  const { data, error } = await apiClient.POST("/api/challenges/{id}/mission-badge", {
+    params: { path: { id: challengeId } },
+    body: { key },
+  });
+  if (error || !data) throw new Error("Failed to claim the badge");
+  return data.xp_earned;
+}
+
+/** +10 XP for an optional photo kind ("design" or "build"), once per kid. */
+export async function claimPhotoBonus(challengeId: string, key: "design" | "build"): Promise<number> {
+  const { data, error } = await apiClient.POST("/api/challenges/{id}/photo-bonus", {
+    params: { path: { id: challengeId } },
+    body: { key },
+  });
+  if (error || !data) throw new Error("Failed to claim the photo bonus");
+  return data.xp_earned;
+}
+
+/** Everything this kid earned on a badge-reward mission, item by item (from the XP ledger). */
+export async function fetchMissionRewards(challengeId: string) {
+  const { data, error } = await apiClient.GET("/api/challenges/{id}/mission-rewards", {
+    params: { path: { id: challengeId } },
+  });
+  if (error || !data) throw new Error("Failed to load rewards");
+  return data;
+}
+
+/** Give a challenge star once (the server checks the work behind it). Returns all stars now earned. */
+export async function claimStar(
+  challengeId: string,
+  star: 1 | 2 | 3,
+  note?: string,
+): Promise<{ stars: number[]; is_new: boolean }> {
+  const { data, error } = await apiClient.POST("/api/challenges/{id}/star", {
+    params: { path: { id: challengeId } },
+    body: { star, note: note ?? null },
+  });
+  if (error || !data) throw new Error("Failed to give the star");
+  return data;
+}
+
+export type ChallengeProgress = {
+  challenge_id: string;
+  stars: number[];
+  badges: string[];
+  xp: number;
+  improved_idea?: string | null;
+};
+
+export type IdeaReference = { title: string; url: string; source: string; summary: string; image_url: string | null };
+export type SubmittedIdea = {
+  idea_id: string;
+  version: number;
+  status: "pending_review" | "reviewed" | "later_guidance";
+  outcome: "related" | "unrelated" | "not_testable_yet" | null;
+  feedback: string | null;
+  experiment: { materials: string[]; steps: string[] } | null;
+  review_available: boolean;
+};
+
+/** Saves a kid's idea (always a new version) and returns Conspy's review, when one could run. */
+export async function submitHeroIdea(
+  challengeId: string,
+  body: { text: string; hero_index: number; lang: string },
+): Promise<SubmittedIdea> {
+  const { data, error } = await apiClient.POST("/api/challenges/{id}/hero-ideas", {
+    params: { path: { id: challengeId } },
+    body,
+  });
+  if (error || !data) throw new Error("Failed to save the idea");
+  return data as SubmittedIdea;
+}
+
+export type SavedHeroIdea = {
+  id: string;
+  challenge_id: string;
+  challenge_title: string;
+  hero_name: string | null;
+  text: string;
+  version: number;
+  project_id: string | null;
+  created_at: string;
+};
+
+/** Attaches a sketch's project to the kid's saved idea on this challenge. */
+export async function attachSketchToIdea(challengeId: string, projectId: string, name: string): Promise<void> {
+  const { error } = await apiClient.POST("/api/challenges/{id}/hero-ideas/sketch", {
+    params: { path: { id: challengeId } },
+    body: { project_id: projectId, name },
+  });
+  if (error) throw new Error("Failed to attach the sketch");
+}
+
+/** Every idea this kid has saved, newest first, for My Profile. */
+export async function fetchMyHeroIdeas(lang: string): Promise<SavedHeroIdea[]> {
+  const { data, error } = await apiClient.GET("/api/children/me/hero-ideas", {
+    params: { query: { lang } },
+  });
+  if (error || !data) throw new Error("Failed to load ideas");
+  return data;
+}
+
+/** Real-world references for an idea: `available` is false until a search provider is connected. */
+export async function fetchIdeaReferences(ideaId: string): Promise<{ available: boolean; references: IdeaReference[] }> {
+  const { data, error } = await apiClient.GET("/api/hero-ideas/{id}/references", {
+    params: { path: { id: ideaId } },
+  });
+  if (error || !data) throw new Error("Failed to load references");
+  return data;
+}
+
+/** Stars, badges and XP per challenge for this kid: the one shared state for cards and header. */
+export async function fetchChallengeProgress(ids: string[]): Promise<ChallengeProgress[]> {
+  if (ids.length === 0) return [];
+  const { data, error } = await apiClient.GET("/api/children/me/challenge-progress", {
+    params: { query: { ids: ids.join(",") } },
+  });
+  if (error || !data) throw new Error("Failed to load progress");
+  return data;
+}
+
+/** Ask the kid's adult to approve sharing. "sent" only when the email really went out. */
+export async function requestApprovalEmail(): Promise<"sent" | "already_approved" | "no_contact" | "not_sent"> {
+  try {
+    const { data, error } = await apiClient.POST("/api/children/me/approval-email", {});
+    if (error || !data) return "not_sent";
+    return data.status;
+  } catch {
+    return "not_sent";
+  }
+}
+
 export async function submitIdea(
   challengeId: string,
   projectId: string,
@@ -706,8 +950,13 @@ export async function fetchReports() {
   return data;
 }
 
-export async function fetchChallenges() {
-  const { data, error } = await apiClient.GET("/api/challenges");
+/** `lang` is the UI locale; missions come back translated when they can be. */
+export async function fetchChallenges(lang?: string) {
+  // The API pages at 20 by default; ask for its maximum page so every
+  // mission (50 across two seasons) is listed.
+  const { data, error } = await apiClient.GET("/api/challenges", {
+    params: { query: { per_page: 100, ...(lang ? { lang } : {}) } },
+  });
   if (error) throw new Error("Failed to load challenges");
   // The backend paginates ({items, total, …}); e2e route mocks may still
   // fulfil a bare array. Always hand consumers the array.

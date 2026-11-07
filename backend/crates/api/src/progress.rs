@@ -7,7 +7,7 @@
 //!   requesting child before mutating.
 
 use axum::{
-    extract::{Path, State},
+    extract::{Path, Query, State},
     http::StatusCode,
     response::IntoResponse,
     Json,
@@ -18,12 +18,15 @@ use utoipa::ToSchema;
 use uuid::Uuid;
 
 use idea_pop_domain::{
+    challenge_badges, challenge_xp, check_star,
     progress::{
-        award_cycle_bonus, evaluate_new_badges, level_from_xp, medal_from_count, rank_from_level,
-        xp_total, AnalyticsEvent, AnalyticsEventKind, AttemptStatus, ChallengeAttempt,
-        CycleActivityResult, XpEvent, XpSourceType,
+        award_cycle_bonus, award_define_bonus, award_mission_badge, award_photo_bonus,
+        award_sketch_bonus, evaluate_new_badges, level_from_xp, medal_from_count,
+        mission_reward_id, rank_from_level, xp_total, AnalyticsEvent, AnalyticsEventKind,
+        AttemptStatus, ChallengeAttempt, CycleActivityResult, XpEvent, XpSourceType,
+        MISSION_BADGE_KEYS, PHOTO_BONUS_KEYS,
     },
-    DomainError,
+    ChallengeStar, DomainError,
 };
 
 use crate::{error::ApiError, extractor::KidAuth, state::AppState};
@@ -256,6 +259,421 @@ pub async fn post_video_view(
         is_new,
         cycle_bonus_earned,
     }))
+}
+
+// ── POST /challenges/{id}/define-bonus ───────────────────────────────────────
+
+/// +5 XP, once per mission, when the kid has defined the mission's problem with
+/// the 5W1H questions. The answers themselves stay on the kid's device; only the
+/// fact of finishing is recorded.
+#[utoipa::path(
+    post, path = "/challenges/{id}/define-bonus", tag = "progress",
+    params(("id" = Uuid, Path, description = "Challenge UUID")),
+    responses(
+        (status = 200, description = "XP awarded (or 0 if already awarded)", body = XpAwardResponse),
+        (status = 403, description = "Non-kid token rejected", body = crate::ProblemDetail),
+        (status = 404, description = "Challenge not found", body = crate::ProblemDetail),
+    )
+)]
+pub async fn post_define_bonus(
+    KidAuth { child_id, .. }: KidAuth,
+    State(state): State<AppState>,
+    Path(challenge_id): Path<Uuid>,
+) -> Result<Json<XpAwardResponse>, ApiError> {
+    if state.challenge.find_by_id(challenge_id).await?.is_none() {
+        return Err(ApiError::Domain(idea_pop_domain::DomainError::NotFound));
+    }
+    let g = &state.gamification;
+    let now = Utc::now();
+
+    let events = g.xp.list_events(child_id).await?;
+    let award = award_define_bonus(child_id, challenge_id, now, &events);
+    let is_new = award.is_some();
+    let mut xp_earned: i16 = 0;
+    if let Some(event) = award {
+        g.xp.append_event(&event).await?;
+        xp_earned = event.amount;
+    }
+
+    let events = g.xp.list_events(child_id).await?;
+    let total = xp_total(&events);
+    let level = level_from_xp(total);
+    let rank = rank_from_level(level);
+    g.xp.upsert_progress(child_id, total, level, rank.as_str())
+        .await?;
+
+    Ok(Json(XpAwardResponse {
+        xp_earned,
+        xp_total: total,
+        level,
+        rank: rank.as_str().to_owned(),
+        is_new,
+        cycle_bonus_earned: false,
+    }))
+}
+
+// ── POST /challenges/{id}/sketch-bonus ───────────────────────────────────────
+
+/// +10 XP, once per mission, when the kid solves the problem with a first
+/// sketched idea (the "you solved it!" moment after the Sketch step).
+#[utoipa::path(
+    post, path = "/challenges/{id}/sketch-bonus", tag = "progress",
+    params(("id" = Uuid, Path, description = "Challenge UUID")),
+    responses(
+        (status = 200, description = "XP awarded (or 0 if already awarded)", body = XpAwardResponse),
+        (status = 403, description = "Non-kid token rejected", body = crate::ProblemDetail),
+        (status = 404, description = "Challenge not found", body = crate::ProblemDetail),
+    )
+)]
+pub async fn post_sketch_bonus(
+    KidAuth { child_id, .. }: KidAuth,
+    State(state): State<AppState>,
+    Path(challenge_id): Path<Uuid>,
+) -> Result<Json<XpAwardResponse>, ApiError> {
+    if state.challenge.find_by_id(challenge_id).await?.is_none() {
+        return Err(ApiError::Domain(idea_pop_domain::DomainError::NotFound));
+    }
+    let g = &state.gamification;
+    let now = Utc::now();
+
+    let events = g.xp.list_events(child_id).await?;
+    let award = award_sketch_bonus(child_id, challenge_id, now, &events);
+    let is_new = award.is_some();
+    let mut xp_earned: i16 = 0;
+    if let Some(event) = award {
+        g.xp.append_event(&event).await?;
+        xp_earned = event.amount;
+    }
+
+    let events = g.xp.list_events(child_id).await?;
+    let total = xp_total(&events);
+    let level = level_from_xp(total);
+    let rank = rank_from_level(level);
+    g.xp.upsert_progress(child_id, total, level, rank.as_str())
+        .await?;
+
+    Ok(Json(XpAwardResponse {
+        xp_earned,
+        xp_total: total,
+        level,
+        rank: rank.as_str().to_owned(),
+        is_new,
+        cycle_bonus_earned: false,
+    }))
+}
+
+// ── Mission badges and photo bonuses (badge-reward missions) ──────────────────
+
+#[derive(Debug, Deserialize, ToSchema)]
+pub struct MissionRewardRequest {
+    /// The reward's stable id: a badge (define, clue, solved, tool, retry, river) or a
+    /// photo kind (design, build).
+    pub key: String,
+}
+
+#[derive(Debug, Serialize, ToSchema)]
+pub struct MissionRewardItem {
+    pub key: String,
+    /// XP this kid got for it (0 = not earned yet).
+    pub xp: i16,
+    /// XP it is worth.
+    pub available: i16,
+}
+
+#[derive(Debug, Serialize, ToSchema)]
+pub struct MissionRewardsResponse {
+    pub badges: Vec<MissionRewardItem>,
+    pub photos: Vec<MissionRewardItem>,
+    pub xp_earned: i32,
+    pub xp_max: i32,
+}
+
+async fn claim_mission_reward(
+    state: &AppState,
+    child_id: Uuid,
+    challenge_id: Uuid,
+    key: &str,
+    photo: bool,
+) -> Result<XpAwardResponse, ApiError> {
+    let badge_mission = state
+        .challenge
+        .find_by_id(challenge_id)
+        .await?
+        .ok_or(ApiError::Domain(DomainError::NotFound))?
+        .story
+        .is_some_and(|s| s.badge_rewards());
+    if !badge_mission {
+        return Err(ApiError::Domain(DomainError::Validation(
+            "this mission has no badge rewards".into(),
+        )));
+    }
+    let g = &state.gamification;
+    let now = Utc::now();
+    let events = g.xp.list_events(child_id).await?;
+    let award = if photo {
+        award_photo_bonus(child_id, challenge_id, key, now, &events)
+    } else {
+        award_mission_badge(child_id, challenge_id, key, now, &events)
+    };
+    let is_new = award.is_some();
+    let mut xp_earned: i16 = 0;
+    if let Some(event) = award {
+        g.xp.append_event(&event).await?;
+        xp_earned = event.amount;
+    }
+    let events = g.xp.list_events(child_id).await?;
+    let total = xp_total(&events);
+    let level = level_from_xp(total);
+    let rank = rank_from_level(level);
+    g.xp.upsert_progress(child_id, total, level, rank.as_str())
+        .await?;
+    Ok(XpAwardResponse {
+        xp_earned,
+        xp_total: total,
+        level,
+        rank: rank.as_str().to_owned(),
+        is_new,
+        cycle_bonus_earned: false,
+    })
+}
+
+/// +5 XP for a mission badge, once per kid and mission (0 if already given).
+#[utoipa::path(
+    post, path = "/challenges/{id}/mission-badge", tag = "progress",
+    params(("id" = Uuid, Path, description = "Challenge UUID")),
+    request_body = MissionRewardRequest,
+    responses(
+        (status = 200, description = "XP awarded (or 0 if already awarded)", body = XpAwardResponse),
+        (status = 404, description = "Challenge not found", body = crate::ProblemDetail),
+        (status = 422, description = "Not a badge-reward mission", body = crate::ProblemDetail),
+    )
+)]
+pub async fn post_mission_badge(
+    KidAuth { child_id, .. }: KidAuth,
+    State(state): State<AppState>,
+    Path(challenge_id): Path<Uuid>,
+    Json(body): Json<MissionRewardRequest>,
+) -> Result<Json<XpAwardResponse>, ApiError> {
+    Ok(Json(
+        claim_mission_reward(&state, child_id, challenge_id, body.key.trim(), false).await?,
+    ))
+}
+
+/// +10 XP for an optional photo kind (design, build), once per kid and mission.
+#[utoipa::path(
+    post, path = "/challenges/{id}/photo-bonus", tag = "progress",
+    params(("id" = Uuid, Path, description = "Challenge UUID")),
+    request_body = MissionRewardRequest,
+    responses(
+        (status = 200, description = "XP awarded (or 0 if already awarded)", body = XpAwardResponse),
+        (status = 404, description = "Challenge not found", body = crate::ProblemDetail),
+        (status = 422, description = "Not a badge-reward mission", body = crate::ProblemDetail),
+    )
+)]
+pub async fn post_photo_bonus(
+    KidAuth { child_id, .. }: KidAuth,
+    State(state): State<AppState>,
+    Path(challenge_id): Path<Uuid>,
+    Json(body): Json<MissionRewardRequest>,
+) -> Result<Json<XpAwardResponse>, ApiError> {
+    Ok(Json(
+        claim_mission_reward(&state, child_id, challenge_id, body.key.trim(), true).await?,
+    ))
+}
+
+/// What this kid has earned on a badge-reward mission, item by item, from the XP ledger.
+#[utoipa::path(
+    get, path = "/challenges/{id}/mission-rewards", tag = "progress",
+    params(("id" = Uuid, Path, description = "Challenge UUID")),
+    responses((status = 200, description = "The mission's rewards", body = MissionRewardsResponse))
+)]
+pub async fn get_mission_rewards(
+    KidAuth { child_id, .. }: KidAuth,
+    State(state): State<AppState>,
+    Path(challenge_id): Path<Uuid>,
+) -> Result<Json<MissionRewardsResponse>, ApiError> {
+    let events = state.gamification.xp.list_events(child_id).await?;
+    let item = |key: &str, source: XpSourceType, worth: i16| {
+        let id = mission_reward_id(challenge_id, key);
+        let xp = events
+            .iter()
+            .filter(|e| e.source_type == source && e.source_id == id)
+            .map(|e| e.amount)
+            .sum::<i16>();
+        MissionRewardItem {
+            key: key.to_owned(),
+            xp,
+            available: worth,
+        }
+    };
+    let badges: Vec<_> = MISSION_BADGE_KEYS
+        .iter()
+        .map(|k| {
+            item(
+                k,
+                XpSourceType::MissionBadge,
+                idea_pop_domain::XP_MISSION_BADGE,
+            )
+        })
+        .collect();
+    let photos: Vec<_> = PHOTO_BONUS_KEYS
+        .iter()
+        .map(|k| item(k, XpSourceType::PhotoBonus, idea_pop_domain::XP_PHOTO_BONUS))
+        .collect();
+    let all = badges.iter().chain(photos.iter());
+    let (xp_earned, xp_max) = all.fold((0i32, 0i32), |(e, m), i| {
+        (e + i32::from(i.xp), m + i32::from(i.available))
+    });
+    Ok(Json(MissionRewardsResponse {
+        badges,
+        photos,
+        xp_earned,
+        xp_max,
+    }))
+}
+
+// ── Challenge stars (three per challenge) and per-challenge progress ───────────
+
+#[derive(Debug, Deserialize, ToSchema)]
+pub struct StarRequest {
+    /// 1 = first idea submitted, 2 = experiment finished and documented,
+    /// 3 = final stage done and the improved idea submitted.
+    pub star: i16,
+    /// The prototype description (star 2 without a photo) or the improved idea (star 3).
+    pub note: Option<String>,
+}
+
+#[derive(Debug, Serialize, ToSchema)]
+pub struct StarsResponse {
+    /// Every star this kid now has on the challenge, ascending.
+    pub stars: Vec<i16>,
+    /// True when this call gave the star (false = it was already earned).
+    pub is_new: bool,
+}
+
+/// Give a challenge star once, only when its activity is really done.
+#[utoipa::path(
+    post, path = "/challenges/{id}/star", tag = "progress",
+    params(("id" = Uuid, Path, description = "Challenge UUID")),
+    request_body = StarRequest,
+    responses(
+        (status = 200, description = "The kid's stars on this challenge", body = StarsResponse),
+        (status = 404, description = "Challenge not found", body = crate::ProblemDetail),
+        (status = 422, description = "The star's activity is not finished", body = crate::ProblemDetail),
+    )
+)]
+pub async fn post_challenge_star(
+    KidAuth { child_id, .. }: KidAuth,
+    State(state): State<AppState>,
+    Path(challenge_id): Path<Uuid>,
+    Json(body): Json<StarRequest>,
+) -> Result<Json<StarsResponse>, ApiError> {
+    let star_mission = state
+        .challenge
+        .find_by_id(challenge_id)
+        .await?
+        .ok_or(ApiError::Domain(DomainError::NotFound))?
+        .story
+        .is_some_and(|s| s.badge_rewards());
+    if !star_mission {
+        return Err(ApiError::Domain(DomainError::Validation(
+            "this mission has no stars yet".into(),
+        )));
+    }
+    let xp = &state.gamification.xp;
+    let note = body
+        .note
+        .as_deref()
+        .map(str::trim)
+        .filter(|n| !n.is_empty())
+        .map(|n| n.chars().take(2000).collect::<String>());
+    let events = xp.list_events(child_id).await?;
+    let already = xp
+        .list_stars(child_id)
+        .await?
+        .iter()
+        .any(|s| s.challenge_id == challenge_id && s.star == body.star);
+    let is_new = if already {
+        false
+    } else {
+        check_star(body.star, challenge_id, &events, note.as_deref())?;
+        xp.award_star(&ChallengeStar {
+            child_id,
+            challenge_id,
+            star: body.star,
+            note,
+        })
+        .await?
+    };
+    let stars = xp
+        .list_stars(child_id)
+        .await?
+        .into_iter()
+        .filter(|s| s.challenge_id == challenge_id)
+        .map(|s| s.star)
+        .collect();
+    Ok(Json(StarsResponse { stars, is_new }))
+}
+
+#[derive(Debug, Deserialize)]
+pub struct ChallengeProgressQuery {
+    /// Comma-separated challenge ids (the cards on screen).
+    pub ids: String,
+}
+
+#[derive(Debug, Serialize, ToSchema)]
+pub struct ChallengeProgressItem {
+    pub challenge_id: Uuid,
+    /// Stars earned, ascending (at most 3).
+    pub stars: Vec<i16>,
+    /// Badge keys earned on this challenge.
+    pub badges: Vec<String>,
+    /// XP earned on this challenge.
+    pub xp: i32,
+    /// The improved idea submitted for star 3, if any.
+    pub improved_idea: Option<String>,
+}
+
+/// Stars, badges and XP per challenge for this kid: one shared state for cards and header.
+#[utoipa::path(
+    get, path = "/children/me/challenge-progress", tag = "progress",
+    params(("ids" = String, Query, description = "Comma-separated challenge UUIDs")),
+    responses((status = 200, description = "Progress per challenge", body = [ChallengeProgressItem]))
+)]
+pub async fn get_challenge_progress(
+    KidAuth { child_id, .. }: KidAuth,
+    State(state): State<AppState>,
+    Query(q): Query<ChallengeProgressQuery>,
+) -> Result<Json<Vec<ChallengeProgressItem>>, ApiError> {
+    let ids: Vec<Uuid> = q
+        .ids
+        .split(',')
+        .filter_map(|s| Uuid::parse_str(s.trim()).ok())
+        .take(200)
+        .collect();
+    let events = state.gamification.xp.list_events(child_id).await?;
+    let stars = state.gamification.xp.list_stars(child_id).await?;
+    Ok(Json(
+        ids.into_iter()
+            .map(|id| {
+                let mine: Vec<&ChallengeStar> =
+                    stars.iter().filter(|s| s.challenge_id == id).collect();
+                ChallengeProgressItem {
+                    challenge_id: id,
+                    stars: mine.iter().map(|s| s.star).collect(),
+                    badges: challenge_badges(id, &events)
+                        .into_iter()
+                        .map(str::to_owned)
+                        .collect(),
+                    xp: challenge_xp(id, &events),
+                    improved_idea: mine
+                        .iter()
+                        .find(|s| s.star == 3)
+                        .and_then(|s| s.note.clone()),
+                }
+            })
+            .collect(),
+    ))
 }
 
 // ── POST /progress/lesson-complete ───────────────────────────────────────────
@@ -505,7 +923,14 @@ pub async fn advance_step(
             })
             .await?;
 
-        if !already_solved {
+        // Badge-reward missions give no extra completion XP: their badges are the reward.
+        let badge_mission = state
+            .challenge
+            .find_by_id(attempt.challenge_id)
+            .await?
+            .and_then(|c| c.story)
+            .is_some_and(|s| s.badge_rewards());
+        if !already_solved && !badge_mission {
             let event = XpEvent {
                 id: Uuid::new_v4(),
                 child_id,

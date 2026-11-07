@@ -2,11 +2,29 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams } from 'next/navigation';
-import { Link } from '@/i18n/routing';
-import { useTranslations } from 'next-intl';
+import { Link, useRouter } from '@/i18n/routing';
+import { getAccessToken } from '@/lib/api/auth';
+import { useLocale, useTranslations } from 'next-intl';
 import { useAgeMode } from '@/lib/hooks/useAgeMode';
 import { useXpToast } from '@/lib/hooks/useXpToast';
-import { fetchChallenge, startAttempt, advanceStep } from '@/lib/api/client';
+import { fetchChallenge, startAttempt, advanceStep, claimSketchBonus, getIdeaFeedback, createProject } from '@/lib/api/client';
+import LabCelebration from '@/components/challenge/story/LabCelebration';
+import SubstitutePractice from '@/components/challenge/story/SubstitutePractice';
+import SubstCelebration from '@/components/challenge/story/SubstCelebration';
+import RewardPopup from '@/components/challenge/story/RewardPopup';
+import GuideNameMessages from '@/components/challenge/story/GuideNameMessages';
+import { AssetScope } from '@/components/AssetSlot';
+import { assetSetFor } from '@/lib/assets/assetSets';
+import { BADGE_CHARACTER, MISSION_XP_MAX, badgeArt, badgeName, type MissionBadgeKey } from '@/components/challenge/story/missionBadges';
+import { discoveryOf, heroShort } from '@/components/challenge/story/discovery';
+import Inspired from '@/components/characters/Inspired';
+import { uploadPhotoSafely } from '@/lib/photoUpload';
+import { claimMissionBadge, claimPhotoBonus, claimStar, fetchChallengeProgress, fetchMissionRewards } from '@/lib/api/client';
+import { announceChallengeProgress, useChallengeProgress } from '@/lib/hooks/useChallengeProgress';
+import StarNotice from '@/components/challenge/StarNotice';
+import { ThreeStarCelebration } from '@/components/challenge/story/ImprovedIdea';
+import BuildAgain from '@/components/challenge/story/BuildAgain';
+import { useMissionJourney } from '@/components/challenge/story/useMissionJourney';
 import MissionHUD from '@/components/challenge/MissionHUD';
 import StepBrief from '@/components/challenge/StepBrief';
 import StepIdeaFork from '@/components/challenge/StepIdeaFork';
@@ -18,6 +36,18 @@ import StepBuild from '@/components/challenge/StepBuild';
 import StepCelebrate from '@/components/challenge/StepCelebrate';
 import IdeasWallTab from '@/components/challenge/IdeasWallTab';
 import XpBurst from '@/components/explore/XpBurst';
+import DefineCelebration from '@/components/challenge/story/DefineCelebration';
+import StoryBrief from '@/components/challenge/story/StoryBrief';
+import StoryClues from '@/components/challenge/story/StoryClues';
+import StorySecret from '@/components/challenge/story/StorySecret';
+import StoryLab from '@/components/challenge/story/StoryLab';
+import ToolLesson from '@/components/challenge/story/ToolLesson';
+import StoryEnding from '@/components/challenge/story/StoryEnding';
+import { StoryFairTest, StorySketchTop } from '@/components/challenge/story/StorySketchBuild';
+import { Popi } from '@/components/challenge/story/StoryBits';
+import { howQuestion } from '@/components/challenge/story/StoryPictureBook';
+import { useMissionGame } from '@/components/challenge/story/useMissionGame';
+import { forgetNarration } from '@/lib/hooks/useAutoNarration';
 import type { components } from '@/lib/api/schema';
 
 type ChallengeDetail = components['schemas']['ChallengeDetail'];
@@ -27,6 +57,10 @@ type XpAward = components['schemas']['XpAwardResponse'];
 type StepNum = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 type ActiveTab = 'mission' | 'wall';
 
+/** The nine-step template's difficulty bands: 1–4 explore and understand, 5–6 create and
+ *  experiment, 7–9 improve and master. */
+const NINE_STEP_LEVELS = [1, 1, 1, 1, 2, 2, 3, 3, 3];
+
 function isStepNum(n: number): n is StepNum {
   return n >= 1 && n <= 8;
 }
@@ -35,7 +69,18 @@ function wallStorageKey(challengeId: string) {
   return `wallSubmitted_${challengeId}`;
 }
 
+/** Max's challenge names its guide PopAI and uses its own lines: the whole page (popups
+ *  included) reads its words through this wrapper once the mission is known. */
 export default function ChallengePage() {
+  const [badgeMode, setBadgeMode] = useState(false);
+  return (
+    <GuideNameMessages enabled={badgeMode}>
+      <ChallengePageInner onBadgeMode={setBadgeMode} />
+    </GuideNameMessages>
+  );
+}
+
+function ChallengePageInner({ onBadgeMode }: { onBadgeMode: (on: boolean) => void }) {
   const params = useParams<{ id: string }>();
   const t = useTranslations('challenge');
   const ageMode = useAgeMode();
@@ -55,14 +100,86 @@ export default function ChallengePage() {
   const [ideaPath, setIdeaPath] = useState<'yes' | 'no' | null>(null);
   const [sketchProjectId, setSketchProjectId] = useState<string | null>(null);
   const [wallUnlocked, setWallUnlocked] = useState(false);
+  // Story missions split step 5 into the lab and the creativity-tool power-up.
+  const [skillPhase, setSkillPhase] = useState<'lab' | 'tool'>('lab');
+  // The "you solved it!" moment after the sketch (TEMP rule 35).
+  const [solvedCelebration, setSolvedCelebration] = useState<{
+    xp: number | null;
+    again: boolean;
+    popi: { state: 'loading' | 'done' | 'off'; text?: string; fits?: boolean };
+    /** The stars after this idea earned the first one (shown once, when it is new). */
+    stars?: number[];
+  } | null>(null);
+  // Stars, badges and XP on this challenge: the same shared state as the Challenges cards.
+  const progressMap = useChallengeProgress(params.id ? [params.id] : []);
+  const myProgress = progressMap[params.id] ?? null;
+  // A star just earned in the lab popup (star 2), and on the last page (star 3 / all three).
+  const [labStars, setLabStars] = useState<number[] | null>(null);
+  const [lastStar, setLastStar] = useState<number[] | null>(null);
+  const [threeStar, setThreeStar] = useState<{ xp: number | null; badges: string[] } | null>(null);
+  const { game, update: updateGame, award: awardBadge, reset: resetGame, loaded: gameLoaded, resumeLater } = useMissionGame(params.id);
+  // Max's Skills page (SCAMPER) is its own step after the Experiment: has the kid reached it?
+  const [toolReached, setToolReached] = useState(false);
+  // Coming back later: carry on where the kid left off (restored once, then kept up to date).
+  const restoredRef = useRef(false);
+  // The lab is done: the popup, with the XP already earned for this section (null: none to show).
+  const [labCelebration, setLabCelebration] = useState<{ xp: number | null } | null>(null);
+  // This visit's saved records for the lab, so finishing again never makes a copy.
+  const labModelRef = useRef<string | null>(null);
+  const labResultsRef = useRef<{ words: string; id: string | null } | null>(null);
+  const labDocumentedRef = useRef(false);
+  // The newest version's words, for the third star.
+  const versionNoteRef = useRef<string | null>(null);
+  // The Substitute practice is done (Skills): celebrate, then Build and Test or stop for today.
+  const [substCelebration, setSubstCelebration] = useState<false | 'subst' | 'tool'>(false);
+  // Max's badge popups (Quizzy after the puzzle, Nature Hero after Nature Clues) and
+  // the XP each one gave (null while the server answers).
+  const [reward, setReward] = useState<{ key: 'define' | 'clue'; xp: number | null } | null>(null);
+  const [substXp, setSubstXp] = useState<number | null>(null);
+  // This visit's photos of the saved idea and the lab model, shown on the Substitute practice.
+  const [ideaPhotoUrl, setIdeaPhotoUrl] = useState<string | null>(null);
+  const [labPhotoUrl, setLabPhotoUrl] = useState<string | null>(null);
+  const tStory = useTranslations('story');
+  // Bumped on "start over", so every step's own state starts fresh too.
+  const [runKey, setRunKey] = useState(0);
+
+  const locale = useLocale();
+  const router = useRouter();
+  // The kid's saved work on this challenge, read from their account on the later pages.
+  const missionWithBadges = discoveryOf(challenge?.story)?.rewards?.mode === 'badges';
+  const { journey, refresh: refreshJourney } = useMissionJourney(
+    params.id,
+    locale,
+    challenge?.story?.lab.title ?? null,
+    missionWithBadges && currentStep >= 6,
+    `${currentStep}-${skillPhase}`,
+  );
 
   // Load challenge data
+  // Every visit opens the mission fresh, so Popi reads the story again too.
   useEffect(() => {
-    fetchChallenge(params.id)
-      .then((c) => setChallenge(c as ChallengeDetail))
-      .catch(() => setFetchError(true))
-      .finally(() => setLoading(false));
+    forgetNarration(params.id);
   }, [params.id]);
+
+  useEffect(() => {
+    fetchChallenge(params.id, locale)
+      .then((c) => setChallenge(c as ChallengeDetail))
+      .catch(() => {
+        // Signed out (the session ran out and couldn't be renewed): sign in again and come
+        // straight back to this mission, instead of a "could not load" dead end.
+        if (!getAccessToken()) {
+          try {
+            sessionStorage.setItem('ideapop_return_to', `/challenges/${params.id}`);
+          } catch {
+            /* private mode — they land on their dashboard instead */
+          }
+          router.replace('/child-login');
+          return;
+        }
+        setFetchError(true);
+      })
+      .finally(() => setLoading(false));
+  }, [params.id, locale]);
 
   // Restore wall-unlocked state from localStorage
   useEffect(() => {
@@ -86,7 +203,7 @@ export default function ChallengePage() {
   }, [challenge, attempt]);
 
   const goToStep = useCallback(
-    async (step: number) => {
+    async (step: number, phase: 'lab' | 'tool' = 'lab') => {
       if (!isStepNum(step)) return;
 
       // Record real progress (and the step-8 completion + XP) — only when the
@@ -104,34 +221,98 @@ export default function ChallengePage() {
       }
 
       setCurrentStep(step);
+      if (step === 6) setSkillPhase(phase);
+      if (step === 6 && phase === 'tool') setToolReached(true);
       setReachedSteps((prev) => {
         const next = new Set(prev);
         next.add(step);
         return next;
       });
       setActiveTab('mission');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      // Every new page opens at its top: once the new content is on screen, reset both the
+      // window and the scrolling content area (instant, so nothing interrupts it).
+      const toTop = () => {
+        window.scrollTo({ top: 0 });
+        document.querySelector('main')?.scrollTo({ top: 0 });
+      };
+      toTop();
+      requestAnimationFrame(() => requestAnimationFrame(toTop));
+      window.setTimeout(toTop, 120);
     },
     [attempt, show],
   );
 
   const handleIdeaYes = useCallback(() => {
     setIdeaPath('yes');
-    // Mark steps 3/4/5 as optionally reachable via mission menu (no dead ends)
-    setReachedSteps((prev) => {
-      const next = new Set(prev);
-      next.add(3);
-      next.add(4);
-      next.add(5);
-      return next;
-    });
-    goToStep(6);
+    // A kid with an idea goes straight to the sketch; Nature clues stays open in the menu.
+    setReachedSteps((prev) => new Set(prev).add(3));
+    goToStep(4);
   }, [goToStep]);
 
   const handleIdeaNo = useCallback(() => {
     setIdeaPath('no');
     goToStep(3);
   }, [goToStep]);
+
+  // Tell the wrapper whether this is a badge-reward mission (PopAI wording).
+  useEffect(() => {
+    onBadgeMode(discoveryOf(challenge?.story)?.rewards?.mode === 'badges');
+  }, [challenge, onBadgeMode]);
+
+  // Max: when Second Try Hero is earned in the fair test, give its 5 XP (once).
+  const retryEarned = game.badges.includes('retry');
+  const retryClaimed = useRef(false);
+  useEffect(() => {
+    if (!retryEarned || retryClaimed.current || !challenge || discoveryOf(challenge.story)?.rewards?.mode !== 'badges') return;
+    retryClaimed.current = true;
+    void claimMissionBadge(challenge.id, 'retry').catch(() => {});
+  }, [retryEarned, challenge]);
+
+  // Resume: put the kid back where they were last time.
+  useEffect(() => {
+    if (!gameLoaded || !challenge || restoredRef.current) return;
+    restoredRef.current = true;
+    const nav = game.nav;
+    if (!nav) return;
+    if (isStepNum(nav.step)) setCurrentStep(nav.step);
+    setSkillPhase(nav.phase);
+    setReachedSteps(new Set(nav.reached));
+    setToolReached(nav.toolReached);
+    setIdeaPath(nav.ideaPath);
+    setSketchProjectId(nav.sketchProjectId);
+  }, [gameLoaded, challenge, game.nav]);
+
+  // ...and remember where they are as they go.
+  useEffect(() => {
+    if (!restoredRef.current) return;
+    updateGame({
+      nav: {
+        step: currentStep,
+        phase: skillPhase,
+        reached: [...reachedSteps],
+        toolReached,
+        ideaPath,
+        sketchProjectId,
+      },
+    });
+  }, [currentStep, skillPhase, reachedSteps, toolReached, ideaPath, sketchProjectId, updateGame]);
+
+  // "Start over": clear this challenge's answers and go back to step 1. XP and badges stay.
+  const restartMission = useCallback(() => {
+    resetGame();
+    forgetNarration(params.id);
+    setIdeaPath(null);
+    setSketchProjectId(null);
+    setSkillPhase('lab');
+    setToolReached(false);
+    setSolvedCelebration(null);
+    setReachedSteps(new Set([1]));
+    setCurrentStep(1);
+    setActiveTab('mission');
+    setRunKey((k) => k + 1);
+    window.scrollTo({ top: 0 });
+    document.querySelector('main')?.scrollTo({ top: 0 });
+  }, [resetGame, params.id]);
 
   function handleWallSubmitted() {
     setWallUnlocked(true);
@@ -160,30 +341,88 @@ export default function ChallengePage() {
   }
 
   const sharedProps = { challenge, ageMode };
+  // Max's challenge shows 9 steps: the Skill step is split into Experiment (the lab) and
+  // Skills (SCAMPER). Underneath they are still step 6, in two phases.
+  // Every template challenge (and Max's) has the nine steps.
+  const split = !!challenge.story?.substitute || discoveryOf(challenge.story)?.rewards?.mode === 'badges';
+  const stepNames = split
+    ? [1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => t(`plan9_step_${n}`))
+    : undefined;
+  const shownStep = !split || currentStep < 6 ? currentStep : currentStep === 6 ? (skillPhase === 'lab' ? 6 : 7) : currentStep + 1;
+  const shownReached = new Set<number>();
+  reachedSteps.forEach((s) => {
+    if (!split || s < 6) shownReached.add(s);
+    else if (s === 6) shownReached.add(6);
+    else shownReached.add(s + 1);
+  });
+  if (split && toolReached) shownReached.add(7);
+  const jumpTo = (n: number) => {
+    if (!split || n < 6) return goToStep(n);
+    if (n === 6) return goToStep(6, 'lab');
+    if (n === 7) return goToStep(6, 'tool');
+    return goToStep(n - 1);
+  };
+  // Steps this mission leaves out (Max: no Build & test); moving on skips them.
+  const hiddenSteps = challenge.story?.hidden_steps ?? [];
+  const after = (step: number) => {
+    let next = step + 1;
+    while (hiddenSteps.includes(next) && next < 8) next += 1;
+    return next;
+  };
+  // The storytelling + Popi instructor layer; null → the classic mission.
+  const story = challenge.story ?? null;
+  // Max's challenge: 5 XP per badge and 10 per photo kind, its guide is PopAI.
+  const badgeMode = discoveryOf(story)?.rewards?.mode === 'badges';
+  // Give a badge once (the server keeps it once too); resolves the XP given now.
+  const giveBadge = (key: MissionBadgeKey) => {
+    updateGame((g) => ({ badges: g.badges.includes(key) ? g.badges : [...g.badges, key] }));
+    return claimMissionBadge(challenge.id, key).catch(() => 0);
+  };
+  const givePhoto = (key: 'design' | 'build') => claimPhotoBonus(challenge.id, key).catch(() => null);
+  const badgeOf = (key: MissionBadgeKey) => ({ character: BADGE_CHARACTER[key], art: badgeArt(story, key), name: badgeName(story, key, tStory) });
+  const disc = discoveryOf(story);
+  // Give a star once; the server checks the work behind it. Every screen hears about it.
+  const giveStar = (star: 1 | 2 | 3, note?: string) =>
+    claimStar(challenge.id, star, note)
+      .then((r) => {
+        announceChallengeProgress(challenge.id);
+        return r;
+      })
+      .catch(() => null);
+  const stars = myProgress?.stars ?? [];
+  const gameProps = { game, update: updateGame };
 
+  // A picture-book brief fills the frame; every other step keeps the narrow reading column.
+  // The Your idea? choice cards get room to be big, too.
+  const wide =
+    (currentStep === 1 && story && story.opening.length > 0 && story.opening.every((p) => p.image)) || currentStep === 2
+      ? 'max-w-5xl'
+      : 'max-w-2xl';
   return (
+    <AssetScope.Provider value={assetSetFor(challenge.slug)}>
     <div data-testid="challenge-page" className="min-h-screen bg-tint-blue">
       <MissionHUD
-        challenge={challenge}
-        currentStep={currentStep}
-        reachedSteps={reachedSteps}
-        onJumpTo={goToStep}
+        challenge={badgeMode ? { ...challenge, completion_xp: MISSION_XP_MAX } : challenge}
+        currentStep={shownStep}
+        reachedSteps={shownReached}
+        onJumpTo={jumpTo}
+        stepNames={stepNames}
+        stepLevels={split ? NINE_STEP_LEVELS : undefined}
+        stars={badgeMode ? stars : null}
         ideaPath={ideaPath}
+        keyInfo={story ? story.card : null}
+        summary={challenge.brief}
       />
 
       {/* Mission / Ideas Wall tabs */}
-      <div className="max-w-2xl mx-auto px-4 pt-4">
-        <div className="flex gap-0 rounded-card overflow-hidden border border-ink/10 mb-4" role="tablist">
+      <div className={`${wide} mx-auto px-4 pt-4`}>
+        <div className="mx-auto mb-3 flex w-fit gap-1 rounded-pill bg-white p-1 shadow-sm" role="tablist">
           <button
             role="tab"
             aria-selected={activeTab === 'mission'}
             data-testid="tab-mission"
             onClick={() => setActiveTab('mission')}
-            className={`flex-1 py-2.5 font-display text-sm transition-colors ${
-              activeTab === 'mission'
-                ? 'bg-challenge text-white'
-                : 'bg-white text-ink/60 hover:bg-tint-blue'
-            }`}
+            className={`rounded-pill px-4 min-h-9 font-body text-sm font-bold transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-[#0F3F63] focus-visible:ring-offset-1 ${activeTab === 'mission' ? 'bg-[#1A6FA6] text-white shadow-[0_2px_4px_rgba(0,0,0,0.2)]' : 'text-[#3E5566] hover:bg-[#EAF5FC] hover:text-[#1F2A33]'}`}
           >
             {t('tab_mission')}
           </button>
@@ -192,11 +431,7 @@ export default function ChallengePage() {
             aria-selected={activeTab === 'wall'}
             data-testid="tab-wall"
             onClick={() => setActiveTab('wall')}
-            className={`flex-1 py-2.5 font-display text-sm transition-colors ${
-              activeTab === 'wall'
-                ? 'bg-challenge text-white'
-                : 'bg-white text-ink/60 hover:bg-tint-blue'
-            }`}
+            className={`rounded-pill px-4 min-h-9 font-body text-sm font-bold transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-[#0F3F63] focus-visible:ring-offset-1 ${activeTab === 'wall' ? 'bg-[#1A6FA6] text-white shadow-[0_2px_4px_rgba(0,0,0,0.2)]' : 'text-[#3E5566] hover:bg-[#EAF5FC] hover:text-[#1F2A33]'}`}
           >
             {t('tab_wall')}
           </button>
@@ -205,9 +440,28 @@ export default function ChallengePage() {
 
       {/* Mission tab content */}
       {activeTab === 'mission' && (
-        <div className="max-w-2xl mx-auto px-4 pb-24">
-          {currentStep === 1 && (
-            <StepBrief {...sharedProps} onNext={() => goToStep(2)} />
+        <div key={runKey} className={`${wide} mx-auto px-4 pb-24`}>
+          {currentStep === 1 &&
+            (story ? (
+              <StoryBrief
+                challenge={challenge}
+                story={story}
+                {...gameProps}
+                customReward={badgeMode}
+                onNext={() => {
+                  if (!badgeMode) return goToStep(2);
+                  setReward({ key: 'define', xp: null });
+                  void giveBadge('define').then((xp) => setReward((r) => (r && r.key === 'define' ? { ...r, xp } : r)));
+                }}
+              />
+            ) : (
+              <StepBrief {...sharedProps} onNext={() => goToStep(2)} />
+            ))}
+
+          {currentStep === 2 && story && (
+            <div className="flex flex-col gap-4 pt-4">
+              <Popi text={howQuestion(story) ?? story.guide.your_idea} />
+            </div>
           )}
 
           {currentStep === 2 && (
@@ -219,46 +473,302 @@ export default function ChallengePage() {
             />
           )}
 
-          {currentStep === 3 && (
-            <StepNatureClues
-              {...sharedProps}
-              onNext={() => goToStep(4)}
-              onBack={() => goToStep(2)}
-            />
-          )}
+          {currentStep === 3 &&
+            (story ? (
+              <StoryClues
+                story={story}
+                {...gameProps}
+                award={awardBadge}
+                deferClueBadge={badgeMode}
+                onNext={() => {
+                  if (!badgeMode) return goToStep(4);
+                  setReward({ key: 'clue', xp: null });
+                  void giveBadge('clue').then((xp) => setReward((r) => (r && r.key === 'clue' ? { ...r, xp } : r)));
+                }}
+                onBack={() => goToStep(2)}
+                workKey={challenge.id}
+              />
+            ) : (
+              <StepNatureClues
+                {...sharedProps}
+                onNext={() => goToStep(4)}
+                onBack={() => goToStep(2)}
+              />
+            ))}
+
+          {currentStep === 4 && story && <StorySketchTop story={story} {...gameProps} />}
 
           {currentStep === 4 && (
-            <StepDesignSecret
-              {...sharedProps}
-              onNext={() => goToStep(5)}
-              onBack={() => goToStep(3)}
-            />
-          )}
-
-          {currentStep === 5 && (
-            <StepSkill
-              {...sharedProps}
-              onNext={() => goToStep(6)}
-              onBack={() => goToStep(4)}
-            />
-          )}
-
-          {currentStep === 6 && (
             <StepSketch
               {...sharedProps}
-              onNext={(projectId) => {
+              hideTools={story !== null}
+              guide={
+                story
+                  ? {
+                      nameLabel: disc?.idea_name_prompt ?? tStory('name_idea_fallback'),
+                      submitLabel: tStory('submit_idea'),
+                      description: game.partnerAnswers?.inspired ?? '',
+                      videoUrl: disc?.sketch_video ?? null,
+                    }
+                  : null
+              }
+              onNext={(projectId, idea, saved) => {
                 if (projectId) setSketchProjectId(projectId);
-                goToStep(7);
+                // The saved idea goes on to the Substitute practice (and is kept for next time).
+                if (saved) {
+                  updateGame({ savedIdea: { title: saved.title, description: saved.description, projectId } });
+                  setIdeaPhotoUrl(saved.photo ? URL.createObjectURL(saved.photo) : null);
+                }
+                // The kid has solved the problem with a first idea: celebrate, then
+                // invite them on to find more ideas (design secret, skill, build).
+                setSolvedCelebration({ xp: null, again: game.badges.includes('solved'), popi: { state: idea || game.partnerAnswers?.inspired ? 'loading' : 'off' } });
+                if (badgeMode) {
+                  void Promise.all([giveBadge('solved'), saved?.photo ? givePhoto('design') : Promise.resolve(0)]).then(
+                    ([b, p]) => {
+                      setSolvedCelebration((c) => (c ? { ...c, xp: b + (p ?? 0) } : c));
+                      // The first idea is in: the first star (after the badge, which it needs).
+                      void giveStar(1).then((r) => {
+                        if (r?.is_new) setSolvedCelebration((c) => (c ? { ...c, stars: r.stars } : c));
+                      });
+                    },
+                  );
+                } else {
+                  claimSketchBonus(challenge.id)
+                    .then((r) => setSolvedCelebration((c) => (c ? { ...c, xp: r?.xp_earned ?? 0 } : c)))
+                    .catch(() => {});
+                }
+                // Popi reads the idea (AI helper). The XP never waits for this.
+                // Popi reads the whole plan: the idea, how nature inspired it, the map labels.
+                const plan = [
+                  idea,
+                  game.partnerAnswers?.inspired,
+                  ...(game.mapLabels ?? []),
+                  game.materials?.length ? game.materials.join(', ') : '',
+                ]
+                  .map((x) => x?.trim())
+                  .filter(Boolean)
+                  .join('. ');
+                if (plan) {
+                  void getIdeaFeedback(challenge.id, plan, locale).then((f) =>
+                    setSolvedCelebration((c) =>
+                      c
+                        ? {
+                            ...c,
+                            popi: f && !f.blocked ? { state: 'done', text: f.message, fits: f.fits } : { state: 'off' },
+                          }
+                        : c,
+                    ),
+                  );
+                }
               }}
-              onBack={() => goToStep(ideaPath === 'yes' ? 2 : 5)}
+              onBack={() => goToStep(ideaPath === 'yes' ? 2 : 3)}
             />
           )}
 
-          {currentStep === 7 && (
+          {currentStep === 5 &&
+            (story ? (
+              <StorySecret
+                challenge={challenge}
+                story={story}
+                {...gameProps}
+                onNext={() => goToStep(6)}
+                onBack={() => goToStep(4)}
+              />
+            ) : (
+              <StepDesignSecret
+                {...sharedProps}
+                onNext={() => goToStep(6)}
+                onBack={() => goToStep(4)}
+              />
+            ))}
+
+          {currentStep === 6 &&
+            (story ? (
+              skillPhase === 'lab' ? (
+                <StoryLab
+                  challenge={challenge}
+                  story={story}
+                  {...gameProps}
+                  experiment={split}
+                  onPhoto={async (photo) => {
+                    setLabPhotoUrl(URL.createObjectURL(photo));
+                    let id = labModelRef.current;
+                    if (!id) {
+                      try {
+                        const p = await createProject({
+                          title: tStory('lab_model_title'),
+                          what_i_made: '',
+                          what_i_used: '',
+                          what_was_hard: '',
+                          what_id_improve: '',
+                          challenge_id: challenge.id,
+                          step_type: 'model',
+                        });
+                        id = p.id;
+                        labModelRef.current = id;
+                      } catch {
+                        return false;
+                      }
+                    }
+                    if (!(await uploadPhotoSafely(id, photo))) return false;
+                    labDocumentedRef.current = true;
+                    if (badgeMode) await givePhoto('build');
+                    return true;
+                  }}
+                  onDescribe={
+                    badgeMode
+                      ? async (text) => {
+                          // No photo: the kid's own description documents the model instead (kept with the star).
+                          const r = await giveStar(2, text);
+                          if (r?.is_new) setLabStars(r.stars);
+                          return !!r && r.stars.includes(2);
+                        }
+                      : undefined
+                  }
+                  onNext={() => {
+                    if (split) void goToStep(6, 'tool');
+                    else setSkillPhase('tool');
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                  onFinished={() => {
+                    // Save the prediction and results to the kid's account, then celebrate.
+                    const lab = story.lab;
+                    const values = lab.options.map((_, i) => Number(game.lab[i] ?? 0));
+                    const bestAt = values.indexOf(lab.higher_is_better ? Math.max(...values) : Math.min(...values));
+                    const prediction = game.labPick !== null ? lab.options[game.labPick] : '';
+                    const results = lab.options.map((o, i) => `${o}: ${values[i]}`).join(', ');
+                    const words = `${tStory('my_prediction')} ${prediction}\n${tStory('my_results')}: ${results} (${lab.measure})`;
+                    setLabCelebration({ xp: null });
+                    const last = labResultsRef.current;
+                    const saveResults =
+                      last && last.words === words
+                        ? Promise.resolve(last.id)
+                        : createProject({
+                            title: lab.title,
+                            what_i_made: words,
+                            what_i_used: '',
+                            what_was_hard: '',
+                            what_id_improve: '',
+                            challenge_id: challenge.id,
+                            step_type: 'lab',
+                          })
+                            .then((p) => {
+                              labResultsRef.current = { words, id: p.id };
+                              return p.id;
+                            })
+                            .catch(() => null);
+                    void saveResults.then((projectId) => {
+                      updateGame({
+                        savedLab: { prediction, results, best: lab.options[bestAt], bestValue: values[bestAt], measure: lab.measure, projectId },
+                      });
+                    });
+                    if (badgeMode) {
+                      // Experiment finished and the model documented: the second star.
+                      if (labDocumentedRef.current) {
+                        void giveStar(2).then((r) => {
+                          if (r?.is_new) setLabStars(r.stars);
+                        });
+                      }
+                      // Shows what the photo already earned; reading it gives nothing.
+                      void fetchMissionRewards(challenge.id)
+                        .then((rewards) => {
+                          const earned = rewards.photos.find((p) => p.key === 'build')?.xp ?? 0;
+                          setLabCelebration((c) => (c ? { xp: earned > 0 ? earned : null } : c));
+                        })
+                        .catch(() => {});
+                    }
+                  }}
+                  onBack={() => goToStep(5)}
+                />
+              ) : story.substitute ? (
+                <SubstitutePractice
+                  challengeId={challenge.id}
+                  story={story}
+                  {...gameProps}
+                  award={awardBadge}
+                  journey={journey}
+                  ideaPhotoUrl={ideaPhotoUrl}
+                  labPhotoUrl={labPhotoUrl}
+                  onDone={() => {
+                    setSubstXp(null);
+                    setSubstCelebration('subst');
+                    void giveBadge('tool').then((xp) => setSubstXp(xp));
+                  }}
+                  onBack={() => setSkillPhase('lab')}
+                />
+              ) : (
+                <ToolLesson
+                  story={story}
+                  {...gameProps}
+                  award={awardBadge}
+                  deferBadge={badgeMode}
+                  onNext={() => {
+                    if (!badgeMode) return goToStep(after(6));
+                    // The template: the tool's badge in the shared reward popup, then Build and Test.
+                    setSubstXp(null);
+                    setSubstCelebration('tool');
+                    void giveBadge('tool').then((xp) => setSubstXp(xp));
+                  }}
+                  onBack={() => setSkillPhase('lab')}
+                />
+              )
+            ) : (
+              <StepSkill
+                {...sharedProps}
+                onNext={() => goToStep(after(6))}
+                onBack={() => goToStep(5)}
+              />
+            ))}
+
+          {currentStep === 7 && !hiddenSteps.includes(7) && story && badgeMode && (
+            <BuildAgain
+              challenge={challenge}
+              story={story}
+              partner={game.partner}
+              journey={journey}
+              improvedNote={myProgress?.improved_idea ?? null}
+              blobUrls={{ model: labPhotoUrl, sketch: ideaPhotoUrl }}
+              onVersionSaved={(note, withPhoto) => {
+                versionNoteRef.current = note;
+                // Building and testing again is what Second Try Hero is for.
+                awardBadge('retry');
+                if (withPhoto) void givePhoto('build');
+                refreshJourney();
+              }}
+              onContinue={async () => {
+                // The final badge, given before the last page shows the totals; the third star
+                // needs it, and a new version.
+                await giveBadge('river');
+                const last = journey.versions[journey.versions.length - 1];
+                const note = versionNoteRef.current ?? (last ? `${last.title}: ${last.text}` : null);
+                if (note) {
+                  const r = await giveStar(3, note);
+                  if (r?.is_new) {
+                    if ([1, 2, 3].every((n) => r.stars.includes(n))) {
+                      // Every requirement met: the three-star celebration, with this challenge's XP and
+                      // badges (the same numbers as the challenge card).
+                      const [now] = await fetchChallengeProgress([challenge.id]).catch(() => []);
+                      setThreeStar({ xp: now?.xp ?? myProgress?.xp ?? null, badges: now?.badges ?? myProgress?.badges ?? [] });
+                    } else {
+                      setLastStar(r.stars);
+                    }
+                  }
+                }
+                await goToStep(8);
+              }}
+              onBack={() => goToStep(6, 'tool')}
+            />
+          )}
+
+          {currentStep === 7 && !hiddenSteps.includes(7) && story && !badgeMode && <StoryFairTest story={story} {...gameProps} />}
+
+          {currentStep === 7 && !hiddenSteps.includes(7) && !(story && badgeMode) && (
             <StepBuild
               {...sharedProps}
+              intro={badgeMode ? disc?.checklist_intro ?? null : null}
+              hideTestQuestion={story !== null}
               sketchProjectId={sketchProjectId}
-              onNext={() => {
+              onNext={async () => {
                 show({
                   xp_earned: challenge.completion_xp,
                   xp_total: 0,
@@ -273,16 +783,36 @@ export default function ChallengePage() {
             />
           )}
 
+          {currentStep === 8 && story && (
+            <StoryEnding
+              story={story}
+              {...gameProps}
+              hiddenSteps={hiddenSteps}
+              badgeMode={badgeMode}
+              journey={journey}
+              improvedNote={myProgress?.improved_idea ?? null}
+            />
+          )}
+
+          {currentStep === 8 && badgeMode && lastStar && (
+            <div className="mt-4">
+              <StarNotice star={3} stars={lastStar} />
+            </div>
+          )}
+
           {currentStep === 8 && (
             <StepCelebrate
               {...sharedProps}
               completionXp={challenge.completion_xp}
+              // Bonuses earned along the way count toward the total too: defining the problem (+5)
+              defineXp={game.badges.includes('define') ? 5 : 0}
+              // The "you solved it!" bonus after the sketch (+10).
+              sketchXp={game.badges.includes('solved') ? 10 : 0}
               sketchProjectId={sketchProjectId}
               wallAlreadySubmitted={wallUnlocked}
               onWallSubmitted={handleWallSubmitted}
-              onRestart={() => {
-                window.location.href = '/challenges';
-              }}
+              onRestart={restartMission}
+              badgeMode={badgeMode}
             />
           )}
         </div>
@@ -303,13 +833,152 @@ export default function ChallengePage() {
         </div>
       )}
 
+      {solvedCelebration && badgeMode && (
+        <RewardPopup
+          testId="define-celebration"
+          badge={badgeOf('solved')}
+          lead={tStory('solved_lead', { hero: heroShort(story) })}
+          title={tStory('solved_heading')}
+          text={tStory('solved_support')}
+          onClose={() => setSolvedCelebration(null)}
+          xp={solvedCelebration.xp}
+          primary={{
+            label: tStory('solved_go'),
+            onClick: () => {
+              setSolvedCelebration(null);
+              goToStep(5);
+            },
+          }}
+          secondary={{
+            label: tStory('enough_today'),
+            onClick: () => {
+              setSolvedCelebration(null);
+              resumeLater();
+              router.push('/challenges');
+            },
+          }}
+        >
+          <p data-testid="solved-saved" className="mb-3 rounded-xl bg-[#F3FBF5] px-3 py-2 font-body text-base font-bold text-[#1E7A44]">
+            ✓ {tStory('solved_saved_line')}
+          </p>
+          {solvedCelebration.stars && (
+            <div className="mb-3">
+              <StarNotice star={1} stars={solvedCelebration.stars} />
+            </div>
+          )}
+          {solvedCelebration.popi && (
+            <div data-testid="popi-idea-check" aria-live="polite" className="flex items-start gap-3 rounded-[18px] bg-[#EAF5FC] p-3 text-start">
+              {/* eslint-disable-next-line @next/next/no-img-element -- the guide's small cut-out */}
+              <img src="/popi/popi.png" alt="" aria-hidden="true" className="h-14 w-auto shrink-0" />
+              <div className="min-w-0">
+                <p className="font-body text-sm font-bold text-challenge">{tStory('popi_says')}</p>
+                <p className="font-body text-base font-semibold leading-snug text-ink">
+                  {solvedCelebration.popi.state === 'loading'
+                    ? tStory('popi_reading')
+                    : solvedCelebration.popi.state === 'done'
+                      ? solvedCelebration.popi.text
+                      : <Inspired text={tStory('popi_offline')} />}
+                </p>
+              </div>
+            </div>
+          )}
+        </RewardPopup>
+      )}
+
+      {reward && (
+        <RewardPopup
+          testId={reward.key === 'define' ? 'quizzy-reward' : 'nature-reward'}
+          badge={badgeOf(reward.key)}
+          title={tStory(reward.key === 'define' ? 'quizzy_reward_title' : 'nature_reward_title')}
+          text={tStory(reward.key === 'define' ? 'quizzy_reward_text' : 'nature_reward_text')}
+          xp={reward.xp}
+          onClose={() => setReward(null)}
+          primary={{
+            label: tStory('reward_continue'),
+            onClick: () => {
+              const next = reward.key === 'define' ? 2 : 4;
+              setReward(null);
+              void goToStep(next);
+            },
+          }}
+        />
+      )}
+
+      {solvedCelebration && !badgeMode && (
+        <DefineCelebration
+          variant="solved"
+          xp={solvedCelebration.xp}
+          popi={solvedCelebration.popi}
+          again={solvedCelebration.again}
+          onDismiss={() => setSolvedCelebration(null)}
+          // Back to the sketch to make the idea better (the XP is already theirs).
+          onImprove={() => setSolvedCelebration(null)}
+          // "That's Enough for Today": the idea is already saved; back to the Challenges page.
+          onEnough={() => {
+            setSolvedCelebration(null);
+            if (story) updateGame((g) => ({ badges: g.badges.includes('solved') ? g.badges : [...g.badges, 'solved'] }));
+            resumeLater();
+            router.push('/challenges');
+          }}
+          onClose={() => {
+            setSolvedCelebration(null);
+            if (story) updateGame((g) => ({ badges: g.badges.includes('solved') ? g.badges : [...g.badges, 'solved'] }));
+            goToStep(5);
+          }}
+        />
+      )}
+
+      {substCelebration && (
+        <SubstCelebration
+          badge={badgeOf('tool')}
+          xp={substXp}
+          toolName={substCelebration === 'tool' ? story?.tool.name ?? null : null}
+          onKeepExploring={() => {
+            setSubstCelebration(false);
+            void goToStep(after(6));
+          }}
+          onClose={() => setSubstCelebration(false)}
+          onEnough={() => {
+            setSubstCelebration(false);
+            resumeLater();
+            router.push('/challenges');
+          }}
+        />
+      )}
+
+      {labCelebration && (
+        <LabCelebration
+          hero={heroShort(story)}
+          xp={labCelebration.xp}
+          star={labStars ? <StarNotice star={2} stars={labStars} /> : null}
+          onKeepExploring={() => {
+            setLabCelebration(null);
+            setLabStars(null);
+            void goToStep(6, 'tool');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            document.querySelector('main')?.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
+          onEnough={() => {
+            setLabCelebration(null);
+            resumeLater();
+            router.push('/challenges');
+          }}
+          onClose={() => setLabCelebration(null)}
+        />
+      )}
+
+      {threeStar && (
+        <ThreeStarCelebration xp={threeStar.xp} badges={threeStar.badges} story={story} onClose={() => setThreeStar(null)} />
+      )}
+
       {visible && award && (
         <XpBurst
           award={award}
-          stickerEmoji="⭐"
+          stickerEmoji={story?.sticker.emoji ?? '⭐'}
           onDismiss={dismiss}
         />
       )}
     </div>
+    </AssetScope.Provider>
   );
 }

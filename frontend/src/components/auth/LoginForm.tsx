@@ -81,9 +81,10 @@ export default function LoginForm({ onDone }: { onDone?: () => void } = {}) {
         />
 
         <div className="-mt-2 text-right">
+          {/* The words are 19px tall; a finger needs 44, so the link carries a box that size around them. */}
           <Link
             href="/forgot-password"
-            className="font-body text-sm font-semibold text-explore underline-offset-2 hover:underline"
+            className="inline-flex min-h-[44px] items-center rounded-md px-1 font-body text-sm font-semibold text-explore underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-explore"
           >
             {t("forgot_password")}
           </Link>
@@ -98,23 +99,26 @@ export default function LoginForm({ onDone }: { onDone?: () => void } = {}) {
         {t("no_account")}{" "}
         <Link
           href="/sign-up"
-          className="font-semibold text-explore underline-offset-2 hover:underline"
+          className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-md px-2 align-middle font-semibold text-explore underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-explore"
         >
           {t("sign_up")}
         </Link>
       </p>
 
-      {/* The other way in, for a student with a code from their teacher: a way of its own rather than a line of
-          small print under the one for grown-ups. */}
-      <div className="mt-7 border-t border-ink/10 pt-6">
-        <p className="text-center font-body text-sm text-ink/70">{t("class_code_hint")}</p>
-        <Link
-          href="/class-login"
-          data-testid="class-code-link"
-          className={`${btnGlass} mt-3 w-full`}
-        >
-          {t("class_code_button")}
-        </Link>
+      {/* The other two ways in, both for children, each a way of its own rather than a line of small print under the
+          one for grown-ups: a code from their teacher at school, or the number they chose when they signed up at
+          home. A child has no password, so without these the form above would have nothing to offer them. */}
+      <div className="mt-7 space-y-5 border-t border-ink/10 pt-6">
+        <div>
+          <p className="text-center font-body text-lg font-bold text-ink">{t("class_code_hint")}</p>
+          <Link
+            href="/class-login"
+            data-testid="class-code-link"
+            className={`${btnGlass} mt-3 w-full`}
+          >
+            {t("class_code_button")}
+          </Link>
+        </div>
       </div>
     </div>
   );

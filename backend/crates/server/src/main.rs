@@ -44,38 +44,52 @@ async fn main() -> anyhow::Result<()> {
     let from_email = std::env::var("FROM_EMAIL").unwrap_or_else(|_| "noreply@idea-pop.app".into());
     let app_url = std::env::var("APP_URL").unwrap_or_else(|_| "http://localhost:3000".into());
 
-    let email_sender: Arc<dyn idea_pop_domain::EmailSender> =
-        if let Ok(smtp_host) = std::env::var("SMTP_HOST") {
-            let smtp_port: u16 = std::env::var("SMTP_PORT")
-                .ok()
-                .and_then(|v| v.parse().ok())
-                .unwrap_or(1025);
-            let smtp_user = std::env::var("SMTP_USER").ok();
-            let smtp_pass = std::env::var("SMTP_PASS").ok();
-            let sender = LettreEmailSender::new(
-                &smtp_host,
-                smtp_port,
-                smtp_user,
-                smtp_pass,
-                from_email.clone(),
-                app_url.clone(),
-            )
-            .expect("failed to build SMTP transport");
-            Arc::new(sender)
-        } else {
-            tracing::warn!("SMTP_HOST not set; using null email sender (no emails will be sent)");
-            Arc::new(NullEmailSender)
-        };
+    let email_sender: Arc<dyn idea_pop_domain::EmailSender> = if let Some(smtp_host) =
+        std::env::var("SMTP_HOST")
+            .ok()
+            .filter(|h| !h.trim().is_empty())
+    {
+        let smtp_port: u16 = std::env::var("SMTP_PORT")
+            .ok()
+            .and_then(|v| v.parse().ok())
+            .unwrap_or(1025);
+        let smtp_user = std::env::var("SMTP_USER").ok();
+        let smtp_pass = std::env::var("SMTP_PASS").ok();
+        let sender = LettreEmailSender::new(
+            &smtp_host,
+            smtp_port,
+            smtp_user,
+            smtp_pass,
+            from_email.clone(),
+            app_url.clone(),
+        )
+        .expect("failed to build SMTP transport");
+        Arc::new(sender)
+    } else {
+        tracing::warn!("SMTP_HOST not set; using null email sender (no emails will be sent)");
+        Arc::new(NullEmailSender)
+    };
 
     let consent_email_sender: Arc<dyn idea_pop_domain::ConsentEmailSender> =
-        if let Ok(smtp_host) = std::env::var("SMTP_HOST") {
+        if let Some(smtp_host) = std::env::var("SMTP_HOST")
+            .ok()
+            .filter(|h| !h.trim().is_empty())
+        {
             let smtp_port: u16 = std::env::var("SMTP_PORT")
                 .ok()
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(1025);
+            let login = match (
+                std::env::var("SMTP_USER").ok(),
+                std::env::var("SMTP_PASS").ok(),
+            ) {
+                (Some(u), Some(p)) if !u.trim().is_empty() && !p.is_empty() => Some((u, p)),
+                _ => None,
+            };
             Arc::new(SmtpConsentEmailSender::new(
                 &smtp_host,
                 smtp_port,
+                login,
                 from_email,
                 app_url.clone(),
             ))

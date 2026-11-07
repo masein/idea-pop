@@ -11,9 +11,11 @@ type KidProjectSummary = import('@/lib/api/schema').components['schemas']['KidPr
 interface KidProjectsGridProps {
   projects: KidProjectSummary[];
   onVisibilityChanged?: (projectId: string, visibility: 'private' | 'class' | 'public') => void;
+  /** Just the cards, inside another section (an idea's sketch). */
+  bare?: boolean;
 }
 
-export default function KidProjectsGrid({ projects, onVisibilityChanged }: KidProjectsGridProps) {
+export default function KidProjectsGrid({ projects, onVisibilityChanged, bare = false }: KidProjectsGridProps) {
   const t = useTranslations('profile');
   // Defensive: never crash if a non-array slips through (API shape drift).
   const list = Array.isArray(projects) ? projects : [];
@@ -65,7 +67,7 @@ export default function KidProjectsGrid({ projects, onVisibilityChanged }: KidPr
 
       {/* Grid */}
       <div data-testid="projects-grid" className="flex flex-col gap-4">
-        <h2 className="font-display text-lg font-bold text-ink">{t('projects_heading')}</h2>
+        {!bare && <h2 className="font-display text-lg font-bold text-ink">{t('projects_heading')}</h2>}
 
         {list.length === 0 ? (
           <Link

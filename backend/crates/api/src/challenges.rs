@@ -82,6 +82,8 @@ pub struct ChallengeResponse {
     /// The Sketch step's own prompt/guidance (frontend `sketch_prompt` etc.).
     pub sketch_prompt: String,
     pub sketch_guidance: String,
+    /// The Build & test step's instructions (what to build it from): the card's materials.
+    pub build_instructions: String,
     /// The Design-secret step's reveal hint (teaser shown to older kids).
     pub design_secret_story: Option<String>,
     /// The Nature-clues step's clues, flattened for the player.
@@ -101,6 +103,10 @@ pub struct ChallengeResponse {
     /// True when `is_premium` and the caller's family has no active subscription.
     /// The kid UI shows an "ask a grown-up to upgrade" card for locked missions.
     pub locked: bool,
+    /// The mission's story layer (Story Spine chapters, Popi's lines, the
+    /// per-step games, the sticker). Null for missions without a story.
+    #[schema(value_type = Option<Object>)]
+    pub story: Option<serde_json::Value>,
     pub created_at: DateTime<Utc>,
 }
 
@@ -119,10 +125,19 @@ pub struct ChallengeQuery {
     pub season: Option<i16>,
     pub week: Option<i16>,
     pub age_mode: Option<String>,
+    /// UI language ("en", "fa"). Kid-facing text comes back in it when a
+    /// translation exists; otherwise the authored English is returned.
+    pub lang: Option<String>,
     #[serde(default = "default_page")]
     pub page: i64,
     #[serde(default = "default_per_page")]
     pub per_page: i64,
+}
+
+#[derive(Debug, Deserialize, IntoParams)]
+pub struct LangQuery {
+    /// UI language ("en", "fa"). Falls back to English when untranslated.
+    pub lang: Option<String>,
 }
 
 fn default_page() -> i64 {
@@ -135,17 +150,25 @@ fn default_per_page() -> i64 {
 // ── Mappers ───────────────────────────────────────────────────────────────────
 
 /// Habitat → (emoji, kid-facing label) for the flattened clue cards.
-fn habitat_display(habitat: &str) -> (&'static str, &'static str) {
-    match habitat {
-        "jungle" => ("🌿", "From the jungle"),
-        "ocean" => ("🌊", "From the ocean"),
-        "desert" => ("🏜️", "From the desert"),
-        "sky" => ("☁️", "From the sky"),
-        _ => ("✨", "From nature"),
+fn habitat_display(habitat: &str, persian: bool) -> (&'static str, &'static str) {
+    match (habitat, persian) {
+        ("jungle", false) => ("🌿", "From the jungle"),
+        ("jungle", true) => ("🌿", "از جنگل"),
+        ("ocean", false) => ("🌊", "From the ocean"),
+        ("ocean", true) => ("🌊", "از اقیانوس"),
+        ("desert", false) => ("🏜️", "From the desert"),
+        ("desert", true) => ("🏜️", "از بیابان"),
+        ("sky", false) => ("☁️", "From the sky"),
+        ("sky", true) => ("☁️", "از آسمان"),
+        (_, false) => ("✨", "From nature"),
+        (_, true) => ("✨", "از طبیعت"),
     }
 }
 
-fn challenge_to_dto(c: Challenge, has_premium: bool) -> ChallengeResponse {
+fn challenge_to_dto(c: Challenge, has_premium: bool, lang: Option<&str>) -> ChallengeResponse {
+    let lang = lang.unwrap_or("en");
+    let persian = lang.starts_with("fa");
+    let c = c.localized(lang);
     let steps: Vec<serde_json::Value> = c
         .steps
         .iter()
@@ -156,6 +179,7 @@ fn challenge_to_dto(c: Challenge, has_premium: bool) -> ChallengeResponse {
     use idea_pop_domain::challenge::ChallengeStep;
     let mut skill_hints = Vec::new();
     let mut build_hints = Vec::new();
+    let mut build_instructions = String::new();
     let mut brief = String::new();
     let mut design_secret = String::new();
     let mut design_secret_story = None;
@@ -178,7 +202,8 @@ fn challenge_to_dto(c: Challenge, has_premium: bool) -> ChallengeResponse {
                 nature_clues = clues
                     .iter()
                     .map(|clue| {
-                        let (emoji, title) = habitat_display(clue.habitat.as_deref().unwrap_or(""));
+                        let (emoji, title) =
+                            habitat_display(clue.habitat.as_deref().unwrap_or(""), persian);
                         NatureClueResponse {
                             emoji: emoji.to_owned(),
                             title: title.to_owned(),
@@ -206,7 +231,14 @@ fn challenge_to_dto(c: Challenge, has_premium: bool) -> ChallengeResponse {
                 sketch_prompt = prompt.clone();
                 sketch_guidance = guidance.clone();
             }
-            ChallengeStep::BuildAndTest { hints, .. } => build_hints = hints.clone(),
+            ChallengeStep::BuildAndTest {
+                hints,
+                instructions,
+                ..
+            } => {
+                build_hints = hints.clone();
+                build_instructions = instructions.clone();
+            }
             _ => {}
         }
     }
@@ -230,6 +262,13 @@ fn challenge_to_dto(c: Challenge, has_premium: bool) -> ChallengeResponse {
         })
         .collect();
 
+    let emoji = c
+        .story
+        .as_ref()
+        .map(|s| s.hero.emoji.clone())
+        .unwrap_or_else(|| "🚀".to_owned());
+    let story = c.story.as_ref().and_then(|s| serde_json::to_value(s).ok());
+
     ChallengeResponse {
         id: c.id,
         title: c.title,
@@ -241,12 +280,13 @@ fn challenge_to_dto(c: Challenge, has_premium: bool) -> ChallengeResponse {
         skill_hints,
         build_hints,
         brief,
-        emoji: "🚀".to_owned(),
+        emoji,
         completion_xp: c.xp_reward,
         design_secret,
         design_secret_story,
         sketch_prompt,
         sketch_guidance,
+        build_instructions,
         nature_clues,
         skill_lesson_id,
         skill_instructions,
@@ -256,6 +296,7 @@ fn challenge_to_dto(c: Challenge, has_premium: bool) -> ChallengeResponse {
         related_video_ids: c.related_video_ids,
         is_premium: c.is_premium,
         locked: c.is_premium && !has_premium,
+        story,
         created_at: c.created_at,
     }
 }
@@ -320,7 +361,7 @@ pub async fn list_challenges(
         items: page
             .items
             .into_iter()
-            .map(|c| challenge_to_dto(c, has_premium))
+            .map(|c| challenge_to_dto(c, has_premium, q.lang.as_deref()))
             .collect(),
         total: page.total,
         page: page.page,
@@ -332,7 +373,7 @@ pub async fn list_challenges(
 #[utoipa::path(
     get, path = "/challenges/{id}",
     tag = "challenges",
-    params(("id" = Uuid, Path, description = "Challenge UUID")),
+    params(("id" = Uuid, Path, description = "Challenge UUID"), LangQuery),
     responses(
         (status = 200, description = "Challenge detail", body = ChallengeResponse),
         (status = 401, description = "Unauthenticated",  body = crate::ProblemDetail),
@@ -343,10 +384,11 @@ pub async fn get_challenge(
     _auth: AuthToken,
     State(state): State<AppState>,
     Path(id): Path<Uuid>,
+    Query(q): Query<LangQuery>,
 ) -> Result<Json<ChallengeResponse>, ApiError> {
     let has_premium = caller_has_premium(&state, &_auth).await?;
     match state.challenge.find_by_id(id).await? {
-        Some(c) => Ok(Json(challenge_to_dto(c, has_premium))),
+        Some(c) => Ok(Json(challenge_to_dto(c, has_premium, q.lang.as_deref()))),
         None => Err(ApiError::Domain(idea_pop_domain::DomainError::NotFound)),
     }
 }

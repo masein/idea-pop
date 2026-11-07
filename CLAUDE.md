@@ -37,7 +37,7 @@ packages/api-types, .github/workflows, docs/.
 - Section colors (chameleon nav): Explore green, Library #F2994A, Challenge #2D9CDB, Pricing purple.
 - Pastel page tints: #F3FFC2 lime, #FBF7D5 cream, #C0F0FF blue, #F1D8FB lavender, #F9DED7 blush.
 - One button system (primary/secondary/tertiary) with default/hover/focus/pressed/disabled. One input anatomy.
-- One mascot: the PENGUIN — "Ask Me" in the app, "Hi, I'm Idea Pop!" on marketing. ("Poppy" is only the
+- One mascot: POPI, a small floating robot (frontend/public/popi/popi.png) — "Ask Me" in the app, "Hi, I'm Idea Pop!" on marketing. ("Poppy" is only the
   TTS narrator-voice identity from the Voice Bible, not a visual character.) One icon set. Tablet-first, WCAG AA.
 - Edition-2 UI notes: app shell = persistent LEFT SIDEBAR (My profile · Exploring · Library · Challenges) +
   content area in per-section tint + top-right IDEA POP logo (tree-in-a-bulb badge) + a floating "Ask Me"
@@ -51,8 +51,9 @@ packages/api-types, .github/workflows, docs/.
 
 ## Challenge engine (canonical)
 Challenge = DATA, not a page. One generic engine renders any challenge from its JSON.
-8 steps: 1 Brief, 2 Your idea?, 3 Nature clues, 4 Design secret, 5 Skill, 6 Sketch, 7 Build & test, 8 Celebrate & share.
-"Yes, I have an idea" jumps to step 6; all steps stay reachable from the mission menu. Ideas Wall is locked until the kid submits.
+8 steps: 1 Brief, 2 Your idea?, 3 Nature clues, 4 Sketch, 5 Design secret, 6 Skill, 7 Build & test, 8 Celebrate & share.
+Finishing the Sketch celebrates "you solved it!" and invites the kid on to find more ideas (steps 5-7); step 8 shows the mission's total XP.
+"Yes, I have an idea" jumps to step 4; all steps stay reachable from the mission menu. Ideas Wall is locked until the kid submits.
 
 ## Commands
 - Dev up: `docker compose up` (or `just up`). DB UI: adminer (:8081). Mail: mailhog (:8025). Storage: minio (:9001).

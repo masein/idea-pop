@@ -1,5 +1,7 @@
 'use client';
 
+import AssetSlot from '@/components/AssetSlot';
+
 interface KidMedalsProps {
   bronze: number;
   silver: number;
@@ -17,19 +19,19 @@ export default function KidMedals({ bronze, silver, gold }: KidMedalsProps) {
         <div className="flex gap-4">
           {bronze > 0 && (
             <div data-testid="medal-bronze" className="flex flex-col items-center gap-1">
-              <span className="text-3xl" aria-hidden="true">🥉</span>
+              <span className="h-10 w-10"><AssetSlot id="PROFILE-MEDAL-001" /></span>
               <span className="font-body text-xs text-ink/60">×{bronze}</span>
             </div>
           )}
           {silver > 0 && (
             <div data-testid="medal-silver" className="flex flex-col items-center gap-1">
-              <span className="text-3xl" aria-hidden="true">🥈</span>
+              <span className="h-10 w-10"><AssetSlot id="PROFILE-MEDAL-001" /></span>
               <span className="font-body text-xs text-ink/60">×{silver}</span>
             </div>
           )}
           {gold > 0 && (
             <div data-testid="medal-gold" className="flex flex-col items-center gap-1">
-              <span className="text-3xl" aria-hidden="true">🥇</span>
+              <span className="h-10 w-10"><AssetSlot id="PROFILE-MEDAL-001" /></span>
               <span className="font-body text-xs text-ink/60">×{gold}</span>
             </div>
           )}

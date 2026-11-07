@@ -6,6 +6,7 @@
 #![forbid(unsafe_code)]
 
 pub mod account;
+pub mod achievements;
 pub mod auth_service;
 pub mod billing;
 pub mod challenge;
@@ -13,11 +14,14 @@ pub mod child;
 pub mod consent_service;
 pub mod content;
 pub mod help;
+pub mod idea_review;
 pub mod portfolio;
 pub mod ports;
 pub mod progress;
+pub mod story;
 
 pub use account::{Account, RefreshSession, Role, TokenClaims, TokenPair};
+pub use achievements::{challenge_badges, challenge_xp, check_star, ChallengeStar, STAR_COUNT};
 pub use auth_service::AuthService;
 pub use billing::{
     apply_webhook_event, is_premium, CheckoutResult, Plan, Subscription, SubscriptionStatus,
@@ -47,11 +51,13 @@ pub use ports::{
     ProgressRepo, ProjectRepo, ReportRepo, SubscriptionRepo, TokenIssuer, WebhookEventLog, XpRepo,
 };
 pub use progress::{
-    award_cycle_bonus, award_explore, award_learn, award_solve, compute_snapshot,
-    evaluate_new_badges, level_from_xp, medal_from_count, rank_from_level, xp_total,
-    AnalyticsEvent, AnalyticsEventKind, AttemptStatus, BadgeCriteria, BadgeDefinition,
-    ChallengeAttempt, ChildBadge, CycleActivityResult, Medal, ProgressSnapshot, Rank, XpEvent,
-    XpSourceType, XP_CYCLE_BONUS, XP_EXPLORE, XP_LEARN, XP_SOLVE,
+    award_cycle_bonus, award_define_bonus, award_explore, award_learn, award_mission_badge,
+    award_photo_bonus, award_sketch_bonus, award_solve, compute_snapshot, evaluate_new_badges,
+    level_from_xp, medal_from_count, mission_reward_id, rank_from_level, xp_total, AnalyticsEvent,
+    AnalyticsEventKind, AttemptStatus, BadgeCriteria, BadgeDefinition, ChallengeAttempt,
+    ChildBadge, CycleActivityResult, Medal, ProgressSnapshot, Rank, XpEvent, XpSourceType,
+    MISSION_BADGE_KEYS, PHOTO_BONUS_KEYS, XP_CYCLE_BONUS, XP_DEFINE_BONUS, XP_EXPLORE, XP_LEARN,
+    XP_MISSION_BADGE, XP_PHOTO_BONUS, XP_SKETCH_BONUS, XP_SOLVE,
 };
 
 use thiserror::Error;
@@ -71,6 +77,11 @@ pub enum DomainError {
     #[error("internal error: {0}")]
     Internal(String),
 }
+
+pub use idea_review::{
+    build_idea_review_prompt, parse_idea_review, IdeaExperiment, IdeaReview, IdeaReviewContext,
+    ReviewOwner, STATUS_LATER, STATUS_PENDING, STATUS_REVIEWED,
+};
 
 #[cfg(test)]
 mod tests {

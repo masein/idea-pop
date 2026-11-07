@@ -1,5 +1,6 @@
 import React from 'react';
 import Image from 'next/image';
+import AssetSlot from '@/components/AssetSlot';
 
 export type Difficulty = 'easy' | 'medium' | 'hard';
 
@@ -24,7 +25,7 @@ export default function QuickMakeCard({ title, duration, difficulty, imageSrc }:
           <Image src={imageSrc} alt="" aria-hidden="true" fill className="object-cover" sizes="80px" />
         ) : (
           <div className="absolute inset-0 flex items-center justify-center">
-            <span className="text-2xl select-none opacity-40" aria-hidden="true">✏️</span>
+            <AssetSlot id="LIBRARY-001" />
           </div>
         )}
       </div>

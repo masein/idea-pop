@@ -2,6 +2,8 @@
 
 import React from 'react';
 import { useTranslations } from 'next-intl';
+import { btnPrimary } from '@/components/challenge/buttons';
+import AssetSlot from '@/components/AssetSlot';
 
 type ChallengeDetail = import('@/lib/api/schema').components['schemas']['ChallengeDetail'];
 type AgeMode = import('@/lib/hooks/useAgeMode').AgeMode;
@@ -20,7 +22,7 @@ export default function StepBrief({ challenge, ageMode, onNext }: StepBriefProps
     <div data-testid="step-brief" className="mx-auto flex max-w-lg flex-col items-center gap-6 px-4 py-8">
       {/* Big emoji */}
       <span className="text-6xl text-center" role="img" aria-label={challenge.title}>
-        {challenge.emoji}
+        <AssetSlot id="CHALLENGE-CARD-001" />
       </span>
 
       {/* Headings */}
@@ -61,7 +63,7 @@ export default function StepBrief({ challenge, ageMode, onNext }: StepBriefProps
       {/* CTA */}
       <button
         onClick={onNext}
-        className="w-full rounded-card bg-challenge px-8 py-4 font-display text-lg text-white transition-all hover:brightness-110 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-challenge focus-visible:ring-offset-2"
+        className={`${btnPrimary} w-full`}
       >
         {t('lets_go')}
       </button>

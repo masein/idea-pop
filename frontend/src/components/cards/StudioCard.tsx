@@ -1,5 +1,6 @@
 import React from 'react';
 import Image from 'next/image';
+import AssetSlot from '@/components/AssetSlot';
 
 export type StudioAccent = 'explore' | 'library' | 'challenge';
 
@@ -31,7 +32,7 @@ export default function StudioCard({ title, subtitle, imageSrc, tag, accent }: S
           <Image src={imageSrc} alt={title} fill className="object-cover" sizes="224px" />
         ) : (
           <div className="absolute inset-0 flex items-center justify-center">
-            <span className="text-4xl select-none opacity-40" aria-hidden="true">🖼️</span>
+            <AssetSlot id="PROFILE-PROJECT-001" />
           </div>
         )}
         {tag && (

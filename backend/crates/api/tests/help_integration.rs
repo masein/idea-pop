@@ -33,6 +33,18 @@ struct FakeHelper;
 #[async_trait]
 impl MissionHelperProvider for FakeHelper {
     async fn answer(&self, system_prompt: &str, question: &str) -> Result<String, DomainError> {
+        if system_prompt.contains("You are Conspy") {
+            let relation = if question.contains("UNRELATED") {
+                "unrelated"
+            } else if question.contains("FAR_FUTURE") {
+                "not_testable_yet"
+            } else {
+                "related"
+            };
+            return Ok(format!(
+                r#"{{"relation":"{relation}","feedback":"Your raft traps air!","experiment":null}}"#
+            ));
+        }
         assert!(
             system_prompt.contains("Never give the final answer")
                 && system_prompt.contains("Never ask for or repeat personal information"),
@@ -495,4 +507,143 @@ async fn retention_purge_deletes_only_expired_transcripts() {
         .await
         .unwrap();
     assert_eq!(count, 1);
+}
+
+#[tokio::test]
+async fn hero_ideas_are_always_saved_and_reviewed_only_when_a_review_can_run() {
+    let (pool, _pg) = start_postgres().await;
+
+    // Helper off: saved and pending, with no review made up.
+    let app = router(base_state(pool.clone()), None);
+    let parent = register_adult(&app, "ideas-parent@test.com", "parent").await;
+    let (child_id, kid) = create_child(&app, &parent, "ideas-parent@test.com").await;
+    let challenge = seed_challenge(&pool, "ideas-mission").await;
+    let send = |text: &'static str| {
+        post_json(
+            &format!("/challenges/{challenge}/hero-ideas"),
+            json!({ "text": text, "lang": "en" }),
+            Some(&kid),
+        )
+    };
+    let res = app.clone().oneshot(send("A raft")).await.unwrap();
+    assert_eq!(res.status(), StatusCode::OK);
+    let first = body_json(res).await;
+    assert_eq!(first["status"], "pending_review");
+    assert_eq!(first["review_available"], false);
+    assert!(first["feedback"].is_null());
+
+    // A changed idea is a new version; the first stays as it was.
+    let res = app.clone().oneshot(send("A bigger raft")).await.unwrap();
+    assert_eq!(body_json(res).await["version"], 2);
+    let original: String = sqlx::query_scalar(
+        "SELECT original_text FROM idea_submissions WHERE child_id = $1 AND version = 1",
+    )
+    .bind(child_id)
+    .fetch_one(&pool)
+    .await
+    .unwrap();
+    assert_eq!(original, "A raft");
+
+    // No search provider yet: an honest "not available", and only for the kid's own idea.
+    let idea_id = first["idea_id"].as_str().unwrap();
+    let res = app
+        .clone()
+        .oneshot(get_req(&format!("/hero-ideas/{idea_id}/references"), &kid))
+        .await
+        .unwrap();
+    let refs = body_json(res).await;
+    assert_eq!(refs["available"], false);
+    assert_eq!(refs["references"].as_array().unwrap().len(), 0);
+
+    // The profile list returns the kid's own words, newest first.
+    let res = app
+        .clone()
+        .oneshot(get_req("/children/me/hero-ideas?lang=en", &kid))
+        .await
+        .unwrap();
+    let mine = body_json(res).await;
+    assert_eq!(mine[0]["text"], "A bigger raft");
+    assert_eq!(mine[1]["text"], "A raft");
+    assert_eq!(mine[1]["challenge_id"], challenge.to_string());
+
+    // A sketch attaches to the latest idea: no new idea, and its words don't change.
+    let project: Uuid = sqlx::query_scalar(
+        "INSERT INTO projects (child_id, origin_type, origin_id, title) VALUES ($1, 'challenge', $2, 'Raft') RETURNING id",
+    )
+    .bind(child_id)
+    .bind(challenge)
+    .fetch_one(&pool)
+    .await
+    .unwrap();
+    let res = app
+        .clone()
+        .oneshot(post_json(
+            &format!("/challenges/{challenge}/hero-ideas/sketch"),
+            json!({ "project_id": project, "name": "Raft" }),
+            Some(&kid),
+        ))
+        .await
+        .unwrap();
+    assert_eq!(res.status(), StatusCode::NO_CONTENT);
+    let res = app
+        .clone()
+        .oneshot(get_req("/children/me/hero-ideas", &kid))
+        .await
+        .unwrap();
+    let mine = body_json(res).await;
+    assert_eq!(mine.as_array().unwrap().len(), 2, "still two ideas");
+    assert_eq!(mine[0]["project_id"], project.to_string());
+    assert_eq!(mine[0]["text"], "A bigger raft");
+    assert!(mine[1]["project_id"].is_null());
+
+    // Off by default: with no review owner set, helper on or not, no AI review runs.
+    grant_consent(&pool, child_id).await;
+    sqlx::query("UPDATE child_profiles SET helper_enabled = true WHERE id = $1")
+        .bind(child_id)
+        .execute(&pool)
+        .await
+        .unwrap();
+    let app = router(helper_state(pool.clone(), 10), None);
+    let res = app.clone().oneshot(send("Still waiting")).await.unwrap();
+    let waiting = body_json(res).await;
+    assert_eq!(waiting["status"], "pending_review");
+    assert_eq!(waiting["review_available"], false);
+
+    // An owner that includes AI, plus consent and the opt-in: each idea gets its own result.
+    std::env::set_var("IDEA_REVIEW_OWNER", "ai");
+    let res = app
+        .clone()
+        .oneshot(send("A raft that traps air"))
+        .await
+        .unwrap();
+    let related = body_json(res).await;
+    assert_eq!(related["status"], "reviewed");
+    assert_eq!(related["outcome"], "related");
+    assert_eq!(related["feedback"], "Your raft traps air!");
+
+    let res = app.clone().oneshot(send("UNRELATED my cat")).await.unwrap();
+    let unrelated = body_json(res).await;
+    assert_eq!(unrelated["status"], "pending_review");
+    assert!(unrelated["feedback"].is_null(), "no correction now");
+
+    let res = app
+        .clone()
+        .oneshot(send("FAR_FUTURE teleport"))
+        .await
+        .unwrap();
+    let later = body_json(res).await;
+    assert_eq!(later["status"], "later_guidance");
+
+    // Reviews are a history apart from the ideas: nothing edited the original.
+    let reviews: i64 = sqlx::query_scalar(
+        "SELECT COUNT(*) FROM idea_reviews r JOIN idea_submissions s ON s.id = r.idea_id WHERE s.child_id = $1",
+    )
+    .bind(child_id)
+    .fetch_one(&pool)
+    .await
+    .unwrap();
+    assert_eq!(
+        reviews, 9,
+        "a pending row for all six ideas, plus three reviews"
+    );
 }

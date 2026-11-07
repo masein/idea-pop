@@ -3,13 +3,17 @@
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
+import Inspired from '@/components/characters/Inspired';
 import { useAgeMode } from '@/lib/hooks/useAgeMode';
 import { fetchKidProgress, fetchMyProjects } from '@/lib/api/client';
 import { levelProgress } from '@/lib/progress';
 import { AVATARS } from '@/lib/avatars';
 import KidMedals from '@/components/profile/KidMedals';
 import KidProjectsGrid from '@/components/profile/KidProjectsGrid';
+import KidIdeas from '@/components/profile/KidIdeas';
 import type { components } from '@/lib/api/schema';
+import AssetSlot from '@/components/AssetSlot';
+import ModalClose from '@/components/ModalClose';
 
 type KidProgressResponse = components['schemas']['KidProgressResponse'];
 type KidProjectSummary = components['schemas']['KidProjectSummary'];
@@ -27,8 +31,9 @@ function ParentHandoffModal({ onDismiss }: { onDismiss: () => void }) {
       aria-modal="true"
       data-testid="parent-handoff-modal"
     >
-      <div className="mx-4 w-full max-w-sm rounded-2xl bg-white p-8 shadow-xl">
-        <div className="mb-4 text-center text-5xl">🤝</div>
+      <div className="relative mx-4 w-full max-w-sm rounded-2xl bg-white p-8 pt-14 shadow-xl">
+        <ModalClose onClose={onDismiss} />
+        <div className="mx-auto mb-4 h-16 w-16"><AssetSlot id="DASHBOARD-001" /></div>
         <h2 className="mb-2 text-center font-display text-xl font-bold text-ink">
           {t('handoff_heading')}
         </h2>
@@ -60,6 +65,8 @@ export default function ProfilePage() {
   const [avatarId, setAvatarId] = useState<string>('');
   const [showHandoff, setShowHandoff] = useState(false);
   const [projectsList, setProjectsList] = useState<KidProjectSummary[]>([]);
+  // Sketches shown with their idea below; the project list leaves them out.
+  const [attachedIds, setAttachedIds] = useState<string[] | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
 
   const EMPTY_PROGRESS: KidProgressResponse = {
@@ -166,7 +173,6 @@ export default function ProfilePage() {
                   {t('xp_to_level', { remaining: xpToNext, next: lp.nextLevel })}
                 </span>
               </span>
-              <span className="text-lg" aria-hidden="true">🏁</span>
             </div>
             <div className="relative mt-2 h-5 w-full overflow-hidden rounded-full bg-black/5">
               <div
@@ -184,7 +190,7 @@ export default function ProfilePage() {
         </div>
 
         <p className="w-fit rounded-pill bg-white px-4 py-1.5 font-body text-sm font-semibold text-ink shadow-sm">
-          ⚡ {t('level_up_hint', { xp: lp.remaining })}
+          {t('level_up_hint', { xp: lp.remaining })}
         </p>
 
         {/* 3 adventures */}
@@ -193,7 +199,7 @@ export default function ProfilePage() {
             {t('xp_source_heading', { count: 3 })}
           </h2>
           <p className="font-body font-semibold text-ink/70">
-            {t('adventures_sub')}
+            <Inspired text={t('adventures_sub')} />
           </p>
 
           <button
@@ -215,7 +221,7 @@ export default function ProfilePage() {
                   { key: 'adventure_solve', count: prog.solve_count, emoji: '🔧' },
                 ].map((a) => (
                   <div key={a.key} className="rounded-card bg-white p-4 text-center shadow-sm">
-                    <div className="text-2xl" aria-hidden="true">{a.emoji}</div>
+                    <div className="mx-auto h-10 w-10"><AssetSlot id="PROFILE-ADV-001" /></div>
                     <p className="mt-1 font-display font-bold text-ink">{t(a.key)}</p>
                     <p className="font-body text-sm text-ink/60">
                       {t('adventure_count', { count: Number.isFinite(a.count) ? a.count : 0 })}
@@ -235,13 +241,16 @@ export default function ProfilePage() {
         </section>
 
         {/* My projects */}
-        {!loading && (
+        {!loading && attachedIds && (
           <KidProjectsGrid
-            projects={projectsList}
+            projects={projectsList.filter((p) => !attachedIds.includes(p.id))}
             onVisibilityChanged={handleVisibilityChanged}
           />
         )}
         {loading && <div className="h-40 animate-pulse rounded-card bg-white" />}
+
+        {/* My ideas, by challenge */}
+        <KidIdeas projects={projectsList} onLoaded={setAttachedIds} onVisibilityChanged={handleVisibilityChanged} />
 
         {/* Upgrade → parent handoff (never checkout) */}
         <div

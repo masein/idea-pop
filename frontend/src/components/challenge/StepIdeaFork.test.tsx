@@ -39,7 +39,7 @@ describe('StepIdeaFork', () => {
       />,
     );
 
-    expect(screen.getByText('Do you already have an idea?')).toBeInTheDocument();
+    expect(screen.getByText('Do you have any ideas?')).toBeInTheDocument();
   });
 
   it('clicking YES calls onYes', () => {
@@ -95,7 +95,7 @@ describe('StepIdeaFork', () => {
       />,
     );
 
-    fireEvent.click(screen.getByText(/← Back/));
+    fireEvent.click(screen.getByText(/Back/));
 
     expect(onBack).toHaveBeenCalledTimes(1);
   });

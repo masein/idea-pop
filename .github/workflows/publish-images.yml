@@ -87,6 +87,45 @@ jobs:
           cache-from: type=gha,scope=frontend
           cache-to: type=gha,scope=frontend,mode=max
 
+      # Temporary: shows how the registry answers a push request (no secrets
+      # are printed), to find why pushes are denied after a good login.
+      - name: Diagnose registry push access
+        continue-on-error: true
+        env:
+          REG_USER: ${{ secrets.REGISTRY_USERNAME }}
+          REG_PASS: ${{ secrets.REGISTRY_PASSWORD }}
+        run: |
+          set +e
+          echo "== anonymous /v2/"
+          curl -s -D - -o /tmp/body https://$REGISTRY/v2/ | grep -iE '^(HTTP|www-authenticate|server|docker-distribution|location)'
+          head -c 300 /tmp/body; echo
+          echo "== /v2/ with login"
+          curl -s -o /tmp/body -w 'status %{http_code}\n' -u "$REG_USER:$REG_PASS" https://$REGISTRY/v2/
+          head -c 300 /tmp/body; echo
+          hdr=$(curl -s -D - -o /dev/null https://$REGISTRY/v2/ | grep -i '^www-authenticate' | tr -d '\r')
+          realm=$(echo "$hdr" | sed -n 's/.*realm="\([^"]*\)".*/\1/p')
+          service=$(echo "$hdr" | sed -n 's/.*service="\([^"]*\)".*/\1/p')
+          echo "realm=$realm service=$service"
+          for repo in idea-pop-frontend idea-pop-backend; do
+            echo "== upload start for $repo (basic auth)"
+            curl -s -D - -o /tmp/body -X POST -u "$REG_USER:$REG_PASS" "https://$REGISTRY/v2/$repo/blobs/uploads/" | grep -iE '^(HTTP|www-authenticate|location)'
+            head -c 300 /tmp/body; echo
+            if [ -n "$realm" ]; then
+              echo "== token for $repo push"
+              curl -s -o /tmp/tok -w 'status %{http_code}\n' -u "$REG_USER:$REG_PASS" "$realm?service=$service&scope=repository:$repo:pull,push"
+              tok=$(jq -r '.token // .access_token // empty' /tmp/tok)
+              if [ -n "$tok" ]; then
+                p=$(echo "$tok" | cut -d. -f2 | tr '_-' '/+'); while [ $(( ${#p} % 4 )) -ne 0 ]; do p="$p="; done
+                echo "$p" | base64 -d 2>/dev/null | jq -c '{sub, aud, iss, access}' 2>/dev/null || echo "(token not a JWT)"
+                echo "== upload start for $repo (bearer)"
+                curl -s -D - -o /tmp/body -X POST -H "Authorization: Bearer $tok" "https://$REGISTRY/v2/$repo/blobs/uploads/" | grep -iE '^(HTTP|location)'
+                head -c 300 /tmp/body; echo
+              else
+                jq -c 'del(.token, .access_token)' /tmp/tok 2>/dev/null || head -c 300 /tmp/tok; echo
+              fi
+            fi
+          done
+
       - name: Push images (with retries)
         run: |
           set -u

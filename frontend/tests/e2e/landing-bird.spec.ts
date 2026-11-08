@@ -11,6 +11,7 @@ test("the flying bird never shows its parts while hidden, nor at full size", asy
   for (const viewport of [
     { width: 1440, height: 900 },
     { width: 390, height: 844 },
+    { width: 360, height: 800 },
   ]) {
     const context = await browser.newContext({ viewport, isMobile: viewport.width < 768 });
     const page = await context.newPage();
@@ -39,4 +40,14 @@ test("the flying bird never shows its parts while hidden, nor at full size", asy
     }
     await context.close();
   }
+});
+
+/* On many Android phones a "desynchronized" (low-latency) WebGL canvas skips normal compositing and ignores its
+   transparency: the wings showed as a black box (2026-11-08). CI cannot run a phone GPU, so this checks the renderer's
+   own settings instead: the wing canvases must be transparent and must not ask for the low-latency mode. */
+test("the wing renderer keeps its canvases transparent on phones", async ({ request }) => {
+  const source = await (await request.get("/ideapop-motion/wing-flight.js")).text();
+  expect(source, "wing canvases must not use desynchronized: true").not.toMatch(/desynchronized:\s*true/);
+  expect(source, "wing canvases must ask for an alpha channel").toMatch(/alpha:\s*true/);
+  expect(source, "wing canvases must keep premultiplied alpha").toMatch(/premultipliedAlpha:\s*true/);
 });

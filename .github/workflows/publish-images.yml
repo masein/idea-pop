@@ -64,6 +64,9 @@ jobs:
           context: ./backend
           platforms: linux/amd64
           load: true
+          # The live site is a public preview until susan opens the rest (lib/publicPreview.ts).
+          build-args: |
+            PUBLIC_PREVIEW=1
           tags: |
             ${{ env.BACKEND_IMAGE }}:latest
             ${{ env.BACKEND_IMAGE }}:sha-${{ steps.sha.outputs.short }}
@@ -81,6 +84,7 @@ jobs:
           build-args: |
             API_URL=http://backend:8080
             NEXT_PUBLIC_MISSION_HELPER=false
+            NEXT_PUBLIC_PUBLIC_PREVIEW=1
           tags: |
             ${{ env.FRONTEND_IMAGE }}:latest
             ${{ env.FRONTEND_IMAGE }}:sha-${{ steps.sha.outputs.short }}

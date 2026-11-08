@@ -10,6 +10,7 @@ import { register } from "@/lib/api/client";
 import { setPersona, dashboardHref } from "@/lib/auth/persona";
 import { btnLime } from "@/components/ui/kit";
 import { Input } from "@/components/ui/Input";
+import TemporaryAccountNotice from "@/components/preview/TemporaryAccountNotice";
 
 interface RegisterFormProps {
   role: "parent" | "teacher";
@@ -104,6 +105,7 @@ export default function RegisterForm({ role, onDone }: RegisterFormProps) {
         <button type="submit" disabled={isSubmitting} className={`${btnLime} w-full disabled:opacity-40 disabled:pointer-events-none`}>
           {isSubmitting ? "…" : t("submit")}
         </button>
+        <TemporaryAccountNotice />
       </form>
 
       <p className="mt-6 text-center font-body text-sm text-ink/60">

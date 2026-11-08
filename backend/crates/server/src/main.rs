@@ -202,6 +202,13 @@ async fn main() -> anyhow::Result<()> {
     // Secure attribute on auth cookies — on in production (https), off for
     // plain-http local dev.
     let state = state.with_secure_cookies(std::env::var("COOKIE_SECURE").as_deref() == Ok("true"));
+    // Public preview: on for the live site (baked into the published image), never on
+    // localhost. Unfinished sections answer "coming soon"; guests can open Max.
+    let public_preview = std::env::var("PUBLIC_PREVIEW").as_deref() == Ok("1");
+    if public_preview {
+        tracing::info!("public preview on: unfinished sections are coming soon");
+    }
+    let state = state.with_public_preview(public_preview);
 
     // help_messages retention: with HELP_MESSAGE_RETENTION_DAYS set (> 0),
     // purge transcripts older than the window once a day. Unset → keep

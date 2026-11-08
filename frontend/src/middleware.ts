@@ -1,6 +1,9 @@
 import createMiddleware from "next-intl/middleware";
 import { type NextRequest, NextResponse } from "next/server";
 import { routing } from "./i18n/routing";
+import { PUBLIC_PREVIEW } from "./lib/publicPreview";
+
+const PREVIEW_OPEN_PREFIXES = ["/explore", "/library"];
 
 const intlMiddleware = createMiddleware(routing);
 
@@ -35,8 +38,12 @@ export function middleware(request: NextRequest) {
   const stripped = pathWithoutLocale(request.nextUrl.pathname);
   const locale = request.nextUrl.pathname.match(/^\/(en|fa)/)?.[1] ?? "en";
 
+  // Public preview (live site): Explore and Library open for everyone, but only behind
+  // their Coming Soon panel, so the landing page's buttons can show them.
   const isProtected = PROTECTED_PREFIXES.some(
-    (p) => stripped === p || stripped.startsWith(p + "/")
+    (p) =>
+      (stripped === p || stripped.startsWith(p + "/")) &&
+      !(PUBLIC_PREVIEW && PREVIEW_OPEN_PREFIXES.includes(p))
   );
 
   if (isProtected && !request.cookies.has("ideapop_persona")) {

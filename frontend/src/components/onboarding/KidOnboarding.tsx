@@ -11,6 +11,7 @@ import { AVATARS } from "@/lib/avatars";
 import { addChild, createChild, fetchMe } from "@/lib/api/client";
 import { getPersona, setPersona } from "@/lib/auth/persona";
 import { btnLime, btnGlassOnCard, tighten } from "@/components/ui/kit";
+import TemporaryAccountNotice from "@/components/preview/TemporaryAccountNotice";
 
 const BIRTH_YEARS = Array.from({ length: 17 }, (_, i) => 2022 - i);
 
@@ -419,6 +420,7 @@ export default function KidOnboarding({ onExit, onDone }: { onExit?: () => void;
                   {isSubmitting ? t("submitting") : t("submit")}
                 </button>
               </div>
+              <TemporaryAccountNotice tone="dark" />
             </section>
           )}
         </form>

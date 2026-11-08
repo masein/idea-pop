@@ -871,3 +871,120 @@ async fn challenge_without_a_story_returns_null_story() {
     assert!(body["story"].is_null());
     assert_eq!(body["emoji"], "🚀");
 }
+
+// ── Public preview (the live site while sections are unfinished) ──────────────
+
+fn anon_get(uri: &str) -> Request<Body> {
+    Request::builder().uri(uri).body(Body::empty()).unwrap()
+}
+
+#[tokio::test]
+async fn preview_endpoints_are_off_outside_the_public_preview() {
+    let (pool, _pg) = start_postgres().await;
+    let max = insert_challenge(
+        &pool,
+        "help-max-cross-the-river",
+        "Help Max",
+        1,
+        1,
+        STEPS_MAX,
+        TOOLS_JSON,
+        VARIANTS_JSON,
+    )
+    .await;
+    let app = router(challenge_state(pool), None);
+    let res = app
+        .clone()
+        .oneshot(anon_get("/preview/challenges"))
+        .await
+        .unwrap();
+    assert_eq!(res.status(), StatusCode::NOT_FOUND);
+    let res = app
+        .oneshot(anon_get(&format!("/preview/challenges/{max}")))
+        .await
+        .unwrap();
+    assert_eq!(res.status(), StatusCode::NOT_FOUND);
+}
+
+#[tokio::test]
+async fn public_preview_opens_max_only_and_closes_unfinished_sections() {
+    let (pool, _pg) = start_postgres().await;
+    let max = insert_challenge(
+        &pool,
+        "help-max-cross-the-river",
+        "Help Max",
+        1,
+        1,
+        STEPS_MAX,
+        TOOLS_JSON,
+        VARIANTS_JSON,
+    )
+    .await;
+    let other = insert_challenge(
+        &pool,
+        "another-mission",
+        "Another mission",
+        1,
+        2,
+        STEPS_MAX,
+        TOOLS_JSON,
+        VARIANTS_JSON,
+    )
+    .await;
+    let app = router(challenge_state(pool).with_public_preview(true), None);
+
+    // Guests (no account): the list and Max, nothing else.
+    let res = app
+        .clone()
+        .oneshot(anon_get("/preview/challenges"))
+        .await
+        .unwrap();
+    assert_eq!(res.status(), StatusCode::OK);
+    assert_eq!(body_json(res).await["total"], 2);
+    let res = app
+        .clone()
+        .oneshot(anon_get(&format!("/preview/challenges/{max}")))
+        .await
+        .unwrap();
+    assert_eq!(res.status(), StatusCode::OK);
+    let res = app
+        .clone()
+        .oneshot(anon_get(&format!("/preview/challenges/{other}")))
+        .await
+        .unwrap();
+    assert_eq!(res.status(), StatusCode::NOT_FOUND);
+
+    // Signed in: Max opens, any other mission (or anything done on it) is coming soon.
+    let token = register_and_token(&app, "preview@test.com").await;
+    let res = app
+        .clone()
+        .oneshot(authed_get(&format!("/challenges/{max}"), &token))
+        .await
+        .unwrap();
+    assert_eq!(res.status(), StatusCode::OK);
+    let res = app
+        .clone()
+        .oneshot(authed_get(&format!("/challenges/{other}"), &token))
+        .await
+        .unwrap();
+    assert_eq!(res.status(), StatusCode::FORBIDDEN);
+    let res = app
+        .clone()
+        .oneshot(authed_get(
+            &format!("/challenges/{other}/mission-rewards"),
+            &token,
+        ))
+        .await
+        .unwrap();
+    assert_eq!(res.status(), StatusCode::FORBIDDEN);
+
+    // Explore videos, courses and Parental Controls are coming soon.
+    for uri in [
+        "/explore/some-video",
+        "/courses/some-course",
+        "/parent/approvals",
+    ] {
+        let res = app.clone().oneshot(authed_get(uri, &token)).await.unwrap();
+        assert_eq!(res.status(), StatusCode::FORBIDDEN, "{uri}");
+    }
+}

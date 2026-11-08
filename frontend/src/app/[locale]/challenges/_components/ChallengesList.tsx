@@ -18,6 +18,7 @@ import type { MissionStory } from '@/components/challenge/story/types';
 import BadgeIcon from '@/components/challenge/story/BadgeIcon';
 import AssetSlot from '@/components/AssetSlot';
 import ModalClose from '@/components/ModalClose';
+import { PUBLIC_PREVIEW, PREVIEW_MISSION_SLUG, makeInert } from '@/lib/publicPreview';
 
 type ChallengeDetail = components['schemas']['ChallengeDetail'];
 
@@ -70,6 +71,7 @@ const PAGE_KEY = 'challengesPage';
 
 export default function ChallengesList() {
   const t = useTranslations('challenge');
+  const tPreview = useTranslations('preview');
   const router = useRouter();
   const ageMode = useAgeMode();
 
@@ -108,16 +110,27 @@ export default function ChallengesList() {
     challenges.filter((c, i) => !(c.locked ?? i > 0)).map((c) => c.id),
   );
 
+  // Public preview: Max is the one mission that opens (the rest show as Coming soon).
+  const previewMax = PUBLIC_PREVIEW ? challenges.find((c) => c.slug === PREVIEW_MISSION_SLUG) ?? null : null;
+  const playable = (c: ChallengeDetail) => !PUBLIC_PREVIEW || c.slug === PREVIEW_MISSION_SLUG;
+
   // Prefer the class-assigned mission; fall back to the first challenge.
   const featured =
-    (assignedId && challenges.find((c) => c.id === assignedId)) || challenges[0] || null;
+    previewMax || (assignedId && challenges.find((c) => c.id === assignedId)) || challenges[0] || null;
 
   // The Continue area: what the kid should do next, never a challenge they already finished.
   const ordered = inPageOrder(challenges);
-  const next = progressLoaded ? nextChallenge(ordered, progress, assignedId) : null;
+  const next = !progressLoaded
+    ? null
+    : PUBLIC_PREVIEW
+      ? previewMax
+        ? ({ kind: 'open', challenge: previewMax } as const)
+        : null
+      : nextChallenge(ordered, progress, assignedId);
 
   const pageCount = Math.max(1, Math.ceil(ordered.length / PER_PAGE));
-  const currentPage = Math.min(page, pageCount);
+  // Public preview: only the first page of missions; the other pages are coming soon.
+  const currentPage = PUBLIC_PREVIEW ? 1 : Math.min(page, pageCount);
   const firstOnPage = (currentPage - 1) * PER_PAGE;
   const goToPage = (n: number) => {
     setPage(n);
@@ -235,7 +248,20 @@ export default function ChallengesList() {
               // Prefer the server's entitlement decision; fall back to "first free".
               const locked = c.locked ?? i > 0;
               const assigned = c.id === assignedId;
-              return locked ? (
+              if (!playable(c)) {
+                // Public preview: the card as it looks, faded and out of reach, marked Coming soon.
+                return (
+                  <div key={c.id} className="relative" data-testid="challenge-card-coming-soon" aria-label={tPreview('challenge_coming_soon_aria', { index: i + 1 })} role="group">
+                    <div ref={makeInert} aria-hidden="true" className="pointer-events-none select-none opacity-45 saturate-50">
+                      <UnlockedChallengeCard index={i + 1} challenge={c} progress={null} onOpen={() => {}} />
+                    </div>
+                    <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap rounded-pill bg-white px-5 py-2 font-body text-lg font-extrabold text-[#135A85] shadow-[0_4px_10px_rgba(0,0,0,0.18)] ring-2 ring-[#58C6EE]">
+                      {tPreview('challenge_coming_soon')}
+                    </span>
+                  </div>
+                );
+              }
+              return locked && !PUBLIC_PREVIEW ? (
                 <LockedChallengeCard
                   key={c.id}
                   index={i + 1}
@@ -257,20 +283,29 @@ export default function ChallengesList() {
 
           {pageCount > 1 && (
             <nav aria-label={t('pagination_aria')} data-testid="challenge-pagination" className="flex flex-wrap justify-center gap-2">
-              {Array.from({ length: pageCount }, (_, n) => n + 1).map((n) => (
+              {Array.from({ length: pageCount }, (_, n) => n + 1).map((n) => {
+                const soon = PUBLIC_PREVIEW && n > 1;
+                return (
                 <button
                   key={n}
                   type="button"
                   data-testid={`challenge-page-${n}`}
-                  aria-label={t('page_aria', { page: n })}
+                  aria-label={soon ? tPreview('page_coming_soon_aria', { page: n }) : t('page_aria', { page: n })}
                   aria-current={n === currentPage ? 'page' : undefined}
+                  disabled={soon}
                   onClick={() => goToPage(n)}
-                  className={`flex h-11 w-11 items-center justify-center rounded-full font-body text-base font-extrabold shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-[#0F3F63] focus-visible:ring-offset-1 ${n === currentPage ? 'bg-[#1A6FA6] text-white' : 'bg-white text-[#135A85] hover:bg-[#EAF5FC]'}`}
+                  className={`flex h-11 w-11 items-center justify-center rounded-full font-body text-base font-extrabold shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-[#0F3F63] focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-40 ${n === currentPage ? 'bg-[#1A6FA6] text-white' : 'bg-white text-[#135A85] hover:bg-[#EAF5FC] disabled:hover:bg-white'}`}
                 >
                   {n}
                 </button>
-              ))}
+                );
+              })}
             </nav>
+          )}
+          {PUBLIC_PREVIEW && (
+            <p data-testid="challenges-more-soon" className="text-center font-body text-base font-bold text-[#135A85]">
+              {tPreview('challenges_more')}
+            </p>
           )}
         </div>
       )}

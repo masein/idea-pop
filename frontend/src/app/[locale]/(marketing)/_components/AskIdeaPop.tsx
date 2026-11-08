@@ -11,6 +11,8 @@ interface AskIdeaPopProps {
   inputLabel: string;
   sendLabel: string;
   micLabel: string;
+  /** Public preview (susan, 2026-11-08): Popi is still learning, so the box shows this line and takes no questions. */
+  previewNote?: string;
 }
 
 /**
@@ -25,6 +27,7 @@ export default function AskIdeaPop({
   inputLabel,
   sendLabel,
   micLabel,
+  previewNote,
 }: AskIdeaPopProps) {
   const router = useRouter();
 
@@ -56,19 +59,23 @@ export default function AskIdeaPop({
             className="relative md:-ms-[200px] md:w-[calc(100%+200px)]"
             onSubmit={(e) => {
               e.preventDefault();
-              router.push("/sign-up");
+              if (!previewNote) router.push("/sign-up");
             }}
           >
             <textarea
               aria-label={inputLabel}
-              placeholder={placeholder}
+              placeholder={previewNote ? undefined : placeholder}
+              value={previewNote}
+              readOnly={!!previewNote}
+              aria-readonly={!!previewNote || undefined}
               rows={4}
               className="w-full h-[140px] md:h-[136px] rounded-[20px] bg-[#EEFFA9] border-2 border-[#D1EF5A] px-6 py-5 [font-family:var(--font-adlam)] font-normal text-[20px] md:text-[24px] text-[#363535] placeholder:text-[#363535]/60 resize-none focus:outline-none focus:ring-2 focus:ring-[#2E5F4B]"
             />
-            <div className="absolute bottom-4 end-4 flex items-center gap-2">
+            <div className={`absolute bottom-4 end-4 flex items-center gap-2 ${previewNote ? "opacity-40 pointer-events-none" : ""}`}>
               <button
                 type="button"
                 aria-label={micLabel}
+                disabled={!!previewNote}
                 className="w-11 h-11 rounded-full flex items-center justify-center text-[#2E5F4B] hover:bg-[#2E5F4B]/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2E5F4B]"
               >
                 <svg
@@ -89,6 +96,7 @@ export default function AskIdeaPop({
               <button
                 type="submit"
                 aria-label={sendLabel}
+                disabled={!!previewNote}
                 className="w-11 h-11 rounded-full bg-[#D1EF5A] flex items-center justify-center text-[#1F4D33] shadow-[inset_0_0_0_1px_#18785A,0_4px_4px_rgba(0,0,0,0.25)] transition-all duration-150 hover:brightness-105 hover:scale-[1.11] hover:shadow-[inset_0_0_0_2px_#18785A,0_4px_4px_rgba(0,0,0,0.25)] active:scale-[0.97] active:bg-[#B8D24F] active:shadow-[inset_0_0_0_2px_#18785A,0_2px_2px_rgba(0,0,0,0.25)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1F4D33] focus-visible:ring-offset-2"
               >
                 <svg

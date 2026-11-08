@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { missionStorage } from '@/lib/api/guest';
 
 /** Bonus badges every story mission can award. */
 export type BadgeKey = 'clue' | 'tool' | 'retry' | 'define' | 'solved' | 'river';
@@ -150,7 +151,7 @@ function storageKey(challengeId: string) {
 
 function load(challengeId: string): MissionGame {
   try {
-    const raw = localStorage.getItem(storageKey(challengeId));
+    const raw = missionStorage()?.getItem(storageKey(challengeId));
     if (!raw) return EMPTY_GAME;
     // For now every visit opens the mission fresh (susan, 2026-10-08): only the earned
     // badges carry over, so one-time bonuses are not replayed. Before merging, answers will be
@@ -180,7 +181,7 @@ export function useMissionGame(challengeId: string) {
       setGame((prev) => {
         const next = { ...prev, ...(typeof patch === 'function' ? patch(prev) : patch) };
         try {
-          localStorage.setItem(storageKey(challengeId), JSON.stringify(next));
+          missionStorage()?.setItem(storageKey(challengeId), JSON.stringify(next));
         } catch {
           // storage blocked — the mission still plays, it just won't resume
         }
@@ -202,7 +203,7 @@ export function useMissionGame(challengeId: string) {
     setGame((prev) => {
       const next = { ...EMPTY_GAME, badges: prev.badges };
       try {
-        localStorage.setItem(storageKey(challengeId), JSON.stringify(next));
+        missionStorage()?.setItem(storageKey(challengeId), JSON.stringify(next));
       } catch {
         // storage blocked — the reset still applies for this visit
       }
@@ -215,15 +216,15 @@ export function useMissionGame(challengeId: string) {
     setGame((prev) => {
       const next = { ...prev, resumeNext: true };
       try {
-        localStorage.setItem(storageKey(challengeId), JSON.stringify(next));
+        missionStorage()?.setItem(storageKey(challengeId), JSON.stringify(next));
       } catch {
         // storage blocked — next visit simply starts fresh
       }
       return next;
     });
     try {
-      const raw = localStorage.getItem(storageKey(challengeId));
-      if (raw) localStorage.setItem(storageKey(challengeId), JSON.stringify({ ...JSON.parse(raw), resumeNext: true }));
+      const raw = missionStorage()?.getItem(storageKey(challengeId));
+      if (raw) missionStorage()?.setItem(storageKey(challengeId), JSON.stringify({ ...JSON.parse(raw), resumeNext: true }));
     } catch {
       // ignore
     }

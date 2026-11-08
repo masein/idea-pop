@@ -13,6 +13,8 @@ import SubstitutePractice from '@/components/challenge/story/SubstitutePractice'
 import SubstCelebration from '@/components/challenge/story/SubstCelebration';
 import RewardPopup from '@/components/challenge/story/RewardPopup';
 import GuideNameMessages from '@/components/challenge/story/GuideNameMessages';
+import GuestSaveNotice from '@/components/preview/GuestSaveNotice';
+import { PUBLIC_PREVIEW } from '@/lib/publicPreview';
 import { AssetScope } from '@/components/AssetSlot';
 import { assetSetFor } from '@/lib/assets/assetSets';
 import { BADGE_CHARACTER, MISSION_XP_MAX, badgeArt, badgeName, type MissionBadgeKey } from '@/components/challenge/story/missionBadges';
@@ -76,6 +78,7 @@ export default function ChallengePage() {
   return (
     <GuideNameMessages enabled={badgeMode}>
       <ChallengePageInner onBadgeMode={setBadgeMode} />
+      <GuestSaveNotice />
     </GuideNameMessages>
   );
 }
@@ -165,6 +168,11 @@ function ChallengePageInner({ onBadgeMode }: { onBadgeMode: (on: boolean) => voi
     fetchChallenge(params.id, locale)
       .then((c) => setChallenge(c as ChallengeDetail))
       .catch(() => {
+        // Public preview: only Max opens; any other mission goes back to the list.
+        if (PUBLIC_PREVIEW) {
+          router.replace('/challenges');
+          return;
+        }
         // Signed out (the session ran out and couldn't be renewed): sign in again and come
         // straight back to this mission, instead of a "could not load" dead end.
         if (!getAccessToken()) {

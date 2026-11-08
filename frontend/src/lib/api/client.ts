@@ -5,6 +5,7 @@ import {
   refreshAccessToken,
   setAccessToken,
 } from "./auth";
+import { guestFetch } from "./guest";
 
 // Same-origin: every /api/* call goes to the Next server, which rewrites it
 // to the backend (see next.config.mjs). The browser never needs to know the
@@ -50,9 +51,11 @@ const authMiddleware: Middleware = {
 
 // Late-bound fetch so test stubs of global.fetch are honoured (openapi-fetch
 // would otherwise capture the real fetch at module-import time).
+// On the public preview a visitor without an account plays Max as a guest: guestFetch
+// answers their saves in this tab only (see guest.ts). Everywhere else it steps aside.
 export const apiClient = createClient<paths>({
   baseUrl: BASE_URL,
-  fetch: (request) => globalThis.fetch(request),
+  fetch: async (request) => (await guestFetch(request)) ?? globalThis.fetch(request),
 });
 apiClient.use(authMiddleware);
 

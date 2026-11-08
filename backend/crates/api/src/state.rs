@@ -94,6 +94,10 @@ pub struct AppState {
     /// Adds `Secure` to auth cookies. Off by default so http://localhost dev
     /// works; MUST be on in production (COOKIE_SECURE=true).
     pub cookie_secure: bool,
+    /// Public preview (the live site while sections are unfinished): unfinished
+    /// sections answer "coming soon" and guests may open Max. Off in development;
+    /// the published backend image turns it on (PUBLIC_PREVIEW=1).
+    pub public_preview: bool,
 }
 
 impl AppState {
@@ -145,6 +149,7 @@ impl AppState {
             helper: Arc::new(DisabledHelperProvider),
             helper_config: HelperConfig::default(),
             cookie_secure: false,
+            public_preview: false,
         }
     }
 
@@ -152,6 +157,11 @@ impl AppState {
     /// many existing `AppState::new` call sites stay untouched).
     pub fn with_secure_cookies(mut self, secure: bool) -> Self {
         self.cookie_secure = secure;
+        self
+    }
+
+    pub fn with_public_preview(mut self, on: bool) -> Self {
+        self.public_preview = on;
         self
     }
 

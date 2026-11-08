@@ -17,6 +17,7 @@ pub mod help;
 pub mod idea_review;
 pub mod portfolio;
 pub mod ports;
+pub mod preview;
 pub mod progress;
 pub mod story;
 

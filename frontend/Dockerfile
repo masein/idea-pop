@@ -10,6 +10,10 @@ ARG API_URL=http://localhost:8080
 ENV API_URL=$API_URL
 ARG NEXT_PUBLIC_MISSION_HELPER=false
 ENV NEXT_PUBLIC_MISSION_HELPER=$NEXT_PUBLIC_MISSION_HELPER
+# Public preview: Coming Soon over unfinished sections, guest Max. On only in the live
+# image (publish workflow); localhost builds leave it off.
+ARG NEXT_PUBLIC_PUBLIC_PREVIEW=0
+ENV NEXT_PUBLIC_PUBLIC_PREVIEW=$NEXT_PUBLIC_PUBLIC_PREVIEW
 RUN npm run build
 
 # ---- runtime ----

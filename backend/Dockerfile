@@ -23,5 +23,9 @@ COPY --from=builder /app/target/release/idea-pop-server /usr/local/bin/idea-pop-
 COPY --from=builder /app/target/release/seed /usr/local/bin/seed
 USER app
 ENV APP_PORT=8080
+# Public preview (unfinished sections answer "coming soon", guests can open Max): the
+# publish workflow builds the live image with PUBLIC_PREVIEW=1. Local builds leave it off.
+ARG PUBLIC_PREVIEW=0
+ENV PUBLIC_PREVIEW=$PUBLIC_PREVIEW
 EXPOSE 8080
 CMD ["idea-pop-server"]

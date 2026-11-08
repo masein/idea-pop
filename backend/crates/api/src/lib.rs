@@ -22,6 +22,7 @@ pub use help::purge_expired_help_messages;
 pub mod library;
 mod me;
 mod parent;
+mod preview;
 mod teacher;
 
 pub use error::{ApiError, ProblemDetail};
@@ -248,6 +249,7 @@ pub struct CreateHealthLogRequest {
         library::list_studios, library::list_courses, library::list_quick_makes,
         library::get_course, library::get_creator,
         challenges::list_challenges, challenges::get_challenge,
+        challenges::preview_list_challenges, challenges::preview_get_challenge,
         ideas::submit_idea, ideas::idea_references, ideas::my_ideas, ideas::attach_sketch,
         help::ask_helper, help::idea_feedback, help::parent_help_messages,
         help::teacher_help_messages, help::set_helper_enabled,
@@ -473,6 +475,7 @@ pub fn router_with_metrics(
     // Use route_layer (not layer) so the middleware stays scoped to only
     // these routes after Router::merge; layer() would wrap the entire merged
     // service and leak the gate to unrelated routes like /classes/{code}/join.
+    let preview_state = state.clone();
     let tokens_cap = Arc::clone(&state.tokens);
     let consent_cap = Arc::clone(&state.consent);
     let gated_routes = Router::new()
@@ -617,6 +620,15 @@ pub fn router_with_metrics(
         // Challenges (any authenticated principal; restricted kids CAN read)
         .route("/challenges", get(challenges::list_challenges))
         .route("/challenges/:id", get(challenges::get_challenge))
+        // Public preview: guests open Max without an account (404 outside the preview).
+        .route(
+            "/preview/challenges",
+            get(challenges::preview_list_challenges),
+        )
+        .route(
+            "/preview/challenges/:id",
+            get(challenges::preview_get_challenge),
+        )
         // Scoped AI mission helper (kid-scoped; flag+consent+opt-in gated)
         .route("/challenges/:id/steps/:step/help", post(help::ask_helper))
         .route("/challenges/:id/idea-feedback", post(help::idea_feedback))
@@ -710,6 +722,11 @@ pub fn router_with_metrics(
         .merge(auth_routes)
         .merge(gated_routes)
         .merge(metrics_router)
+        // Public preview: unfinished sections answer "coming soon" (pass-through in dev).
+        .layer(middleware::from_fn_with_state(
+            preview_state,
+            preview::preview_gate,
+        ))
         .layer(middleware::from_fn(metrics_middleware))
         .layer(middleware::from_fn(timeout_middleware))
         .layer(TraceLayer::new_for_http())

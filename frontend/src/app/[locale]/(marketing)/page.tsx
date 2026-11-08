@@ -51,7 +51,8 @@ import expertArt from "../../../../public/landing/experts/art.png";
 import expertMath from "../../../../public/landing/experts/math.png";
 
 // The mission shown with the train picture, opened directly by its stable slug (not its place in the list).
-const TRAIN_CHALLENGE = "/challenges/by-slug/the-train-that-went-boom";
+// Public preview (susan, 2026-11-08): every challenge button on the landing opens Max, the one mission open to guests.
+const TRAIN_CHALLENGE = "/challenges/by-slug/help-max-cross-the-river";
 // On the wall (xl) the hero buttons are a size smaller so the pair fits side by side between the shelves and the girl.
 const heroWallButton = "xl:px-6 xl:py-2.5 xl:text-[clamp(0.875rem,1vw,1.0625rem)]";
 const kidMakes = [kidMake1, kidMake2, kidMake3, kidMake4, kidMake5, kidMake6];
@@ -240,12 +241,12 @@ export default async function LandingPage({ params }: Props) {
                 keep a grown button clear of its neighbour. */}
             <div className="flex flex-col sm:flex-row items-center justify-center xl:justify-start gap-4 sm:gap-8 xl:gap-8 xl:whitespace-nowrap mt-[clamp(0.5rem,0.3rem+0.6vw,0.75rem)]" data-intro="rise" style={motionDelay(980)}>
               <Link
-                href="/exploring"
+                href="/explore"
                 className={`${btnLime} ${heroWallButton}`}
               >
                 {t("hero.cta_explore")}
               </Link>
-              <Link href="/challenges" prefetch={false} className={`${btnGlass} ${heroWallButton}`}>
+              <Link href={TRAIN_CHALLENGE} prefetch={false} className={`${btnGlass} ${heroWallButton}`}>
                 {t("hero.cta_challenge")}
               </Link>
             </div>
@@ -365,7 +366,7 @@ export default async function LandingPage({ params }: Props) {
             {keepTogether(t("paint.body"))}
           </p>
           {/* The kit's primary, as in the mission band. */}
-          <Link href="/explore" prefetch={false} className={btnLime} data-reveal="pop" style={motionDelay(220)}>
+          <Link href="/library" prefetch={false} className={btnLime} data-reveal="pop" style={motionDelay(220)}>
             {t("paint.cta")}
           </Link>
         </div>
@@ -674,6 +675,7 @@ export default async function LandingPage({ params }: Props) {
         inputLabel={t("ask.input_label")}
         sendLabel={t("ask.send_label")}
         micLabel={t("ask.mic_label")}
+        previewNote={process.env.NEXT_PUBLIC_PUBLIC_PREVIEW === "1" ? t("ask.preview_note") : undefined}
       />
 
       {/* 12. CTA band — Figma: a 1336-wide #18785A panel with radius 112 that straddles the footer (its bottom 105px sit

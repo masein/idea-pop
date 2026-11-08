@@ -392,3 +392,71 @@ pub async fn get_challenge(
         None => Err(ApiError::Domain(idea_pop_domain::DomainError::NotFound)),
     }
 }
+
+// ── Public preview: guests (no account) ───────────────────────────────────────
+
+/// The missions list for a guest on the public site (no account needed). Only on the
+/// live site's public preview; 404 everywhere else.
+#[utoipa::path(
+    get, path = "/preview/challenges",
+    tag = "challenges",
+    params(ChallengeQuery),
+    responses(
+        (status = 200, description = "Missions list for guests", body = ChallengePageResponse),
+        (status = 404, description = "Not in public preview",   body = crate::ProblemDetail),
+    )
+)]
+pub async fn preview_list_challenges(
+    State(state): State<AppState>,
+    Query(q): Query<ChallengeQuery>,
+) -> Result<Json<ChallengePageResponse>, ApiError> {
+    if !state.public_preview {
+        return Err(ApiError::Domain(idea_pop_domain::DomainError::NotFound));
+    }
+    let filter = ChallengeFilter {
+        season: q.season,
+        week: q.week,
+        age_mode: None,
+        page: q.page,
+        per_page: q.per_page,
+    };
+    filter.validate()?;
+    let page = state.challenge.list(&filter).await?;
+    Ok(Json(ChallengePageResponse {
+        items: page
+            .items
+            .into_iter()
+            .map(|c| challenge_to_dto(c, false, q.lang.as_deref()))
+            .collect(),
+        total: page.total,
+        page: page.page,
+        per_page: page.per_page,
+    }))
+}
+
+/// One mission for a guest on the public site: Max only. 404 for any other mission
+/// and outside the public preview.
+#[utoipa::path(
+    get, path = "/preview/challenges/{id}",
+    tag = "challenges",
+    params(("id" = Uuid, Path, description = "Challenge UUID"), LangQuery),
+    responses(
+        (status = 200, description = "Max, for guests", body = ChallengeResponse),
+        (status = 404, description = "Not available",   body = crate::ProblemDetail),
+    )
+)]
+pub async fn preview_get_challenge(
+    State(state): State<AppState>,
+    Path(id): Path<Uuid>,
+    Query(q): Query<LangQuery>,
+) -> Result<Json<ChallengeResponse>, ApiError> {
+    if !state.public_preview {
+        return Err(ApiError::Domain(idea_pop_domain::DomainError::NotFound));
+    }
+    match state.challenge.find_by_id(id).await? {
+        Some(c) if c.slug == idea_pop_domain::preview::PREVIEW_MISSION_SLUG => {
+            Ok(Json(challenge_to_dto(c, false, q.lang.as_deref())))
+        }
+        _ => Err(ApiError::Domain(idea_pop_domain::DomainError::NotFound)),
+    }
+}

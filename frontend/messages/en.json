@@ -206,7 +206,8 @@
       "placeholder": "Ask me anything you like...",
       "input_label": "Your question for Idea Pop",
       "send_label": "Send question",
-      "mic_label": "Ask by voice"
+      "mic_label": "Ask by voice",
+      "preview_note": "I'm still learning! I'll be here to answer your questions soon."
     },
     "cta_band": {
       "heading": "Your kid's first invention could be this week.",
@@ -2087,5 +2088,41 @@
     "intro_conspy": "Hi! I'm Conspy. I love unusual and creative ideas!",
     "inspiration_title": "Inspiration",
     "inspiration_text": "Inspiration means noticing something interesting and getting a new idea from it! For example, watching birds fly might inspire you to design something that can fly.\nLearning from nature means understanding how nature works and creating your own idea, not copying it exactly!"
+  },
+  "preview": {
+    "section_title": "Coming Soon!",
+    "section_body": "We're creating something exciting! More IDEA POP adventures will be available soon.",
+    "profile_title": "We're Upgrading IDEA POP!",
+    "profile_body": "We're improving our system. All features will be available soon!",
+    "guest_save_notice": "IDEA POP is still in development. Your idea is kept only for this session and won't be saved permanently.",
+    "guest_save_ok": "OK, let's keep going",
+    "signup_temp_notice": "This is a temporary, one-time account while IDEA POP is under development.",
+    "challenges_more": "More challenges are being designed. Coming soon!",
+    "challenge_coming_soon": "Coming soon",
+    "challenge_coming_soon_aria": "Mission {index}: coming soon",
+    "page_coming_soon_aria": "Page {page}: coming soon",
+    "guest_overrides": {
+      "mission": {
+        "saved": "✓ Kept for this visit",
+        "xp_problem_solved": "First idea"
+      },
+      "story": {
+        "solved_text": "<b>Your idea is kept for this visit.</b> Popi will look at it and give you some tips.",
+        "solved_chip": "Idea kept for now",
+        "solved_text_again": "Your new idea is kept for this visit too! You already collected the points for this section, so this one is just for you.",
+        "solved_saved_line": "Your idea is kept for this visit.",
+        "review_saved_later": "Your idea is kept for this visit. It won't be saved after you close the page.",
+        "review_saved_develop": "Your idea is kept for this visit. We're still exploring how it might work!",
+        "version_saved": "Your new version is kept for this visit! You can add another one anytime.",
+        "subst_saved_title": "Done!",
+        "subst_saved_text": "You finished the S — Substitute practice. Your idea, your change, your prediction and your results are kept for this visit.",
+        "lab_photo_saved": "Photo kept for this visit",
+        "lab_describe_saved": "Your description is kept for this visit.",
+        "rewards_load_failed": "Your points couldn't load right now."
+      },
+      "stars": {
+        "improved_saved": "Your improved idea is kept for this visit."
+      }
+    }
   }
 }

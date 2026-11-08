@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import { useRouter } from '@/i18n/routing';
 import { getAccessToken } from '@/lib/api/auth';
 import { fetchChallenges } from '@/lib/api/client';
+import { PUBLIC_PREVIEW } from '@/lib/publicPreview';
 
 // Opens a challenge by its stable slug (e.g. the landing page's "The train that went boom"). Challenge ids are
 // generated per database, so links from outside the app name the slug and this page swaps it for the id.
@@ -24,6 +25,11 @@ export default function ChallengeBySlugPage() {
       })
       .catch(() => {
         if (cancelled) return;
+        // Public preview: the list is open to everyone, so a failure here is not a sign-in.
+        if (PUBLIC_PREVIEW) {
+          setMissing(true);
+          return;
+        }
         // Signed out: sign in and come straight back here, as the challenge page does.
         if (!getAccessToken()) {
           try {

@@ -237,6 +237,7 @@
       const hidden = opacity < .001;
       const vis = hidden ? 'hidden' : 'visible';
       if (host.style.visibility !== vis) host.style.visibility = vis;
+      if (hidden && host.style.opacity !== '0') host.style.opacity = '0';
       let wingState = lastWing;
       if (!hidden) {
         host.style.transform = `translate3d(${(x - win.scrollX).toFixed(2)}px,${(y - win.scrollY).toFixed(2)}px,0) scale(${pose.S.toFixed(5)}) translate(${-ANCHOR.x}px,${-ANCHOR.y}px)`;

@@ -219,7 +219,9 @@
       this.gl = this.canvas.getContext('webgl', {
         alpha: true, antialias: true, depth: false, stencil: false,
         premultipliedAlpha: true, preserveDrawingBuffer: false,
-        powerPreference: 'low-power', desynchronized: true,
+        // desynchronized (low-latency) canvases skip normal compositing on many Android phones and drew the wings as a
+        // black box (susan, 2026-11-08), so the canvas uses the normal, transparent path
+        powerPreference: 'low-power', desynchronized: false,
         // Idea Pop site (2026-11-07): no WebGL on software-only graphics (no GPU, blocked drivers, remote desktops),
         // where two large canvases per frame froze the page; the wings then use the light image-transform fallback.
         failIfMajorPerformanceCaveat: true

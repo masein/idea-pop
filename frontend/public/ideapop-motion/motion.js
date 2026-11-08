@@ -19,6 +19,7 @@
     let lastFocus = 387, amplitude = .65, hoverStart = null, reduced = motionPreference.matches;
     let latest = {}, playing = null, paused = false, frozenScroll = null;
     let pinnedScene = null;
+    let lastWing, lastGirl = '', lastMission = '', sleeping = false;
     const on = (target, type, fn, opts) => { target.addEventListener(type, fn, opts); cleanup.push(() => target.removeEventListener(type, fn, opts)); };
     const nativeToDoc = n => C.piecewise(geometry.native, geometry.doc, n);
     const docToNative = n => C.piecewise(geometry.doc, geometry.native, n);
@@ -231,13 +232,24 @@
       const y = (terminal ? geometry.arrivalY : pose.Y) + bob * geometry.g;
       // The final paper artwork is a photograph layer. The flying rig always
       // stays upright; the exact drawn pose comes from the approved photo.
-      host.style.transform = `translate3d(${(x - win.scrollX).toFixed(2)}px,${(y - win.scrollY).toFixed(2)}px,0) scale(${pose.S.toFixed(5)}) translate(${-ANCHOR.x}px,${-ANCHOR.y}px)`;
-      host.style.opacity = opacity.toFixed(4);
-      host.style.visibility = opacity < .001 ? 'hidden' : 'visible';
-      const wingState = wing?.update({ timeSeconds: now / 1000, amplitude, resting, pixelScale: pose.S, flapRateHz: rate });
-      if (tail) tail.style.transform = `rotateZ(${(resting ? 0 : Math.sin((wingState?.phase ?? 0) * Math.PI * 2 - .65) * 3 * amplitude).toFixed(3)}deg)`;
-      doc.documentElement.style.setProperty('--painted-reveal', girl.toFixed(4));
-      doc.documentElement.style.setProperty('--mission-reveal', mission.reveal.toFixed(4));
+      // Idea Pop site (2026-11-07): no drawing at all while the bird is hidden; styles and the page-wide variables are
+      // only written when they change.
+      const hidden = opacity < .001;
+      const vis = hidden ? 'hidden' : 'visible';
+      if (host.style.visibility !== vis) host.style.visibility = vis;
+      if (hidden && host.style.opacity !== '0') host.style.opacity = '0';
+      let wingState = lastWing;
+      if (!hidden) {
+        host.style.transform = `translate3d(${(x - win.scrollX).toFixed(2)}px,${(y - win.scrollY).toFixed(2)}px,0) scale(${pose.S.toFixed(5)}) translate(${-ANCHOR.x}px,${-ANCHOR.y}px)`;
+        const o = opacity.toFixed(4);
+        if (host.style.opacity !== o) host.style.opacity = o;
+        wingState = lastWing = wing?.update({ timeSeconds: now / 1000, amplitude, resting, pixelScale: pose.S, flapRateHz: rate });
+        if (tail) tail.style.transform = `rotateZ(${(resting ? 0 : Math.sin((wingState?.phase ?? 0) * Math.PI * 2 - .65) * 3 * amplitude).toFixed(3)}deg)`;
+      }
+      const g4 = girl.toFixed(4), m4 = mission.reveal.toFixed(4);
+      if (g4 !== lastGirl) { lastGirl = g4; doc.documentElement.style.setProperty('--painted-reveal', g4); }
+      if (m4 !== lastMission) { lastMission = m4; doc.documentElement.style.setProperty('--mission-reveal', m4); }
+      sleeping = hidden && heroIn >= 1 && focus === lastFocus && !playing;
       latest = {
         focus, scrollY: win.scrollY, maxScroll: geometry.maxScroll, pinDelta,
         scene: geometry.scene ? { ...geometry.scene, photoScreenTop: geometry.scene.frameTop + pinDelta - scroll } : null,
@@ -247,17 +259,14 @@
         wing: wingState, hovering: terminal, playing: !!playing, reducedMotion: reduced,
         stage: girlHold ? 'girl-paper' : mission.reveal >= 1 ? 'boy-paper' : focus >= 8120 ? 'footer' : focus > 3880 && focus < geometry.mission.enter ? 'boy-observation' : focus > geometry.mission.leave && focus < 5217 ? 'boy-departure' : focus < 900 ? 'hero' : 'flight'
       };
-      host.dataset.motionState = latest.stage;
-      host.dataset.x = x.toFixed(2); host.dataset.y = y.toFixed(2);
-      host.dataset.scale = pose.S.toFixed(5); host.dataset.opacity = opacity.toFixed(4);
-      host.dataset.docking = pose.docking.toFixed(4);
+      if (host.dataset.motionState !== latest.stage) host.dataset.motionState = latest.stage;
       lastFocus = focus;
     }
     function tick(now) {
       raf = 0;
       if (destroyed || doc.hidden) return;
       render(now);
-      if (!reduced || playing) raf = win.requestAnimationFrame(tick);
+      if ((!reduced || playing) && !sleeping) raf = win.requestAnimationFrame(tick);
     }
     function request() { if (!raf && !destroyed) raf = win.requestAnimationFrame(tick); }
     function remeasure() { dirty = true; request(); }

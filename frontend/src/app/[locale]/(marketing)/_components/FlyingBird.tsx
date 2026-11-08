@@ -17,7 +17,7 @@ import { useEffect, useRef, useState } from "react";
 
 const BASE = "/ideapop-motion/";
 const BIRD = "/landing/bird/";
-const REV = "motion-2026-10-21";
+const REV = "motion-2026-11-08";
 const SCRIPTS = ["wing-flight.js", "motion-core.js", "motion.js"];
 const PARTS = ["bird-wing-far", "bird-tail", "bird-body", "bird-wing-near"];
 const partSrc = (file: string) => `${BIRD}${file}.webp?v=bird-2026-10-15c`;

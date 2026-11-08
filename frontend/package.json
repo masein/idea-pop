@@ -12,7 +12,8 @@
     "test:watch": "vitest",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "check:budget": "node scripts/check-landing-budget.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",

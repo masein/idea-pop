@@ -219,11 +219,16 @@
       this.gl = this.canvas.getContext('webgl', {
         alpha: true, antialias: true, depth: false, stencil: false,
         premultipliedAlpha: true, preserveDrawingBuffer: false,
-        powerPreference: 'low-power', desynchronized: true
+        powerPreference: 'low-power', desynchronized: true,
+        // Idea Pop site (2026-11-07): no WebGL on software-only graphics (no GPU, blocked drivers, remote desktops),
+        // where two large canvases per frame froze the page; the wings then use the light image-transform fallback.
+        failIfMajorPerformanceCaveat: true
       });
-      if (!this.gl) {
+      const info = this.gl && this.gl.getExtension('WEBGL_debug_renderer_info');
+      const renderer = this.gl ? String(info ? this.gl.getParameter(info.UNMASKED_RENDERER_WEBGL) : this.gl.getParameter(this.gl.RENDERER)) : '';
+      if (!this.gl || /swiftshader|llvmpipe|softpipe|software|basic render/i.test(renderer)) {
         this.canvas.remove();
-        throw new Error('WebGL is unavailable.');
+        throw new Error('WebGL is unavailable or software-only.');
       }
       this.resolution = -1;
       this.lost = false;
@@ -387,16 +392,16 @@
         this.near.canvas.style.display = 'none';
         this.far.canvas.style.display = 'none';
         this.useGL = false;
-        this.nearImage.style.visibility = 'visible';
-        this.farImage.style.visibility = 'visible';
+        this.nearImage.style.visibility = ''; // inherit the bird's own visibility (2026-11-08: 'visible' showed the wings while the bird was hidden)
+        this.farImage.style.visibility = '';
       }
       if (!this.loading) {
         if (this.useGL) {
           this.near.draw(pose, pixelScale, 1);
           this.far.draw(pose.far, pixelScale, 1);
         } else {
-          this.nearImage.style.visibility = 'visible';
-          this.farImage.style.visibility = 'visible';
+          this.nearImage.style.visibility = ''; // inherit the bird's own visibility (2026-11-08: 'visible' showed the wings while the bird was hidden)
+          this.farImage.style.visibility = '';
           const applyProjection = (img, p) => {
             const u = deformPoint(ROOT.x + AXIS.x * 400, ROOT.y + AXIS.y * 400, p);
             const v = deformPoint(ROOT.x + SPAN.x * 400, ROOT.y + SPAN.y * 400, p);

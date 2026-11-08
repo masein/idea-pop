@@ -370,6 +370,15 @@ export default function HeroScene() {
       if (layout()) draw();
     });
     resize.observe(viewport);
+    // Scrolled away before the entrance ended: show the finished scene at once instead of animating it off screen
+    // while the visitor scrolls (it is what they see when they come back up anyway).
+    const away = new IntersectionObserver((entries) => {
+      if (entries.some((e) => !e.isIntersecting) && ready && playing) {
+        stop();
+        finish();
+      }
+    });
+    away.observe(viewport);
     const onVisibility = () => {
       stop();
       schedule();
@@ -432,6 +441,7 @@ export default function HeroScene() {
       stop();
       showNav(1);
       resize.disconnect();
+      away.disconnect();
       document.removeEventListener("visibilitychange", onVisibility);
       reduced.removeEventListener("change", onReducedChange);
     };

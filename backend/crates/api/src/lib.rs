@@ -620,7 +620,7 @@ pub fn router_with_metrics(
         // Challenges (any authenticated principal; restricted kids CAN read)
         .route("/challenges", get(challenges::list_challenges))
         .route("/challenges/:id", get(challenges::get_challenge))
-        // Public preview: guests open Max without an account (404 outside the preview).
+        // Guests (no account) open Max: the list and Max itself, read-only.
         .route(
             "/preview/challenges",
             get(challenges::preview_list_challenges),

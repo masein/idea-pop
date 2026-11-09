@@ -1,22 +1,21 @@
 "use client";
 
 /**
- * Guest play on the public preview: a visitor without an account can play Max, and
+ * Guest play: a visitor without an account (a first visit, an Incognito window) can play Max, and
  * everything they make stays in THIS browser tab (sessionStorage + memory). Nothing a
  * guest makes is sent to the server: the mission itself is read from the guest-only
  * preview endpoints, every save, star, badge and photo is answered here.
  *
- * Only active on the public preview (never on localhost), and only while nobody is
- * signed in.
+ * Active whenever nobody is signed in, on the live site and on localhost alike, so the
+ * landing page's buttons open Max for everyone. Signed-in users are never affected.
  */
 
-import { PUBLIC_PREVIEW } from "@/lib/publicPreview";
 import { getAccessToken } from "./auth";
 import { getPersona } from "@/lib/auth/persona";
 import { MISSION_BADGES, MISSION_XP_MAX, PHOTO_KINDS } from "@/components/challenge/story/missionBadges";
 
 export function isGuest(): boolean {
-  if (!PUBLIC_PREVIEW || typeof window === "undefined") return false;
+  if (typeof window === "undefined") return false;
   return !getAccessToken() && !getPersona();
 }
 
@@ -135,9 +134,19 @@ function blobToDataUrl(b: Blob): Promise<string> {
 
 // ── The guest "server" ───────────────────────────────────────────────────────
 
+// One call at a time: each reads this tab's store, changes it and writes it back, so two
+// rewards given together (a badge and a photo) never overwrite each other.
+let queue: Promise<unknown> = Promise.resolve();
+
 /** Answers a guest's API call, or returns null to let it go to the network. */
-export async function guestFetch(request: Request): Promise<Response | null> {
-  if (!isGuest()) return null;
+export function guestFetch(request: Request): Promise<Response | null> {
+  if (!isGuest()) return Promise.resolve(null);
+  const run = queue.then(() => handle(request));
+  queue = run.catch(() => null);
+  return run;
+}
+
+async function handle(request: Request): Promise<Response | null> {
   const url = new URL(request.url, window.location.origin);
   if (!url.pathname.startsWith("/api/")) return null;
   const path = url.pathname.slice(4); // keep the leading "/"

@@ -2,10 +2,13 @@
 
 import { useEffect, useRef, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
-import { useTranslations } from 'next-intl';
+import { useFormatter, useTranslations } from 'next-intl';
 import { btnPrimary, btnSecondary } from '@/components/challenge/buttons';
 import AssetSlot from '@/components/AssetSlot';
 import ModalClose from '@/components/ModalClose';
+import StarRow from '@/components/challenge/StarRow';
+import { flyToSlot, releaseAllSoon } from '@/lib/achievementBar';
+import { markPopupOpen } from '@/lib/characters';
 
 const CONFETTI_COLORS = ['#2D9CDB', '#FFD93D', '#6BCB77', '#FF6B6B', '#C77DFF', '#FF9F45'];
 // Fixed positions and delays (no randomness), so every render looks the same.
@@ -21,12 +24,27 @@ export interface RewardBadge {
   /** A character standing beside the popup, whole. */
   character?: string;
   name: string;
+  /** The badge's id: its slot on the achievement bar. */
+  key?: string;
+}
+
+/** What changed on the mission's achievement bar with this reward. */
+export interface RewardSummary {
+  /** The mission XP before this reward. */
+  xpBefore: number;
+  /** XP given now; null while the server answers. */
+  xpGained: number | null;
+  /** The stars before this reward. */
+  starsBefore: number[];
+  /** A star earned now (1–3), if any. */
+  starNew?: number | null;
 }
 
 /**
- * The one reward popup for Max's challenge: the same layout for every achievement —
- * badge artwork, badge name, a short explanation, the XP, then the buttons. Only the
- * artwork and words change. Nothing navigates until the kid presses a button.
+ * The one reward popup for Max's challenge: the same layout for every achievement. The main
+ * reward first (the badge, or the star), then what changed (XP before → after, stars x/3 →
+ * y/3), then the encouragement, then the next step. When the kid moves on, each reward flies
+ * into its place on the achievement bar. Nothing navigates until the kid presses a button.
  */
 export default function RewardPopup({
   badge = null,
@@ -35,6 +53,7 @@ export default function RewardPopup({
   xp,
   xpAlready = false,
   lead,
+  summary = null,
   children,
   primary,
   secondary,
@@ -44,12 +63,14 @@ export default function RewardPopup({
   badge?: RewardBadge | null;
   title: string;
   text: ReactNode;
-  /** XP earned now; null while the server answers. */
+  /** XP earned now; null while the server answers. (Unused when there is a summary.) */
   xp: number | null;
   /** This reward was already collected before (never given twice). */
   xpAlready?: boolean;
-  /** An optional line above the badge (e.g. "You've earned all the points…"). */
+  /** Encouragement under the reward details (e.g. "One problem can have many solutions!"). */
   lead?: ReactNode;
+  /** XP and star progress for the achievement bar. */
+  summary?: RewardSummary | null;
   /** Extra content under the explanation (a photo, PopAI's tip…). */
   children?: ReactNode;
   primary: { label: string; onClick: () => void; disabled?: boolean };
@@ -59,11 +80,42 @@ export default function RewardPopup({
   testId?: string;
 }) {
   const t = useTranslations('story');
+  const f = useFormatter();
+  const n = (v: number) => f.number(v);
   const goRef = useRef<HTMLButtonElement>(null);
+  const medalRef = useRef<HTMLElement | null>(null);
+  const starRef = useRef<HTMLSpanElement>(null);
+  const xpRef = useRef<HTMLParagraphElement>(null);
   useEffect(() => {
     goRef.current?.focus();
   }, []);
+  // While it is open, no character introduction pops up over it.
+  useEffect(() => {
+    markPopupOpen(true);
+    return () => markPopupOpen(false);
+  }, []);
   const isImage = !!badge && !badge.art.startsWith('asset:') && /^\/|\.(png|webp|jpe?g|svg)$/i.test(badge.art);
+  const starNew = summary?.starNew ?? null;
+  const starsAfter = summary
+    ? starNew && !summary.starsBefore.includes(starNew)
+      ? [...summary.starsBefore, starNew]
+      : summary.starsBefore
+    : [];
+  const gained = summary ? summary.xpGained : xp;
+
+  // Moving on: each reward flies into the bar (the popup closes at once; the copies travel).
+  const finish = (go: () => void) => () => {
+    if (summary) {
+      if (badge?.key) void flyToSlot(medalRef.current, `badge-${badge.key}`);
+      if (starNew) void flyToSlot(starRef.current?.querySelector(`[data-testid="star-${starNew}"]`) ?? null, `star-${starNew}`);
+      void flyToSlot(xpRef.current, 'xp');
+      releaseAllSoon();
+    }
+    go();
+  };
+
+  const medalClass =
+    'relative flex h-28 w-28 items-center justify-center rounded-full border-[6px] border-white bg-[radial-gradient(circle_at_35%_30%,#fff,#ffe38a_40%,#f2b705)] text-5xl shadow-[0_6px_18px_rgba(0,0,0,0.18)]';
 
   return createPortal(
     <div className="app-typography fixed inset-0 z-[90] flex items-center justify-center overflow-y-auto bg-[rgba(15,40,70,0.45)] p-4">
@@ -95,29 +147,45 @@ export default function RewardPopup({
           />
         ))}
 
-        <ModalClose onClose={onClose} testId={`${testId}-close`} />
+        <ModalClose onClose={finish(onClose)} testId={`${testId}-close`} />
 
-        {lead && (
-          <div data-testid={`${testId}-lead`} className="relative w-full rounded-[18px] bg-gradient-to-br from-[#FFF7D6] to-[#FFE9A8] px-4 py-3 font-body text-base font-bold leading-relaxed text-ink">
-            {lead}
-          </div>
-        )}
-
-        {/* Badge artwork: always the same size and place. A character (e.g. Quizi) stands
-            beside the popup, whole, never cropped. */}
-        {isImage && badge && (
+        {/* 1. The main reward: the badge (always the same size and place), or the star. */}
+        {badge && isImage && (
           // eslint-disable-next-line @next/next/no-img-element -- the badge's own medal
-          <img src={badge.art} alt="" aria-hidden="true" data-testid={`${testId}-medal`} className="relative h-28 w-28 object-contain sm:h-32 sm:w-32" />
+          <img
+            ref={(el) => {
+              medalRef.current = el;
+            }}
+            src={badge.art}
+            alt=""
+            aria-hidden="true"
+            data-testid={`${testId}-medal`}
+            className="relative h-28 w-28 object-contain sm:h-32 sm:w-32"
+          />
         )}
-        {!isImage && (
-        <span
-          aria-hidden="true"
-          className="relative flex h-28 w-28 items-center justify-center rounded-full border-[6px] border-white bg-[radial-gradient(circle_at_35%_30%,#fff,#ffe38a_40%,#f2b705)] text-5xl shadow-[0_6px_18px_rgba(0,0,0,0.18)]"
-        >
-          {badge?.art.startsWith('asset:') ? <AssetSlot id={badge.art.slice(6)} className="!rounded-full" /> : <AssetSlot id="CHALLENGE-UI-001" className="!rounded-full" />}
-        </span>
+        {badge && !isImage && (
+          <span
+            ref={(el) => {
+              medalRef.current = el;
+            }}
+            aria-hidden="true"
+            className={medalClass}
+          >
+            <AssetSlot id={badge.art.startsWith('asset:') ? badge.art.slice(6) : 'CHALLENGE-UI-001'} className="!rounded-full" />
+          </span>
         )}
-        {badge && (
+        {!badge && starNew && (
+          <span ref={starRef} data-testid={`${testId}-star-hero`} className="relative">
+            <StarRow stars={starsAfter} size={52} pop={[starNew]} />
+          </span>
+        )}
+        {!badge && !starNew && (
+          <span aria-hidden="true" className={medalClass}>
+            <AssetSlot id="CHALLENGE-UI-001" className="!rounded-full" />
+          </span>
+        )}
+        {/* The badge's name, unless its artwork already says it (Quizi's medal). */}
+        {badge && !isImage && (
           <p data-testid={`${testId}-badge`} className="relative rounded-pill bg-[#FFF5D1] px-4 py-1 font-body text-sm font-extrabold uppercase tracking-wide text-[#6b4d00]">
             {badge.name}
           </p>
@@ -126,22 +194,43 @@ export default function RewardPopup({
         <h2 id={`${testId}-title`} className="relative font-display text-3xl text-ink">
           {title}
         </h2>
-        <p className="relative font-body text-base font-semibold leading-relaxed text-ink/80">{text}</p>
 
-        {(xp !== null || xpAlready) && (
-          <p data-testid={`${testId}-xp`} className="relative rounded-pill bg-[#EAF5FC] px-4 py-1.5 font-body text-base font-extrabold text-[#1A6FA6]">
-            {xpAlready || xp === 0 ? t('xp_already') : <span dir="ltr"><AssetSlot id="CHALLENGE-UI-004" variant="dot" />+{xp} XP</span>}
+        {/* 2. What was earned, simply: the star filling in among the three, and +XP. The running
+            total lives in the achievement bar. */}
+        {starNew && badge && (
+          <span ref={starRef} data-testid={`${testId}-stars`} className="relative">
+            <StarRow stars={starsAfter} size={36} pop={[starNew]} />
+          </span>
+        )}
+        {gained !== null && gained > 0 && (
+          <p ref={xpRef} data-testid={`${testId}-xp`} dir="ltr" className="relative rounded-pill bg-[#EAF5FC] px-5 py-1.5 font-display text-2xl text-[#1A6FA6]">
+            +{n(gained)} XP
           </p>
+        )}
+        {/* A badge given before shows it was already collected; a section without XP shows none. */}
+        {((gained === 0 && !!badge) || (!summary && xpAlready)) && (
+          <p data-testid={`${testId}-xp`} className="relative rounded-pill bg-[#EAF5FC] px-4 py-1.5 font-body text-base font-extrabold text-[#1A6FA6]">
+            {t('xp_already')}
+          </p>
+        )}
+
+        {/* 3. The encouragement. */}
+        <p className="relative font-body text-base font-semibold leading-relaxed text-ink/80">{text}</p>
+        {lead && (
+          <div data-testid={`${testId}-lead`} className="relative w-full rounded-[18px] bg-gradient-to-br from-[#FFF7D6] to-[#FFE9A8] px-4 py-3 font-body text-base font-bold leading-relaxed text-ink">
+            {lead}
+          </div>
         )}
 
         {children && <div className="relative w-full">{children}</div>}
 
+        {/* 4. What next. */}
         <div className="relative mt-2 flex w-full flex-col gap-3">
-          <button ref={goRef} type="button" data-testid={`${testId}-primary`} onClick={primary.onClick} disabled={primary.disabled} className={`${btnPrimary} w-full`}>
+          <button ref={goRef} type="button" data-testid={`${testId}-primary`} onClick={finish(primary.onClick)} disabled={primary.disabled} className={`${btnPrimary} w-full`}>
             {primary.label}
           </button>
           {secondary && (
-            <button type="button" data-testid={`${testId}-secondary`} onClick={secondary.onClick} disabled={secondary.disabled} className={`${btnSecondary} w-full`}>
+            <button type="button" data-testid={`${testId}-secondary`} onClick={finish(secondary.onClick)} disabled={secondary.disabled} className={`${btnSecondary} w-full`}>
               {secondary.label}
             </button>
           )}

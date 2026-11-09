@@ -393,26 +393,21 @@ pub async fn get_challenge(
     }
 }
 
-// ── Public preview: guests (no account) ───────────────────────────────────────
+// ── Guests (no account): Max only ───────────────────────────────────────
 
-/// The missions list for a guest on the public site (no account needed). Only on the
-/// live site's public preview; 404 everywhere else.
+/// The missions list for a guest (no account needed): a first visit can open Max from it.
 #[utoipa::path(
     get, path = "/preview/challenges",
     tag = "challenges",
     params(ChallengeQuery),
     responses(
         (status = 200, description = "Missions list for guests", body = ChallengePageResponse),
-        (status = 404, description = "Not in public preview",   body = crate::ProblemDetail),
     )
 )]
 pub async fn preview_list_challenges(
     State(state): State<AppState>,
     Query(q): Query<ChallengeQuery>,
 ) -> Result<Json<ChallengePageResponse>, ApiError> {
-    if !state.public_preview {
-        return Err(ApiError::Domain(idea_pop_domain::DomainError::NotFound));
-    }
     let filter = ChallengeFilter {
         season: q.season,
         week: q.week,
@@ -434,8 +429,7 @@ pub async fn preview_list_challenges(
     }))
 }
 
-/// One mission for a guest on the public site: Max only. 404 for any other mission
-/// and outside the public preview.
+/// One mission for a guest (no account needed): Max only. 404 for any other mission.
 #[utoipa::path(
     get, path = "/preview/challenges/{id}",
     tag = "challenges",
@@ -450,9 +444,6 @@ pub async fn preview_get_challenge(
     Path(id): Path<Uuid>,
     Query(q): Query<LangQuery>,
 ) -> Result<Json<ChallengeResponse>, ApiError> {
-    if !state.public_preview {
-        return Err(ApiError::Domain(idea_pop_domain::DomainError::NotFound));
-    }
     match state.challenge.find_by_id(id).await? {
         Some(c) if c.slug == idea_pop_domain::preview::PREVIEW_MISSION_SLUG => {
             Ok(Json(challenge_to_dto(c, false, q.lang.as_deref())))

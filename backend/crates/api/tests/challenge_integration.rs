@@ -879,7 +879,7 @@ fn anon_get(uri: &str) -> Request<Body> {
 }
 
 #[tokio::test]
-async fn preview_endpoints_are_off_outside_the_public_preview() {
+async fn guests_open_max_without_an_account_outside_the_preview_too() {
     let (pool, _pg) = start_postgres().await;
     let max = insert_challenge(
         &pool,
@@ -892,15 +892,33 @@ async fn preview_endpoints_are_off_outside_the_public_preview() {
         VARIANTS_JSON,
     )
     .await;
+    let other = insert_challenge(
+        &pool,
+        "another-mission",
+        "Another mission",
+        1,
+        2,
+        STEPS_MAX,
+        TOOLS_JSON,
+        VARIANTS_JSON,
+    )
+    .await;
+    // No public preview (localhost): a first-time visitor still opens Max, and only Max.
     let app = router(challenge_state(pool), None);
     let res = app
         .clone()
         .oneshot(anon_get("/preview/challenges"))
         .await
         .unwrap();
-    assert_eq!(res.status(), StatusCode::NOT_FOUND);
+    assert_eq!(res.status(), StatusCode::OK);
     let res = app
+        .clone()
         .oneshot(anon_get(&format!("/preview/challenges/{max}")))
+        .await
+        .unwrap();
+    assert_eq!(res.status(), StatusCode::OK);
+    let res = app
+        .oneshot(anon_get(&format!("/preview/challenges/{other}")))
         .await
         .unwrap();
     assert_eq!(res.status(), StatusCode::NOT_FOUND);

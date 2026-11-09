@@ -10,6 +10,7 @@ import IdeasWallTab from '@/components/challenge/IdeasWallTab';
 import type { components } from '@/lib/api/schema';
 import type { ChallengeProgress } from '@/lib/api/client';
 import { useChallengeProgressState } from '@/lib/hooks/useChallengeProgress';
+import { isGuest } from '@/lib/api/guest';
 import { nextChallenge } from '@/lib/challenges/nextChallenge';
 import StarRow from '@/components/challenge/StarRow';
 import { discoveryOf } from '@/components/challenge/story/discovery';
@@ -96,6 +97,8 @@ export default function ChallengesList() {
 
   useEffect(() => {
     fetchChallenges(locale)
+      // A sign-in that has just ended (or run out) turns this visitor into a guest: ask again.
+      .catch(() => (isGuest() ? fetchChallenges(locale) : []))
       .then((c) => setChallenges((c ?? []) as ChallengeDetail[]))
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -461,15 +464,13 @@ function UnlockedChallengeCard({
               <span className={BADGE}>{t('challenge_badge', { index })}</span>
             </div>
           </button>
-          {/* This challenge's stars and XP; the row also turns the card on touch and keyboard. */}
+          {/* This challenge's stars and XP: part of the card, so it opens the mission too. */}
           <button
             type="button"
             data-testid="card-flip"
-            aria-controls={backId}
-            aria-expanded={open}
-            aria-label={t('card_flip_aria', { title: challenge.title })}
-            tabIndex={open ? -1 : 0}
-            onClick={() => setOpen(true)}
+            aria-label={challenge.title}
+            tabIndex={-1}
+            onClick={onOpen}
             className="flex min-h-[3.75rem] w-full items-center gap-3 border-t border-[#D6E4EE] px-4 py-2.5 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-inset focus-visible:ring-[#0F3F63]"
           >
             <StarRow stars={stars} />
@@ -484,10 +485,11 @@ function UnlockedChallengeCard({
         <div
           id={backId}
           data-testid="challenge-card-back"
+          // The whole card opens the mission (the back shows on hover).
           onClick={(e) => {
-            if (!(e.target as HTMLElement).closest('button')) setOpen(false);
+            if (!(e.target as HTMLElement).closest('button')) onOpen();
           }}
-          className="story-face story-back flex flex-col gap-2 overflow-hidden rounded-[1.25rem] border border-[#58C6EE] bg-[#F7FCFF] p-3 shadow-sm"
+          className="story-face story-back cursor-pointer flex flex-col gap-2 overflow-hidden rounded-[1.25rem] border border-[#58C6EE] bg-[#F7FCFF] p-3 shadow-sm"
         >
           <div className="flex flex-wrap items-baseline justify-between gap-x-3">
             <p className="text-lg leading-tight text-ink [font-family:var(--font-adlam)]">{challenge.title}</p>

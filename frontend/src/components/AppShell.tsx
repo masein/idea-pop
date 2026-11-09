@@ -11,6 +11,7 @@ import { hasMetCharacter, showCharacterIntro } from '@/lib/characters';
 import LocaleSwitcher from './marketing/LocaleSwitcher';
 import HelpPanel, { type HelpSection } from './HelpPanel';
 import { AVATARS } from '@/lib/avatars';
+import AvatarBadge from '@/components/profile/AvatarBadge';
 
 export type Section = 'profile' | 'explore' | 'library' | 'challenge' | 'studio';
 type Persona = 'kid' | 'parent' | 'teacher';
@@ -480,7 +481,8 @@ function AppShellInner({
   const items = NAV[persona];
   const theme = SECTION_THEME[activeSection];
   const showUpgrade = persona === 'kid' || persona === 'parent';
-  useFirstMeetIfKid(persona === 'kid');
+  // Inside a mission the story introduces Popi itself, after its narration (not on arrival).
+  useFirstMeetIfKid(persona === 'kid' && !pathname.startsWith('/challenges/'));
 
   useEffect(() => {
     try {
@@ -522,6 +524,8 @@ function AppShellInner({
               <span>{persona === 'kid' ? (avatar?.emoji ?? '🐧') : persona === 'teacher' ? '🧑‍🏫' : '🧑'}</span>
             )}
           </span>
+          {/* The newest mission badge (River Explorer after Max). */}
+          {persona === 'kid' && <AvatarBadge size="sm" />}
         </span>
         <span className="font-display text-lg font-bold text-ink">{displayName}</span>
       </div>

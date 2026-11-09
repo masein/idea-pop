@@ -4,7 +4,7 @@ import type { ReactNode } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { Link } from '@/i18n/routing';
 import { btnLime } from '@/components/ui/kit';
-import { PUBLIC_PREVIEW, makeInert } from '@/lib/publicPreview';
+import { PREVIEW_MISSION_PATH, PUBLIC_PREVIEW, makeInert } from '@/lib/publicPreview';
 
 /** Which screen: Explore and Library get their own line and a way to the missions; the
  *  signed-in homes (My Profile, the dashboards) get "We're upgrading". */
@@ -13,7 +13,7 @@ type Kind = 'explore' | 'library' | 'profile';
 /**
  * Public preview: an unfinished section stays in the page, faded and out of reach, under the
  * approved Coming Soon panel (fixed, no close button). The site menu stays usable, and on
- * Explore and Library a button leads to the missions. On localhost (no preview) the page shows
+ * Explore and Library a button opens Max, the mission everyone can play. On localhost (no preview) the page shows
  * exactly as before.
  *
  * The approved artwork keeps its logo, drawings and big heading. Its smaller lines are set as
@@ -87,7 +87,7 @@ export function ComingSoonPanel({ kind }: { kind: Kind }) {
           >
             {note}
           </p>
-          <Link href="/challenges" className={btnLime} data-testid="coming-soon-missions">
+          <Link href={PREVIEW_MISSION_PATH} className={btnLime} data-testid="coming-soon-missions">
             {t('explore_missions')}
           </Link>
         </>

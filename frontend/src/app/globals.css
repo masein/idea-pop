@@ -327,8 +327,17 @@ html {
   100% { transform: none; filter: drop-shadow(0 0 0 rgba(255, 196, 0, 0)); }
 }
 .star-earn { animation: star-earn 0.9s ease-out; }
+
+/* A reward landing in its slot on the mission's achievement bar: a short pop and glow. */
+@keyframes achievement-land {
+  0% { transform: scale(1); filter: drop-shadow(0 0 0 rgba(255, 196, 0, 0)); }
+  45% { transform: scale(1.35); filter: drop-shadow(0 0 8px rgba(255, 196, 0, 0.95)); }
+  100% { transform: scale(1); filter: drop-shadow(0 0 0 rgba(255, 196, 0, 0)); }
+}
+.achievement-land { animation: achievement-land 0.6s ease-out; }
 @media (prefers-reduced-motion: reduce) {
   .star-earn { animation: none; }
+  .achievement-land { animation: none; }
   .card-flip .story-flip-inner { transition: none; }
 }
 

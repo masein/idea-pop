@@ -8,6 +8,7 @@ import { useAgeMode } from '@/lib/hooks/useAgeMode';
 import { fetchKidProgress, fetchMyProjects } from '@/lib/api/client';
 import { levelProgress } from '@/lib/progress';
 import { AVATARS } from '@/lib/avatars';
+import AvatarBadge from '@/components/profile/AvatarBadge';
 import KidMedals from '@/components/profile/KidMedals';
 import KidProjectsGrid from '@/components/profile/KidProjectsGrid';
 import KidIdeas from '@/components/profile/KidIdeas';
@@ -138,6 +139,8 @@ export default function ProfilePage() {
       <div data-testid="profile-page" className="mx-auto flex max-w-3xl flex-col gap-7 px-4 py-6">
         {/* Header + XP strip */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center" data-testid="profile-header">
+          {/* The avatar, with the newest mission badge on its corner. */}
+          <span className="relative w-fit shrink-0">
           <div
             className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full text-4xl shadow-sm ring-4 ring-white"
             style={{ backgroundColor: avatar.bg }}
@@ -155,6 +158,8 @@ export default function ProfilePage() {
               <span aria-hidden="true">{avatar.emoji}</span>
             )}
           </div>
+          <AvatarBadge />
+          </span>
           <div className="flex-1">
             <h1 className="font-display text-2xl font-bold text-ink">
               {t('greeting', { name: nickname || t('default_nickname') })}

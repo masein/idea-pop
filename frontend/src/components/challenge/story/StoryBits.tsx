@@ -61,7 +61,8 @@ export function Popi({
   }, [speaking]);
   // Each page's Popi arrives with his own move (spin, turn around, fade, swing…), picked
   // from his line so a page always gets the same one and neighbouring pages differ.
-  useFirstMeet('popi');
+  // Popi introduces himself once the story has been read aloud and the kid scrolls on.
+  useFirstMeet('popi', true, { afterScroll: true });
   const entrance = POPI_ENTRANCES[[...text].reduce((h, ch) => (h * 31 + ch.charCodeAt(0)) >>> 0, 7) % POPI_ENTRANCES.length];
   return (
     <div data-testid="story-popi" className="flex items-end gap-4">

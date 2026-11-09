@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslations } from 'next-intl';
 import { GUEST_SAVE_EVENT, isGuest } from '@/lib/api/guest';
+import { markPopupOpen } from '@/lib/characters';
 
 /**
  * Public preview, guest play: when a guest saves an idea (or anything else), this explains
@@ -28,6 +29,12 @@ export default function GuestSaveNotice() {
 
   useEffect(() => {
     if (done) okRef.current?.focus();
+  }, [done]);
+  // No character introduction over this notice.
+  useEffect(() => {
+    if (!done) return;
+    markPopupOpen(true);
+    return () => markPopupOpen(false);
   }, [done]);
 
   if (!done) return null;

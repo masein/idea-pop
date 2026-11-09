@@ -835,7 +835,11 @@
     "hud_state_current": "You are here",
     "hud_state_done": "Completed",
     "hud_state_available": "Available",
-    "hud_state_locked": "Locked"
+    "hud_state_locked": "Locked",
+    "hud_xp_total": "{xp, number} XP",
+    "hud_xp_total_aria": "{xp, number} XP earned on this mission. What are XP and stars?",
+    "hud_badges_aria": "Badges on this mission",
+    "hud_badge_locked_aria": "{name}: not earned yet"
   },
   "ideas_wall": {
     "tab_mission": "Mission",
@@ -1945,7 +1949,14 @@
     "version_saved": "Your new version is saved! You can add another one anytime.",
     "version_failed": "We couldn't save your new version just now. Your words are still here, so please try again.",
     "build_continue": "Continue",
-    "build_continue_skip": "Continue without a new version"
+    "build_continue_skip": "Continue without a new version",
+    "solved_more_stars": "You earned your first star! Two more stars are waiting for you. One problem can have many solutions, so keep exploring!",
+    "retry_reward_title": "You earned the Second Try Hero badge!",
+    "retry_reward_text": "You built and tested a new version of your idea. Trying again is how inventors make things better!",
+    "complete_title": "Mission complete!",
+    "complete_text": "You finished the mission! Look at everything you earned.",
+    "complete_totals": "Everything you earned",
+    "avatar_badge_aria": "Newest mission badge: {name}"
   },
   "thinking_tools": {
     "accordion_young": "Stuck? Try a thinking tool!",

@@ -6,6 +6,19 @@ import XpInfoDialog from './XpInfoDialog';
 import StarRow from './StarRow';
 import { btnPrimary, btnSecondary } from '@/components/challenge/buttons';
 import AssetSlot from '@/components/AssetSlot';
+import BadgeIcon from '@/components/challenge/story/BadgeIcon';
+import { useHeldSlots } from '@/lib/achievementBar';
+
+/** What the kid has earned on this mission, for the achievement bar. */
+export interface MissionAchievements {
+  /** XP earned on this mission so far. */
+  xp: number;
+  /** The most this mission gives. */
+  xpMax: number;
+  stars: number[];
+  /** Every badge of the mission, in order; unearned ones show as quiet placeholders. */
+  badges: { key: string; art: string; name: string; earned: boolean }[];
+}
 
 const ALL_STEPS = [1, 2, 3, 4, 5, 6, 7, 8] as const;
 const INFO_KEYS = ['problem', 'goal', 'rules'] as const;
@@ -43,6 +56,8 @@ interface MissionHUDProps {
   stepLevels?: number[];
   /** The kid's stars on this challenge; shown beside the XP when given. */
   stars?: number[] | null;
+  /** The achievement bar (stars, total XP, badges) for badge-reward missions. */
+  achievements?: MissionAchievements | null;
 }
 
 export default function MissionHUD({
@@ -56,7 +71,9 @@ export default function MissionHUD({
   stepNames,
   stepLevels,
   stars = null,
+  achievements = null,
 }: MissionHUDProps) {
+  const held = useHeldSlots();
   const t = useTranslations('challenge');
   const steps: number[] = stepNames ? stepNames.map((_, i) => i + 1) : [...ALL_STEPS];
   const shown = (step: number) => step;
@@ -106,8 +123,8 @@ export default function MissionHUD({
 
         {/* Right: the three stars, then the XP badge — a button that explains XP and stars.
             dir=ltr so "+N XP" doesn't reorder in RTL. */}
-        {stars && <StarRow stars={stars} size={20} className="shrink-0" />}
-        <button
+        {!achievements && stars && <StarRow stars={stars} size={20} className="shrink-0" />}
+        {!achievements && <button
           type="button"
           dir="ltr"
           data-testid="hud-xp-button"
@@ -127,8 +144,62 @@ export default function MissionHUD({
           >
             ?
           </span>
-        </button>
+        </button>}
       </div>
+
+      {/* The achievement bar: the three stars, the XP so far and every badge. What is not
+          earned yet waits as a quiet outline; a reward flies in and its slot lights up. */}
+      {achievements && (
+        <div
+          data-testid="achievement-bar"
+          className="relative z-50 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 border-t border-ink/5 bg-white px-4 py-2"
+        >
+          <StarRow
+            stars={achievements.stars.filter((n) => !held.has(`star-${n}`))}
+            size={22}
+            slots
+            className="shrink-0"
+          />
+          <button
+            type="button"
+            dir="ltr"
+            data-testid="hud-xp-button"
+            data-achievement-slot="xp"
+            aria-label={t('hud_xp_total_aria', { xp: Number(held.get('xp') ?? achievements.xp), max: achievements.xpMax })}
+            aria-expanded={xpOpen}
+            onClick={() => {
+              setMenuOpen(false);
+              setXpOpen((v) => !v);
+            }}
+            className="flex shrink-0 items-center gap-1 rounded-pill bg-challenge px-3 py-1.5 font-body text-xs font-semibold text-white shadow-sm transition-transform hover:scale-105 hover:bg-challenge/90 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-challenge focus-visible:ring-offset-2"
+          >
+            {t('hud_xp_total', { xp: Number(held.get('xp') ?? achievements.xp), max: achievements.xpMax })}
+            <span aria-hidden="true" className="flex h-4 w-4 items-center justify-center rounded-full bg-white/25 text-[10px] leading-none">
+              ?
+            </span>
+          </button>
+          <ul data-testid="hud-badges" aria-label={t('hud_badges_aria')} className="flex items-center gap-1.5">
+            {achievements.badges.map((b) => {
+              const on = b.earned && !held.has(`badge-${b.key}`);
+              return (
+                <li
+                  key={b.key}
+                  data-testid={`hud-badge-${b.key}`}
+                  data-earned={on}
+                  data-achievement-slot={`badge-${b.key}`}
+                  title={b.name}
+                  aria-label={on ? b.name : t('hud_badge_locked_aria', { name: b.name })}
+                  className={`flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border-2 transition-all duration-300 ${
+                    on ? 'border-[#F2B705] bg-[#FFF5D1] shadow-sm' : 'border-dashed border-[#B9C6D2] bg-white opacity-45 grayscale'
+                  }`}
+                >
+                  <BadgeIcon art={b.art} className="h-7 w-7" compact />
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
 
       {/* Key info: the problem statement and constraints, from step 2 on
           (step 1, the Brief, already shows the full story card). */}

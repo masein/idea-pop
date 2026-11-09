@@ -2,7 +2,7 @@
 
 import { type ReactNode } from 'react';
 import { useTranslations } from 'next-intl';
-import RewardPopup from './RewardPopup';
+import RewardPopup, { type RewardSummary } from './RewardPopup';
 
 /** Build and Test is done. No uploads here: the photo is on the page itself. Shows what the kid
  *  has actually earned for it, and gives nothing by itself. */
@@ -13,6 +13,7 @@ export default function LabCelebration({
   onKeepExploring,
   onEnough,
   onClose,
+  summary = null,
 }: {
   /** Who the kid is helping. */
   hero: string;
@@ -23,6 +24,8 @@ export default function LabCelebration({
   onKeepExploring: () => void;
   onEnough: () => void;
   onClose: () => void;
+  /** XP and star progress for the achievement bar. */
+  summary?: RewardSummary | null;
 }) {
   const t = useTranslations('story');
   return (
@@ -34,6 +37,7 @@ export default function LabCelebration({
       primary={{ label: t('reward_continue'), onClick: onKeepExploring }}
       secondary={{ label: t('enough_today'), onClick: onEnough }}
       onClose={onClose}
+      summary={summary}
     >
       {star}
     </RewardPopup>

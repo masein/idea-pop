@@ -1,6 +1,6 @@
 "use client";
 
-import { reconcilePersona } from "@/lib/auth/persona";
+import { clearPersona, reconcilePersona } from "@/lib/auth/persona";
 
 /**
  * In-memory access token store.
@@ -39,6 +39,9 @@ async function doRefresh(): Promise<string | null> {
   });
   if (!res.ok) {
     accessToken = null;
+    // No session any more (signed out elsewhere, or it ran out): forget the signed-in
+    // persona too, so the site treats this visitor as a guest instead of a broken sign-in.
+    if (res.status === 401) clearPersona();
     return null;
   }
   const data = (await res.json()) as { access_token: string };
@@ -71,5 +74,6 @@ export async function logout(): Promise<void> {
     });
   } finally {
     accessToken = null;
+    clearPersona();
   }
 }

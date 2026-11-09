@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-// The public preview is switched on at build time; turn it on before guest.ts loads.
+// Load guest.ts fresh (the live site also has the public preview switched on).
 async function loadGuest() {
   vi.resetModules();
   vi.stubEnv('NEXT_PUBLIC_PUBLIC_PREVIEW', '1');
@@ -26,11 +26,13 @@ describe('guest play on the public preview', () => {
     vi.unstubAllGlobals();
   });
 
-  it('is off without the preview switch (localhost)', async () => {
+  it('also works on localhost (no preview switch) for a visitor who is not signed in', async () => {
     vi.resetModules();
     const { guestFetch, isGuest } = await import('./guest');
-    expect(isGuest()).toBe(false);
-    expect(await guestFetch(post(`/challenges/${MAX}/hero-ideas`, { text: 'x' }))).toBeNull();
+    expect(isGuest()).toBe(true);
+    const res = await guestFetch(post(`/challenges/${MAX}/mission-badge`, { key: 'clue' }));
+    expect(res?.status).toBe(200);
+    expect(network).not.toHaveBeenCalled();
   });
 
   it('asks first, then keeps an idea in this tab only, never on the server', async () => {

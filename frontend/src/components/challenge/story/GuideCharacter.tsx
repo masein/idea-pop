@@ -22,7 +22,8 @@ export default function GuideCharacter({
 }) {
   const t = useTranslations('story');
   const name = CHARACTER_NAMES[character];
-  useFirstMeet(character, introReady);
+  // After the narration and a scroll, and never before Popi has introduced himself.
+  useFirstMeet(character, introReady, { afterScroll: true, after: character === 'popi' ? undefined : 'popi' });
   return (
     <div data-testid={testId} className="flex flex-col items-start gap-2 sm:flex-row sm:items-end sm:gap-3">
       {image ? (
